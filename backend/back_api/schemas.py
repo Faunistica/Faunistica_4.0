@@ -1,5 +1,6 @@
+from typing import Dict, List, Optional
+
 from pydantic import BaseModel
-from typing import Optional, List, Dict
 
 
 class UserRequest(BaseModel):
@@ -13,7 +14,7 @@ class UserResponse(BaseModel):
 
 class InfoRequest(BaseModel):
     text: str
-    
+
 
 class InfoResponse(BaseModel):
     country: Optional[str] = None

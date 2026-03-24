@@ -1,12 +1,13 @@
-import logging
-from fastapi import APIRouter, HTTPException, Depends, Request
-import pandas as pd
-from pathlib import Path
 import asyncio
+import logging
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
-from back_api.token import get_current_user
+import pandas as pd
+from fastapi import APIRouter, Depends, HTTPException, Request
+
 from back_api.schemas import AutofillTaxonRequest, AutofillTaxonResponse
+from back_api.token import get_current_user
 
 router = APIRouter()
 
@@ -42,13 +43,13 @@ async def async_autofill_taxon(field: str, text: str) -> AutofillTaxonResponse:
 
 @router.post("/autofill_taxon", response_model=AutofillTaxonResponse)
 async def autofill_taxon_endpoint(
-        request: Request,
-        data: AutofillTaxonRequest,
-        user_data: dict = Depends(get_current_user)
+    request: Request,
+    data: AutofillTaxonRequest,
+    user_data: dict = Depends(get_current_user),
 ):
     try:
         result = await async_autofill_taxon(data.field, data.text)
         return result
     except ValueError as e:
-        logger.error(f'Value error: {e}', exc_info=True)
+        logger.error(f"Value error: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))

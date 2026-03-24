@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 
 class Keyboards:
@@ -10,20 +10,18 @@ class Keyboards:
     def language_selection() -> ReplyKeyboardMarkup:
         return ReplyKeyboardMarkup(
             keyboard=[
-                [KeyboardButton(text='1')],
-                [KeyboardButton(text='2')],
-                [KeyboardButton(text='3')]
+                [KeyboardButton(text="1")],
+                [KeyboardButton(text="2")],
+                [KeyboardButton(text="3")],
             ],
             resize_keyboard=True,
-            one_time_keyboard=True
+            one_time_keyboard=True,
         )
 
     @staticmethod
     def yes_no() -> ReplyKeyboardMarkup:
         return ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text='Да'), KeyboardButton(text='Нет')]
-            ],
+            keyboard=[[KeyboardButton(text="Да"), KeyboardButton(text="Нет")]],
             resize_keyboard=True,
-            one_time_keyboard=True
+            one_time_keyboard=True,
         )

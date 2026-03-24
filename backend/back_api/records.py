@@ -1,15 +1,17 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, UTC
-import re
-from typing import Optional
 import logging
+import re
+from datetime import UTC, datetime
+from typing import Optional
 
-from database.database import get_session
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from back_api.schemas import InsertRecordsRequest
 from database.crud import add_record_from_json, get_user
+from database.database import get_session
+
 from .rate_limiter import limiter
 from .token import get_current_user
-from back_api.schemas import InsertRecordsRequest
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -33,7 +35,9 @@ def specimen_parse(specimens):
         nonlocal total
         if count is not None and count != 0:
             values.append(count)
-            entries.append(f"{int(count) if isinstance(count, float) and count.is_integer() else count} {label}")
+            entries.append(
+                f"{int(count) if isinstance(count, float) and count.is_integer() else count} {label}"
+            )
             total += count
 
     add_entry(specimens.get("male_adult"), "mmm")
@@ -44,7 +48,10 @@ def specimen_parse(specimens):
     add_entry(specimens.get("undefined_juvenile"), "juv")
 
     if entries:
-        all_whole = all((isinstance(v, int) or (isinstance(v, float) and v.is_integer())) for v in values)
+        all_whole = all(
+            (isinstance(v, int) or (isinstance(v, float) and v.is_integer()))
+            for v in values
+        )
         result = " | ".join(entries)
         return result, int(total) if all_whole else round(total, 6)
     return None, 0
@@ -71,11 +78,11 @@ def parse_coordinate(coord: str) -> float:
     coord = coord.strip()
 
     # 1. Degree: 59°
-    if re.match(r'^(-?\d+(?:\.\d+)?)°(?!\S)$', coord):
+    if re.match(r"^(-?\d+(?:\.\d+)?)°(?!\S)$", coord):
         return round(float(coord), 6)
 
     # 2. Degree + minutes: 59°29'
-    match_deg_min = re.match(r'^(\d{1,3})°\s*(\d{1,2})\'$', coord)
+    match_deg_min = re.match(r"^(\d{1,3})°\s*(\d{1,2})\'$", coord)
     if match_deg_min:
         degrees = int(match_deg_min.group(1))
         minutes = int(match_deg_min.group(2))
@@ -83,7 +90,9 @@ def parse_coordinate(coord: str) -> float:
         return round(decimal, 6)
 
     # 3. Degree + minutes + seconds: 56°51'10"
-    match_deg_min_sec = re.match(r'^(\d{1,3})°\s*(\d{1,2})\'\s*(\d{1,2})(?:["″])$', coord)
+    match_deg_min_sec = re.match(
+        r'^(\d{1,3})°\s*(\d{1,2})\'\s*(\d{1,2})(?:["″])$', coord
+    )
     if match_deg_min_sec:
         degrees = int(match_deg_min_sec.group(1))
         minutes = int(match_deg_min_sec.group(2))
@@ -91,7 +100,7 @@ def parse_coordinate(coord: str) -> float:
         decimal = degrees + (minutes / 60) + (seconds / 3600)
         return round(decimal, 6)
 
-    logger.warning(f'Invalid coordinate format: {coord}')
+    logger.warning(f"Invalid coordinate format: {coord}")
     raise ValueError(f"Invalid coordinate format: {coord}")
 
 
@@ -101,17 +110,17 @@ def safe_coord_parse(coord: Optional[str]) -> Optional[float]:
     try:
         return parse_coordinate(coord)
     except ValueError as e:
-        logger.error(f'Value error: {e}', exc_info=True)
+        logger.error(f"Value error: {e}", exc_info=True)
         return None
 
 
 @router.post("/insert_record")
 @limiter.limit("5/minute")
 async def insert_record(
-        request: Request,
-        data: InsertRecordsRequest,
-        user_data: dict = Depends(get_current_user),
-        session: AsyncSession = Depends(get_session)
+    request: Request,
+    data: InsertRecordsRequest,
+    user_data: dict = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ):
     north = safe_coord_parse(data.north)
     east = safe_coord_parse(data.east)
@@ -145,7 +154,9 @@ async def insert_record(
         "tax_fam": clean_value(data.family),
         "tax_gen": clean_value(data.genus),
         "tax_sp": clean_value(data.species),
-        "tax_sp_def": True if clean_value(data.is_defined_species) is not None else False,
+        "tax_sp_def": True
+        if clean_value(data.is_defined_species) is not None
+        else False,
         "tax_nsp": True if clean_value(data.is_new_species) is not None else False,
         "type_status": clean_value(data.type_status),
         "tax_REM": clean_value(data.taxonomic_notes),
@@ -156,12 +167,12 @@ async def insert_record(
         "eve_YY_end": clean_value(data.end_year),
         "eve_MM_end": clean_value(data.end_month),
         "eve_DD_end": clean_value(data.end_day),
-        "adm_verbatim": "1"
+        "adm_verbatim": "1",
     }
 
     try:
         await add_record_from_json(session, record_json)
         return {"message": "OK"}
     except Exception as e:
-        logger.error(f'Server database error: {e}', exc_info=True)
+        logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Server database error: {str(e)}")

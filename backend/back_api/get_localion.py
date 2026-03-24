@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, Request, HTTPException
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut
 import logging
 
-from back_api.schemas import GetLocationResponse, GetLocationRequest
+from fastapi import APIRouter, Depends, HTTPException, Request
+from geopy.exc import GeocoderTimedOut
+from geopy.geocoders import Nominatim
+
+from back_api.schemas import GetLocationRequest, GetLocationResponse
+
 from .token import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -14,28 +16,26 @@ def get_location_names(lat, lon):
     geolocator = Nominatim(user_agent="geoapi", timeout=10)
 
     try:
-        location = geolocator.reverse((lat, lon), language='ru')
+        location = geolocator.reverse((lat, lon), language="ru")
 
         if location is None:
-            logger.warning('Location not found for the given coordinates')
-            raise HTTPException(status_code=404, detail="Location not found for the given coordinates")
+            logger.warning("Location not found for the given coordinates")
+            raise HTTPException(
+                status_code=404, detail="Location not found for the given coordinates"
+            )
 
-        address = location.raw.get('address', {})
+        address = location.raw.get("address", {})
 
-        country = address.get('country', None)
-        region = address.get('state', address.get('region', None))
-        district = address.get('county', address.get('district', None))
+        country = address.get("country", None)
+        region = address.get("state", address.get("region", None))
+        district = address.get("county", address.get("district", None))
 
-        return {
-            "country": country,
-            "region": region,
-            "district": district
-        }
+        return {"country": country, "region": region, "district": district}
     except GeocoderTimedOut as e:
-        logger.error(f'GeocoderTimedOut: {e}', exc_info=True)
+        logger.error(f"GeocoderTimedOut: {e}", exc_info=True)
         raise HTTPException(status_code=408, detail="Geocoding service timeout")
     except Exception as e:
-        logger.error(f'HTTP Error: {e}', exc_info=True)
+        logger.error(f"HTTP Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -52,9 +52,9 @@ def dms_to_dd(
 
 @router.post("/get_loc", response_model=GetLocationResponse)
 async def get_loc(
-        request: Request,
-        data: GetLocationRequest,
-        user_data: dict = Depends(get_current_user)
+    request: Request,
+    data: GetLocationRequest,
+    user_data: dict = Depends(get_current_user),
 ):
     latitude = dms_to_dd(data.degrees_n, data.minutes_n, data.seconds_n)
     longitude = dms_to_dd(data.degrees_e, data.minutes_e, data.seconds_e)
@@ -62,5 +62,5 @@ async def get_loc(
     return GetLocationResponse(
         country=location.get("country"),
         region=location.get("region"),
-        district=location.get("district")
+        district=location.get("district"),
     )

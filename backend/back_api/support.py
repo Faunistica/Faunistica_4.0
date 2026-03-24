@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
-from back_api.schemas import SupportRequest
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from back_api.messages import send_support_message
-from database.database import get_session
+from back_api.schemas import SupportRequest
 from database.crud import get_user_id_by_username
+from database.database import get_session
+
 from .rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
@@ -15,14 +17,14 @@ router = APIRouter()
 @router.post("/support")
 @limiter.limit("1/minute")
 async def support(
-        request: Request,
-        data: SupportRequest,
-        session: AsyncSession = Depends(get_session)
+    request: Request, data: SupportRequest, session: AsyncSession = Depends(get_session)
 ):
     try:
-        user_id = await get_user_id_by_username(session, data.user_name) 
+        user_id = await get_user_id_by_username(session, data.user_name)
         await send_support_message(data, user_id)
         return {"message": "Support request received"}
     except Exception as e:
-        logger.error(f'Failed to process support request: {e}', exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to process support request: {str(e)}")
+        logger.error(f"Failed to process support request: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail=f"Failed to process support request: {str(e)}"
+        )

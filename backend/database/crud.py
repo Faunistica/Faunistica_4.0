@@ -1,15 +1,16 @@
-from sqlalchemy import func, update, text, and_
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+import asyncio
+import functools
+import logging
+from datetime import datetime
+from typing import Dict, List
+
+from sqlalchemy import and_, func, text, update
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from datetime import datetime
-import functools
-import asyncio
-from typing import List, Dict
-import logging
 
 from .hash import check_pass, encrypt_id
-from .models import User, Action, Publ, Record
+from .models import Action, Publ, Record, User
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +23,11 @@ def handle_db_errors(function):
             return await function(session, *args, **kwargs)
         except IntegrityError as e:
             await session.rollback()
-            logger.error(f'IntegrityError in {function.__name__}: {e}', exc_info=True)
+            logger.error(f"IntegrityError in {function.__name__}: {e}", exc_info=True)
         except SQLAlchemyError as e:
             await session.rollback()
-            logger.error(f'SQLAlchemyError in {function.__name__}: {e}', exc_info=True)
+            logger.error(f"SQLAlchemyError in {function.__name__}: {e}", exc_info=True)
+
     return wrapper
 
 
@@ -66,7 +68,7 @@ async def username_and_publication(session: AsyncSession, user_id: int) -> dict:
                 "author": publication.author,
                 "year": str(publication.year),
                 "name": publication.name,
-                "pdf_file": publication.pdf_file
+                "pdf_file": publication.pdf_file,
             }
 
     return data
@@ -118,16 +120,19 @@ async def get_publications_for_language(session: AsyncSession, language: str):
 
 
 async def is_publ_filled(session: AsyncSession, user_id: int, publ_id: int) -> bool:
-    stmt = select(Record).where(Record.user_id == user_id, Record.publ_id == publ_id) \
-        .order_by(Record.datetime.desc()) \
+    stmt = (
+        select(Record)
+        .where(Record.user_id == user_id, Record.publ_id == publ_id)
+        .order_by(Record.datetime.desc())
         .limit(1)
+    )
     result = await session.execute(stmt)
     record = result.scalar_one_or_none()
 
     if not record:
         return False
 
-    return record.type == 'rec_ok'
+    return record.type == "rec_ok"
 
 
 @handle_db_errors
@@ -141,39 +146,55 @@ async def add_publication_from_json(session: AsyncSession, publ_json: dict):
 async def get_general_stats(session: AsyncSession):
     stats = {}
 
-    stmt = select(func.count()).select_from(User).where((User.reg_stat == 1) | (User.reg_stat >= 7))
+    stmt = (
+        select(func.count())
+        .select_from(User)
+        .where((User.reg_stat == 1) | (User.reg_stat >= 7))
+    )
     result = await session.execute(stmt)
-    stats['total_users'] = result.scalar()
+    stats["total_users"] = result.scalar()
 
     result = await session.execute(select(func.avg(User.age)))
     avg_age = result.scalar()
-    stats['avg_age'] = round(avg_age, 1) if avg_age else 0
+    stats["avg_age"] = round(avg_age, 1) if avg_age else 0
 
-    stmt = select(Publ.language).where(Publ.ural.is_(True), Publ.coords.is_(True), Publ.occs.is_(True))
+    stmt = select(Publ.language).where(
+        Publ.ural.is_(True), Publ.coords.is_(True), Publ.occs.is_(True)
+    )
     result = await session.execute(stmt)
     langs = result.scalars().all()
-    stats.update({
-        'total_publs': len(langs),
-        'rus_publs': sum('rus' in (lang or '').lower() for lang in langs),
-        'eng_publs': sum('eng' in (lang or '').lower() for lang in langs)
-    })
+    stats.update(
+        {
+            "total_publs": len(langs),
+            "rus_publs": sum("rus" in (lang or "").lower() for lang in langs),
+            "eng_publs": sum("eng" in (lang or "").lower() for lang in langs),
+        }
+    )
 
     result = await session.execute(select(Record.type))
     records = result.scalars().all()
-    rec_ok = records.count('rec_ok')
+    rec_ok = records.count("rec_ok")
 
-    stats['rec_ok'] = rec_ok
-    stats['rec_fail_ratio'] = round(records.count('rec_fail') / rec_ok, 2) if rec_ok else 0
-    stats['check_ratio'] = round(sum('check' in (r or '') for r in records) / rec_ok, 2) if rec_ok else 0
+    stats["rec_ok"] = rec_ok
+    stats["rec_fail_ratio"] = (
+        round(records.count("rec_fail") / rec_ok, 2) if rec_ok else 0
+    )
+    stats["check_ratio"] = (
+        round(sum("check" in (r or "") for r in records) / rec_ok, 2) if rec_ok else 0
+    )
 
-    species_stmt = select(func.count(func.distinct(func.concat(Record.tax_gen, '_', Record.tax_sp)))).where(Record.type == 'rec_ok')
-    families_stmt = select(func.count(func.distinct(Record.tax_fam))).where(Record.type == 'rec_ok')
+    species_stmt = select(
+        func.count(func.distinct(func.concat(Record.tax_gen, "_", Record.tax_sp)))
+    ).where(Record.type == "rec_ok")
+    families_stmt = select(func.count(func.distinct(Record.tax_fam))).where(
+        Record.type == "rec_ok"
+    )
 
     species_result = await session.execute(species_stmt)
     families_result = await session.execute(families_stmt)
 
-    stats['species_count'] = species_result.scalar()
-    stats['families_count'] = families_result.scalar()
+    stats["species_count"] = species_result.scalar()
+    stats["families_count"] = families_result.scalar()
 
     return stats
 
@@ -192,32 +213,37 @@ async def get_user_stats(session: AsyncSession, user_id: int):
         publs.append(publ_id)
         publ_ids.add(publ_id)
 
-    stats['processed_publs'] = max(len(publ_ids), 0)
+    stats["processed_publs"] = max(len(publ_ids), 0)
     total_records = len(publs)
 
     result = await session.execute(select(Record.type).where(Record.user_id == user_id))
     records = result.scalars().all()
 
-    rec_ok = records.count('rec_ok')
-    rec_check = sum('check' in (r or '') for r in records)
+    rec_ok = records.count("rec_ok")
+    rec_check = sum("check" in (r or "") for r in records)
 
-    stats.update({
-        'rec_ok': rec_ok,
-        'check_ratio': round(rec_check / rec_ok, 2) if total_records else 0,
-    })
-
-    species_stmt = select(func.count(func.distinct(func.concat(Record.tax_gen, '_', Record.tax_sp)))).where(
-        Record.type == 'rec_ok', Record.user_id == user_id
+    stats.update(
+        {
+            "rec_ok": rec_ok,
+            "check_ratio": round(rec_check / rec_ok, 2) if total_records else 0,
+        }
     )
-    result = await session.execute(species_stmt)
-    stats['species_count'] = result.scalar()
 
-    result = await session.execute(text("""
+    species_stmt = select(
+        func.count(func.distinct(func.concat(Record.tax_gen, "_", Record.tax_sp)))
+    ).where(Record.type == "rec_ok", Record.user_id == user_id)
+    result = await session.execute(species_stmt)
+    stats["species_count"] = result.scalar()
+
+    result = await session.execute(
+        text("""
         SELECT mode() WITHIN GROUP (ORDER BY CONCAT(tax_gen, ' ', tax_sp)) 
         FROM records 
         WHERE type = 'rec_ok' AND user_id = :user_id
-    """), {"user_id": user_id})
-    stats['most_common_species'] = result.scalar()
+    """),
+        {"user_id": user_id},
+    )
+    stats["most_common_species"] = result.scalar()
 
     return stats
 
@@ -257,15 +283,10 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> List[Dict]:
             Record.eve_YY_end,
             Record.eve_MM_end,
             Record.eve_DD_end,
-            Publ.author
+            Publ.author,
         )
         .join(Publ, Publ.id == Record.publ_id)
-        .where(
-            and_(
-                Record.user_id == user_id,
-                Record.type == "rec_ok"
-            )
-        )
+        .where(and_(Record.user_id == user_id, Record.type == "rec_ok"))
         .order_by(Record.datetime.desc())
     )
 
@@ -274,7 +295,14 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> List[Dict]:
 
     records = []
     for row in rows:
-        date = format_event_date(row.eve_YY, row.eve_MM, row.eve_DD, row.eve_YY_end, row.eve_MM_end, row.eve_DD_end)
+        date = format_event_date(
+            row.eve_YY,
+            row.eve_MM,
+            row.eve_DD,
+            row.eve_YY_end,
+            row.eve_MM_end,
+            row.eve_DD_end,
+        )
         location_parts = []
         if row.adm_district is not None:
             location_parts.append(row.adm_district)
@@ -291,15 +319,17 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> List[Dict]:
 
         species = " ".join(species_parts) if species_parts else "Не заполнено"
 
-        records.append({
-            "hash": encrypt_id(row.id, user_id),
-            "date": str(row.datetime),
-            "author": row.author,
-            "species": species,
-            "abundance": row.abu,
-            "locality": location,
-            "even_date": date
-        })
+        records.append(
+            {
+                "hash": encrypt_id(row.id, user_id),
+                "date": str(row.datetime),
+                "author": row.author,
+                "species": species,
+                "abundance": row.abu,
+                "locality": location,
+                "even_date": date,
+            }
+        )
 
     return records
 
@@ -338,37 +368,49 @@ async def get_statistics(session: AsyncSession):
 
     stmt = select(func.count()).select_from(Publ)
     result = await session.execute(stmt)
-    stats['total_publications'] = result.scalar()
+    stats["total_publications"] = result.scalar()
 
     stmt = select(func.count(func.distinct(Record.publ_id)))
     result = await session.execute(stmt)
-    stats['processed_publications'] = result.scalar()
+    stats["processed_publications"] = result.scalar()
 
-    stmt = select(func.count()).select_from(Record).where(Record.type == 'rec_ok')
+    stmt = select(func.count()).select_from(Record).where(Record.type == "rec_ok")
     result = await session.execute(stmt)
-    stats['total_species'] = result.scalar()
-
-    stmt = select(func.count(func.distinct(func.concat(Record.tax_gen, '_', Record.tax_sp)))).where(
-        Record.type == 'rec_ok')
-    result = await session.execute(stmt)
-    stats['unique_species'] = result.scalar()
-
-    stmt = select(Record.tax_gen, Record.tax_sp, func.count(Record.id).label('spider_count')) \
-        .group_by(Record.tax_gen, Record.tax_sp) \
-        .order_by(func.count(Record.id).desc()) \
-        .limit(4)
-    result = await session.execute(stmt)
-    top_species = result.fetchall()
-    stats['top_species'] = [{"species": f"{row.tax_gen} {row.tax_sp}", "count": row.spider_count} for row in top_species]
+    stats["total_species"] = result.scalar()
 
     stmt = select(
-        func.date(Record.datetime).label('formatted_date'),
-        Record.tax_gen,
-        Record.tax_sp,
-        Record.adm_district,
-        Record.adm_region,
-        Record.user_id
-    ).order_by(Record.datetime.desc()).limit(4)
+        func.count(func.distinct(func.concat(Record.tax_gen, "_", Record.tax_sp)))
+    ).where(Record.type == "rec_ok")
+    result = await session.execute(stmt)
+    stats["unique_species"] = result.scalar()
+
+    stmt = (
+        select(
+            Record.tax_gen, Record.tax_sp, func.count(Record.id).label("spider_count")
+        )
+        .group_by(Record.tax_gen, Record.tax_sp)
+        .order_by(func.count(Record.id).desc())
+        .limit(4)
+    )
+    result = await session.execute(stmt)
+    top_species = result.fetchall()
+    stats["top_species"] = [
+        {"species": f"{row.tax_gen} {row.tax_sp}", "count": row.spider_count}
+        for row in top_species
+    ]
+
+    stmt = (
+        select(
+            func.date(Record.datetime).label("formatted_date"),
+            Record.tax_gen,
+            Record.tax_sp,
+            Record.adm_district,
+            Record.adm_region,
+            Record.user_id,
+        )
+        .order_by(Record.datetime.desc())
+        .limit(4)
+    )
     result = await session.execute(stmt)
     latest_records = result.fetchall()
 
@@ -377,12 +419,14 @@ async def get_statistics(session: AsyncSession):
         *[username_and_publication(session, user_id) for user_id in user_ids]
     )
 
-    stats['latest_records'] = [
+    stats["latest_records"] = [
         {
             "datetime": record.formatted_date.isoformat(),
             "species": f"{record.tax_gen} {record.tax_sp}",
             "location": f"{record.adm_district}, {record.adm_region}",
-            "username": user_data['user_name'] if user_data and 'user_name' in user_data else "Unknown"
+            "username": user_data["user_name"]
+            if user_data and "user_name" in user_data
+            else "Unknown",
         }
         for record, user_data in zip(latest_records, user_name_data)
     ]
@@ -399,7 +443,9 @@ async def get_user_records(session: AsyncSession, user_id: int):
 
 # === DEL/EDIT RECORD ===
 @handle_db_errors
-async def remove_record_row_by_id(session: AsyncSession, record_id: int, user_id: int) -> bool:
+async def remove_record_row_by_id(
+    session: AsyncSession, record_id: int, user_id: int
+) -> bool:
     stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
     result = await session.execute(stmt)
     record = result.scalar_one_or_none()
@@ -419,7 +465,9 @@ async def get_record_by_id(session: AsyncSession, record_id: int, user_id: int):
 
 
 @handle_db_errors
-async def edit_record_by_id(session: AsyncSession, record_id: int, user_id: int, new_data: dict) -> bool:
+async def edit_record_by_id(
+    session: AsyncSession, record_id: int, user_id: int, new_data: dict
+) -> bool:
     stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
     result = await session.execute(stmt)
     record = result.scalar_one_or_none()
@@ -446,6 +494,6 @@ async def publ_by_hash(session: AsyncSession, record_id: int, user_id: int) -> d
                 "author": publication.author,
                 "year": str(publication.year),
                 "name": publication.name,
-                "pdf_file": publication.pdf_file
+                "pdf_file": publication.pdf_file,
             }
     return data

@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Request, HTTPException, Depends
-from pathlib import Path
 import json
 import logging
-from typing import List, Dict, Optional
+from pathlib import Path
+from typing import Dict, List, Optional
 
-from .token import get_current_user
+from fastapi import APIRouter, Depends, HTTPException, Request
+
 from .schemas import GeoSearchRequest, GeoSearchResponse
+from .token import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -17,7 +18,7 @@ def _load_location_data():
     global _LOCATION_DATA
     if _LOCATION_DATA is None:
         try:
-            with open(json_path, 'r', encoding='utf-8') as f:
+            with open(json_path, "r", encoding="utf-8") as f:
                 _LOCATION_DATA = json.load(f)
         except Exception as e:
             logger.error(f"Failed to load location data: {e}", exc_info=True)
@@ -25,7 +26,9 @@ def _load_location_data():
     return _LOCATION_DATA
 
 
-async def get_suggestions(field: str, text: str, filters: Optional[Dict] = None) -> List[str]:
+async def get_suggestions(
+    field: str, text: str, filters: Optional[Dict] = None
+) -> List[str]:
     location_data = _load_location_data()
     if not location_data:
         return []
@@ -33,10 +36,7 @@ async def get_suggestions(field: str, text: str, filters: Optional[Dict] = None)
     filters = filters or {}
 
     if field == "region":
-        return [
-                   r["region"] for r in location_data
-                   if text in r["region"].lower()
-               ][:100]
+        return [r["region"] for r in location_data if text in r["region"].lower()][:100]
 
     elif field == "district":
         region_filter = filters.get("region")
@@ -46,10 +46,7 @@ async def get_suggestions(field: str, text: str, filters: Optional[Dict] = None)
             if region_filter and entry["region"] != region_filter:
                 continue
 
-            districts.extend([
-                d for d in entry["districts"]
-                if text in d.lower()
-            ])
+            districts.extend([d for d in entry["districts"] if text in d.lower()])
 
         return districts[:200]
 
@@ -58,9 +55,9 @@ async def get_suggestions(field: str, text: str, filters: Optional[Dict] = None)
 
 @router.post("/geo_search", response_model=GeoSearchResponse)
 async def geo_search(
-        request: Request,
-        data: GeoSearchRequest,
-        user_data: dict = Depends(get_current_user)
+    request: Request,
+    data: GeoSearchRequest,
+    user_data: dict = Depends(get_current_user),
 ):
     try:
         suggestions = await get_suggestions(data.field, data.text, data.filters)

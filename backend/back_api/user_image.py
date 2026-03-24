@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
-import httpx
 import io
 import logging
+
+import httpx
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 
 from config.config import BOT_TOKEN
 
@@ -34,6 +35,6 @@ async def fetch_telegram_photo(user_id: int):
 async def stream_photo(user_id: int):
     photo = await fetch_telegram_photo(user_id)
     if not photo:
-        logger.warning('No photo found')
+        logger.warning("No photo found")
         raise HTTPException(404, detail="No photo found")
     return StreamingResponse(photo, media_type="image/jpeg")

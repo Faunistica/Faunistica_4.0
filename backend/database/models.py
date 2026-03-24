@@ -1,13 +1,23 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean, TIMESTAMP, Double, BigInteger
+from sqlalchemy import (
+    TIMESTAMP,
+    BigInteger,
+    Boolean,
+    Column,
+    Double,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
     id = Column(BigInteger, primary_key=True)
-    publ_id = Column(Integer, ForeignKey('publs.id', ondelete='CASCADE'))
+    publ_id = Column(Integer, ForeignKey("publs.id", ondelete="CASCADE"))
     tlg_name = Column(String(255))
     tlg_username = Column(String(255))
     name = Column(String(255))
@@ -27,7 +37,7 @@ class User(Base):
 
 
 class Publ(Base):
-    __tablename__ = 'publs'
+    __tablename__ = "publs"
     id = Column(Integer, primary_key=True)
     type = Column(Text)
     author = Column(Text)
@@ -44,19 +54,19 @@ class Publ(Base):
 
 
 class Action(Base):
-    __tablename__ = 'actions'
+    __tablename__ = "actions"
     id = Column(Integer, primary_key=True)
-    user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'))
+    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     action = Column(Text)
     object = Column(Text)
     datetime = Column(TIMESTAMP)
 
 
 class Record(Base):
-    __tablename__ = 'records'
+    __tablename__ = "records"
     id = Column(Integer, primary_key=True)
-    publ_id = Column(Integer, ForeignKey('publs.id', ondelete='CASCADE'))
-    user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'))
+    publ_id = Column(Integer, ForeignKey("publs.id", ondelete="CASCADE"))
+    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     datetime = Column(TIMESTAMP)
     ip = Column(Text)
     errors = Column(Text)
