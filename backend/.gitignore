@@ -1,7 +1,10 @@
-/.idea
-/.env
-/learning
-/logs
-/test.py
-/database/hash.py
-__pycache__/
+.idea
+.venv
+.ruff_cache
+pyvenv.cfg
+
+__pycache__
+
+.env
+
+logs

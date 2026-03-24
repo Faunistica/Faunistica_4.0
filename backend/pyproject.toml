@@ -1,0 +1,41 @@
+[project]
+name = "faunistica-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]",
+    "slowapi",
+    "geopy",
+    "pygbif",
+    "sqlalchemy",
+    "dotenv",
+    "asyncpg",
+    "aiogram",
+    "cryptography",
+    "argon2-cffi",
+    "python-jose[cryptography]",
+    "pandas",
+    "httpx",
+    "openpyxl",
+    "aiohttp-socks>=0.11.0",
+]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["I"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-single-line = false
+order-by-type = true
+
+[tool.ruff.format]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.7",
+]
