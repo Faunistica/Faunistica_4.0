@@ -1,0 +1,12 @@
+{
+  "$schema": "https://oxlint.rs/schema.json",
+  "rules": {
+    "recommended": true
+  },
+  "typescript": {
+    "deny": []
+  },
+  "jsx_a11y": {
+    "deny": []
+  }
+}

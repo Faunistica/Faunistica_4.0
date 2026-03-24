@@ -1,5 +1,5 @@
 .error .MuiAutocomplete-inputRoot[class*="MuiOutlinedInput-root"] {
-    background-color: rgba(255, 91, 91, 0.19);
-    border: 1px solid rgb(255, 91, 91);
-    color: #c62828;
+  background-color: rgba(255, 91, 91, 0.19);
+  border: 1px solid rgb(255, 91, 91);
+  color: #c62828;
 }
