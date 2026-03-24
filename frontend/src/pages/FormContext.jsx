@@ -104,7 +104,11 @@ export const fieldsMap = {
   ],
 };
 
-export const FormProvider = ({ children, initialState, isEditMode = false }) => {
+export const FormProvider = ({
+  children,
+  initialState,
+  isEditMode = false,
+}) => {
   {
     i18n.t(`FormContext.sections.${SECTION_KEYS.ADMIN}`);
   }
@@ -125,8 +129,6 @@ export const FormProvider = ({ children, initialState, isEditMode = false }) => 
     "Сбор материала": "material_collection",
     Таксономия: "taxonomy",
   };
-
-  const allowedNewKeys = Object.values(keyMap);
 
   const [pinnedSections, setPinnedSections] = useState(() => {
     const saved = localStorage.getItem("pinnedSections");

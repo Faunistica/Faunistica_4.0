@@ -1,5 +1,5 @@
 import "../styles/instruction.css";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation, Trans } from "react-i18next";
 import tlg_auth from "../img/instuction/tlg_auth.webp";
@@ -71,13 +71,23 @@ export const Introduction = () => {
         <div className="section">
           <div
             className={`section-header ${!collapsed.requirements ? "collapsed" : ""}`}
-            onClick={() => setCollapsed({ ...collapsed, requirements: !collapsed.requirements })}
+            onClick={() =>
+              setCollapsed({
+                ...collapsed,
+                requirements: !collapsed.requirements,
+              })
+            }
           >
             <h2>{t("sections.requirements.title")}</h2>
             <button
               className={`collapse-toggle ${collapsed.requirements ? "collapsed" : ""}`}
               type="button"
-              onClick={() => setCollapsed({ ...collapsed, requirements: !collapsed.requirements })}
+              onClick={() =>
+                setCollapsed({
+                  ...collapsed,
+                  requirements: !collapsed.requirements,
+                })
+              }
             >
               {collapsed.requirements ? "⌃" : "⌃"}
             </button>
@@ -94,13 +104,23 @@ export const Introduction = () => {
         <div className="section">
           <div
             className={`section-header ${!collapsed.registration ? "collapsed" : ""}`}
-            onClick={() => setCollapsed({ ...collapsed, registration: !collapsed.registration })}
+            onClick={() =>
+              setCollapsed({
+                ...collapsed,
+                registration: !collapsed.registration,
+              })
+            }
           >
             <h2>{t("sections.registration.title")}</h2>
             <button
               className={`collapse-toggle ${collapsed.registration ? "collapsed" : ""}`}
               type="button"
-              onClick={() => setCollapsed({ ...collapsed, registration: !collapsed.registration })}
+              onClick={() =>
+                setCollapsed({
+                  ...collapsed,
+                  registration: !collapsed.registration,
+                })
+              }
             >
               {collapsed.registration ? "⌃" : "⌃"}
             </button>
@@ -134,7 +154,11 @@ export const Introduction = () => {
                   <br />
                   <br />
                 </p>
-                <img className={"full-width"} src={site_auth} alt={t("alts.site_auth")} />
+                <img
+                  className={"full-width"}
+                  src={site_auth}
+                  alt={t("alts.site_auth")}
+                />
               </div>
               <div className="horizontal">
                 <p>{t("sections.registration.step3")}</p>
@@ -147,13 +171,23 @@ export const Introduction = () => {
         <div className="section">
           <div
             className={`section-header ${!collapsed.telegram_bot ? "collapsed" : ""}`}
-            onClick={() => setCollapsed({ ...collapsed, telegram_bot: !collapsed.telegram_bot })}
+            onClick={() =>
+              setCollapsed({
+                ...collapsed,
+                telegram_bot: !collapsed.telegram_bot,
+              })
+            }
           >
             <h2>{t("sections.telegram_bot.title")}</h2>
             <button
               className={`collapse-toggle ${collapsed.telegram_bot ? "collapsed" : ""}`}
               type="button"
-              onClick={() => setCollapsed({ ...collapsed, telegram_bot: !collapsed.telegram_bot })}
+              onClick={() =>
+                setCollapsed({
+                  ...collapsed,
+                  telegram_bot: !collapsed.telegram_bot,
+                })
+              }
             >
               {collapsed.telegram_bot ? "⌃" : "⌃"}
             </button>
@@ -290,7 +324,10 @@ export const Introduction = () => {
           <div
             className={`section-header ${!collapsed.publ_structure ? "collapsed" : ""}`}
             onClick={() =>
-              setCollapsed({ ...collapsed, publ_structure: !collapsed.publ_structure })
+              setCollapsed({
+                ...collapsed,
+                publ_structure: !collapsed.publ_structure,
+              })
             }
           >
             <h2>{t("sections.publ_structure.title")}</h2>
@@ -298,7 +335,10 @@ export const Introduction = () => {
               className={`collapse-toggle ${collapsed.publ_structure ? "collapsed" : ""}`}
               type="button"
               onClick={() =>
-                setCollapsed({ ...collapsed, publ_structure: !collapsed.publ_structure })
+                setCollapsed({
+                  ...collapsed,
+                  publ_structure: !collapsed.publ_structure,
+                })
               }
             >
               {collapsed.publ_structure ? "⌃" : "⌃"}
@@ -316,7 +356,9 @@ export const Introduction = () => {
               <ul>
                 <li>{t("sections.publ_structure.types.articles")}</li>
                 <li>{t("sections.publ_structure.types.monographs")}</li>
-                <li>{t("sections.publ_structure.types.conference_materials")}</li>
+                <li>
+                  {t("sections.publ_structure.types.conference_materials")}
+                </li>
                 <li>{t("sections.publ_structure.types.dissertations")}</li>
               </ul>
               <h3>{t("sections.publ_structure.how_it_works")}</h3>
@@ -327,7 +369,11 @@ export const Introduction = () => {
                 {t("sections.publ_structure.udk_explanation")}
               </p>
               <div className="horizontal">
-                <img className="publ" src={publ1} alt={t("sections.publ_structure.alts.publ1")} />
+                <img
+                  className="publ"
+                  src={publ1}
+                  alt={t("sections.publ_structure.alts.publ1")}
+                />
                 <p>
                   {t("sections.publ_structure.title_explanation")}
                   <br />
@@ -336,7 +382,11 @@ export const Introduction = () => {
                 </p>
               </div>
               <div className="horizontal">
-                <img className="publ" src={publ2} alt={t("sections.publ_structure.alts.publ2")} />
+                <img
+                  className="publ"
+                  src={publ2}
+                  alt={t("sections.publ_structure.alts.publ2")}
+                />
                 <p>
                   {t("sections.publ_structure.example_no_udk")}
                   <br />
@@ -345,7 +395,11 @@ export const Introduction = () => {
                 </p>
               </div>
               <div className="horizontal">
-                <img className="publ" src={publ3} alt={t("sections.publ_structure.alts.publ3")} />
+                <img
+                  className="publ"
+                  src={publ3}
+                  alt={t("sections.publ_structure.alts.publ3")}
+                />
                 <p>
                   {t("sections.publ_structure.introduction_section")}
                   <br />
@@ -354,13 +408,25 @@ export const Introduction = () => {
                 </p>
               </div>
               <div className="horizontal">
-                <img className="publ" src={publ4} alt={t("sections.publ_structure.alts.publ4")} />
+                <img
+                  className="publ"
+                  src={publ4}
+                  alt={t("sections.publ_structure.alts.publ4")}
+                />
                 <p>{t("sections.publ_structure.materials_methods")}</p>
               </div>
               <p>{t("sections.publ_structure.main_part")}</p>
               <div className="horizontal">
-                <img className="publ" src={publ5} alt={t("sections.publ_structure.alts.publ5")} />
-                <img className="publ" src={publ6} alt={t("sections.publ_structure.alts.publ6")} />
+                <img
+                  className="publ"
+                  src={publ5}
+                  alt={t("sections.publ_structure.alts.publ5")}
+                />
+                <img
+                  className="publ"
+                  src={publ6}
+                  alt={t("sections.publ_structure.alts.publ6")}
+                />
               </div>
               <p>{t("sections.publ_structure.discussion_conclusion")}</p>
             </>
@@ -371,7 +437,10 @@ export const Introduction = () => {
           <div
             className={`section-header ${!collapsed.beginning_work ? "collapsed" : ""}`}
             onClick={() =>
-              setCollapsed({ ...collapsed, beginning_work: !collapsed.beginning_work })
+              setCollapsed({
+                ...collapsed,
+                beginning_work: !collapsed.beginning_work,
+              })
             }
           >
             <h2>{t("sections.beginning_work.title")}</h2>
@@ -379,7 +448,10 @@ export const Introduction = () => {
               className={`collapse-toggle ${collapsed.beginning_work ? "collapsed" : ""}`}
               type="button"
               onClick={() =>
-                setCollapsed({ ...collapsed, beginning_work: !collapsed.beginning_work })
+                setCollapsed({
+                  ...collapsed,
+                  beginning_work: !collapsed.beginning_work,
+                })
               }
             >
               {collapsed.beginning_work ? "⌃" : "⌃"}
@@ -424,30 +496,46 @@ export const Introduction = () => {
             <button
               className={`collapse-toggle ${collapsed.geo ? "collapsed" : ""}`}
               type="button"
-              onClick={() => setCollapsed({ ...collapsed, geo: !collapsed.geo })}
+              onClick={() =>
+                setCollapsed({ ...collapsed, geo: !collapsed.geo })
+              }
             >
               {collapsed.geo ? "⌃" : "⌃"}
             </button>
           </div>
           {collapsed.geo && (
             <>
-              <img className={"full-width"} src={geo} alt={t("sections.geo.alts.geo")} />
+              <img
+                className={"full-width"}
+                src={geo}
+                alt={t("sections.geo.alts.geo")}
+              />
               <p>{t("sections.geo.find_coordinates")}</p>
-              <img className={"full-width middle"} src={geo2} alt={t("sections.geo.alts.geo2")} />
+              <img
+                className={"full-width middle"}
+                src={geo2}
+                alt={t("sections.geo.alts.geo2")}
+              />
               <p>{t("sections.geo.coordinates_difficulties")}</p>
               <p>{t("sections.geo.no_coordinates_option")}</p>
-              <img className={"full-width middle"} src={geo3} alt={t("sections.geo.alts.geo3")} />
+              <img
+                className={"full-width middle"}
+                src={geo3}
+                alt={t("sections.geo.alts.geo3")}
+              />
               <p>
                 <Trans i18nKey="sections.geo.example2_intro" t={t}>
                   В публикации из{" "}
                   <Link
-                    to={"https://sozontov.cc/arachnolibrary/files/p5099_2014_Esyunin_Ukhova.pdf"}
+                    to={
+                      "https://sozontov.cc/arachnolibrary/files/p5099_2014_Esyunin_Ukhova.pdf"
+                    }
                     target={"_blank"}
                   >
                     Примера 2
                   </Link>{" "}
-                  в начале статьи, даны координаты каждой исследованной площадки. Две площадки
-                  выделены желтым для примера:
+                  в начале статьи, даны координаты каждой исследованной
+                  площадки. Две площадки выделены желтым для примера:
                 </Trans>
               </p>
               <div className={"horizontal"}>
@@ -455,7 +543,11 @@ export const Introduction = () => {
                 <img src={coord2} alt={t("sections.geo.alts.coord2")} />
               </div>
               <p>{t("sections.geo.degrees_minutes_format")}</p>
-              <img className={"full-width middle"} src={geo4} alt={t("sections.geo.alts.geo4")} />
+              <img
+                className={"full-width middle"}
+                src={geo4}
+                alt={t("sections.geo.alts.geo4")}
+              />
               <p>{t("sections.geo.coordinates_source")}</p>
               <p>
                 {t("sections.geo.radius_explanation")}
@@ -478,14 +570,20 @@ export const Introduction = () => {
             <button
               className={`collapse-toggle ${collapsed.adm ? "collapsed" : ""}`}
               type="button"
-              onClick={() => setCollapsed({ ...collapsed, adm: !collapsed.adm })}
+              onClick={() =>
+                setCollapsed({ ...collapsed, adm: !collapsed.adm })
+              }
             >
               {collapsed.adm ? "⌃" : "⌃"}
             </button>
           </div>
           {collapsed.adm && (
             <>
-              <img className={"full-width"} src={adm} alt={t("sections.adm.alts.adm")} />
+              <img
+                className={"full-width"}
+                src={adm}
+                alt={t("sections.adm.alts.adm")}
+              />
               <p>
                 {t("sections.adm.block_description")}
                 <br />
@@ -501,7 +599,11 @@ export const Introduction = () => {
               <p>{t("sections.adm.example1_intro")}</p>
               <p>{t("sections.adm.english_publication")}</p>
               <p>{t("sections.adm.example1_region")}</p>
-              <img className={"full-width middle"} src={adm2} alt={t("sections.adm.alts.adm2")} />
+              <img
+                className={"full-width middle"}
+                src={adm2}
+                alt={t("sections.adm.alts.adm2")}
+              />
               <p>{t("sections.adm.example1_locations")}</p>
               <div className="horizontal">
                 <img src={image39} alt={t("sections.adm.alts.image39")} />
@@ -519,7 +621,11 @@ export const Introduction = () => {
               <p>{t("sections.adm.example2_location")}</p>
               <p>{t("sections.adm.example2_reserve")}</p>
               <p>{t("sections.adm.filled_example")}</p>
-              <img className={"full-width"} src={adm4} alt={t("sections.adm.alts.adm4")} />
+              <img
+                className={"full-width"}
+                src={adm4}
+                alt={t("sections.adm.alts.adm4")}
+              />
             </>
           )}
         </div>
@@ -532,14 +638,20 @@ export const Introduction = () => {
             <button
               className={`collapse-toggle ${collapsed.eve ? "collapsed" : ""}`}
               type="button"
-              onClick={() => setCollapsed({ ...collapsed, eve: !collapsed.eve })}
+              onClick={() =>
+                setCollapsed({ ...collapsed, eve: !collapsed.eve })
+              }
             >
               {collapsed.eve ? "⌃" : "⌃"}
             </button>
           </div>
           {collapsed.eve && (
             <>
-              <img className={"full-width"} src={eve1} alt={t("sections.eve.alts.eve1")} />
+              <img
+                className={"full-width"}
+                src={eve1}
+                alt={t("sections.eve.alts.eve1")}
+              />
               <div className="horizontal">
                 <p>{t("sections.eve.dates_description")}</p>
                 <img src={eve2} alt={t("sections.eve.alts.eve2")} />
@@ -559,7 +671,11 @@ export const Introduction = () => {
                   <br />
                   {t("sections.eve.yellow_text")}
                 </p>
-                <img className={"small"} src={image25} alt={t("sections.eve.alts.image25")} />
+                <img
+                  className={"small"}
+                  src={image25}
+                  alt={t("sections.eve.alts.image25")}
+                />
               </div>
               <p>{t("sections.eve.example2_biotope")}</p>
               <p>{t("sections.eve.quarter_altitude")}</p>
@@ -572,14 +688,22 @@ export const Introduction = () => {
               <p>{t("sections.eve.no_collector_info")}</p>
               <p>{t("sections.eve.selective_effort")}</p>
               <p>{t("sections.eve.filled_example1")}</p>
-              <img className={"full-width"} src={eve4} alt={t("sections.eve.alts.eve4")} />
+              <img
+                className={"full-width"}
+                src={eve4}
+                alt={t("sections.eve.alts.eve4")}
+              />
               <p>{t("sections.eve.filled_example2")}</p>
               <img
                 className={"full-width middle"}
                 src={image9}
                 alt={t("sections.eve.alts.image9")}
               />
-              <img className={"full-width"} src={eve5} alt={t("sections.eve.alts.eve5")} />
+              <img
+                className={"full-width"}
+                src={eve5}
+                alt={t("sections.eve.alts.eve5")}
+              />
               <div className="attention">
                 <p>{t("sections.eve.effort_absence")}</p>
               </div>
@@ -595,14 +719,20 @@ export const Introduction = () => {
             <button
               className={`collapse-toggle ${collapsed.tax ? "collapsed" : ""}`}
               type="button"
-              onClick={() => setCollapsed({ ...collapsed, tax: !collapsed.tax })}
+              onClick={() =>
+                setCollapsed({ ...collapsed, tax: !collapsed.tax })
+              }
             >
               {collapsed.tax ? "⌃" : "⌃"}
             </button>
           </div>
           {collapsed.tax && (
             <>
-              <img className={"full-width"} src={tax1} alt={t("sections.tax.alts.tax1")} />
+              <img
+                className={"full-width"}
+                src={tax1}
+                alt={t("sections.tax.alts.tax1")}
+              />
               <p>
                 {t("sections.tax.latin_names")}
                 <br />
@@ -619,8 +749,16 @@ export const Introduction = () => {
                 {t("sections.tax.example1_appearance")}
               </p>
               <div className={"horizontal"}>
-                <img className="small" src={tax2} alt={t("sections.tax.alts.tax2")} />
-                <img className={"middle"} src={tax3} alt={t("sections.tax.alts.tax3")} />
+                <img
+                  className="small"
+                  src={tax2}
+                  alt={t("sections.tax.alts.tax2")}
+                />
+                <img
+                  className={"middle"}
+                  src={tax3}
+                  alt={t("sections.tax.alts.tax3")}
+                />
               </div>
               <p>
                 {t("sections.tax.missing_species")}
@@ -637,13 +775,17 @@ export const Introduction = () => {
         <div className={"section"}>
           <div
             className={`section-header ${!collapsed.count ? "collapsed" : ""}`}
-            onClick={() => setCollapsed({ ...collapsed, count: !collapsed.count })}
+            onClick={() =>
+              setCollapsed({ ...collapsed, count: !collapsed.count })
+            }
           >
             <h2>{t("sections.count.title")}</h2>
             <button
               className={`collapse-toggle ${collapsed.count ? "collapsed" : ""}`}
               type="button"
-              onClick={() => setCollapsed({ ...collapsed, count: !collapsed.count })}
+              onClick={() =>
+                setCollapsed({ ...collapsed, count: !collapsed.count })
+              }
             >
               {collapsed.count ? "⌃" : "⌃"}
             </button>
@@ -674,7 +816,11 @@ export const Introduction = () => {
                 <br />
                 {t("sections.count.quantity_rules4")}
               </p>
-              <img className={"full-width middle"} src={tax4} alt={t("sections.count.alts.tax4")} />
+              <img
+                className={"full-width middle"}
+                src={tax4}
+                alt={t("sections.count.alts.tax4")}
+              />
               <p>{t("sections.count.two_indicators")}</p>
               <p>{t("sections.count.more_significant")}</p>
             </>
@@ -683,13 +829,17 @@ export const Introduction = () => {
         <div className={"section"}>
           <div
             className={`section-header ${!collapsed.extra ? "collapsed" : ""}`}
-            onClick={() => setCollapsed({ ...collapsed, extra: !collapsed.extra })}
+            onClick={() =>
+              setCollapsed({ ...collapsed, extra: !collapsed.extra })
+            }
           >
             <h2>{t("sections.extra.title")}</h2>
             <button
               className={`collapse-toggle ${collapsed.extra ? "collapsed" : ""}`}
               type="button"
-              onClick={() => setCollapsed({ ...collapsed, extra: !collapsed.extra })}
+              onClick={() =>
+                setCollapsed({ ...collapsed, extra: !collapsed.extra })
+              }
             >
               {collapsed.extra ? "⌃" : "⌃"}
             </button>

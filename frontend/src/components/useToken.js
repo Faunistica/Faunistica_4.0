@@ -11,7 +11,7 @@ export default function useToken() {
       const authStatus = await apiService.checkAuth();
       setIsAuth(authStatus);
       return authStatus;
-    } catch (error) {
+    } catch {
       setIsAuth(false);
       return false;
     } finally {

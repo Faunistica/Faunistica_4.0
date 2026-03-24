@@ -1,5 +1,4 @@
 import "./navbar.css";
-import React from "react";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import LanguageSwitcher from "../LanguageSwitcher";
@@ -16,11 +15,19 @@ const Navbar = ({ isAuthenticated, onLoginClick, onLogoutClick }) => {
   return (
     <nav className="nav">
       <div className={`nav-content ${isMenuOpen ? "open" : ""}`}>
-        <NavLink to="/" className="logo" style={{ color: "white", textDecoration: "none" }}>
+        <NavLink
+          to="/"
+          className="logo"
+          style={{ color: "white", textDecoration: "none" }}
+        >
           <div className="logo">{t("logo")}</div>
         </NavLink>
 
-        <button className="burger-menu" onClick={toggleMenu} aria-label={t("menu.toggle")}>
+        <button
+          className="burger-menu"
+          onClick={toggleMenu}
+          aria-label={t("menu.toggle")}
+        >
           <div className={`burger-line ${isMenuOpen ? "open" : ""}`}></div>
           <div className={`burger-line ${isMenuOpen ? "open" : ""}`}></div>
           <div className={`burger-line ${isMenuOpen ? "open" : ""}`}></div>

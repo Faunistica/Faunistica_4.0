@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import FormModePage from "./FormModePage";
 import { FormProvider, defaultState } from "./FormContext";
@@ -90,13 +90,12 @@ const EditRecordPage = () => {
       return defaultState;
     }
 
-    const beginDate = "";
-    const endDate = "";
-
     const hasBeginDay = record.eve_DD !== null && record.eve_DD !== undefined;
     const hasBeginMonth = record.eve_MM !== null && record.eve_MM !== undefined;
-    const hasEndDay = record.eve_DD_end !== null && record.eve_DD_end !== undefined;
-    const hasEndMonth = record.eve_MM_end !== null && record.eve_MM_end !== undefined;
+    const hasEndDay =
+      record.eve_DD_end !== null && record.eve_DD_end !== undefined;
+    const hasEndMonth =
+      record.eve_MM_end !== null && record.eve_MM_end !== undefined;
 
     const north = parseCoordinate(record.geo_nn_raw);
     const east = parseCoordinate(record.geo_ee_raw);
@@ -139,6 +138,7 @@ const EditRecordPage = () => {
       family: record.tax_fam || "",
       genus: record.tax_gen || "",
       species: record.tax_sp || "",
+      // FIXME: idk how it is supposed to work
       tax_sp_def: !record.tax_sp_def !== undefined ? !record.tax_sp_def : true,
       tax_nsp: record.tax_nsp || false,
       is_new_species: record.is_new_species || false,
@@ -199,42 +199,22 @@ const EditRecordPage = () => {
     if ("male_adult" in specimens) addEntry(specimens.male_adult, "mmm");
     if ("female_adult" in specimens) addEntry(specimens.female_adult, "fff");
     if ("male_juvenile" in specimens) addEntry(specimens.male_juvenile, "ssm");
-    if ("female_juvenile" in specimens) addEntry(specimens.female_juvenile, "ssf");
-    if ("undefined_adult" in specimens) addEntry(specimens.undefined_adult, "adu");
-    if ("undefined_juvenile" in specimens) addEntry(specimens.undefined_juvenile, "juv");
+    if ("female_juvenile" in specimens)
+      addEntry(specimens.female_juvenile, "ssf");
+    if ("undefined_adult" in specimens)
+      addEntry(specimens.undefined_adult, "adu");
+    if ("undefined_juvenile" in specimens)
+      addEntry(specimens.undefined_juvenile, "juv");
 
     if (entries.length > 0) {
       const allWhole = values.every((v) => Number.isInteger(v));
       const result = entries.join(" | ");
-      return [result, allWhole ? parseInt(total) : parseFloat(total.toFixed(6))];
+      return [
+        result,
+        allWhole ? parseInt(total) : parseFloat(total.toFixed(6)),
+      ];
     }
     return [null, 0];
-  };
-
-  const numOfSpecimen = (specimens) => {
-    if (!specimens) return 0;
-    let count = 0;
-    let hasFloat = false;
-
-    const counts = [
-      cleanValue(specimens.male_adult),
-      cleanValue(specimens.female_adult),
-      cleanValue(specimens.male_juvenile),
-      cleanValue(specimens.female_juvenile),
-      cleanValue(specimens.undefined_adult),
-      cleanValue(specimens.undefined_juvenile),
-    ];
-
-    counts.forEach((c) => {
-      if (c !== null && c !== undefined) {
-        if (Number(c) % 1 !== 0) {
-          hasFloat = true;
-        }
-        count += Number(c);
-      }
-    });
-
-    return hasFloat ? count : Math.round(count);
   };
 
   const reevalCoordinate = (coord) => {
@@ -256,7 +236,9 @@ const EditRecordPage = () => {
     }
 
     // Degree + minutes + seconds: 56°51'10"
-    const degMinSecMatch = str.match(/^(\d{1,3})°\s*(\d{1,2})'\s*(\d{1,2})(?:["″])?$/);
+    const degMinSecMatch = str.match(
+      /^(\d{1,3})°\s*(\d{1,2})'\s*(\d{1,2})(?:["″])?$/,
+    );
     if (degMinSecMatch) {
       const degrees = parseInt(degMinSecMatch[1]);
       const minutes = parseInt(degMinSecMatch[2]);
@@ -281,7 +263,9 @@ const EditRecordPage = () => {
     try {
       const north = safeCoordParse(formData.north);
       const east = safeCoordParse(formData.east);
-      const [specimenDetails, specimenCount] = specimenParse(formData.specimens);
+      const [specimenDetails, specimenCount] = specimenParse(
+        formData.specimens,
+      );
 
       const updatedRecord = {
         hash,
@@ -343,7 +327,11 @@ const EditRecordPage = () => {
   return (
     <div className="edit-record-container">
       <FormProvider key={hash} initialState={initialFormState} isEditMode>
-        <FormModePage isEditMode onSubmit={handleSubmit} onCancel={() => navigate("/profile")} />
+        <FormModePage
+          isEditMode
+          onSubmit={handleSubmit}
+          onCancel={() => navigate("/profile")}
+        />
       </FormProvider>
       <ToastContainer />
     </div>

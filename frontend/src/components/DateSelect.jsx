@@ -6,7 +6,7 @@ const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const DateSelect = ({ disabled }) => {
   const { t } = useTranslation("dateSelect");
-  const { formState, setFormState, pinnedSections } = useFormContext();
+  const { formState, setFormState } = useFormContext();
 
   const initialPrecision = formState.eve_day_def
     ? "exact"
@@ -35,7 +35,10 @@ const DateSelect = ({ disabled }) => {
 
     setFormState((prev) => ({
       ...prev,
-      [name]: name.includes("year") || name.includes("month") ? Number(value) || "" : value,
+      [name]:
+        name.includes("year") || name.includes("month")
+          ? Number(value) || ""
+          : value,
     }));
   };
 
@@ -65,7 +68,10 @@ const DateSelect = ({ disabled }) => {
           onChange={(e) => {
             setPrecision(e.target.value);
             resetForm();
-            setFormState((prev) => ({ ...prev, eve_day_def: e.target.value === "exact" }));
+            setFormState((prev) => ({
+              ...prev,
+              eve_day_def: e.target.value === "exact",
+            }));
           }}
           className="form-control"
         >
@@ -106,7 +112,11 @@ const DateSelect = ({ disabled }) => {
               </option>
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i + 1} value={i + 1}>
-                  {capitalize(new Date(0, i).toLocaleString(t("locale"), { month: "long" }))}
+                  {capitalize(
+                    new Date(0, i).toLocaleString(t("locale"), {
+                      month: "long",
+                    }),
+                  )}
                 </option>
               ))}
             </select>
@@ -172,7 +182,11 @@ const DateSelect = ({ disabled }) => {
                   </option>
                   {Array.from({ length: 12 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>
-                      {capitalize(new Date(0, i).toLocaleString(t("locale"), { month: "long" }))}
+                      {capitalize(
+                        new Date(0, i).toLocaleString(t("locale"), {
+                          month: "long",
+                        }),
+                      )}
                     </option>
                   ))}
                 </select>

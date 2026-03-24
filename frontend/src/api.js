@@ -1,8 +1,7 @@
 import axios from "axios";
-import i18n from "i18next";
 
 const api = axios.create({
-  // baseURL: "http://localhost:5001",
+  baseURL: "http://localhost:8000",
   withCredentials: true,
 });
 
@@ -63,7 +62,9 @@ const apiService = {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(error.response.data.message || t("errors.stats.general_error"));
+        throw new Error(
+          error.response.data.message || t("errors.stats.general_error"),
+        );
       } else if (error.request) {
         throw new Error(t("errors.common.server_unavailable"));
       } else {
@@ -72,17 +73,14 @@ const apiService = {
     }
   },
 
+  // FIXME: error handling
   refreshToken: async () => {
-    try {
-      if (!refreshTokenPromise) {
-        refreshTokenPromise = api.post("/api/refresh_token").finally(() => {
-          refreshTokenPromise = null;
-        });
-      }
-      return await refreshTokenPromise;
-    } catch (error) {
-      throw error;
+    if (!refreshTokenPromise) {
+      refreshTokenPromise = api.post("/api/refresh_token").finally(() => {
+        refreshTokenPromise = null;
+      });
     }
+    return await refreshTokenPromise;
   },
 
   suggestTaxon: async (filters) => {
@@ -169,7 +167,9 @@ const apiService = {
       await api.post("/api/support", data);
     } catch (error) {
       if (error.response) {
-        throw new Error(error.response.data.message || t("errors.support.request_error"));
+        throw new Error(
+          error.response.data.message || t("errors.support.request_error"),
+        );
       } else if (error.request) {
         throw new Error(t("errors.common.server_unavailable"));
       } else {
@@ -184,7 +184,9 @@ const apiService = {
       return response;
     } catch (error) {
       if (error.response) {
-        throw new Error(error.response.data.message || t("errors.support.request_error"));
+        throw new Error(
+          error.response.data.message || t("errors.support.request_error"),
+        );
       } else if (error.request) {
         throw new Error(t("errors.common.server_unavailable"));
       } else {
@@ -202,7 +204,7 @@ const apiService = {
         responseType: "blob",
       });
       return URL.createObjectURL(response.data);
-    } catch (error) {
+    } catch {
       return null;
     }
   },
@@ -265,7 +267,10 @@ const apiService = {
 
   editRecord: async (hash, recordData, t) => {
     try {
-      const response = await api.post("/api/edit_record", { hash, ...recordData });
+      const response = await api.post("/api/edit_record", {
+        hash,
+        ...recordData,
+      });
       return response.data;
     } catch (error) {
       if (error.response?.status === 400) {

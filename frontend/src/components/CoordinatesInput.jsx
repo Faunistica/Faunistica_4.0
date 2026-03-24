@@ -1,11 +1,12 @@
 import { useFormContext } from "../pages/FormContext";
 import { useTranslation } from "react-i18next";
-import React, { useState } from "react";
+import { useState } from "react";
 import { apiService } from "../api";
 
-export const CoordinatesInput = ({ isDisabled, showRequired }) => {
+export const CoordinatesInput = ({ isDisabled }) => {
   const { t } = useTranslation("coordinateInput");
-  const { formState, setFormState, validationErrors, setValidationErrors } = useFormContext();
+  const { formState, setFormState, validationErrors, setValidationErrors } =
+    useFormContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -63,7 +64,9 @@ export const CoordinatesInput = ({ isDisabled, showRequired }) => {
       }
     } else if (name.startsWith("mins_")) {
       if (coordFormat === "mins") {
-        processedValue = value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+        processedValue = value
+          .replace(/[^0-9.]/g, "")
+          .replace(/(\..*)\./g, "$1");
 
         const parts = processedValue.split(".");
         if (parts[0]) parts[0] = parts[0].slice(0, 2);
@@ -168,7 +171,9 @@ export const CoordinatesInput = ({ isDisabled, showRequired }) => {
         placeholder={placeholder}
         inputMode={inputMode}
       />
-      {validationErrors?.[name] && <span className="no-data">{validationErrors[name]}</span>}
+      {validationErrors?.[name] && (
+        <span className="no-data">{validationErrors[name]}</span>
+      )}
     </div>
   );
 
@@ -193,7 +198,8 @@ export const CoordinatesInput = ({ isDisabled, showRequired }) => {
         {coordFormat === "grads" ? (
           <div className="form-group">
             <label htmlFor="grads-north">
-              {t("formats.lat")} N°<span>{validationErrors["grads_north"] ? "*" : ""}</span>
+              {t("formats.lat")} N°
+              <span>{validationErrors["grads_north"] ? "*" : ""}</span>
             </label>
             {renderInputField(
               "grads-north",
@@ -204,7 +210,8 @@ export const CoordinatesInput = ({ isDisabled, showRequired }) => {
               "",
             )}
             <label htmlFor="grads-east">
-              {t("formats.long")} E°<span>{validationErrors["grads_east"] ? "*" : ""}</span>
+              {t("formats.long")} E°
+              <span>{validationErrors["grads_east"] ? "*" : ""}</span>
             </label>
             {renderInputField(
               "grads-east",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useFormContext } from "./FormContext";
 import SpecimenForm from "../components/specimen-form/SpecimenForm";
@@ -180,13 +180,15 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
       if (!formState.secs_east) errors.secs_east = t("validation.required");
     }
 
-    Object.entries(REQUIRED_FIELDS).forEach(([section, fields]) => {
+    Object.entries(REQUIRED_FIELDS).forEach(([_section, fields]) => {
       fields.forEach((field) => {
         console.log(formState[field]);
         if (
-          ((!(typeof formState[field] === "object") || formState[field] === null) &&
+          ((!(typeof formState[field] === "object") ||
+            formState[field] === null) &&
             !formState[field]) ||
-          (typeof formState[field] === "object" && Object.keys(formState[field]).length === 0)
+          (typeof formState[field] === "object" &&
+            Object.keys(formState[field]).length === 0)
         ) {
           errors[field] = t("validation.required");
           isValid = false;
@@ -226,7 +228,6 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
     ];
 
     const savedOrder = localStorage.getItem("sectionOrder");
-    const newList = [];
     if (savedOrder) {
       const list = JSON.parse(savedOrder);
 
@@ -263,7 +264,10 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
       if (index <= 0) return prevOrder;
 
       const newOrder = [...prevOrder];
-      [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
+      [newOrder[index], newOrder[index - 1]] = [
+        newOrder[index - 1],
+        newOrder[index],
+      ];
 
       localStorage.setItem("sectionOrder", JSON.stringify(newOrder));
       return newOrder;
@@ -276,7 +280,10 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
       if (index >= prevOrder.length - 1) return prevOrder;
 
       const newOrder = [...prevOrder];
-      [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+      [newOrder[index], newOrder[index + 1]] = [
+        newOrder[index + 1],
+        newOrder[index],
+      ];
 
       localStorage.setItem("sectionOrder", JSON.stringify(newOrder));
       return newOrder;
@@ -287,7 +294,10 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error(t("validation.fill_required"), { autoClose: 3000, position: "bottom-right" });
+      toast.error(t("validation.fill_required"), {
+        autoClose: 3000,
+        position: "bottom-right",
+      });
       return;
     }
 
@@ -301,25 +311,55 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
       north = formState.grads_north + "°" + formState.mins_north + "'";
       east = formState.grads_east + "°" + formState.mins_east + "'";
     } else if (format === "secs") {
-      north = formState.grads_north + "°" + formState.mins_north + "'" + formState.secs_north + '"';
-      east = formState.grads_east + "°" + formState.mins_east + "'" + formState.secs_east + '"';
+      north =
+        formState.grads_north +
+        "°" +
+        formState.mins_north +
+        "'" +
+        formState.secs_north +
+        '"';
+      east =
+        formState.grads_east +
+        "°" +
+        formState.mins_east +
+        "'" +
+        formState.secs_east +
+        '"';
     }
 
     try {
       const recordData = {
         abu_ind_rem: formState.abu_ind_rem,
         adm_verbatim: formState.adm_verbatim,
-        begin_day: formState.begin_day || parseInt(formState.begin_date.split("-")[2]) || null,
-        begin_month: formState.begin_month || parseInt(formState.begin_date.split("-")[1]) || null,
-        begin_year: formState.begin_year || parseInt(formState.begin_date.split("-")[0]) || null,
+        begin_day:
+          formState.begin_day ||
+          parseInt(formState.begin_date.split("-")[2]) ||
+          null,
+        begin_month:
+          formState.begin_month ||
+          parseInt(formState.begin_date.split("-")[1]) ||
+          null,
+        begin_year:
+          formState.begin_year ||
+          parseInt(formState.begin_date.split("-")[0]) ||
+          null,
         biotope: formState.biotope,
         collector: formState.collector,
         country: formState.country,
         district: formState.district,
         east: east,
-        end_year: formState.end_year || parseInt(formState.end_date.split("-")[0]) || null,
-        end_month: formState.end_month || parseInt(formState.end_date.split("-")[1]) || null,
-        end_day: formState.end_day || parseInt(formState.end_date.split("-")[2]) || null,
+        end_year:
+          formState.end_year ||
+          parseInt(formState.end_date.split("-")[0]) ||
+          null,
+        end_month:
+          formState.end_month ||
+          parseInt(formState.end_date.split("-")[1]) ||
+          null,
+        end_day:
+          formState.end_day ||
+          parseInt(formState.end_date.split("-")[2]) ||
+          null,
         eve_REM: formState.eve_REM,
         family: formState.family,
         genus: formState.genus,
@@ -346,11 +386,17 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
       } else {
         await apiService.insertRecord(recordData);
         resetForm();
-        toast.success(t("toast.data_sent"), { autoClose: 3000, position: "bottom-right" });
+        toast.success(t("toast.data_sent"), {
+          autoClose: 3000,
+          position: "bottom-right",
+        });
       }
     } catch (error) {
       console.error("Error while sending data:", error);
-      toast.error(t("toast.data_fail"), { autoClose: 3000, position: "bottom-right" });
+      toast.error(t("toast.data_fail"), {
+        autoClose: 3000,
+        position: "bottom-right",
+      });
     }
   };
 
@@ -424,7 +470,10 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
             switch (sectionName) {
               case SECTION_IDS.GEOGRAPHICAL:
                 return (
-                  <div key={sectionName} className={`${getSectionClassName(sectionName)} section`}>
+                  <div
+                    key={sectionName}
+                    className={`${getSectionClassName(sectionName)} section`}
+                  >
                     <div
                       className={`section-header ${collapsedSections[sectionName] ? "collapsed" : ""}`}
                     >
@@ -433,7 +482,9 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                         isPinned={pinnedSections[sectionName] || false}
                         onPinToggle={() => pinSection(sectionName)}
                         isCollapsed={collapsedSections[sectionName]}
-                        onCollapseToggle={() => toggleCollapseSection(sectionName)}
+                        onCollapseToggle={() =>
+                          toggleCollapseSection(sectionName)
+                        }
                         onMoveUp={() => moveSectionUp(sectionName)}
                         onMoveDown={() => moveSectionDown(sectionName)}
                         isFirst={isFirst}
@@ -456,7 +507,9 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                           className={`${validationErrors.geo_origin ? "error" : ""}`}
                         >
                           {t("geo.origin")}
-                          <span>{validationErrors["geo_origin"] ? "*" : ""}</span>
+                          <span>
+                            {validationErrors["geo_origin"] ? "*" : ""}
+                          </span>
                         </label>
                         <select
                           disabled={pinnedSections[sectionName] || false}
@@ -468,16 +521,27 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                             handleInputChange(e);
                             const value = e.target.value;
                             if (value.trim().length > 0) {
-                              setValidationErrors((prev) => ({ ...prev, ["geo_origin"]: "" }));
+                              setValidationErrors((prev) => ({
+                                ...prev,
+                                ["geo_origin"]: "",
+                              }));
                             }
                           }}
                         >
-                          <option value="original">{t("geo.origins.publ")}</option>
-                          <option value="volunteer">{t("geo.origins.own")}</option>
-                          <option value="nothing">{t("geo.origins.nothing")}</option>
+                          <option value="original">
+                            {t("geo.origins.publ")}
+                          </option>
+                          <option value="volunteer">
+                            {t("geo.origins.own")}
+                          </option>
+                          <option value="nothing">
+                            {t("geo.origins.nothing")}
+                          </option>
                         </select>
                         {validationErrors.geo_origin && (
-                          <span className="error-message">{validationErrors.geo_origin}</span>
+                          <span className="error-message">
+                            {validationErrors.geo_origin}
+                          </span>
                         )}
                       </div>
 
@@ -511,7 +575,10 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
 
               case SECTION_IDS.ADMINISTRATIVE:
                 return (
-                  <div key={sectionName} className={`${getSectionClassName(sectionName)} section`}>
+                  <div
+                    key={sectionName}
+                    className={`${getSectionClassName(sectionName)} section`}
+                  >
                     <div
                       className={`section-header ${collapsedSections[sectionName] ? "collapsed" : ""}`}
                     >
@@ -520,7 +587,9 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                         isPinned={pinnedSections[sectionName] || false}
                         onPinToggle={() => pinSection(sectionName)}
                         isCollapsed={collapsedSections[sectionName]}
-                        onCollapseToggle={() => toggleCollapseSection(sectionName)}
+                        onCollapseToggle={() =>
+                          toggleCollapseSection(sectionName)
+                        }
                         onMoveUp={() => moveSectionUp(sectionName)}
                         onMoveDown={() => moveSectionDown(sectionName)}
                         isFirst={isFirst}
@@ -550,10 +619,14 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                         </div>
                       </div>
 
-                      <AdminDropdown isDisabled={pinnedSections[sectionName] || false} />
+                      <AdminDropdown
+                        isDisabled={pinnedSections[sectionName] || false}
+                      />
 
                       <div className="form-group">
-                        <label htmlFor="gathering_place">{t("adm.gathering_place")}</label>
+                        <label htmlFor="gathering_place">
+                          {t("adm.gathering_place")}
+                        </label>
                         <input
                           disabled={pinnedSections[sectionName] || false}
                           id="gathering_place"
@@ -570,7 +643,10 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
 
               case SECTION_IDS.MATERIAL:
                 return (
-                  <div key={sectionName} className={`${getSectionClassName(sectionName)} section`}>
+                  <div
+                    key={sectionName}
+                    className={`${getSectionClassName(sectionName)} section`}
+                  >
                     <div
                       className={`section-header ${collapsedSections[sectionName] ? "collapsed" : ""}`}
                     >
@@ -579,7 +655,9 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                         isPinned={pinnedSections[sectionName] || false}
                         onPinToggle={() => pinSection(sectionName)}
                         isCollapsed={collapsedSections[sectionName]}
-                        onCollapseToggle={() => toggleCollapseSection(sectionName)}
+                        onCollapseToggle={() =>
+                          toggleCollapseSection(sectionName)
+                        }
                         onMoveUp={() => moveSectionUp(sectionName)}
                         onMoveDown={() => moveSectionDown(sectionName)}
                         isFirst={isFirst}
@@ -610,7 +688,9 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                       <div className="form-group">
                         <label htmlFor="collector">
                           {t("eve.collector")}{" "}
-                          <span>{validationErrors["collector"] ? "*" : ""}</span>
+                          <span>
+                            {validationErrors["collector"] ? "*" : ""}
+                          </span>
                         </label>
                         <input
                           disabled={pinnedSections[sectionName] || false}
@@ -622,19 +702,26 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                           onChange={(e) => {
                             handleInputChange(e);
                             if (e.target.value.trim().length > 0) {
-                              setValidationErrors((prev) => ({ ...prev, ["collector"]: "" }));
+                              setValidationErrors((prev) => ({
+                                ...prev,
+                                ["collector"]: "",
+                              }));
                             }
                           }}
                         />
                         {validationErrors.collector && (
-                          <span className="no-data">{validationErrors.collector}</span>
+                          <span className="no-data">
+                            {validationErrors.collector}
+                          </span>
                         )}
                       </div>
 
                       <div className="form-group">
                         <label htmlFor="measurement_units">
                           {t("eve.units")}{" "}
-                          <span>{validationErrors["measurement_units"] ? "*" : ""}</span>
+                          <span>
+                            {validationErrors["measurement_units"] ? "*" : ""}
+                          </span>
                         </label>
                         <input
                           disabled={pinnedSections[sectionName] || false}
@@ -654,12 +741,16 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                           }}
                         />
                         {validationErrors.measurement_units && (
-                          <span className="no-data">{validationErrors.measurement_units}</span>
+                          <span className="no-data">
+                            {validationErrors.measurement_units}
+                          </span>
                         )}
                       </div>
 
                       <div className="form-group">
-                        <label htmlFor="selective_gain">{t("eve.effort")}</label>
+                        <label htmlFor="selective_gain">
+                          {t("eve.effort")}
+                        </label>
                         <input
                           disabled={pinnedSections[sectionName] || false}
                           id="selective_gain"
@@ -687,7 +778,10 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
 
               case SECTION_IDS.TAXONOMY:
                 return (
-                  <div key={sectionName} className={`${getSectionClassName(sectionName)} section`}>
+                  <div
+                    key={sectionName}
+                    className={`${getSectionClassName(sectionName)} section`}
+                  >
                     <div
                       className={`section-header ${collapsedSections[sectionName] ? "collapsed" : ""}`}
                     >
@@ -696,7 +790,9 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                         isPinned={pinnedSections[sectionName] || false}
                         onPinToggle={() => pinSection(sectionName)}
                         isCollapsed={collapsedSections[sectionName]}
-                        onCollapseToggle={() => toggleCollapseSection(sectionName)}
+                        onCollapseToggle={() =>
+                          toggleCollapseSection(sectionName)
+                        }
                         onMoveUp={() => moveSectionUp(sectionName)}
                         onMoveDown={() => moveSectionDown(sectionName)}
                         isFirst={isFirst}
@@ -723,7 +819,10 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                                 tax_sp_def: !e.target.checked,
                               }));
                               if (!e.target.checked) {
-                                setFormState((prev) => ({ ...prev, species: "" }));
+                                setFormState((prev) => ({
+                                  ...prev,
+                                  species: "",
+                                }));
                               }
                             }}
                           />
@@ -755,7 +854,9 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                         </div>
 
                         <div className="form-row">
-                          <label htmlFor="is_new_species">{t("tax.type")}</label>
+                          <label htmlFor="is_new_species">
+                            {t("tax.type")}
+                          </label>
                           <input
                             disabled={pinnedSections[sectionName] || false}
                             id="is_new_species"
@@ -781,10 +882,18 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                               value={formState.type_status ?? ""}
                               onChange={handleInputChange}
                             >
-                              <option value="holotype">{t("tax.types.holo")}</option>
-                              <option value="paratype">{t("tax.types.para")}</option>
-                              <option value="neotype">{t("tax.types.neo")}</option>
-                              <option value="other">{t("tax.types.other")}</option>
+                              <option value="holotype">
+                                {t("tax.types.holo")}
+                              </option>
+                              <option value="paratype">
+                                {t("tax.types.para")}
+                              </option>
+                              <option value="neotype">
+                                {t("tax.types.neo")}
+                              </option>
+                              <option value="other">
+                                {t("tax.types.other")}
+                              </option>
                             </select>
                           </div>
                         )}
@@ -841,10 +950,12 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                       <SpecimenForm
                         value={
                           Object.keys(formState.specimens).length > 0
-                            ? Object.entries(formState.specimens).map(([key, count]) => {
-                                const [gender, maturity] = key.split("_");
-                                return { gender, maturity, count };
-                              })
+                            ? Object.entries(formState.specimens).map(
+                                ([key, count]) => {
+                                  const [gender, maturity] = key.split("_");
+                                  return { gender, maturity, count };
+                                },
+                              )
                             : []
                         }
                         onChange={(specimens) => {
@@ -876,7 +987,10 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
                           id="comment"
                           value={formState.abu_ind_rem}
                           onChange={(e) => {
-                            setFormState({ ...formState, abu_ind_rem: e.target.value });
+                            setFormState({
+                              ...formState,
+                              abu_ind_rem: e.target.value,
+                            });
                           }}
                           style={{ width: "100%", padding: "8px" }}
                         />
@@ -893,15 +1007,25 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
         </form>
 
         {showResetModal && (
-          <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
+          <div
+            className="modal-overlay"
+            onClick={() => setShowResetModal(false)}
+          >
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <h3>{t("modal.conf_act")}</h3>
-              <p>{resetMode === "soft" ? t("modal.clear") : t("modal.obliterate")}</p>
+              <p>
+                {resetMode === "soft"
+                  ? t("modal.clear")
+                  : t("modal.obliterate")}
+              </p>
               <div className="modal-actions">
                 <button className="confirm-button" onClick={handleResetConfirm}>
                   {t("modal.conf")}
                 </button>
-                <button className="cancel-button" onClick={() => setShowResetModal(false)}>
+                <button
+                  className="cancel-button"
+                  onClick={() => setShowResetModal(false)}
+                >
                   {t("modal.canc")}
                 </button>
               </div>

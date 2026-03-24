@@ -1,19 +1,24 @@
 import { Autocomplete, TextField } from "@mui/material";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "../../pages/FormContext";
 import { apiService } from "../../api";
 import "./dropdown.css";
 
-const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, isDisabled }) => {
+const TaxonDropdown = ({ debounceTime = 300, isDisabled }) => {
   const { t } = useTranslation("adminDropdown");
-  const { formState, setFormState, validationErrors, setValidationErrors } = useFormContext();
+  const { formState, setFormState, validationErrors, setValidationErrors } =
+    useFormContext();
   const [loading, setLoading] = useState(false);
 
   const levels = [
     { name: "country", placeholder: t("placehold_cou"), heading: t("country") },
     { name: "region", placeholder: t("placehold_reg"), heading: t("region") },
-    { name: "district", placeholder: t("placehold_dis"), heading: t("district") },
+    {
+      name: "district",
+      placeholder: t("placehold_dis"),
+      heading: t("district"),
+    },
   ];
 
   const [options, setOptions] = useState({
@@ -89,22 +94,30 @@ const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, 
           className={`input-group ${validationErrors[level.name] ? "error" : ""}`}
         >
           <label htmlFor={level.name}>
-            {level.heading}:<span>{validationErrors[level.name] ? "*" : ""}</span>
+            {level.heading}:
+            <span>{validationErrors[level.name] ? "*" : ""}</span>
           </label>
           <Autocomplete
             freeSolo
             filterOptions={(x) => x}
             getOptionLabel={(option) => (option ? option.toString() : "")}
-            onChange={(event, newValue) => {
+            onChange={(_event, newValue) => {
               updateField(level.name, newValue);
               if (newValue?.length > 0) {
                 setValidationErrors((prev) => ({ ...prev, [level.name]: "" }));
               }
             }}
             onInputChange={(_, input, reason) => {
-              if (reason === "clear" || reason === "removeOption" || reason === "reset") {
+              if (
+                reason === "clear" ||
+                reason === "removeOption" ||
+                reason === "reset"
+              ) {
                 setInputValues({ ...inputValues, [level.name]: "" });
-              } else if (!options[level.name].includes(input) && level.name !== "country") {
+              } else if (
+                !options[level.name].includes(input) &&
+                level.name !== "country"
+              ) {
                 setInputValues({ ...inputValues, [level.name]: input });
                 fetchWithFilters(level.name, input);
               }
@@ -117,7 +130,11 @@ const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, 
             loading={loading}
             disabled={isDisabled}
             renderInput={(params) => (
-              <TextField {...params} placeholder={level.placeholder} size="small" />
+              <TextField
+                {...params}
+                placeholder={level.placeholder}
+                size="small"
+              />
             )}
           />
           {validationErrors?.[level.name] && (

@@ -1,6 +1,6 @@
 import "./styles/styles.css";
 import "./styles/responsive.css";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "./components/navbar/Navbar";
 import Footer from "./components/footer/Footer";
 import Home from "./pages/Home";
@@ -64,13 +64,21 @@ function App() {
       />
 
       {showLoginModal && (
-        <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} />
+        <LoginModal
+          onClose={() => setShowLoginModal(false)}
+          onLogin={handleLogin}
+        />
       )}
 
       <Routes>
         <Route
           path="/"
-          element={<Home isAuthenticated={isAuth} onLoginClick={() => setShowLoginModal(true)} />}
+          element={
+            <Home
+              isAuthenticated={isAuth}
+              onLoginClick={() => setShowLoginModal(true)}
+            />
+          }
         />
         <Route element={<PrivateRoutes auth={isAuth} loading={isLoading} />}>
           <Route path="/profile" element={<ProfilePage />} />

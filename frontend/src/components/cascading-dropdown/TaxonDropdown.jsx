@@ -1,13 +1,19 @@
 import { Autocomplete, TextField } from "@mui/material";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "../../pages/FormContext";
 import { apiService } from "../../api";
 import "./dropdown.css";
 
-const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, isDisabled }) => {
+const TaxonDropdown = ({
+  isDefined = true,
+  isInList = true,
+  debounceTime = 300,
+  isDisabled,
+}) => {
   const { t } = useTranslation("taxonDropdown");
-  const { formState, setFormState, validationErrors, setValidationErrors } = useFormContext();
+  const { formState, setFormState, validationErrors, setValidationErrors } =
+    useFormContext();
   const [loading, setLoading] = useState(false);
 
   const levels = [
@@ -71,7 +77,9 @@ const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, 
               [fieldName]: (data?.suggestions || []).filter(Boolean),
             }));
           } else {
-            const opt = [t("undefined")].concat((data?.suggestions || []).filter(Boolean));
+            const opt = [t("undefined")].concat(
+              (data?.suggestions || []).filter(Boolean),
+            );
             setOptions((prev) => ({ ...prev, [fieldName]: opt }));
           }
         } finally {
@@ -99,7 +107,10 @@ const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, 
     () =>
       debounce(async (fieldName, option) => {
         try {
-          const autofillResult = await apiService.autofillTaxon(fieldName, option);
+          const autofillResult = await apiService.autofillTaxon(
+            fieldName,
+            option,
+          );
 
           if (autofillResult.family) {
             updateField("family", autofillResult.family);
@@ -115,7 +126,11 @@ const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, 
             if (formState.genus || formState.species) {
               updateField("genus", "");
               updateField("species", "");
-              setOptions({ family: toArray(autofillResult.family), genus: [], species: [] });
+              setOptions({
+                family: toArray(autofillResult.family),
+                genus: [],
+                species: [],
+              });
             }
           } else if (fieldName === "genus") {
             if (formState.species) {
@@ -142,23 +157,31 @@ const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, 
           className={`input-group ${validationErrors[level.name] ? "error" : ""}`}
         >
           <label htmlFor={level.name}>
-            {level.heading}:<span>{validationErrors[level.name] ? "*" : ""}</span>
+            {level.heading}:
+            <span>{validationErrors[level.name] ? "*" : ""}</span>
           </label>
           {!isInList ? (
             <Autocomplete
               filterOptions={(x) => x}
-              onChange={(event, newValue) => {
+              onChange={(_event, newValue) => {
                 if (newValue) {
                   autoUpdate(level.name, newValue);
                 }
                 if (newValue?.length > 0) {
-                  setValidationErrors((prev) => ({ ...prev, [level.name]: "" }));
+                  setValidationErrors((prev) => ({
+                    ...prev,
+                    [level.name]: "",
+                  }));
                 }
                 updateField(level.name, newValue);
               }}
               getOptionLabel={(option) => (option ? option.toString() : "")}
               onInputChange={(_, input, reason) => {
-                if (reason === "clear" || reason === "removeOption" || reason === "reset") {
+                if (
+                  reason === "clear" ||
+                  reason === "removeOption" ||
+                  reason === "reset"
+                ) {
                   setInputValues({ ...inputValues, [level.name]: "" });
                 } else if (!options[level.name].includes(input)) {
                   setInputValues({ ...inputValues, [level.name]: input });
@@ -166,17 +189,27 @@ const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, 
                 }
               }}
               autoSelect={true}
-              value={formState[level.name] === "unknown" ? t("undefined") : formState[level.name]}
+              value={
+                formState[level.name] === "unknown"
+                  ? t("undefined")
+                  : formState[level.name]
+              }
               autoHighlight={true}
               id={level.name}
               options={options[level.name]}
               loading={loading}
-              disabled={level.name === "species" || isDisabled ? isDefined || isDisabled : false}
+              disabled={
+                level.name === "species" || isDisabled
+                  ? isDefined || isDisabled
+                  : false
+              }
               renderInput={(params) => (
                 <TextField
                   {...params}
                   placeholder={
-                    level.name === "species" && isDefined ? t("undefined") : level.placeholder
+                    level.name === "species" && isDefined
+                      ? t("undefined")
+                      : level.placeholder
                   }
                   size="small"
                 />
@@ -187,7 +220,11 @@ const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, 
               size="small"
               id={level.name}
               value={formState[level.name]}
-              disabled={level.name === "species" || isDisabled ? isDefined || isDisabled : false}
+              disabled={
+                level.name === "species" || isDisabled
+                  ? isDefined || isDisabled
+                  : false
+              }
               onChange={(e) => {
                 updateField(level.name, e.target.value);
               }}

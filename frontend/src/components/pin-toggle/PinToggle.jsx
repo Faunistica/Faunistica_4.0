@@ -1,4 +1,3 @@
-import React from "react";
 import "./toggleButton.css";
 
 const PinToggle = ({ isChecked = false, onChange }) => {
