@@ -7,8 +7,8 @@
 /coverage
 
 # production
-/build
-build.zip
+/dist
+dist.zip
 
 # misc
 /.idea

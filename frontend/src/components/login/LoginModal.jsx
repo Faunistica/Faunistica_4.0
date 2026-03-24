@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ReactComponent as QrCode } from "../../img/qr-code.svg";
+import QrCode from "../../img/qr-code.svg?react";
 import { useNavigate } from "react-router-dom";
 import "./LoginModal.css";
 import { apiService } from "../../api";
