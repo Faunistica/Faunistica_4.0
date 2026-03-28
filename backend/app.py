@@ -32,7 +32,7 @@ from back_api import (
 )
 from back_api.rate_limiter import RateLimitExceeded, limiter, rate_limit_handler
 from bot.bot_main import bot_start
-from config.config import LOGS_DIR
+from config.config import LOG_LEVEL, LOGS_DIR
 from database.database import ping_db
 
 logs_dir = LOGS_DIR
@@ -59,7 +59,7 @@ error_handler.setLevel(logging.ERROR)
 error_handler.setFormatter(logging.Formatter(log_format))
 
 logging.basicConfig(
-    level=logging.WARNING,
+    level=getattr(logging, LOG_LEVEL, logging.WARNING),
     handlers=[app_handler, error_handler],
     format=log_format,
     force=True,

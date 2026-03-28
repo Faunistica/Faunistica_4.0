@@ -32,3 +32,7 @@ ACCESS_TOKEN_EXPIRE = int(os.getenv("ACCESS_TOKEN_EXPIRE")) * 60
 REFRESH_TOKEN_EXPIRE = int(os.getenv("REFRESH_TOKEN_EXPIRE")) * 24 * 60 * 60
 
 ENCRYPT_SECRET = os.getenv("ENCRYPT_SECRET")
+
+LOG_LEVEL = os.getenv("LOG_LEVEL", "WARNING")
+
+DB_ECHO = os.getenv("DB_ECHO", "false").lower() in ("true", "1", "yes")
