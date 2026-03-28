@@ -4,10 +4,10 @@
 
 ## ⚙️ Функционал
 
-[Faunistica 3.0](https://faunistica.ru/): Система обработки научных литературных источников и регистрации на этой основе данных о находках пауков.  
+[Faunistica 3.0](https://faunistica.ru/): Система обработки научных литературных источников и регистрации на этой основе данных о находках пауков.\
 Программа предназначена для извлечения и структурирования данных из научных публикаций, содержащих упоминания о находках экземпляров пауков, и последующего формирования стандартизированной базы данных. Она ориентирована на использование биологами-исследователями и волонтерами для систематизации сведений об распространении пауков, что способствует углубленному изучению экологии и биогеографии.
 
-## </> Инструкция по запуску backend
+## \</> Инструкция по запуску backend
 
 ### Подготовка
 
@@ -35,49 +35,6 @@ REFRESH_TOKEN_EXPIRE = *YOUR_REFRESH_TOKEN_EXPIRE* #Время жизни REFRES
 ENCRYPT_SECRET = *YOUR_ENCRYPT_SECRET* #Необохдим для шифрования пароля, генерируется с помощью AES или Fernet
 ```
 
-Далее нужно создать файл "hash.py" в директории "backend/database/hash.py", который будет шифровать и хэшировать данные:
-
-```python
-'''
-
-Ваш метод хэширования
-
-'''
-
-def register_user(user_pass):
-    db_hash = ph.hash(user_pass)
-    return db_hash
-
-
-def check_pass(user_pass, db_hash):
-    try:
-        ph.verify(db_hash, user_pass)
-        return True
-    except VerifyMismatchError:
-        return False
-
-
-def derive_user_key(user_id: int) -> bytes:
-    key = ...
-    # Используем user_id для обфускации
-    return ...(key)
-
-
-def encrypt_id(some_id: int, user_id: int) -> str:  
-    key = derive_user_key(user_id)  
-    # *Ваш метод шифрования*  
-    return token.decode()
-
-
-def decrypt_id(token: str, user_id: int) -> int | None:  
-    key = derive_user_key(user_id)  
-    # *Ваш метод дешифрования*  
-    try:   
-        return int(decrypted.decode())  
-    except InvalidToken:  
-	return None
-```
-
 > Подробнее о JWT токенах и алгоритмах можно прочитать [здесь](https://pyjwt.readthedocs.io/en/latest/usage.html)
 
 ______________________________________________________________________
@@ -95,9 +52,9 @@ docker-compose up -d --build
 
 ______________________________________________________________________
 
->Если у вас не появились ошибки в терминале, отобразилась база данных в PGadmin и чат-бот в Telegram функционирут, то поздравляю! Полдела сделано, backend запущен!
+> Если у вас не появились ошибки в терминале, отобразилась база данных в PGadmin и чат-бот в Telegram функционирут, то поздравляю! Полдела сделано, backend запущен!
 
-## </> Инструкция по запуску frontend
+## \</> Инструкция по запуску frontend
 
 > ❗️ Перед началом убедитесь, что у вас установлен Node.js, если нет, то его можно установить [здесь](https://nodejs.org/en/download).
 
