@@ -33,6 +33,7 @@ from back_api import (
 from back_api.rate_limiter import RateLimitExceeded, limiter, rate_limit_handler
 from bot.bot_main import bot_start
 from config.config import LOGS_DIR
+from database.database import ping_db
 
 logs_dir = LOGS_DIR
 logs_dir.mkdir(exist_ok=True)
@@ -81,6 +82,14 @@ for lib_name, level in third_party_libs.items():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger = logging.getLogger(__name__)
+
+    if not await ping_db():
+        logger.critical("Database is not available. Application cannot start.")
+        raise RuntimeError("Database connection failed")
+
+    logger.info("Database connection verified")
+
     asyncio.create_task(bot_start())
     yield
 
