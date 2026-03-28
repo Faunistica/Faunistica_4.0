@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
@@ -14,35 +15,37 @@ logger = logging.getLogger(__name__)
 
 
 async def bot_start() -> None:
+    global bot_instance, dp_instance
+
+    session = None
+    if config.BOT_PROXY:
+        session = AiohttpSession(proxy=config.BOT_PROXY)
+        logger.info(f"Bot session configured with proxy: {config.BOT_PROXY}")
+
+    bot_instance = Bot(token=config.BOT_TOKEN, session=session)
+    dp_instance = Dispatcher(storage=MemoryStorage())
+
     try:
-        session = None
-        if config.BOT_PROXY:
-            session = AiohttpSession(proxy=config.BOT_PROXY)
-            logger.info(f"Bot session configured with proxy: {config.BOT_PROXY}")
-
-        bot = Bot(token=config.BOT_TOKEN, session=session)
-        dp = Dispatcher(storage=MemoryStorage())
-
-        try:
-            await init_db()
-        except Exception as db_error:
-            logger.error(f"Database initialization failed: {db_error}", exc_info=True)
-            raise
-
-        handlers = Handlers(bot, get_session)
-        dp.include_router(handlers.router)
-
-        try:
-            await bot(DeleteWebhook(drop_pending_updates=True))
-            await dp.start_polling(bot)
-        except TelegramAPIError as api_error:
-            logger.error(f"Telegram API error: {api_error}", exc_info=True)
-            raise
-        except Exception as polling_error:
-            logger.error(f"Polling failed: {polling_error}", exc_info=True)
-            raise
-        finally:
-            await bot.session.close()
-    except Exception as global_error:
-        logger.critical(f"Bot crashed: {global_error}", exc_info=True)
+        await init_db()
+    except Exception as db_error:
+        logger.error(f"Database initialization failed: {db_error}", exc_info=True)
+        await bot_instance.session.close()
         raise
+
+    handlers = Handlers(bot_instance, get_session)
+    dp_instance.include_router(handlers.router)
+
+    try:
+        await bot_instance(DeleteWebhook(drop_pending_updates=True))
+        logger.info("Bot started polling")
+        await dp_instance.start_polling(bot_instance, handle_signals=False)
+    except asyncio.CancelledError:
+        logger.info("Shutting down bot...")
+    except TelegramAPIError as api_error:
+        logger.error(f"Telegram API error: {api_error}", exc_info=True)
+        raise
+    except Exception as polling_error:
+        logger.error(f"Polling failed: {polling_error}", exc_info=True)
+    finally:
+        logger.info("Closing bot session...")
+        await bot_instance.session.close()

@@ -4,7 +4,11 @@ from sqlalchemy import text
 
 from config.config import DB_ECHO, DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 
+import logging
+
 from database.models import Base
+
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = (
     f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
@@ -30,5 +34,6 @@ async def ping_db() -> bool:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return False

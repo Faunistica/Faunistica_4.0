@@ -84,14 +84,20 @@ for lib_name, level in third_party_libs.items():
 async def lifespan(app: FastAPI):
     logger = logging.getLogger(__name__)
 
+    bot_task = asyncio.create_task(bot_start())
+
     if not await ping_db():
         logger.critical("Database is not available. Application cannot start.")
         raise RuntimeError("Database connection failed")
 
     logger.info("Database connection verified")
 
-    asyncio.create_task(bot_start())
-    yield
+    try:
+        yield
+    finally:
+        logger.info("Shutting down bot...")
+        bot_task.cancel()
+        await bot_task
 
 
 app = FastAPI(lifespan=lifespan)
