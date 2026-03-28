@@ -9,44 +9,34 @@
 
 ## </> Инструкция по запуску backend
 
-### Подготовка:
+### Подготовка
 
 Перед запуском в корневой папке backend необходимо создать файл ".env", в котором будет находится переменное окружение для будущей работы проекта.
 
 Заполнение ".env":
-```
-BOT_TOKEN = *YOUR_BOT_TOKEN* #Токен вашего чат-бота в Telegram
-ADMIN_CHAT_ID = *YOUR_ADMIN_CHAT_ID* #ID телеграм-чата, в котором находится администрация тех.поддержки
+
+```sh
+BOT_TOKEN = *YOUR_BOT_TOKEN* # Токен вашего чат-бота в Telegram
+ADMIN_CHAT_ID = *YOUR_ADMIN_CHAT_ID* # ID телеграм-чата, в котором находится администрация тех.поддержки
 
 # Данные необходимые для базы данных PostgreSQL
-DB_NAME = *YOUR_DB_NAME* 
+DB_NAME = *YOUR_DB_NAME*
 DB_HOST = *YOUR_DB_HOST*
 DB_PORT = *YOUR_DB_PORT*
 DB_USER = *YOUR_DB_USER*
 DB_PASSWORD = *YOUR_DB_PASSWORD*
 
-POSTGRES_USER = *YOUR_POSTGRES_USER*
-POSTGRES_PASS = *YOUR_POSTGRES_PASS*
-PGADMIN_DEFAULT_EMAIL = *YOUR_PGADMIN_DEFAULT_EMAIL*
-PGADMIN_DEFAULT_PASSWORD=*YOUR_PGADMIN_DEFAULT_PASSWORD*
-
 # Ключи для генерации JWT токенов
-PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
-*private key here*
------END PRIVATE KEY-----"
+JWT_SECRET = *YOUR_JWT_SECRET* # Секрет для HS256. Сгенерировать: python -c "import secrets; print(secrets.token_urlsafe(32))"
 
-PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
-*public key here*
------END PUBLIC KEY-----"
-
-ALGORITHM = *YOUR_ALGORITHM* #Название алгоритма для генерации JWT токенов
 ACCESS_TOKEN_EXPIRE = *YOUR_ACCESS_TOKEN_EXPIRE* #Время жизни ACCESS токена в МИНУТАХ (лучше устанавливать число в диапозоне от 15 до 30)
 REFRESH_TOKEN_EXPIRE = *YOUR_REFRESH_TOKEN_EXPIRE* #Время жизни REFRESH токена в ДНЯХ (лучше устанавливать число в диапозоне от 7 до 30)
 
 ENCRYPT_SECRET = *YOUR_ENCRYPT_SECRET* #Необохдим для шифрования пароля, генерируется с помощью AES или Fernet
 ```
 
-Далее нужно создать файл "hash.py" в директории "../database/hash.py", который будет шифровать и хэшировать данные:
+Далее нужно создать файл "hash.py" в директории "backend/database/hash.py", который будет шифровать и хэшировать данные:
+
 ```python
 '''
 
@@ -87,21 +77,23 @@ def decrypt_id(token: str, user_id: int) -> int | None:
     except InvalidToken:  
 	return None
 ```
-> Подробнее о JWT токенах и алгоритмах можно прочитать [здесь](https://pyjwt.readthedocs.io/en/latest/usage.html)
----
 
-### Запуск:
+> Подробнее о JWT токенах и алгоритмах можно прочитать [здесь](https://pyjwt.readthedocs.io/en/latest/usage.html)
+
+______________________________________________________________________
+
+### Запуск
 
 > Убедитесь, что у вас установлен Docker и Docker Compose.
 > Если нет, то [здесь](https://docs.docker.com/compose/install/) ссылка на скачивание.
 
 В корневой папке backend через терминал прописываем:
 
-`chmod +x wait-for-postgres.sh init.sh`
+```sh
+docker-compose up -d --build
+```
 
-`docker-compose up -d --build`
-
----
+______________________________________________________________________
 
 >Если у вас не появились ошибки в терминале, отобразилась база данных в PGadmin и чат-бот в Telegram функционирут, то поздравляю! Полдела сделано, backend запущен!
 
@@ -132,6 +124,7 @@ def decrypt_id(token: str, user_id: int) -> int | None:
 
 Далее перенесите содержимое папки build на сервер.
 После создайте конфигурационный файл nginx:
+
 ```
 server {
     listen 80;
@@ -187,11 +180,14 @@ server {
 
 После сохранения перезапустите nginx (`sudo systemctl restart nginx`) и если все сделано правильно, то в браузере откроется сайт - победа!
 
----
+______________________________________________________________________
 
 ## ✍🏻 Дополнительная информация
+
 ### Telegram бот
+
 В Telegram боте есть две команды, недоступные для обычных пользователей.
+
 - `/reply` (позволяет ответить на обращение пользователя в поддержку)
 - `/logs` (позволяет получить лог-файлы с серверной части)
 
@@ -202,10 +198,10 @@ server {
 Для использования команды `/logs` нужно прописать команду и через пробел указать дату, за которую необходимо получить лог-файлы. Дата указывается в формате **YYYY-MM-DD**.
 ❗️ Если вам нужно получить лог-файлы за сегодняшний день, можно вместо даты написать слово "сегодня". В случае, если за указанную дату лог-файлы не будут найдены, бот пришлет список доступных дат, за которые можно запросить лог-файлы.
 
----
+______________________________________________________________________
 
 С ❤️ команда Rock & Stone, 2025
 
----
+______________________________________________________________________
 
 Здесь могла быть ваша реклама :)

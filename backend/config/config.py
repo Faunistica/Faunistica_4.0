@@ -21,11 +21,9 @@ DB_USER = os.getenv("DB_USER")
 
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
-PRIVATE_KEY = os.getenv("PRIVATE_KEY")
+JWT_SECRET = os.getenv("JWT_SECRET")
 
-PUBLIC_KEY = os.getenv("PUBLIC_KEY")
-
-ALGORITHM = os.getenv("ALGORITHM")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 ACCESS_TOKEN_EXPIRE = int(os.getenv("ACCESS_TOKEN_EXPIRE")) * 60
 

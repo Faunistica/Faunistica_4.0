@@ -7,8 +7,7 @@ from jose import ExpiredSignatureError, JWTError, jwt
 from config.config import (
     ACCESS_TOKEN_EXPIRE,
     ALGORITHM,
-    PRIVATE_KEY,
-    PUBLIC_KEY,
+    JWT_SECRET,
     REFRESH_TOKEN_EXPIRE,
 )
 
@@ -18,18 +17,18 @@ logger = logging.getLogger(__name__)
 def create_access_token(data: dict) -> str:
     expires = datetime.now(UTC) + timedelta(seconds=ACCESS_TOKEN_EXPIRE)
     data.update({"exp": expires, "type": "access"})
-    return jwt.encode(data, PRIVATE_KEY, algorithm=ALGORITHM)
+    return jwt.encode(data, JWT_SECRET, algorithm=ALGORITHM)
 
 
 def create_refresh_token(data: dict) -> str:
     expires = datetime.now(UTC) + timedelta(seconds=REFRESH_TOKEN_EXPIRE)
     data.update({"exp": expires, "type": "refresh"})
-    return jwt.encode(data, PRIVATE_KEY, algorithm=ALGORITHM)
+    return jwt.encode(data, JWT_SECRET, algorithm=ALGORITHM)
 
 
 def verify_token(token: str) -> dict:
     try:
-        payload = jwt.decode(token, PUBLIC_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
         return payload
     except ExpiredSignatureError:
         logger.warning("Token expired")
