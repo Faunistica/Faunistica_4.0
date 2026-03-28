@@ -15,8 +15,12 @@ logger = logging.getLogger(__name__)
 
 async def bot_start() -> None:
     try:
-        bot = Bot(token=config.BOT_TOKEN)
+        session = None
+        if config.BOT_PROXY:
+            session = AiohttpSession(proxy=config.BOT_PROXY)
+            logger.info(f"Bot session configured with proxy: {config.BOT_PROXY}")
 
+        bot = Bot(token=config.BOT_TOKEN, session=session)
         dp = Dispatcher(storage=MemoryStorage())
 
         try:

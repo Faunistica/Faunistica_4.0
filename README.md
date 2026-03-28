@@ -17,6 +17,7 @@
 
 ```sh
 BOT_TOKEN = *YOUR_BOT_TOKEN* # Токен вашего чат-бота в Telegram
+BOT_PROXY = *YOUR_BOT_PROXY* # Опционально: socks5://user:pass@host:port или http://host:port
 ADMIN_CHAT_ID = *YOUR_ADMIN_CHAT_ID* # ID телеграм-чата, в котором находится администрация тех.поддержки
 
 # Данные необходимые для базы данных PostgreSQL

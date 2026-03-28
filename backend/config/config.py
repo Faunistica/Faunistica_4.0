@@ -9,6 +9,8 @@ LOGS_DIR = Path("logs")
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+BOT_PROXY = os.getenv("BOT_PROXY")
+
 ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID"))
 
 DB_NAME = os.getenv("DB_NAME")
