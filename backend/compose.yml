@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: "postgres_db"
+    container_name: "fau_db"
     env_file:
       - .env
     environment:
@@ -23,27 +23,13 @@ services:
   # NOTE: remove if not needed
   pgadmin:
     image: dpage/pgadmin4
-    container_name: "pgadmin"
+    container_name: "fau_pgadmin"
     env_file:
       - .env
     volumes:
       - data_pgadmin:/var/lib/pgadmin
     ports:
       - "8080:80"
-
-  app:
-    build: .
-    container_name: "python_app"
-    depends_on:
-      db:
-        condition: service_healthy
-    working_dir: /app
-    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5001"]
-    volumes:
-      - .:/app
-    ports:
-      - "5001:5001"
-    restart: always
 
 volumes:
   postgres_data:
