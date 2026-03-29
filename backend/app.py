@@ -32,7 +32,7 @@ from back_api import (
 )
 from back_api.rate_limiter import RateLimitExceeded, limiter, rate_limit_handler
 from bot.bot_main import bot_start
-from config.config import LOG_LEVEL, LOGS_DIR, ALLOWED_ORIGINS, DEV_MODE
+from config.config import ALLOWED_ORIGINS, DEV_MODE, LOG_LEVEL, LOGS_DIR
 from database.database import ping_db
 
 logs_dir = LOGS_DIR
