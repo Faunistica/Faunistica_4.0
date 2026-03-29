@@ -32,7 +32,7 @@ from back_api import (
 )
 from back_api.rate_limiter import RateLimitExceeded, limiter, rate_limit_handler
 from bot.bot_main import bot_start
-from config.config import LOG_LEVEL, LOGS_DIR
+from config.config import LOG_LEVEL, LOGS_DIR, ALLOWED_ORIGINS, DEV_MODE
 from database.database import ping_db
 
 logs_dir = LOGS_DIR
@@ -102,14 +102,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+logger = logging.getLogger(__name__)
+logger.info(f"Running in {'DEVELOPMENT' if DEV_MODE else 'PRODUCTION'} mode")
+logger.info(f"Allowed origins: {ALLOWED_ORIGINS}")
+
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 
-origins = ["*"]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization"],

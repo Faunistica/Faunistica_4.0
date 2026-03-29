@@ -922,6 +922,7 @@ dependencies = [
     { name = "pygbif" },
     { name = "python-dotenv" },
     { name = "python-jose", extra = ["cryptography"] },
+    { name = "pyyaml" },
     { name = "slowapi" },
     { name = "sqlalchemy" },
 ]
@@ -948,6 +949,7 @@ requires-dist = [
     { name = "pygbif" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "python-jose", extras = ["cryptography"] },
+    { name = "pyyaml" },
     { name = "slowapi" },
     { name = "sqlalchemy" },
 ]

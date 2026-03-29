@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import yaml
 from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
@@ -36,3 +37,18 @@ ENCRYPT_SECRET = os.getenv("ENCRYPT_SECRET")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "WARNING")
 
 DB_ECHO = os.getenv("DB_ECHO", "false").lower() in ("true", "1", "yes")
+
+config_path = Path("config.yaml")
+if config_path.exists():
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+else:
+    raise RuntimeError("cannot load config")
+
+DEV_MODE = config.get("dev_mode", {}).get("enabled", False)
+
+if DEV_MODE:
+    ALLOWED_ORIGINS = ["*"]
+else:
+    # NOTE: allowing no origns seems strange, but couldn't come up with any other sane defaults
+    ALLOWED_ORIGINS = config.get("allowed_origins", [])
