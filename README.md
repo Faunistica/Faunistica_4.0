@@ -96,6 +96,8 @@ make -C frontend format
 - `REFRESH_TOKEN_EXPIRE` - Время жизни REFRESH токена в днях
 - `LOG_LEVEL` - Уровень логирования: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 - `DB_ECHO` - Логировать SQL-запросы: `true`/`false`
+- `PGADMIN_EMAIL` - Email для входа в pgAdmin (по умолчанию: `admin@example.com`)
+- `PGADMIN_PASSWORD` - Пароль для входа в pgAdmin (по умолчанию: `admin`)
 
 ## ✍🏻 Дополнительная информация
 
