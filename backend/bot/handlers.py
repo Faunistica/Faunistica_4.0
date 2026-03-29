@@ -24,7 +24,7 @@ from database.crud import (
     log_action,
     update_user,
 )
-from database.hash import register_user
+from database.hash import get_password_hash
 
 
 class Handlers:
@@ -210,7 +210,7 @@ class Handlers:
                     )
 
                     password = generate_secure_password()
-                    hashed_password = register_user(password)
+                    hashed_password = get_password_hash(password)
 
                     await update_user(
                         session=session,

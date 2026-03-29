@@ -6,6 +6,11 @@ import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+const getPublicationImage = (year) => {
+  const index = year % 8;
+  return new URL(`../../img/publ-spider-${index}.jpg`, import.meta.url).href;
+};
+
 const ArticleInfo = ({ isEditMode = false }) => {
   const { t } = useTranslation("articleInfo");
   const { t: tApi } = useTranslation("api");
@@ -70,19 +75,17 @@ const ArticleInfo = ({ isEditMode = false }) => {
           <img
             src={
               publication?.year
-                ? require(`../../img/publ-spider-${publication?.year % 8}.jpg`)
+                ? getPublicationImage(publication.year)
                 : "https://placehold.co/120x120"
             }
             alt={t("data.alt")}
           />
           <div id="article_info_container">
             <p>
-              {t("data.field.title")}{" "}
-              {publication?.name ?? t("data.field.title")}
+              {t("data.field.title")} {publication?.name ?? t("data.field.title")}
             </p>
             <p>
-              {t("data.field.author")}{" "}
-              {publication?.author ?? t("data.field.title")}
+              {t("data.field.author")} {publication?.author ?? t("data.field.title")}
             </p>
             <p>
               {t("data.field.year")} {publication?.year ?? 2009}
@@ -90,24 +93,16 @@ const ArticleInfo = ({ isEditMode = false }) => {
             <p>
               {t("data.field.link")}{" "}
               <Link
-                to={
-                  publication?.pdf_file ??
-                  "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                }
+                to={publication?.pdf_file ?? "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
                 target="_blank"
               >
-                {publication?.pdf_file ??
-                  "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
+                {publication?.pdf_file ?? "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
               </Link>
             </p>
           </div>
         </div>
         {!isEditMode && publication && (
-          <button
-            type="button"
-            onClick={handleChangePublication}
-            className="change-publ-btn"
-          >
+          <button type="button" onClick={handleChangePublication} className="change-publ-btn">
             {t("button")}
           </button>
         )}

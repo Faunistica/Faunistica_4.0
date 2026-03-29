@@ -5,8 +5,8 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from .schemas import GeoSearchRequest, GeoSearchResponse
-from .token import get_current_user
+from back_api.schemas import GeoSearchRequest, GeoSearchResponse
+from back_api.token import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

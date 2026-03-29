@@ -5,8 +5,7 @@ from geopy.exc import GeocoderTimedOut
 from geopy.geocoders import Nominatim
 
 from back_api.schemas import GetLocationRequest, GetLocationResponse
-
-from .token import get_current_user
+from back_api.token import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

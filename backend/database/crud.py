@@ -9,8 +9,8 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from .hash import check_pass, encrypt_id
-from .models import Action, Publ, Record, User
+from database.hash import check_password_hash, encrypt_id
+from database.models import Action, Publ, Record, User
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ async def is_pass_correct(session: AsyncSession, user_id: int, user_pass: str) -
     stmt = select(User.hash).where(User.id == user_id)
     result = await session.execute(stmt)
     user_hash = result.scalar_one_or_none()
-    return check_pass(user_pass, user_hash)
+    return check_password_hash(user_pass, user_hash)
 
 
 async def get_user(session: AsyncSession, user_id: int):

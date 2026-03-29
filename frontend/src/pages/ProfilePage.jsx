@@ -120,8 +120,7 @@ const ProfilePage = () => {
           correctRecords: per_stats.data[2].rec_ok || 0,
           checkRatio: per_stats.data[2].check_ratio || 0,
           speciesCount: per_stats.data[2].species_count || 0,
-          mostCommonSpecies:
-            per_stats.data[2].most_common_species || t("errors.MVSpecies"),
+          mostCommonSpecies: per_stats.data[2].most_common_species || t("errors.MVSpecies"),
         },
         records: Array.isArray(per_stats.data[3])
           ? per_stats.data[3]
@@ -250,9 +249,7 @@ const ProfilePage = () => {
             {profile.avatar ? (
               <img src={profile.avatar} alt={t("user.pfp")} />
             ) : (
-              <div className="avatar-fallback">
-                {profile.username.charAt(0).toUpperCase()}
-              </div>
+              <div className="avatar-fallback">{profile.username.charAt(0).toUpperCase()}</div>
             )}
           </div>
           <h2 className="profile-name">{profile.username}</h2>
@@ -261,9 +258,7 @@ const ProfilePage = () => {
 
         <div className="quick-stats">
           <div className="stat-item">
-            <div className="stat-number">
-              {profile.stats.processedPublications}
-            </div>
+            <div className="stat-number">{profile.stats.processedPublications}</div>
             <div className="stat-label">{t("summary.publ_processed")}</div>
           </div>
           <div className="stat-item">
@@ -282,32 +277,22 @@ const ProfilePage = () => {
               disabled={downloadStatus.loading || profile.records.length === 0}
               className="download-records-button"
             >
-              {downloadStatus.loading
-                ? t("download.downloading")
-                : t("download.button")}
+              {downloadStatus.loading ? t("download.downloading") : t("download.button")}
             </button>
           </div>
 
-          {downloadStatus.error && (
-            <div className="download-error">{downloadStatus.error}</div>
-          )}
+          {downloadStatus.error && <div className="download-error">{downloadStatus.error}</div>}
           {downloadStatus.success && (
             <div className="download-success">{t("download.success")}</div>
           )}
 
-          {actionStatus.error && (
-            <div className="action-error">{actionStatus.error}</div>
-          )}
-          {actionStatus.success && (
-            <div className="action-success">{actionStatus.success}</div>
-          )}
+          {actionStatus.error && <div className="action-error">{actionStatus.error}</div>}
+          {actionStatus.success && <div className="action-success">{actionStatus.success}</div>}
 
           <div className="stats-grid">
             <div className="stat-card">
               <h3>{t("summary.publ_processed")}</h3>
-              <div className="stat-value">
-                {profile.stats.processedPublications}
-              </div>
+              <div className="stat-value">{profile.stats.processedPublications}</div>
             </div>
 
             <div className="stat-card">
@@ -317,9 +302,7 @@ const ProfilePage = () => {
 
             <div className="stat-card">
               <h3>{t("summary.check_coef")}</h3>
-              <div className="stat-value">
-                {profile.stats.checkRatio.toFixed(2)}
-              </div>
+              <div className="stat-value">{profile.stats.checkRatio.toFixed(2)}</div>
             </div>
 
             <div className="stat-card">
@@ -344,9 +327,8 @@ const ProfilePage = () => {
           {profile.records.length > 0 ? (
             <div className="records-table-container">
               <div className="table-info">
-                {t("table.displayed")} {sortedRecords.length}{" "}
-                {t("table.out_of")} {profile.records.length}{" "}
-                {t("table.records")}
+                {t("table.displayed")} {sortedRecords.length} {t("table.out_of")}{" "}
+                {profile.records.length} {t("table.records")}
               </div>
               <table className="records-table">
                 <thead>

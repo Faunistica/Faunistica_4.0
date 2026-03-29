@@ -12,11 +12,7 @@ const Footer = () => {
       </div>
       <div className="social-media">
         <a href="https://vk.com/data_web">
-          <img
-            src={vkIcon}
-            alt={t("alt.logo1")}
-            className="social-media-logo"
-          />
+          <img src={vkIcon} alt={t("alt.logo1")} className="social-media-logo" />
           <p>{t("logo1")}</p>
         </a>
       </div>
