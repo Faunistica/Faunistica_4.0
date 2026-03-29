@@ -268,7 +268,7 @@ const apiService = {
       return response.data;
     } catch (error) {
       if (error.response?.status === 400) {
-        Error(t("errors.records.invalid_token"));
+        throw new Error(t("errors.records.invalid_token"));
       }
       if (error.response?.status === 404) {
         throw new Error(t("errors.records.not_found_or_no_access"));
