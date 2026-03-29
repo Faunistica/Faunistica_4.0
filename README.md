@@ -15,6 +15,7 @@
 - [Python 3.11+](https://www.python.org/)
 - [uv](https://github.com/astral-sh/uv) - Менеджер пакетов Python
 - [Node.js 18+](https://nodejs.org/)
+- [pnpm](https://pnpm.io)
 - [Git](https://git-scm.com)
 - make - опционально, без него запускайте линтеры вручную
 
@@ -46,8 +47,8 @@ make run # или fastapi dev в виртуальном окружении
 
 ```bash
 cd frontend
-npm install
-npm start
+pnpm install
+pnpm dev
 ```
 
 ### Проверка кода
