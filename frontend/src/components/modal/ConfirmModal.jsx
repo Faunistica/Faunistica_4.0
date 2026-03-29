@@ -20,13 +20,7 @@ export const Modal = ({ isOpen, onClose, children, type = "info" }) => {
   );
 };
 
-export const ConfirmationModal = ({
-  isOpen,
-  onConfirm,
-  onCancel,
-  title,
-  message,
-}) => {
+export const ConfirmationModal = ({ isOpen, onConfirm, onCancel, title, message }) => {
   const { t } = useTranslation("confirmModal");
   if (!isOpen) {
     return null;

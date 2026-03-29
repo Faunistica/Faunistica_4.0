@@ -16,11 +16,7 @@ const Home = ({ isAuthenticated, onLoginClick }) => {
         <div className="main-container">
           <section className="hero">
             <div className="hero-image">
-              <img
-                src={spider}
-                alt={t("hero.spider_alt")}
-                className="spider-image"
-              />
+              <img src={spider} alt={t("hero.spider_alt")} className="spider-image" />
               <div className="hero-text">
                 <h1>{t("hero.title")}</h1>
                 {isAuthenticated ? (
@@ -56,11 +52,7 @@ const Home = ({ isAuthenticated, onLoginClick }) => {
 
           <section id="volunteer-info-container">
             <div id="volunteer-info">
-              <img
-                src={spidey}
-                id="volunteer-spider"
-                alt={t("volunteer.spider_alt")}
-              />
+              <img src={spidey} id="volunteer-spider" alt={t("volunteer.spider_alt")} />
 
               <div id="volunteer-info-text">
                 <h2>{t("volunteer.title")}</h2>
@@ -79,8 +71,7 @@ const Home = ({ isAuthenticated, onLoginClick }) => {
                 <span>1</span>
                 <p>
                   <Trans i18nKey="how_to_help.step1" t={t}>
-                    Register via our{" "}
-                    <Link to="https://t.me/FaunisticaV3Bot">telegram bot</Link>
+                    Register via our <Link to="https://t.me/FaunisticaV3Bot">telegram bot</Link>
                   </Trans>
                 </p>
               </div>
@@ -88,8 +79,7 @@ const Home = ({ isAuthenticated, onLoginClick }) => {
                 <span>2</span>
                 <p>
                   <Trans i18nKey="how_to_help.step2" t={t}>
-                    Carefully study the{" "}
-                    <NavLink to="/instruction">instructions</NavLink>
+                    Carefully study the <NavLink to="/instruction">instructions</NavLink>
                   </Trans>
                 </p>
               </div>

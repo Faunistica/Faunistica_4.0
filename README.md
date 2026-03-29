@@ -1,150 +1,101 @@
-# Проект Faunistica_3.0
+# Проект Faunistica_4.0
 
 Проект предназначен для доработки сервиса [Faunistica 2.0](https://sozontov.cc/faunistica_2.0/).
 
-## ⚙️ Функционал
+## Функционал
 
-[Faunistica 3.0](https://faunistica.ru/): Система обработки научных литературных источников и регистрации на этой основе данных о находках пауков.\
+[Faunistica 4.0](https://faunistica.ru/): Система обработки научных литературных источников и регистрации на этой основе данных о находках пауков.\
 Программа предназначена для извлечения и структурирования данных из научных публикаций, содержащих упоминания о находках экземпляров пауков, и последующего формирования стандартизированной базы данных. Она ориентирована на использование биологами-исследователями и волонтерами для систематизации сведений об распространении пауков, что способствует углубленному изучению экологии и биогеографии.
 
-## \</> Инструкция по запуску backend
+## Инструкция для разработчиков
 
-### Подготовка
+### Требуемые инструменты
 
-Перед запуском в корневой папке backend необходимо создать файл ".env", в котором будет находится переменное окружение для будущей работы проекта.
-
-Заполнение ".env":
-
-```sh
-BOT_TOKEN = *YOUR_BOT_TOKEN* # Токен вашего чат-бота в Telegram
-BOT_PROXY = *YOUR_BOT_PROXY* # Опционально: socks5://user:pass@host:port или http://host:port
-ADMIN_CHAT_ID = *YOUR_ADMIN_CHAT_ID* # ID телеграм-чата, в котором находится администрация тех.поддержки
-
-# Данные необходимые для базы данных PostgreSQL
-DB_NAME = *YOUR_DB_NAME*
-DB_HOST = *YOUR_DB_HOST*
-DB_PORT = *YOUR_DB_PORT*
-DB_USER = *YOUR_DB_USER*
-DB_PASSWORD = *YOUR_DB_PASSWORD*
-
-# Ключи для генерации JWT токенов
-JWT_SECRET = *YOUR_JWT_SECRET* # Секрет для HS256. Сгенерировать: python -c "import secrets; print(secrets.token_urlsafe(32))"
-
-ACCESS_TOKEN_EXPIRE = *YOUR_ACCESS_TOKEN_EXPIRE* #Время жизни ACCESS токена в МИНУТАХ (лучше устанавливать число в диапозоне от 15 до 30)
-REFRESH_TOKEN_EXPIRE = *YOUR_REFRESH_TOKEN_EXPIRE* #Время жизни REFRESH токена в ДНЯХ (лучше устанавливать число в диапозоне от 7 до 30)
-
-ENCRYPT_SECRET = *YOUR_ENCRYPT_SECRET* #Необохдим для шифрования пароля, генерируется с помощью AES или Fernet
-
-# Логирование
-LOG_LEVEL = WARNING # DEBUG, INFO, WARNING, ERROR, CRITICAL
-
-# База данных
-DB_ECHO = false # Логировать SQL-запросы: true или false
-```
-
-> Подробнее о JWT токенах и алгоритмах можно прочитать [здесь](https://pyjwt.readthedocs.io/en/latest/usage.html)
-
-______________________________________________________________________
-
-### Запуск
-
-> Убедитесь, что у вас установлен Docker и Docker Compose.
-> Если нет, то [здесь](https://docs.docker.com/compose/install/) ссылка на скачивание.
-
-В корневой папке backend через терминал прописываем:
-
-```sh
-docker-compose up -d --build
-```
-
-______________________________________________________________________
-
-> Если у вас не появились ошибки в терминале, отобразилась база данных в PGadmin и чат-бот в Telegram функционирут, то поздравляю! Полдела сделано, backend запущен!
-
-## \</> Инструкция по запуску frontend
-
-> ❗️ Перед началом убедитесь, что у вас установлен Node.js, если нет, то его можно установить [здесь](https://nodejs.org/en/download).
+- [Docker](https://docs.docker.com/engine/install) + [Docker Compose](https://docs.docker.com/compose/install)
+- [Python 3.11+](https://www.python.org/)
+- [uv](https://github.com/astral-sh/uv) - Менеджер пакетов Python
+- [Node.js 18+](https://nodejs.org/)
+- [Git](https://git-scm.com)
+- make - опционально, без него запускайте линтеры вручную
 
 ### Локальный запуск
 
-В корневой папке frontend через терминал прописываем:
+#### Backend
 
-`npm install i18next react-i18next i18next-http-backend i18next-browser-languagedetector --legacy-peer-deps npm install`
+```bash
+cd backend
+cp .env.example .env
+# Заполнить .env (см. секцию "Переменные окружения")
 
-`npm start`
+# Запуск БД
+docker compose up -d
 
-Если в вашем браузере открылся сайт, то вы мощно потрудились и локально запустили frontend!
-
-### Запуск на сервере
-
-> Убедитесь, что у вас установлен nginx.
-> Если нет, прочитать о нем и установить его можно [здесь](https://nginx.org/)
-
-В корневой папке frontend через терминал прописываем:
-
-`npm install`
-
-`npm run build`
-
-Далее перенесите содержимое папки build на сервер.
-После создайте конфигурационный файл nginx:
-
-```
-server {
-    listen 80;
-    server_name *YOUR_DOMAIN*;
-    return 301 https://$host$request_uri; #Редирект на HTTPS
-}
-
-server {
-    listen 443 ssl;
-    server_name *YOUR_DOMAIN*;
-
-    # SSL сертификаты
-    ssl_certificate     /..;
-    ssl_certificate_key /..;
-
-    # Настройки SSL
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:10m;
-
-    # Корневая директория фронтенда
-    root /var/www/frontend;
-    index index.html;
-
-    # Обработка статики фронтенда
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Проксирование API на бэкенд
-    location /api/ {
-        proxy_pass http:// YOUR_BACKEND_API_PORT;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        
-        # Для WebSocket (если используется)
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-
-    # Кэширование статики
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-        expires 1y;
-        access_log off;
-        add_header Cache-Control "public";
-    }
-}
+# Запуск backend сервера
+make run # или fastapi dev в виртуальном окружении
 ```
 
-После сохранения перезапустите nginx (`sudo systemctl restart nginx`) и если все сделано правильно, то в браузере откроется сайт - победа!
+После запуска проекта можно добавить тестовые данные в бдскриптом init.sh
 
-______________________________________________________________________
+```bash
+./init.sh
+```
+
+Скрипт создает пользователя с именем `DEV_USERNAME` и паролем `password`
+
+#### Frontend
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### Проверка кода
+
+В корневой директории проекта:
+
+```bash
+# Линтинг всего проекта
+make lint
+
+# Форматирование всего проекта
+make format
+```
+
+Или для отдельных частей:
+
+```bash
+make -C backend lint
+make -C backend format
+make -C frontend lint
+make -C frontend format
+```
+
+### Переменные окружения
+
+#### Обязательные
+
+- `BOT_TOKEN` - Токен Telegram бота
+- `ADMIN_CHAT_ID` - ID чата администратора. Переменная необходима, но используется\
+  только для части функционала.
+- `DB_NAME` - Имя базы данных
+- `DB_HOST` - Хост базы данных
+- `DB_PORT` - Порт базы данных
+- `DB_USER` - Пользователь БД
+- `DB_PASSWORD` - Пароль БД
+- `JWT_SECRET` - Секрет для JWT (HS256). \
+  Сгенерировать: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
+- `ENCRYPT_SECRET` - Секрет для шифрования
+
+#### Опциональные
+
+- `DEV_TG_ID` - Ваш ID в телеграме.\
+  Используется скриптом `init.sh` при создании тестового пользователя
+- `BOT_PROXY` - SOCKS5/HTTP прокси для бота
+- `ACCESS_TOKEN_EXPIRE` - Время жизни ACCESS токена в минутах
+- `REFRESH_TOKEN_EXPIRE` - Время жизни REFRESH токена в днях
+- `LOG_LEVEL` - Уровень логирования: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+- `DB_ECHO` - Логировать SQL-запросы: `true`/`false`
 
 ## ✍🏻 Дополнительная информация
 
@@ -161,11 +112,3 @@ ______________________________________________________________________
 
 Для использования команды `/logs` нужно прописать команду и через пробел указать дату, за которую необходимо получить лог-файлы. Дата указывается в формате **YYYY-MM-DD**.
 ❗️ Если вам нужно получить лог-файлы за сегодняшний день, можно вместо даты написать слово "сегодня". В случае, если за указанную дату лог-файлы не будут найдены, бот пришлет список доступных дат, за которые можно запросить лог-файлы.
-
-______________________________________________________________________
-
-С ❤️ команда Rock & Stone, 2025
-
-______________________________________________________________________
-
-Здесь могла быть ваша реклама :)

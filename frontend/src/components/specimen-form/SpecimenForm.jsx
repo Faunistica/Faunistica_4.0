@@ -46,8 +46,7 @@ const SpecimenForm = ({ value = [], onChange }) => {
     };
 
     const isDuplicate = value.some(
-      (s) =>
-        s.gender === newSpecimen.gender && s.maturity === newSpecimen.maturity,
+      (s) => s.gender === newSpecimen.gender && s.maturity === newSpecimen.maturity,
     );
 
     if (isDuplicate) {
@@ -72,9 +71,7 @@ const SpecimenForm = ({ value = [], onChange }) => {
         width: "max(70%, 500px)",
       }}
     >
-      {validationErrors.specimens && (
-        <span className="no-data">{validationErrors.specimens}</span>
-      )}
+      {validationErrors.specimens && <span className="no-data">{validationErrors.specimens}</span>}
       <div
         style={{
           display: "grid",
@@ -84,10 +81,7 @@ const SpecimenForm = ({ value = [], onChange }) => {
         }}
       >
         <div>
-          <label
-            htmlFor={"gender"}
-            style={{ display: "block", marginBottom: "5px" }}
-          >
+          <label htmlFor={"gender"} style={{ display: "block", marginBottom: "5px" }}>
             {t("sex")}
           </label>
           <select
@@ -105,10 +99,7 @@ const SpecimenForm = ({ value = [], onChange }) => {
         </div>
 
         <div>
-          <label
-            htmlFor={"maturity"}
-            style={{ display: "block", marginBottom: "5px" }}
-          >
+          <label htmlFor={"maturity"} style={{ display: "block", marginBottom: "5px" }}>
             {t("maturity")}
           </label>
           <select
@@ -126,10 +117,7 @@ const SpecimenForm = ({ value = [], onChange }) => {
         </div>
 
         <div>
-          <label
-            htmlFor={"count"}
-            style={{ display: "block", marginBottom: "5px" }}
-          >
+          <label htmlFor={"count"} style={{ display: "block", marginBottom: "5px" }}>
             {t("amount")}
           </label>
           <input

@@ -40,10 +40,8 @@ const TextModePage = () => {
       ) {
         if (result.count_males) specimens.male_adult = result.count_males;
         if (result.count_females) specimens.female_adult = result.count_females;
-        if (result.count_juv_male)
-          specimens.male_juvenile = result.count_juv_male;
-        if (result.count_juv_female)
-          specimens.female_juvenile = result.count_juv_female;
+        if (result.count_juv_male) specimens.male_juvenile = result.count_juv_male;
+        if (result.count_juv_female) specimens.female_juvenile = result.count_juv_female;
         if (result.count_juv) specimens.undefined_juvenile = result.count_juv;
       }
 
@@ -103,12 +101,9 @@ const TextModePage = () => {
           updates.district = result.district;
         if (result.gathering_place != null && !pinnedSections["administrative"])
           updates.gathering_place = result.gathering_place;
-        if (result.family != null && !pinnedSections["taxonomy"])
-          updates.family = result.family;
-        if (result.genus != null && !pinnedSections["taxonomy"])
-          updates.genus = result.genus;
-        if (result.species != null && !pinnedSections["taxonomy"])
-          updates.species = result.species;
+        if (result.family != null && !pinnedSections["taxonomy"]) updates.family = result.family;
+        if (result.genus != null && !pinnedSections["taxonomy"]) updates.genus = result.genus;
+        if (result.species != null && !pinnedSections["taxonomy"]) updates.species = result.species;
         if (result.taxonomic_notes != null && !pinnedSections["taxonomy"])
           updates.taxonomic_notes = result.taxonomic_notes;
 

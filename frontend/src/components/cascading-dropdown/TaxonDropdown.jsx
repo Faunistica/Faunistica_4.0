@@ -5,15 +5,9 @@ import { useFormContext } from "../../pages/FormContext";
 import { apiService } from "../../api";
 import "./dropdown.css";
 
-const TaxonDropdown = ({
-  isDefined = true,
-  isInList = true,
-  debounceTime = 300,
-  isDisabled,
-}) => {
+const TaxonDropdown = ({ isDefined = true, isInList = true, debounceTime = 300, isDisabled }) => {
   const { t } = useTranslation("taxonDropdown");
-  const { formState, setFormState, validationErrors, setValidationErrors } =
-    useFormContext();
+  const { formState, setFormState, validationErrors, setValidationErrors } = useFormContext();
   const [loading, setLoading] = useState(false);
 
   const levels = [
@@ -77,9 +71,7 @@ const TaxonDropdown = ({
               [fieldName]: (data?.suggestions || []).filter(Boolean),
             }));
           } else {
-            const opt = [t("undefined")].concat(
-              (data?.suggestions || []).filter(Boolean),
-            );
+            const opt = [t("undefined")].concat((data?.suggestions || []).filter(Boolean));
             setOptions((prev) => ({ ...prev, [fieldName]: opt }));
           }
         } finally {
@@ -107,10 +99,7 @@ const TaxonDropdown = ({
     () =>
       debounce(async (fieldName, option) => {
         try {
-          const autofillResult = await apiService.autofillTaxon(
-            fieldName,
-            option,
-          );
+          const autofillResult = await apiService.autofillTaxon(fieldName, option);
 
           if (autofillResult.family) {
             updateField("family", autofillResult.family);
@@ -157,8 +146,7 @@ const TaxonDropdown = ({
           className={`input-group ${validationErrors[level.name] ? "error" : ""}`}
         >
           <label htmlFor={level.name}>
-            {level.heading}:
-            <span>{validationErrors[level.name] ? "*" : ""}</span>
+            {level.heading}:<span>{validationErrors[level.name] ? "*" : ""}</span>
           </label>
           {!isInList ? (
             <Autocomplete
@@ -177,11 +165,7 @@ const TaxonDropdown = ({
               }}
               getOptionLabel={(option) => (option ? option.toString() : "")}
               onInputChange={(_, input, reason) => {
-                if (
-                  reason === "clear" ||
-                  reason === "removeOption" ||
-                  reason === "reset"
-                ) {
+                if (reason === "clear" || reason === "removeOption" || reason === "reset") {
                   setInputValues({ ...inputValues, [level.name]: "" });
                 } else if (!options[level.name].includes(input)) {
                   setInputValues({ ...inputValues, [level.name]: input });
@@ -189,27 +173,17 @@ const TaxonDropdown = ({
                 }
               }}
               autoSelect={true}
-              value={
-                formState[level.name] === "unknown"
-                  ? t("undefined")
-                  : formState[level.name]
-              }
+              value={formState[level.name] === "unknown" ? t("undefined") : formState[level.name]}
               autoHighlight={true}
               id={level.name}
               options={options[level.name]}
               loading={loading}
-              disabled={
-                level.name === "species" || isDisabled
-                  ? isDefined || isDisabled
-                  : false
-              }
+              disabled={level.name === "species" || isDisabled ? isDefined || isDisabled : false}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   placeholder={
-                    level.name === "species" && isDefined
-                      ? t("undefined")
-                      : level.placeholder
+                    level.name === "species" && isDefined ? t("undefined") : level.placeholder
                   }
                   size="small"
                 />
@@ -220,11 +194,7 @@ const TaxonDropdown = ({
               size="small"
               id={level.name}
               value={formState[level.name]}
-              disabled={
-                level.name === "species" || isDisabled
-                  ? isDefined || isDisabled
-                  : false
-              }
+              disabled={level.name === "species" || isDisabled ? isDefined || isDisabled : false}
               onChange={(e) => {
                 updateField(level.name, e.target.value);
               }}

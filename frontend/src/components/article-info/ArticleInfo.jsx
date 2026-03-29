@@ -77,12 +77,10 @@ const ArticleInfo = ({ isEditMode = false }) => {
           />
           <div id="article_info_container">
             <p>
-              {t("data.field.title")}{" "}
-              {publication?.name ?? t("data.field.title")}
+              {t("data.field.title")} {publication?.name ?? t("data.field.title")}
             </p>
             <p>
-              {t("data.field.author")}{" "}
-              {publication?.author ?? t("data.field.title")}
+              {t("data.field.author")} {publication?.author ?? t("data.field.title")}
             </p>
             <p>
               {t("data.field.year")} {publication?.year ?? 2009}
@@ -90,24 +88,16 @@ const ArticleInfo = ({ isEditMode = false }) => {
             <p>
               {t("data.field.link")}{" "}
               <Link
-                to={
-                  publication?.pdf_file ??
-                  "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                }
+                to={publication?.pdf_file ?? "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
                 target="_blank"
               >
-                {publication?.pdf_file ??
-                  "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
+                {publication?.pdf_file ?? "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
               </Link>
             </p>
           </div>
         </div>
         {!isEditMode && publication && (
-          <button
-            type="button"
-            onClick={handleChangePublication}
-            className="change-publ-btn"
-          >
+          <button type="button" onClick={handleChangePublication} className="change-publ-btn">
             {t("button")}
           </button>
         )}

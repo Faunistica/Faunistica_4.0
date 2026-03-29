@@ -1,13 +1,13 @@
 .PHONY: format lint isort install sync
 
+run: install
+	uv run --directory . fastapi dev
+
 install:
 	uv sync
 
 sync:
 	uv sync
-
-run:
-	uv run --directory . fastapi dev
 
 format: isort
 	uv run ruff format .

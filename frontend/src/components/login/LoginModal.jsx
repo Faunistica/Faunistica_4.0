@@ -61,11 +61,7 @@ const LoginModal = ({ onClose }) => {
           <p>{t("modal.tg_text")}</p>
 
           <div className="qr-code-container">
-            <a
-              href="https://t.me/FaunisticaV3Bot"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href="https://t.me/FaunisticaV3Bot" target="_blank" rel="noopener noreferrer">
               <QrCode className="qr-code" />
             </a>
             <p>{t("modal.tg_qr")}</p>

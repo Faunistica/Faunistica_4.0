@@ -62,9 +62,7 @@ const apiService = {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
-          error.response.data.message || t("errors.stats.general_error"),
-        );
+        throw new Error(error.response.data.message || t("errors.stats.general_error"));
       } else if (error.request) {
         throw new Error(t("errors.common.server_unavailable"));
       } else {
@@ -167,9 +165,7 @@ const apiService = {
       await api.post("/api/support", data);
     } catch (error) {
       if (error.response) {
-        throw new Error(
-          error.response.data.message || t("errors.support.request_error"),
-        );
+        throw new Error(error.response.data.message || t("errors.support.request_error"));
       } else if (error.request) {
         throw new Error(t("errors.common.server_unavailable"));
       } else {
@@ -184,9 +180,7 @@ const apiService = {
       return response;
     } catch (error) {
       if (error.response) {
-        throw new Error(
-          error.response.data.message || t("errors.support.request_error"),
-        );
+        throw new Error(error.response.data.message || t("errors.support.request_error"));
       } else if (error.request) {
         throw new Error(t("errors.common.server_unavailable"));
       } else {

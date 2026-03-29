@@ -104,11 +104,7 @@ export const fieldsMap = {
   ],
 };
 
-export const FormProvider = ({
-  children,
-  initialState,
-  isEditMode = false,
-}) => {
+export const FormProvider = ({ children, initialState, isEditMode = false }) => {
   {
     i18n.t(`FormContext.sections.${SECTION_KEYS.ADMIN}`);
   }
