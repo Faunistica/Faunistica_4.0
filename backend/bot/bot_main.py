@@ -9,7 +9,7 @@ from aiogram.methods import DeleteWebhook
 
 from bot.handlers import Handlers
 from config import config
-from database.database import get_session, init_db
+from database.database import get_session
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +24,6 @@ async def bot_start() -> None:
 
     bot_instance = Bot(token=config.BOT_TOKEN, session=session)
     dp_instance = Dispatcher(storage=MemoryStorage())
-
-    try:
-        await init_db()
-    except Exception as db_error:
-        logger.error(f"Database initialization failed: {db_error}", exc_info=True)
-        await bot_instance.session.close()
-        raise
 
     handlers = Handlers(bot_instance, get_session)
     dp_instance.include_router(handlers.router)
