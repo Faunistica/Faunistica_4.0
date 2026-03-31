@@ -15,7 +15,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 if BOT_TOKEN is None:
     raise RuntimeError("cannot load BOT_TOKEN")
 
-BOT_PROXY: str | None = os.getenv("BOT_PROXY")
+BOT_PROXY: str = os.getenv("BOT_PROXY") or ""
 
 _admin_chat_id_env = os.getenv("ADMIN_CHAT_ID")
 if _admin_chat_id_env is None:

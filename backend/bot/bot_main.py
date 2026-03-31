@@ -18,7 +18,7 @@ async def bot_start() -> None:
     global bot_instance, dp_instance
 
     session = None
-    if config.BOT_PROXY:
+    if len(config.BOT_PROXY) > 0:
         session = AiohttpSession(proxy=config.BOT_PROXY)
         logger.info(f"Bot session configured with proxy: {config.BOT_PROXY}")
 
