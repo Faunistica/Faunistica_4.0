@@ -4,11 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.messages import send_support_message
+from back_api.rate_limiter import limiter
 from back_api.schemas import SupportRequest
 from database.crud import get_user_id_by_username
 from database.database import get_session
-
-from .rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from back_api.rate_limiter import limiter
+from back_api.schemas import StatisticsResponse
 from database.crud import get_statistics
 from database.database import get_session
-
-from .rate_limiter import limiter
-from .schemas import StatisticsResponse
 
 router = APIRouter()
 

@@ -65,8 +65,12 @@ class Action(Base):
 class Record(Base):
     __tablename__ = "records"
     id = Column(Integer, primary_key=True)
-    publ_id = Column(Integer, ForeignKey("publs.id", ondelete="CASCADE"))
-    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
+    publ_id = Column(
+        Integer, ForeignKey("publs.id", ondelete="CASCADE")
+    )  # FIXME: Cascade?
+    user_id = Column(
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE")
+    )  # FIXME: Cascade?
     datetime = Column(TIMESTAMP)
     ip = Column(Text)
     errors = Column(Text)

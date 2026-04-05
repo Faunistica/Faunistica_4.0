@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from back_api.token import get_current_user
 from database.crud import get_personal_stats, get_user, get_user_stats
 from database.database import get_session
-
-from .token import get_current_user
 
 router = APIRouter()
 

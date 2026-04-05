@@ -20,6 +20,9 @@ dependencies = [
     "httpx",
     "openpyxl",
     "aiohttp-socks>=0.11.0",
+    "python-dotenv>=1.2.2",
+    "greenlet>=3.3.2",
+    "pyyaml",
 ]
 
 [tool.ruff]

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import QrCode from "../../img/qr-code.svg?react";
+import QrCodeImg from "../../img/qr-code.svg";
 import { useNavigate } from "react-router-dom";
 import "./LoginModal.css";
 import { apiService } from "../../api";
@@ -61,12 +61,8 @@ const LoginModal = ({ onClose }) => {
           <p>{t("modal.tg_text")}</p>
 
           <div className="qr-code-container">
-            <a
-              href="https://t.me/FaunisticaV3Bot"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <QrCode className="qr-code" />
+            <a href="https://t.me/FaunisticaV3Bot" target="_blank" rel="noopener noreferrer">
+              <img src={QrCodeImg} alt="QR Code" className="qr-code" />
             </a>
             <p>{t("modal.tg_qr")}</p>
           </div>

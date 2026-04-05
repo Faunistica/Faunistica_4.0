@@ -35,10 +35,7 @@ const DateSelect = ({ disabled }) => {
 
     setFormState((prev) => ({
       ...prev,
-      [name]:
-        name.includes("year") || name.includes("month")
-          ? Number(value) || ""
-          : value,
+      [name]: name.includes("year") || name.includes("month") ? Number(value) || "" : value,
     }));
   };
 

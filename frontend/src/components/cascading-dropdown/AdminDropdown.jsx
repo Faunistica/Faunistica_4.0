@@ -7,8 +7,7 @@ import "./dropdown.css";
 
 const TaxonDropdown = ({ debounceTime = 300, isDisabled }) => {
   const { t } = useTranslation("adminDropdown");
-  const { formState, setFormState, validationErrors, setValidationErrors } =
-    useFormContext();
+  const { formState, setFormState, validationErrors, setValidationErrors } = useFormContext();
   const [loading, setLoading] = useState(false);
 
   const levels = [
@@ -94,8 +93,7 @@ const TaxonDropdown = ({ debounceTime = 300, isDisabled }) => {
           className={`input-group ${validationErrors[level.name] ? "error" : ""}`}
         >
           <label htmlFor={level.name}>
-            {level.heading}:
-            <span>{validationErrors[level.name] ? "*" : ""}</span>
+            {level.heading}:<span>{validationErrors[level.name] ? "*" : ""}</span>
           </label>
           <Autocomplete
             freeSolo
@@ -108,16 +106,9 @@ const TaxonDropdown = ({ debounceTime = 300, isDisabled }) => {
               }
             }}
             onInputChange={(_, input, reason) => {
-              if (
-                reason === "clear" ||
-                reason === "removeOption" ||
-                reason === "reset"
-              ) {
+              if (reason === "clear" || reason === "removeOption" || reason === "reset") {
                 setInputValues({ ...inputValues, [level.name]: "" });
-              } else if (
-                !options[level.name].includes(input) &&
-                level.name !== "country"
-              ) {
+              } else if (!options[level.name].includes(input) && level.name !== "country") {
                 setInputValues({ ...inputValues, [level.name]: input });
                 fetchWithFilters(level.name, input);
               }
@@ -130,11 +121,7 @@ const TaxonDropdown = ({ debounceTime = 300, isDisabled }) => {
             loading={loading}
             disabled={isDisabled}
             renderInput={(params) => (
-              <TextField
-                {...params}
-                placeholder={level.placeholder}
-                size="small"
-              />
+              <TextField {...params} placeholder={level.placeholder} size="small" />
             )}
           />
           {validationErrors?.[level.name] && (

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: import.meta.env.VITE_API_URL || "",
   withCredentials: true,
 });
 
@@ -62,9 +62,7 @@ const apiService = {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
-          error.response.data.message || t("errors.stats.general_error"),
-        );
+        throw new Error(error.response.data.message || t("errors.stats.general_error"));
       } else if (error.request) {
         throw new Error(t("errors.common.server_unavailable"));
       } else {
@@ -167,9 +165,7 @@ const apiService = {
       await api.post("/api/support", data);
     } catch (error) {
       if (error.response) {
-        throw new Error(
-          error.response.data.message || t("errors.support.request_error"),
-        );
+        throw new Error(error.response.data.message || t("errors.support.request_error"));
       } else if (error.request) {
         throw new Error(t("errors.common.server_unavailable"));
       } else {
@@ -184,9 +180,7 @@ const apiService = {
       return response;
     } catch (error) {
       if (error.response) {
-        throw new Error(
-          error.response.data.message || t("errors.support.request_error"),
-        );
+        throw new Error(error.response.data.message || t("errors.support.request_error"));
       } else if (error.request) {
         throw new Error(t("errors.common.server_unavailable"));
       } else {
@@ -274,7 +268,7 @@ const apiService = {
       return response.data;
     } catch (error) {
       if (error.response?.status === 400) {
-        Error(t("errors.records.invalid_token"));
+        throw new Error(t("errors.records.invalid_token"));
       }
       if (error.response?.status === 404) {
         throw new Error(t("errors.records.not_found_or_no_access"));

@@ -3,11 +3,10 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from back_api.rate_limiter import limiter
+from back_api.token import get_current_user
 from database.crud import get_user, is_publ_filled, update_user
 from database.database import get_session
-
-from .rate_limiter import limiter
-from .token import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

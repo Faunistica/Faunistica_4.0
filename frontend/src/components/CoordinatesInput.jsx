@@ -5,8 +5,7 @@ import { apiService } from "../api";
 
 export const CoordinatesInput = ({ isDisabled }) => {
   const { t } = useTranslation("coordinateInput");
-  const { formState, setFormState, validationErrors, setValidationErrors } =
-    useFormContext();
+  const { formState, setFormState, validationErrors, setValidationErrors } = useFormContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -64,9 +63,7 @@ export const CoordinatesInput = ({ isDisabled }) => {
       }
     } else if (name.startsWith("mins_")) {
       if (coordFormat === "mins") {
-        processedValue = value
-          .replace(/[^0-9.]/g, "")
-          .replace(/(\..*)\./g, "$1");
+        processedValue = value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
 
         const parts = processedValue.split(".");
         if (parts[0]) parts[0] = parts[0].slice(0, 2);
@@ -171,9 +168,7 @@ export const CoordinatesInput = ({ isDisabled }) => {
         placeholder={placeholder}
         inputMode={inputMode}
       />
-      {validationErrors?.[name] && (
-        <span className="no-data">{validationErrors[name]}</span>
-      )}
+      {validationErrors?.[name] && <span className="no-data">{validationErrors[name]}</span>}
     </div>
   );
 

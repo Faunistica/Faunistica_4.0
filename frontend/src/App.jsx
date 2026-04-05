@@ -64,21 +64,13 @@ function App() {
       />
 
       {showLoginModal && (
-        <LoginModal
-          onClose={() => setShowLoginModal(false)}
-          onLogin={handleLogin}
-        />
+        <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} />
       )}
 
       <Routes>
         <Route
           path="/"
-          element={
-            <Home
-              isAuthenticated={isAuth}
-              onLoginClick={() => setShowLoginModal(true)}
-            />
-          }
+          element={<Home isAuthenticated={isAuth} onLoginClick={() => setShowLoginModal(true)} />}
         />
         <Route element={<PrivateRoutes auth={isAuth} loading={isLoading} />}>
           <Route path="/profile" element={<ProfilePage />} />

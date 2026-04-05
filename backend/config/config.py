@@ -1,36 +1,64 @@
+import logging
 import os
 from pathlib import Path
 
+import yaml
 from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 
+logger = logging.getLogger(__name__)
+
 LOGS_DIR = Path("logs")
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+if BOT_TOKEN is None:
+    raise RuntimeError("cannot load BOT_TOKEN")
 
-TEST_BOT_TOKEN = os.getenv("TEST_BOT_TOKEN")
+BOT_PROXY: str = os.getenv("BOT_PROXY") or ""
 
-ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID"))
+_admin_chat_id_env = os.getenv("ADMIN_CHAT_ID")
+if _admin_chat_id_env is None:
+    logger.warning("ADMIN_CHAT_ID is not set")
+    _admin_chat_id_env = "0"
 
-DB_NAME = os.getenv("DB_NAME")
+ADMIN_CHAT_ID: int = int(_admin_chat_id_env)
 
-DB_HOST = os.getenv("DB_HOST")
+DB_NAME: str = os.getenv("DB_NAME") or ""
 
-DB_PORT = os.getenv("DB_PORT")
+DB_HOST: str = os.getenv("DB_HOST") or ""
 
-DB_USER = os.getenv("DB_USER")
+DB_PORT: str = os.getenv("DB_PORT") or ""
 
-DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_USER: str = os.getenv("DB_USER") or ""
 
-PRIVATE_KEY = os.getenv("PRIVATE_KEY")
+DB_PASSWORD: str = os.getenv("DB_PASSWORD") or ""
 
-PUBLIC_KEY = os.getenv("PUBLIC_KEY")
+JWT_SECRET: str = os.getenv("JWT_SECRET") or ""
 
-ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE: int = int(os.getenv("ACCESS_TOKEN_EXPIRE") or "30") * 60
 
-ACCESS_TOKEN_EXPIRE = int(os.getenv("ACCESS_TOKEN_EXPIRE")) * 60
+REFRESH_TOKEN_EXPIRE: int = (
+    int(os.getenv("REFRESH_TOKEN_EXPIRE") or "30") * 24 * 60 * 60
+)
 
-REFRESH_TOKEN_EXPIRE = int(os.getenv("REFRESH_TOKEN_EXPIRE")) * 24 * 60 * 60
+ENCRYPT_SECRET: str = os.getenv("ENCRYPT_SECRET") or ""
 
-ENCRYPT_SECRET = os.getenv("ENCRYPT_SECRET")
+LOG_LEVEL: str = os.getenv("LOG_LEVEL") or "WARNING"
+
+DB_ECHO: bool = os.getenv("DB_ECHO", "false").lower() in ("true", "1", "yes")
+
+config_path = Path("config.yaml")
+if config_path.exists():
+    with open(config_path) as f:
+        config = yaml.safe_load(f) or {}
+else:
+    raise RuntimeError("cannot load config")
+
+DEV_MODE: bool = config.get("dev_mode", {}).get("enabled", False)
+
+ALLOWED_ORIGINS: list[str] = (
+    config.get("allowed_origins", ["*"])
+    if DEV_MODE
+    else config.get("allowed_origins", [])
+)

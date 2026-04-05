@@ -31,35 +31,54 @@ from back_api import (
     users,
 )
 from back_api.rate_limiter import RateLimitExceeded, limiter, rate_limit_handler
-from bot.bot_main import bot_start
-from config.config import LOGS_DIR
+from bot.bot_main import bot_start, config
+from config.config import ALLOWED_ORIGINS, DEV_MODE, LOG_LEVEL, LOGS_DIR
+from database.database import init_db, ping_db
 
 logs_dir = LOGS_DIR
 logs_dir.mkdir(exist_ok=True)
 
 log_format = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 
-app_handler = TimedRotatingFileHandler(
-    filename=logs_dir / "service.log",
-    when="midnight",
-    backupCount=30,
-    encoding="utf-8",
-)
-app_handler.setLevel(logging.DEBUG)
-app_handler.setFormatter(logging.Formatter(log_format))
+handlers = []
 
-error_handler = TimedRotatingFileHandler(
-    filename=logs_dir / "errors.log",
-    when="midnight",
-    backupCount=90,
-    encoding="utf-8",
-)
-error_handler.setLevel(logging.ERROR)
-error_handler.setFormatter(logging.Formatter(log_format))
+if config.DEV_MODE:
+    handler = logging.StreamHandler()
+
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(logging.Formatter(log_format))
+
+    handlers.append(handler)
+else:
+    app_handler = TimedRotatingFileHandler(
+        filename=logs_dir / "service.log",
+        when="midnight",
+        backupCount=30,
+        encoding="utf-8",
+    )
+    app_handler.setLevel(logging.DEBUG)
+    app_handler.setFormatter(logging.Formatter(log_format))
+
+    error_handler = TimedRotatingFileHandler(
+        filename=logs_dir / "errors.log",
+        when="midnight",
+        backupCount=90,
+        encoding="utf-8",
+    )
+    error_handler.setLevel(logging.ERROR)
+    error_handler.setFormatter(logging.Formatter(log_format))
+
+    handlers.append(
+        app_handler,
+    )
+    handlers.append(
+        error_handler,
+    )
+
 
 logging.basicConfig(
-    level=logging.WARNING,
-    handlers=[app_handler, error_handler],
+    level=getattr(logging, LOG_LEVEL, logging.WARNING),
+    handlers=handlers,
     format=log_format,
     force=True,
 )
@@ -81,20 +100,42 @@ for lib_name, level in third_party_libs.items():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    asyncio.create_task(bot_start())
-    yield
+    logger = logging.getLogger(__name__)
+
+    await init_db()
+
+    try:
+        bot_task = asyncio.create_task(bot_start())
+    except Exception as db_error:
+        logger.error(f"Database initialization failed: {db_error}", exc_info=True)
+        raise
+
+    if not await ping_db():
+        logger.critical("Database is not available. Application cannot start.")
+        raise RuntimeError("Database connection failed")
+
+    logger.info("Database connection verified")
+
+    try:
+        yield
+    finally:
+        logger.info("Shutting down bot...")
+        bot_task.cancel()
+        await bot_task
 
 
 app = FastAPI(lifespan=lifespan)
 
+logger = logging.getLogger(__name__)
+logger.info(f"Running in {'DEVELOPMENT' if DEV_MODE else 'PRODUCTION'} mode")
+logger.info(f"Allowed origins: {ALLOWED_ORIGINS}")
+
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 
-origins = ["*"]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization"],
