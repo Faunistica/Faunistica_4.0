@@ -40,5 +40,6 @@ order-by-type = true
 
 [dependency-groups]
 dev = [
+    "pylint>=4.0.5",
     "ruff>=0.15.7",
 ]
