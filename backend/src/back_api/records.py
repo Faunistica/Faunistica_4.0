@@ -145,7 +145,7 @@ async def insert_record(
         "eve_YY": clean_value(data.begin_year),
         "eve_MM": clean_value(data.begin_month),
         "eve_DD": clean_value(data.begin_day),
-        "eve_day_def": True if clean_value(data.begin_day) is not None else False,
+        "eve_day_def": clean_value(data.begin_day) is not None,
         "eve_habitat": clean_value(data.biotope),
         "eve_effort": clean_value(data.selective_gain),
         "abu_coll": clean_value(data.collector),
@@ -153,10 +153,8 @@ async def insert_record(
         "tax_fam": clean_value(data.family),
         "tax_gen": clean_value(data.genus),
         "tax_sp": clean_value(data.species),
-        "tax_sp_def": True
-        if clean_value(data.is_defined_species) is not None
-        else False,
-        "tax_nsp": True if clean_value(data.is_new_species) is not None else False,
+        "tax_sp_def": clean_value(data.is_defined_species) is not None,
+        "tax_nsp": clean_value(data.is_new_species) is not None,
         "type_status": clean_value(data.type_status),
         "tax_REM": clean_value(data.taxonomic_notes),
         "abu": num,
