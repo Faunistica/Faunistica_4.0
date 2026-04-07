@@ -1,7 +1,7 @@
+import re
 from datetime import datetime
-from re import fullmatch
 
-from aiogram import Router
+from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import FSInputFile, Message
@@ -24,17 +24,27 @@ from database.crud import (
     log_action,
     update_user,
 )
+from database.database import get_session
 from database.hash import get_password_hash
+from database.models import User
+
+
+class HandlerError(Exception):
+    """Custom exception for handler errors."""
+
+    MSG_INCORRECTLY_CONFIGURED = "incorrectly configured handler"
+
+    pass
 
 
 class Handlers:
-    def __init__(self, bot, db_session_factory):
+    def __init__(self, bot: Bot) -> None:
         self.bot = bot
-        self.db_session_factory = db_session_factory
+        self.db_session_factory = get_session
         self.router = Router()
         self.register_handlers()
 
-    def register_handlers(self):
+    def register_handlers(self) -> None:
         self.router.message.register(self.start_command, Command("start"))
         self.router.message.register(self.register_command, Command("register"))
         self.router.message.register(self.auth_command, Command("auth"))
@@ -112,9 +122,13 @@ class Handlers:
 
     # ========== COMMAND HANDLERS ========== #
 
-    async def start_command(self, message: Message):
+    async def start_command(self, message: Message) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
+
         await message.answer(
             Messages.start(message.from_user.first_name),
             parse_mode="HTML",
@@ -122,7 +136,10 @@ class Handlers:
             reply_markup=Keyboards.remove(),
         )
 
-    async def register_command(self, message: Message, state: FSMContext):
+    async def register_command(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
 
@@ -130,9 +147,7 @@ class Handlers:
             user = await get_user(session, message.from_user.id)
 
             if not user:
-                await create_user(
-                    session=session, user_id=message.from_user.id, reg_stat=2
-                )
+                await create_user(session, user_id=message.from_user.id, reg_stat=2)
                 await message.answer(
                     Messages.registration_start(),
                     reply_markup=Keyboards.yes_no(),
@@ -141,9 +156,7 @@ class Handlers:
                 )
                 await state.set_state(RegistrationStates.waiting_for_agreement)
             elif user.reg_stat is None:
-                await update_user(
-                    session=session, user_id=message.from_user.id, reg_stat=2
-                )
+                await update_user(session, user_id=message.from_user.id, reg_stat=2)
 
                 await message.answer(Messages.old_user(user.name))
 
@@ -164,7 +177,10 @@ class Handlers:
             else:
                 await self.continue_registration(message, user, state)
 
-    async def auth_command(self, message: Message):
+    async def auth_command(self, message: Message) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
 
@@ -174,7 +190,7 @@ class Handlers:
             if not user:
                 await message.answer(Messages.not_registered())
                 await log_action(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     action="bot_auth",
                     object="not_reg_start",
@@ -184,7 +200,7 @@ class Handlers:
             elif 1 < user.reg_stat <= 6:
                 await message.answer(Messages.registration_not_finished())
                 await log_action(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     action="bot_auth",
                     object="not_reg_end",
@@ -213,7 +229,7 @@ class Handlers:
                     hashed_password = get_password_hash(password)
 
                     await update_user(
-                        session=session,
+                        session,
                         user_id=message.from_user.id,
                         hash=hashed_password,
                         hash_date=datetime.now(),
@@ -226,17 +242,18 @@ class Handlers:
                         disable_web_page_preview=True,
                     )
 
-                await update_user(
-                    session=session, user_id=message.from_user.id, reg_stat=1
-                )
+                await update_user(session, user_id=message.from_user.id, reg_stat=1)
                 await log_action(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     action="bot_auth",
                     object="success",
                 )
 
-    async def next_publ_command(self, message: Message):
+    async def next_publ_command(self, message: Message) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
 
@@ -246,7 +263,7 @@ class Handlers:
             if not user:
                 await message.answer(Messages.not_registered())
                 await log_action(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     action="bot_auth",
                     object="not_reg_start",
@@ -256,7 +273,7 @@ class Handlers:
             elif 1 < user.reg_stat <= 6:
                 await message.answer(Messages.registration_not_finished())
                 await log_action(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     action="bot_auth",
                     object="not_reg_end",
@@ -280,7 +297,7 @@ class Handlers:
 
                 if (num_publ != -1) and (num_publ != len(items) - 1):
                     await update_user(
-                        session=session,
+                        session,
                         user_id=message.from_user.id,
                         publ_id=int(items[num_publ + 1]),
                     )
@@ -295,13 +312,16 @@ class Handlers:
                 else:
                     await message.answer(Messages.no_publications_left())
 
-    async def menu_command(self, message: Message):
+    async def menu_command(self, message: Message) -> None:
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
 
         await message.answer(Messages.called_menu(), parse_mode="HTML")
 
-    async def stats_command(self, message: Message):
+    async def stats_command(self, message: Message) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
 
@@ -320,10 +340,13 @@ class Handlers:
             )
 
             if message.chat.id == config.ADMIN_CHAT_ID:
-                volunteers_data = await get_volunteers_achievements(session)
+                await get_volunteers_achievements(session)
                 # IN DEVELOPMENT
 
-    async def rename_command(self, message: Message, state: FSMContext):
+    async def rename_command(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
 
@@ -346,7 +369,10 @@ class Handlers:
                 )
                 await state.set_state(RenameStates.waiting_for_new_name)
 
-    async def support_command(self, message: Message, state: FSMContext):
+    async def support_command(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             await message.answer(Messages.support_for_admins())
             return
@@ -369,13 +395,16 @@ class Handlers:
                 return
 
         async for session in self.db_session_factory():
-            await update_user(session=session, user_id=message.from_user.id, reg_stat=7)
+            await update_user(session, user_id=message.from_user.id, reg_stat=7)
         await message.answer(
             Messages.support_request(), reply_markup=Keyboards.remove()
         )
         await state.set_state(SupportStates.waiting_for_question)
 
-    async def sociology_command(self, message: Message, state: FSMContext):
+    async def sociology_command(self, message: Message, state: FSMContext) -> None:  # noqa: PLR0912
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
 
@@ -396,10 +425,8 @@ class Handlers:
             elif user.reg_stat != 1:
                 await message.answer(Messages.started_unidentified_action())
             elif all(
-                [
-                    getattr(user, field) is not None
-                    for field in ["age", "lng", "comm", "sex", "rating"]
-                ]
+                getattr(user, field) is not None
+                for field in ["age", "lng", "comm", "sex", "rating"]
             ):
                 await message.answer(Messages.sociology_completed())
             else:
@@ -432,7 +459,10 @@ class Handlers:
                     await message.answer(Messages.sociology_question(2))
                     await state.set_state(SociologyStates.waiting_for_rating_agreement)
 
-    async def cancel_command(self, message: Message, state: FSMContext):
+    async def cancel_command(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
 
@@ -455,18 +485,21 @@ class Handlers:
 
             await state.clear()
 
-            await update_user(session=session, user_id=message.from_user.id, reg_stat=1)
+            await update_user(session, user_id=message.from_user.id, reg_stat=1)
 
         await message.answer(
             Messages.rollback_completed(), reply_markup=Keyboards.remove()
         )
 
-    async def reply_to_user_command(self, message: Message):
+    async def reply_to_user_command(self, message: Message) -> None:
+        if message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id != config.ADMIN_CHAT_ID:
             await message.answer(Messages.no_access_to_command())
             return
 
-        if not message.reply_to_message:
+        if message.reply_to_message is None or message.reply_to_message.text is None:
             await message.answer(Messages.using_command_reply())
             return
 
@@ -491,7 +524,11 @@ class Handlers:
         await self.bot.send_message(user_id, Messages.response_from_support(reply_text))
         await message.answer(Messages.response_sent())
 
-    async def send_logs_command(self, message: Message):
+    # NOTE: do we need this?
+    async def send_logs_command(self, message: Message) -> None:
+        if message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id != config.ADMIN_CHAT_ID:
             print(message.chat.id)
             await message.answer(Messages.no_access_to_command())
@@ -548,7 +585,9 @@ class Handlers:
 
     # ========== STATE HANDLERS ========== #
 
-    async def continue_registration(self, message: Message, user, state: FSMContext):
+    async def continue_registration(
+        self, message: Message, user: User, state: FSMContext
+    ) -> None:
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
         reg_stat = user.reg_stat
@@ -587,18 +626,22 @@ class Handlers:
                 Messages.unexpected_error(), reply_markup=Keyboards.remove()
             )
 
-    async def reg_accept_handler(self, message: Message, state: FSMContext):
+    async def reg_accept_handler(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         async for session in self.db_session_factory():
-            await update_user(session=session, user_id=message.from_user.id, reg_stat=3)
+            await update_user(session, user_id=message.from_user.id, reg_stat=3)
+
         await message.answer(Messages.consent_taken())
         await message.answer(Messages.ask_name())
         await state.set_state(RegistrationStates.waiting_for_name)
 
-    async def reg_decline_handler(self, message: Message, state: FSMContext):
+    async def reg_decline_handler(self, message: Message, state: FSMContext) -> None:
         await message.answer(Messages.maybe_later())
         await state.clear()
 
-    async def reg_name_handler(self, message: Message, state: FSMContext):
+    async def reg_name_handler(self, message: Message, state: FSMContext) -> None:
         name_msg = message.text
 
         async for session in self.db_session_factory():
@@ -610,11 +653,11 @@ class Handlers:
                 await message.answer(Messages.message_too_short())
             elif len(name_msg) > 40:
                 await message.answer(Messages.message_too_long())
-            elif not fullmatch(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$", name_msg):
+            elif not re.fullmatch(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$", name_msg):
                 await message.answer(Messages.invalid_characters())
             else:
                 await update_user(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     name=name_msg,
                     reg_stat=4,
@@ -623,7 +666,7 @@ class Handlers:
                 await message.answer(Messages.ask_age())
                 await state.set_state(RegistrationStates.waiting_for_age)
 
-    async def reg_age_handler(self, message: Message, state: FSMContext):
+    async def reg_age_handler(self, message: Message, state: FSMContext) -> None:
         age_msg = message.text
 
         if len(age_msg) > 5:
@@ -641,7 +684,7 @@ class Handlers:
         else:
             async for session in self.db_session_factory():
                 await update_user(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     age=int(age_msg),
                     reg_stat=5,
@@ -654,18 +697,18 @@ class Handlers:
             await message.answer(Messages.ask_publication_preferences())
             await state.set_state(RegistrationStates.waiting_for_preferences)
 
-    async def reg_prefs_handler(self, message: Message, state: FSMContext):
+    async def reg_prefs_handler(self, message: Message, state: FSMContext) -> None:
         comm_msg = message.text.strip()
 
         async for session in self.db_session_factory():
             await update_user(
-                session=session, user_id=message.from_user.id, comm=comm_msg, reg_stat=6
+                session, user_id=message.from_user.id, comm=comm_msg, reg_stat=6
             )
         await message.answer(Messages.publication_preferences_accepted(comm_msg))
         await message.answer(Messages.ask_language())
         await state.set_state(RegistrationStates.waiting_for_language)
 
-    async def reg_lang_handler(self, message: Message, state: FSMContext):
+    async def reg_lang_handler(self, message: Message, state: FSMContext) -> None:
         lang_msg = (
             message.text.strip().replace(" ", "").replace(",", "").replace(".", "")
         )
@@ -680,19 +723,19 @@ class Handlers:
 
         async for session in self.db_session_factory():
             items = await get_publications_for_language(session, lang_value)
-            items_str = "|".join(list(str(item) for item in items))
+            items_str = "|".join([str(item) for item in items])
 
             if not items:
                 await message.answer(Messages.no_publication())
                 await update_user(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     reg_stat=1,
                     reg_end=datetime.now(),
                 )
 
             await update_user(
-                session=session,
+                session,
                 user_id=message.from_user.id,
                 lng=lang_value,
                 items=items_str,
@@ -704,13 +747,20 @@ class Handlers:
         await message.answer(Messages.auth_prompt())
         await state.clear()
 
-    async def support_question_handler(self, message: Message, state: FSMContext):
+    async def support_question_handler(
+        self, message: Message, state: FSMContext
+    ) -> None:
+        if (
+            message.from_user is None
+            or message.from_user.username is None
+            or message.text is None
+        ):
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.text.lower().strip() in ["cancel", "отмена"]:
             await message.answer(Messages.cancellation_support_request())
             async for session in self.db_session_factory():
-                await update_user(
-                    session=session, user_id=message.from_user.id, reg_stat=1
-                )
+                await update_user(session, user_id=message.from_user.id, reg_stat=1)
 
             await state.clear()
             return
@@ -722,7 +772,7 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            await update_user(session=session, user_id=message.from_user.id, reg_stat=1)
+            await update_user(session, user_id=message.from_user.id, reg_stat=1)
 
         await message.answer(
             Messages.support_request_received(),
@@ -739,7 +789,7 @@ class Handlers:
 
         await state.clear()
 
-    async def rename_name_handler(self, message: Message, state: FSMContext):
+    async def rename_name_handler(self, message: Message, state: FSMContext) -> None:
         name_msg = message.text
 
         async for session in self.db_session_factory():
@@ -753,20 +803,20 @@ class Handlers:
                 await message.answer(Messages.message_too_short())
             elif len(name_msg) > 40:
                 await message.answer(Messages.message_too_long())
-            elif not fullmatch(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$", name_msg):
+            elif not re.fullmatch(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$", name_msg):
                 await message.answer(Messages.invalid_characters())
             else:
                 old_name = (await get_user(session, message.from_user.id)).name
 
                 await log_action(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     action="bot_rename",
                     object=f"{old_name}>{name_msg}",
                 )
 
                 await update_user(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     name=name_msg,
                     reg_stat=1,
@@ -776,7 +826,10 @@ class Handlers:
                 await state.clear()
 
     # Sociology state handlers
-    async def sociology_age_handler(self, message: Message, state: FSMContext):
+    async def sociology_age_handler(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         age_msg = message.text
 
         if len(age_msg) > 5:
@@ -794,7 +847,7 @@ class Handlers:
         else:
             async for session in self.db_session_factory():
                 await update_user(
-                    session=session,
+                    session,
                     user_id=message.from_user.id,
                     age=int(age_msg),
                     reg_stat=1,
@@ -807,7 +860,10 @@ class Handlers:
             await message.answer(Messages.go_back_to_sociology())
             await state.clear()
 
-    async def sociology_lang_handler(self, message: Message, state: FSMContext):
+    async def sociology_lang_handler(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         lang_msg = (
             message.text.strip().replace(" ", "").replace(",", "").replace(".", "")
         )
@@ -821,7 +877,7 @@ class Handlers:
 
         async for session in self.db_session_factory():
             await update_user(
-                session=session,
+                session,
                 user_id=message.from_user.id,
                 lng=lang_value,
                 reg_stat=1,
@@ -831,17 +887,27 @@ class Handlers:
         await message.answer(Messages.go_back_to_sociology())
         await state.clear()
 
-    async def sociology_comments_handler(self, message: Message, state: FSMContext):
+    async def sociology_comments_handler(
+        self, message: Message, state: FSMContext
+    ) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         comm_msg = message.text.strip()
         async for session in self.db_session_factory():
             await update_user(
-                session=session, user_id=message.from_user.id, comm=comm_msg, reg_stat=1
+                session, user_id=message.from_user.id, comm=comm_msg, reg_stat=1
             )
         await message.answer(Messages.publication_preferences_accepted(comm_msg))
         await message.answer(Messages.go_back_to_sociology())
         await state.clear()
 
-    async def sociology_gender_handler(self, message: Message, state: FSMContext):
+    async def sociology_gender_handler(
+        self, message: Message, state: FSMContext
+    ) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         gender_msg = message.text.lower()
 
         if "жен" in gender_msg or "female" in gender_msg:
@@ -854,7 +920,7 @@ class Handlers:
 
         async for session in self.db_session_factory():
             await update_user(
-                session=session,
+                session,
                 user_id=message.from_user.id,
                 sex=gender_value,
                 reg_stat=1,
@@ -864,7 +930,12 @@ class Handlers:
         await message.answer(Messages.go_back_to_sociology())
         await state.clear()
 
-    async def sociology_rating_handler(self, message: Message, state: FSMContext):
+    async def sociology_rating_handler(
+        self, message: Message, state: FSMContext
+    ) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         answer = message.text.lower()
 
         if answer in config_vars.YES_WORDS:
@@ -877,7 +948,7 @@ class Handlers:
 
         async for session in self.db_session_factory():
             await update_user(
-                session=session,
+                session,
                 user_id=message.from_user.id,
                 rating=rating_value,
                 reg_stat=1,
@@ -887,7 +958,12 @@ class Handlers:
         await message.answer(Messages.go_back_to_sociology())
         await state.clear()
 
-    async def sociology_region_handler(self, message: Message, state: FSMContext):
+    async def sociology_region_handler(
+        self, message: Message, state: FSMContext
+    ) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         region_msg = message.text.strip()
 
         if len(region_msg) < 3:
@@ -896,7 +972,7 @@ class Handlers:
 
         async for session in self.db_session_factory():
             await update_user(
-                session=session,
+                session,
                 user_id=message.from_user.id,
                 region=region_msg,
                 reg_stat=1,
@@ -906,7 +982,12 @@ class Handlers:
         await message.answer(Messages.go_back_to_sociology())
         await state.clear()
 
-    async def sociology_email_handler(self, message: Message, state: FSMContext):
+    async def sociology_email_handler(
+        self, message: Message, state: FSMContext
+    ) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         email_msg = message.text.strip().lower()
 
         if "@" not in email_msg or "." not in email_msg:
@@ -915,7 +996,7 @@ class Handlers:
 
         async for session in self.db_session_factory():
             await update_user(
-                session=session,
+                session,
                 user_id=message.from_user.id,
                 email=email_msg,
                 reg_stat=1,
@@ -927,13 +1008,16 @@ class Handlers:
 
     # ========== OTHER HANDLERS ========== #
 
-    async def other_content_handler(self, message: Message):
+    async def other_content_handler(self, message: Message) -> None:
+        if message.from_user is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         if message.chat.id == config.ADMIN_CHAT_ID:
             return
 
         async for session in self.db_session_factory():
             await log_action(
-                session=session,
+                session,
                 user_id=message.from_user.id,
                 action="bot_fun.other",
                 object=message.content_type,

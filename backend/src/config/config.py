@@ -13,7 +13,7 @@ LOGS_DIR = Path("logs")
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 if BOT_TOKEN is None:
-    raise RuntimeError("cannot load BOT_TOKEN")
+    raise Exception("cannot load BOT_TOKEN")
 
 BOT_PROXY: str = os.getenv("BOT_PROXY") or ""
 
@@ -53,7 +53,7 @@ if config_path.exists():
     with open(config_path) as f:
         config = yaml.safe_load(f) or {}
 else:
-    raise RuntimeError("cannot load config")
+    raise Exception("cannot load config")
 
 DEV_MODE: bool = config.get("dev_mode", {}).get("enabled", False)
 

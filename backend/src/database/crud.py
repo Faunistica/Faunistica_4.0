@@ -125,9 +125,9 @@ async def count_users_with_name(session: AsyncSession, name: str) -> int:
 # === ACTIONS ===
 @handle_db_errors
 async def log_action(
-    session: AsyncSession, user_id: int, action: str, obj: str
+    session: AsyncSession, user_id: int, action: str, object: str
 ) -> None:
-    act = Action(user_id=user_id, action=action, object=obj, datetime=datetime.now())
+    act = Action(user_id=user_id, action=action, object=object, datetime=datetime.now())
     session.add(act)
     await session.commit()
 

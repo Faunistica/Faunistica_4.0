@@ -9,7 +9,6 @@ from aiogram.methods import DeleteWebhook
 
 from bot.handlers import Handlers
 from config import config
-from database.database import get_session
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ async def bot_start() -> None:
     bot_instance = Bot(token=config.BOT_TOKEN, session=session)
     dp_instance = Dispatcher(storage=MemoryStorage())
 
-    handlers = Handlers(bot_instance, get_session)
+    handlers = Handlers(bot_instance)
     dp_instance.include_router(handlers.router)
 
     try:
