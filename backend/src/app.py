@@ -18,7 +18,6 @@ from back_api import (
     get_publ,
     get_record,
     get_records_file,
-    info,
     logout,
     next_publ,
     pers_stats,
@@ -145,7 +144,6 @@ app.add_middleware(
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
 app.include_router(users.router, prefix="/api")
-app.include_router(info.router, prefix="/api")
 app.include_router(records.router, prefix="/api")
 app.include_router(gen_stats.router, prefix="/api")
 app.include_router(refresh_token.router, prefix="/api")
