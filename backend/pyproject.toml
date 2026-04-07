@@ -44,6 +44,9 @@ select = [
     "S",      # bandit (security)
     "PL",     # Pylint
 ]
+ignore = [
+    "PLR2004" # ignore magick variables for now
+]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
