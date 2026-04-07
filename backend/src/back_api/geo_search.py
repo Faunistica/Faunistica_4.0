@@ -7,24 +7,29 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from back_api.schemas import GeoSearchRequest, GeoSearchResponse
 from back_api.token import get_current_user
+from model import Location
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # FIXME: through config?
 json_path = Path(__file__).resolve().parent.parent.parent / "locations.json"
-_LOCATION_DATA = None
+_LOCATION_DATA: list[Location] | None = None
 
 
-def _load_location_data():
+def _load_location_data() -> list[Location]:
     global _LOCATION_DATA
-    if _LOCATION_DATA is None:
-        try:
-            with open(json_path, encoding="utf-8") as f:
-                _LOCATION_DATA = json.load(f)
-        except Exception as e:
-            logger.error(f"Failed to load location data: {e}", exc_info=True)
-            _LOCATION_DATA = []
+
+    if _LOCATION_DATA is not None:
+        return _LOCATION_DATA
+
+    try:
+        with open(json_path, encoding="utf-8") as f:
+            _LOCATION_DATA = json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to load location data: {e}", exc_info=True)
+        _LOCATION_DATA = []
+
     return _LOCATION_DATA
 
 

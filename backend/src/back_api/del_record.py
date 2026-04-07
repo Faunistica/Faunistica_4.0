@@ -24,7 +24,7 @@ async def del_record(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     user_id = int(user_data["sub"])
-    record_id = decrypt_id(data.hash, user_id)
+    record_id = decrypt_id(data.hash)
     if record_id is None:
         logger.warning("Invalid record token")
         raise HTTPException(status_code=400, detail="Invalid record token.")

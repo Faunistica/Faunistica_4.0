@@ -25,19 +25,19 @@ async def edit_record(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     user_id = int(user_data["sub"])
-    record_id = decrypt_id(data.hash, user_id)
+    record_id = decrypt_id(data.hash)
     if record_id is None:
         logger.warning("Invalid record token")
         raise HTTPException(status_code=400, detail="Invalid record token.")
 
     try:
-        data = data.model_dump()
-        data["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
-        data["type"] = "rec_ok"
-        is_success = await edit_record_by_id(session, record_id, user_id, data)
+        dump = data.model_dump()
+        dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
+        dump["type"] = "rec_ok"
+        is_success = await edit_record_by_id(session, record_id, user_id, dump)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Server database error.")
+        raise HTTPException(status_code=500, detail="Server database error.") from e
 
     if is_success:
         return {"message": "OK"}

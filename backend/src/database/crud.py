@@ -1,7 +1,7 @@
 import asyncio
 import functools
 import logging
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Concatenate, ParamSpec, TypeVar
@@ -58,6 +58,11 @@ async def is_pass_correct(session: AsyncSession, user_id: int, user_pass: str) -
     stmt = select(User.hash).where(User.id == user_id)
     result = await session.execute(stmt)
     user_hash = result.scalar_one()
+
+    if user_hash is None:
+        logger.warning("trying to check password for user without one: id: %d", user_id)
+        return False
+
     return check_password_hash(user_pass, user_hash)
 
 
@@ -103,7 +108,8 @@ async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> Non
 async def update_user(
     session: AsyncSession,
     user_id: int,
-    **fields: dict[str, Any],  # noqa: ANN401
+    # FIXME: proper typing
+    **fields: Any,  # noqa: ANN401
 ) -> None:
     stmt = update(User).where(User.id == user_id).values(**fields)
     await session.execute(stmt)
@@ -390,13 +396,6 @@ async def get_volunteers_achievements(
 
 
 # === RECORDS ===
-async def get_all_records(session: AsyncSession) -> list[dict]:
-    stmt = select(Record)
-    result = await session.execute(stmt)
-    records = result.scalars().all()
-    return [r.__dict__ for r in records if r]
-
-
 @handle_db_errors
 async def add_record_from_json(session: AsyncSession, record_json: dict) -> None:
     record = Record(**record_json)
@@ -476,7 +475,7 @@ async def get_statistics(session: AsyncSession) -> dict:
 
 
 @handle_db_errors
-async def get_user_records(session: AsyncSession, user_id: int) -> list[Record]:
+async def get_user_records(session: AsyncSession, user_id: int) -> Sequence[Record]:
     stmt = select(Record).where(Record.user_id == user_id)
     result = await session.execute(stmt)
     return result.scalars().all()
@@ -543,7 +542,7 @@ async def publ_by_hash(
 
     return PublData(
         author=publication.author,
-        year=str(publication.year),
+        year=str(publication.year or ""),
         name=publication.name,
         pdf_file=publication.pdf_file,
     )

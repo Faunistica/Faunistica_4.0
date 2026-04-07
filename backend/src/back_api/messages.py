@@ -1,12 +1,13 @@
 import aiohttp
 
+from back_api.schemas import SupportRequest
 from config.config import ADMIN_CHAT_ID, BOT_TOKEN
 
 
 async def send_support_message(
     session: aiohttp.ClientSession,
-    data,
-    user_id,
+    data: SupportRequest,
+    user_id: int,
 ) -> None:
     message = (
         f"📢 Новое сообщение в поддержку из веб-формы 📢\n"
@@ -26,7 +27,7 @@ async def send_support_message(
         response.raise_for_status()
 
 
-def get_issue_type(issue_type):
+def get_issue_type(issue_type: str) -> str:
     issue_types = {
         "authorisation-website": "Проблемы с авторизацией на сайте",
         "authorisation-tg": "Проблемы с авторизацией в боте",
@@ -37,4 +38,5 @@ def get_issue_type(issue_type):
         "confirmation": "Проблемы с отправкой формы",
         "other": "Другая проблема",
     }
+    # FIXME: wtf
     return issue_types.get(issue_type, issue_type)

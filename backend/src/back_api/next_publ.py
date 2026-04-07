@@ -1,7 +1,7 @@
 import logging
-from typing import Annotated, cast
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.rate_limiter import limiter
@@ -21,23 +21,26 @@ async def next_publ(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> bool:
     user_id = int(user_data["sub"])
-    user_info = await get_user(session, user_id)
+    user = await get_user(session, user_id)
 
-    if not await is_publ_filled(session, user_id, int, user_info.publ_id):
+    # NOTE: gessing how it should work, shoud check if incorrect
+    if user.publ_id is not None and not await is_publ_filled(
+        session, user_id, user.publ_id
+    ):
         logger.warning("Publication is not filled")
-        raise HTTPException(status_code=409, detail="Publication is not filled")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Publication is not filled"
+        )
 
-    if len(user_info.items) == 0:
+    if user.items is None or len(user.items) == 0:
         logger.warning("No publications available for user %d", user_id)
         raise HTTPException(status_code=404, detail="No publications available")
 
-    items = user_info.items.split("|")
-    num_publ = (
-        items.index(str(user_info.publ_id)) if str(user_info.publ_id) in items else -1
-    )
+    items = user.items.split("|")
+    num_publ = items.index(str(user.publ_id)) if str(user.publ_id) in items else -1
 
     if (num_publ != -1) and (num_publ != len(items) - 1):
         publ_id = int(items[num_publ + 1])
-        await update_user(session=session, user_id=user_id, publ_id=publ_id)
+        await update_user(session, user_id, publ_id=publ_id)
         return True
     return False
