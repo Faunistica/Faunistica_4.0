@@ -30,6 +30,10 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = [
+    "ANN",
+    "PYI",
+    "RSE",
+    "TC",
     "I",      # isort (imports)
     "E",      # pycodestyle errors
     "F",      # Pyflakes
