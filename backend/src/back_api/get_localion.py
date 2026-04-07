@@ -1,18 +1,17 @@
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from geopy.exc import GeocoderTimedOut
 from geopy.geocoders import Nominatim
 
 from back_api.schemas import GetLocationRequest, GetLocationResponse
-from back_api.token import get_current_user
+from model import Location
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def get_location_names(lat, lon):
+def get_location_names(lat: float, lon: float) -> Location:
     geolocator = Nominatim(user_agent="geoapi", timeout=10)
 
     try:
@@ -30,13 +29,13 @@ def get_location_names(lat, lon):
         region = address.get("state", address.get("region", None))
         district = address.get("county", address.get("district", None))
 
-        return {"country": country, "region": region, "district": district}
+        return Location(country=country, region=region, district=district)
     except GeocoderTimedOut as e:
         logger.error(f"GeocoderTimedOut: {e}", exc_info=True)
-        raise HTTPException(status_code=408, detail="Geocoding service timeout")
+        raise HTTPException(status_code=408, detail="Geocoding service timeout") from e
     except Exception as e:
         logger.error(f"HTTP Error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 def dms_to_dd(
@@ -49,12 +48,11 @@ def dms_to_dd(
     return degrees + (minutes / 60) + (seconds / 3600)
 
 
-@router.post("/get_loc", response_model=GetLocationResponse)
+@router.post("/get_loc")
 async def get_loc(
     request: Request,
     data: GetLocationRequest,
-    user_data: Annotated[dict, Depends(get_current_user)],
-):
+) -> GetLocationResponse:
     latitude = dms_to_dd(data.degrees_n, data.minutes_n, data.seconds_n)
     longitude = dms_to_dd(data.degrees_e, data.minutes_e, data.seconds_e)
     location = get_location_names(latitude, longitude)

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.rate_limiter import limiter
-from back_api.schemas import InsertRecordsRequest
+from back_api.schemas import InsertRecordsRequest, Message
 from back_api.token import get_current_user
 from database.crud import add_record_from_json, get_user
 from database.database import get_session
@@ -24,15 +24,15 @@ def clean_value(value: T | None) -> T | None:
     return value
 
 
-def specimen_parse(specimens):
-    if not specimens:
+def specimen_parse(specimens: dict[str, float | None] | None) -> tuple[str | None, int]:
+    if specimens is None:
         return None, 0
 
     entries = []
     total = 0
     values = []
 
-    def add_entry(count, label) -> None:
+    def add_entry(count: float | None, label: str) -> None:
         nonlocal total
         if count is not None and count != 0:
             values.append(count)
@@ -123,7 +123,7 @@ async def insert_record(
     data: InsertRecordsRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-):
+) -> Message:
     north = safe_coord_parse(data.north)
     east = safe_coord_parse(data.east)
     specimen, num = specimen_parse(clean_value(data.specimens))
@@ -172,7 +172,9 @@ async def insert_record(
 
     try:
         await add_record_from_json(session, record_json)
-        return {"message": "OK"}
+        return Message("ok")
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Server database error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Server database error: {str(e)}"
+        ) from e

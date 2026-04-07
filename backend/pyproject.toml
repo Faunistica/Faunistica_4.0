@@ -47,6 +47,7 @@ select = [
     "RET",    # return statements
     "S",      # bandit (security)
     "PL",     # Pylint
+    "TRY"
 ]
 ignore = [
     "PLR2004" # ignore magick variables for now

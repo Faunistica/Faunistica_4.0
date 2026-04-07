@@ -21,7 +21,7 @@ async def get_publ(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-):
+) -> PublResponse:
     try:
         data = await username_and_publication(session, int(user_data["sub"]))
 
@@ -33,4 +33,6 @@ async def get_publ(
         )
     except Exception as e:
         logger.error(f"HTTP Error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Server database error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Server database error: {str(e)}"
+        ) from e

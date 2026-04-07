@@ -61,7 +61,7 @@ async def get_records_data(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-):
+) -> StreamingResponse:
     user_id = int(user_data["sub"])
     username = user_data["username"]
     try:
@@ -117,4 +117,4 @@ async def get_records_data(
 
     except Exception as e:
         logger.error(f"Exception in get_records_data: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

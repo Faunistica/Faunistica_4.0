@@ -2,13 +2,11 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Annotated
 
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 
 from back_api.schemas import SuggestTaxonRequest, SuggestTaxonResponse
-from back_api.token import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -55,15 +53,14 @@ async def async_suggestion(
     return await loop.run_in_executor(executor, suggestion, field, text, filters)
 
 
-@router.post("/suggest_taxon", response_model=SuggestTaxonResponse)
+@router.post("/suggest_taxon")
 async def suggest_taxon(
     request: Request,
     data: SuggestTaxonRequest,
-    user_data: Annotated[dict, Depends(get_current_user)],
-):
+) -> SuggestTaxonResponse:
     try:
         suggestions = await async_suggestion(data.field, data.text, data.filters or {})
-        return {"suggestions": suggestions}
+        return SuggestTaxonResponse(suggestions=suggestions)
     except ValueError as e:
         logger.error(f"Value error: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e)) from e

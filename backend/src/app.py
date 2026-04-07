@@ -1,7 +1,10 @@
 import asyncio
+import json
 import logging
 from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
+from pathlib import Path
+from typing import Any
 
 import aiohttp
 from fastapi import FastAPI
@@ -100,7 +103,7 @@ for lib_name, level in third_party_libs.items():
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Any:  # noqa: ANN401
     logger = logging.getLogger(__name__)
 
     await init_db()
@@ -111,6 +114,19 @@ async def lifespan(app: FastAPI):
     else:
         app.state.http_session = aiohttp.ClientSession()
         logger.info("HTTP session created without proxy")
+
+    json_path = Path(__file__).resolve().parent.parent / "locations.json"  # noqa: ASYNC240
+    if json_path.exists():
+        try:
+            with open(json_path, encoding="utf-8") as f:  # noqa: ASYNC230
+                app.state.location_data = json.load(f)
+            logger.info("Location data loaded")
+        except Exception as e:
+            logger.error(f"Failed to load location data: {e}", exc_info=True)
+            app.state.location_data = []
+    else:
+        logger.warning(f"Location data file not found at {json_path}")
+        app.state.location_data = []
 
     try:
         bot_task = asyncio.create_task(bot_start())

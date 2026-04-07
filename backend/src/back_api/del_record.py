@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.rate_limiter import limiter
-from back_api.schemas import RemoveRecordRequest
+from back_api.schemas import Message, RemoveRecordRequest
 from back_api.token import get_current_user
 from database.crud import remove_record_row_by_id
 from database.database import get_session
@@ -22,7 +22,7 @@ async def del_record(
     data: RemoveRecordRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-):
+) -> Message:
     user_id = int(user_data["sub"])
     record_id = decrypt_id(data.hash)
     if record_id is None:
@@ -36,7 +36,8 @@ async def del_record(
         raise HTTPException(status_code=500, detail="Server database error.") from e
 
     if is_success:
-        return {"message": "OK"}
+        return Message("ok")
+
     logger.warning("Record not found or not owned by user")
     raise HTTPException(
         status_code=404, detail="Record not found or not owned by user."

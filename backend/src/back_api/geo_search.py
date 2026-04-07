@@ -1,44 +1,27 @@
-import json
 import logging
-from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from back_api.schemas import GeoSearchRequest, GeoSearchResponse
-from back_api.token import get_current_user
-from model import Location
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# FIXME: through config?
-json_path = Path(__file__).resolve().parent.parent.parent / "locations.json"
-_LOCATION_DATA: list[Location] | None = None
 
-
-def _load_location_data() -> list[Location]:
-    global _LOCATION_DATA
-
-    if _LOCATION_DATA is not None:
-        return _LOCATION_DATA
-
-    try:
-        with open(json_path, encoding="utf-8") as f:
-            _LOCATION_DATA = json.load(f)
-    except Exception as e:
-        logger.error(f"Failed to load location data: {e}", exc_info=True)
-        _LOCATION_DATA = []
-
-    return _LOCATION_DATA
+def get_location_data(request: Request) -> list[dict[str, Any]]:
+    return request.app.state.location_data
 
 
 async def get_suggestions(
-    field: str, text: str, filters: dict | None = None
+    location_data: list[dict[str, Any]],
+    field: str,
+    text: str,
+    filters: dict | None = None,
 ) -> list[str]:
-    location_data = _load_location_data()
     if not location_data:
         return []
+
     text = text.lower().strip()
     filters = filters or {}
 
@@ -60,15 +43,17 @@ async def get_suggestions(
     return []
 
 
-@router.post("/geo_search", response_model=GeoSearchResponse)
+@router.post("/geo_search")
 async def geo_search(
     request: Request,
     data: GeoSearchRequest,
-    user_data: Annotated[dict, Depends(get_current_user)],
-):
+    location_data: Annotated[list[dict[str, Any]], Depends(get_location_data)],
+) -> GeoSearchResponse:
     try:
-        suggestions = await get_suggestions(data.field, data.text, data.filters)
-        return {"suggestions": suggestions or None}
+        suggestions = await get_suggestions(
+            location_data, data.field, data.text, data.filters
+        )
+        return GeoSearchResponse(suggestions=suggestions)
     except Exception as e:
         logger.error(f"Geo search failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e

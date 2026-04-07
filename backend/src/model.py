@@ -10,6 +10,13 @@ class PublData:
 
 
 @dataclass
-class Location:
+class LocationList:
     region: str
     districts: list[str]
+
+
+@dataclass
+class Location:
+    country: str
+    region: str
+    district: str

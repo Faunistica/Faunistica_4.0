@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.rate_limiter import limiter
-from back_api.schemas import EditRecordRequest
+from back_api.schemas import EditRecordRequest, Message
 from back_api.token import get_current_user
 from database.crud import edit_record_by_id
 from database.database import get_session
@@ -23,7 +23,7 @@ async def edit_record(
     data: EditRecordRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-):
+) -> Message:
     user_id = int(user_data["sub"])
     record_id = decrypt_id(data.hash)
     if record_id is None:
@@ -35,12 +35,14 @@ async def edit_record(
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"
         is_success = await edit_record_by_id(session, record_id, user_id, dump)
+
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e
 
     if is_success:
-        return {"message": "OK"}
+        return Message("ok")
+
     logger.warning("Record not found or not owned by user")
     raise HTTPException(
         status_code=404, detail="Record not found or not owned by user."

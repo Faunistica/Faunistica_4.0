@@ -15,7 +15,7 @@ async def get_pers_stats(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-):
+) -> tuple[str, int, dict, list[dict]]:
     user_id = int(user_data["sub"])
     user_info = await get_user(session, user_id)
     username = user_info.name

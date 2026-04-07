@@ -42,5 +42,38 @@ async def insert_record(
             status_code=404, detail="Record not found or not owned by user."
         )
 
-    record_data.hash = data.hash
-    return record_data
+    # NOTE: lol, maybe there is another way..
+    return GetRecordResponse(
+        hash=data.hash,
+        type=record_data.type,
+        adm_country=record_data.adm_country,
+        adm_region=record_data.adm_region,
+        adm_district=record_data.adm_district,
+        adm_loc=record_data.adm_loc,
+        geo_nn_raw=record_data.geo_nn_raw,
+        geo_ee_raw=record_data.geo_ee_raw,
+        geo_origin=record_data.geo_origin,
+        geo_REM=record_data.geo_REM,
+        eve_YY=record_data.eve_YY,
+        eve_MM=record_data.eve_MM,
+        eve_DD=record_data.eve_DD,
+        eve_day_def=record_data.eve_day_def,
+        eve_habitat=record_data.eve_habitat,
+        eve_effort=record_data.eve_effort,
+        abu_coll=record_data.abu_coll,
+        eve_REM=record_data.eve_REM,
+        tax_fam=record_data.tax_fam,
+        tax_gen=record_data.tax_gen,
+        tax_sp=record_data.tax_sp,
+        tax_sp_def=record_data.tax_sp_def,
+        tax_nsp=record_data.tax_nsp,
+        type_status=record_data.type_status,
+        tax_REM=record_data.tax_REM,
+        abu=record_data.abu,
+        abu_details=record_data.abu_details,
+        abu_ind_rem=record_data.abu_ind_rem,
+        geo_uncert=record_data.geo_uncert,
+        eve_YY_end=record_data.eve_YY_end,
+        eve_MM_end=record_data.eve_MM_end,
+        eve_DD_end=record_data.eve_DD_end,
+    )
