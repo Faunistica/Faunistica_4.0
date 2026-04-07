@@ -1,7 +1,10 @@
 import asyncio
 import functools
 import logging
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from sqlalchemy import and_, func, text, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -14,18 +17,30 @@ from database.models import Action, Publ, Record, User
 logger = logging.getLogger(__name__)
 
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+class DBException(Exception):
+    pass
+
+
 # === UTILS ===
-def handle_db_errors(function):
+def handle_db_errors(
+    function: Callable[Concatenate[AsyncSession, P], Awaitable[R]],
+) -> Callable[Concatenate[AsyncSession, P], Awaitable[R]]:
     @functools.wraps(function)
-    async def wrapper(session: AsyncSession, *args, **kwargs):
+    async def wrapper(session: AsyncSession, *args: P.args, **kwargs: P.kwargs) -> R:
         try:
             return await function(session, *args, **kwargs)
         except IntegrityError as e:
             await session.rollback()
             logger.error(f"IntegrityError in {function.__name__}: {e}", exc_info=True)
+            raise DBException from e
         except SQLAlchemyError as e:
             await session.rollback()
             logger.error(f"SQLAlchemyError in {function.__name__}: {e}", exc_info=True)
+            raise DBException from e
 
     return wrapper
 
@@ -41,14 +56,17 @@ async def get_user_id_by_username(session: AsyncSession, username: str) -> int:
 async def is_pass_correct(session: AsyncSession, user_id: int, user_pass: str) -> bool:
     stmt = select(User.hash).where(User.id == user_id)
     result = await session.execute(stmt)
-    user_hash = result.scalar_one_or_none()
+    user_hash = result.scalar_one()
     return check_password_hash(user_pass, user_hash)
 
 
-async def get_user(session: AsyncSession, user_id: int):
+async def get_user(session: AsyncSession, user_id: int) -> User:
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
-    return result.scalar_one_or_none()
+
+    # NOTE: i'm not sure if this is better then before
+    # maybe some more robust error handling is required here and in similar places
+    return result.scalar_one()
 
 
 async def username_and_publication(session: AsyncSession, user_id: int) -> dict:
@@ -74,14 +92,18 @@ async def username_and_publication(session: AsyncSession, user_id: int) -> dict:
 
 
 @handle_db_errors
-async def create_user(session: AsyncSession, user_id: int, reg_stat: int):
+async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> None:
     user = User(id=user_id, reg_stat=reg_stat, reg_run=datetime.now())
     session.add(user)
     await session.commit()
 
 
 @handle_db_errors
-async def update_user(session: AsyncSession, user_id: int, **fields):
+async def update_user(
+    session: AsyncSession,
+    user_id: int,
+    **fields: dict[str, Any],  # noqa: ANN401
+) -> None:
     stmt = update(User).where(User.id == user_id).values(**fields)
     await session.execute(stmt)
     await session.commit()
@@ -90,25 +112,29 @@ async def update_user(session: AsyncSession, user_id: int, **fields):
 async def count_users_with_name(session: AsyncSession, name: str) -> int:
     stmt = select(func.count()).select_from(User).where(User.name == name)
     result = await session.execute(stmt)
-    return result.scalar()
+    return result.scalar_one()
 
 
 # === ACTIONS ===
 @handle_db_errors
-async def log_action(session: AsyncSession, user_id: int, action: str, object: str):
-    act = Action(user_id=user_id, action=action, object=object, datetime=datetime.now())
+async def log_action(
+    session: AsyncSession, user_id: int, action: str, obj: str
+) -> None:
+    act = Action(user_id=user_id, action=action, object=obj, datetime=datetime.now())
     session.add(act)
     await session.commit()
 
 
 # === PUBLICATIONS ===
-async def get_publication(session: AsyncSession, publ_id: int):
+async def get_publication(session: AsyncSession, publ_id: int) -> Publ | None:
     stmt = select(Publ).where(Publ.id == publ_id)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
 
-async def get_publications_for_language(session: AsyncSession, language: str):
+async def get_publications_for_language(
+    session: AsyncSession, language: str
+) -> list[int]:
     filters = [Publ.ural.is_(True), Publ.coords.is_(True), Publ.year > 1950]
     if language != "all":
         filters.append(Publ.language.ilike(f"%{language}%"))
@@ -120,29 +146,30 @@ async def get_publications_for_language(session: AsyncSession, language: str):
 
 async def is_publ_filled(session: AsyncSession, user_id: int, publ_id: int) -> bool:
     stmt = (
-        select(Record)
+        select(Record.type)
         .where(Record.user_id == user_id, Record.publ_id == publ_id)
         .order_by(Record.datetime.desc())
         .limit(1)
     )
-    result = await session.execute(stmt)
-    record = result.scalar_one_or_none()
 
-    if not record:
+    result = await session.execute(stmt)
+    record_type = result.scalar_one_or_none()
+
+    if record_type is None:
         return False
 
-    return record.type == "rec_ok"
+    return record_type == "rec_ok"
 
 
 @handle_db_errors
-async def add_publication_from_json(session: AsyncSession, publ_json: dict):
+async def add_publication_from_json(session: AsyncSession, publ_json: dict) -> None:
     publ = Publ(**publ_json)
     session.add(publ)
     await session.commit()
 
 
 # === GENERAL STATS ===
-async def get_general_stats(session: AsyncSession):
+async def get_general_stats(session: AsyncSession) -> dict:
     stats = {}
 
     stmt = (
@@ -200,7 +227,7 @@ async def get_general_stats(session: AsyncSession):
 
 # === USER STATS ===
 @handle_db_errors
-async def get_user_stats(session: AsyncSession, user_id: int):
+async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
     stats = {}
 
     publ_ids = set()
@@ -247,8 +274,18 @@ async def get_user_stats(session: AsyncSession, user_id: int):
     return stats
 
 
-def format_event_date(yy, mm, dd, yy_end, mm_end, dd_end) -> str:
-    def fmt(y, m, d):
+@dataclass
+class EventDate:
+    yy: int | None
+    mm: int | None
+    dd: int | None
+    yy_end: int | None
+    mm_end: int | None
+    dd_end: int | None
+
+
+def format_event_date(date: EventDate) -> str:
+    def fmt(y: int | None, m: int | None, d: int | None) -> str:
         parts = []
         if y:
             parts.append(str(y))
@@ -258,8 +295,8 @@ def format_event_date(yy, mm, dd, yy_end, mm_end, dd_end) -> str:
                     parts.append(f"{d:02}")
         return ".".join(parts)
 
-    start = fmt(yy, mm, dd)
-    end = fmt(yy_end, mm_end, dd_end)
+    start = fmt(date.yy, date.mm, date.dd)
+    end = fmt(date.yy_end, date.mm_end, date.dd_end)
 
     return f"{start} – {end}" if end else start
 
@@ -295,12 +332,14 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> list[dict]:
     records = []
     for row in rows:
         date = format_event_date(
-            row.eve_YY,
-            row.eve_MM,
-            row.eve_DD,
-            row.eve_YY_end,
-            row.eve_MM_end,
-            row.eve_DD_end,
+            EventDate(
+                yy=row.eve_YY,
+                mm=row.eve_MM,
+                dd=row.eve_DD,
+                yy_end=row.eve_YY_end,
+                mm_end=row.eve_MM_end,
+                dd_end=row.eve_DD_end,
+            )
         )
         location_parts = []
         if row.adm_district is not None:
@@ -334,7 +373,9 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> list[dict]:
 
 
 # === VOLUNTEERS ===
-async def get_volunteers_achievements(session: AsyncSession):
+async def get_volunteers_achievements(
+    session: AsyncSession,
+) -> list[Any]:
     stmt = text("""
         SELECT a.user_id, a.object, a.datetime,
                u.name, u.tlg_name, u.tlg_username
@@ -348,7 +389,7 @@ async def get_volunteers_achievements(session: AsyncSession):
 
 
 # === RECORDS ===
-async def get_all_records(session: AsyncSession):
+async def get_all_records(session: AsyncSession) -> list[dict]:
     stmt = select(Record)
     result = await session.execute(stmt)
     records = result.scalars().all()
@@ -356,13 +397,13 @@ async def get_all_records(session: AsyncSession):
 
 
 @handle_db_errors
-async def add_record_from_json(session: AsyncSession, record_json: dict):
+async def add_record_from_json(session: AsyncSession, record_json: dict) -> None:
     record = Record(**record_json)
     session.add(record)
     await session.commit()
 
 
-async def get_statistics(session: AsyncSession):
+async def get_statistics(session: AsyncSession) -> dict:
     stats = {}
 
     stmt = select(func.count()).select_from(Publ)
@@ -434,7 +475,7 @@ async def get_statistics(session: AsyncSession):
 
 
 @handle_db_errors
-async def get_user_records(session: AsyncSession, user_id: int):
+async def get_user_records(session: AsyncSession, user_id: int) -> list[Record]:
     stmt = select(Record).where(Record.user_id == user_id)
     result = await session.execute(stmt)
     return result.scalars().all()
@@ -457,7 +498,9 @@ async def remove_record_row_by_id(
 
 
 @handle_db_errors
-async def get_record_by_id(session: AsyncSession, record_id: int, user_id: int):
+async def get_record_by_id(
+    session: AsyncSession, record_id: int, user_id: int
+) -> Record | None:
     stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
     result = await session.execute(stmt)
     return result.scalar_one_or_none()

@@ -2,7 +2,6 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
-from weakref import proxy
 
 import aiohttp
 from fastapi import FastAPI
