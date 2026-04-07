@@ -7,7 +7,6 @@ import Home from "./pages/Home";
 import LoginModal from "./components/login/LoginModal";
 import { useNavigate, Routes, Route, Outlet } from "react-router-dom";
 import FormModePage from "./pages/FormModePage";
-import TextModePage from "./pages/TextModePage";
 import useToken from "./components/useToken";
 import StatsPage from "./pages/Stats";
 import FeedbackPage from "./pages/Feedback";
@@ -75,7 +74,6 @@ function App() {
         <Route element={<PrivateRoutes auth={isAuth} loading={isLoading} />}>
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/form" element={<FormModePage />} />
-          <Route path="/text" element={<TextModePage />} />
         </Route>
         <Route path="/feedback" element={<FeedbackPage />} />
         <Route path="/instruction" element={<Introduction />} />

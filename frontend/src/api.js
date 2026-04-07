@@ -38,11 +38,6 @@ const apiService = {
     }
   },
 
-  getInfoFromText: async (text) => {
-    const response = await api.post("/api/get_info", { text });
-    return response.data;
-  },
-
   insertRecord: async (recordData, t) => {
     try {
       const response = await api.post("/api/insert_record", recordData);
@@ -296,7 +291,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     const currentPath = window.location.pathname;
-    const shouldRedirect = currentPath === "/text" || currentPath === "/form";
+    const shouldRedirect = currentPath === "/form";
 
     if (error.response?.status === 403 && !originalRequest._retry) {
       originalRequest._retry = true;

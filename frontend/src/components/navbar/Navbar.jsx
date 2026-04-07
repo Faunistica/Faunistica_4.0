@@ -28,7 +28,7 @@ const Navbar = ({ isAuthenticated, onLoginClick, onLogoutClick }) => {
         <div className={`nav-links ${isMenuOpen ? "open" : ""}`}>
           <ul className="nav-list">
             <li>
-              <NavLink to="/text" onClick={() => setIsMenuOpen(false)}>
+              <NavLink to="/form" onClick={() => setIsMenuOpen(false)}>
                 {t("links.form")}
               </NavLink>
             </li>
