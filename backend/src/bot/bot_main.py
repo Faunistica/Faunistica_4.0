@@ -15,8 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 async def bot_start() -> None:
-    global bot_instance, dp_instance
-
     session = None
     if len(config.BOT_PROXY) > 0:
         session = AiohttpSession(proxy=config.BOT_PROXY)

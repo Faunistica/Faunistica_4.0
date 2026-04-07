@@ -17,7 +17,7 @@ dependencies = [
     "argon2-cffi",
     "python-jose[cryptography]",
     "pandas",
-    "httpx",
+    "aiohttp",
     "openpyxl",
     "aiohttp-socks>=0.11.0",
     "python-dotenv>=1.2.2",

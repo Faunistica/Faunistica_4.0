@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,8 +20,8 @@ router = APIRouter()
 async def del_record(
     request: Request,
     data: RemoveRecordRequest,
-    user_data: dict = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    user_data: Annotated[dict, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     user_id = int(user_data["sub"])
     record_id = decrypt_id(data.hash, user_id)
@@ -32,7 +33,7 @@ async def del_record(
         is_success = await remove_record_row_by_id(session, record_id, user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Server database error.")
+        raise HTTPException(status_code=500, detail="Server database error.") from e
 
     if is_success:
         return {"message": "OK"}

@@ -2,7 +2,9 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
+from weakref import proxy
 
+import aiohttp
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.middleware import SlowAPIMiddleware
@@ -90,7 +92,7 @@ third_party_libs = {
     "sqlalchemy.engine": logging.WARNING,
     "sqlalchemy.engine.Engine": logging.WARNING,
     "sqlalchemy.pool": logging.WARNING,
-    "httpx": logging.WARNING,
+    "aiohttp": logging.WARNING,
 }
 
 for lib_name, level in third_party_libs.items():
@@ -102,6 +104,13 @@ async def lifespan(app: FastAPI):
     logger = logging.getLogger(__name__)
 
     await init_db()
+
+    if len(config.BOT_PROXY) > 0:
+        app.state.http_session = aiohttp.ClientSession(proxy=config.BOT_PROXY)
+        logger.info(f"HTTP session configured with proxy: {config.BOT_PROXY}")
+    else:
+        app.state.http_session = aiohttp.ClientSession()
+        logger.info("HTTP session created without proxy")
 
     try:
         bot_task = asyncio.create_task(bot_start())
@@ -118,6 +127,8 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        logger.info("Closing HTTP session...")
+        await app.state.http_session.close()
         logger.info("Shutting down bot...")
         bot_task.cancel()
         await bot_task

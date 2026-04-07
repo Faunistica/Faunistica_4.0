@@ -911,6 +911,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aiogram" },
+    { name = "aiohttp" },
     { name = "aiohttp-socks" },
     { name = "argon2-cffi" },
     { name = "asyncpg" },
@@ -919,7 +920,6 @@ dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "geopy" },
     { name = "greenlet" },
-    { name = "httpx" },
     { name = "openpyxl" },
     { name = "pandas" },
     { name = "pygbif" },
@@ -938,6 +938,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiogram" },
+    { name = "aiohttp" },
     { name = "aiohttp-socks", specifier = ">=0.11.0" },
     { name = "argon2-cffi" },
     { name = "asyncpg" },
@@ -946,7 +947,6 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"] },
     { name = "geopy" },
     { name = "greenlet", specifier = ">=3.3.2" },
-    { name = "httpx" },
     { name = "openpyxl" },
     { name = "pandas" },
     { name = "pygbif" },

@@ -9,7 +9,9 @@ from back_api.token import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-json_path = Path(__file__).resolve().parent.parent / "locations.json"
+
+# FIXME: through config?
+json_path = Path(__file__).resolve().parent.parent.parent / "locations.json"
 _LOCATION_DATA = None
 
 

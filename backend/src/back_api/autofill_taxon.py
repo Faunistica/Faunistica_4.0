@@ -4,14 +4,14 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 
 from back_api.schemas import AutofillTaxonRequest, AutofillTaxonResponse
-from back_api.token import get_current_user
 
 router = APIRouter()
 
-csv_path = Path(__file__).resolve().parent.parent / "species_export_20250503.csv"
+# FIXME: through config?
+csv_path = Path(__file__).resolve().parent.parent.parent / "species_export_20250503.csv"
 df = pd.read_csv(csv_path, usecols=["family", "genus", "species"])
 executor = ThreadPoolExecutor()
 
@@ -43,13 +43,10 @@ async def async_autofill_taxon(field: str, text: str) -> AutofillTaxonResponse:
 
 @router.post("/autofill_taxon", response_model=AutofillTaxonResponse)
 async def autofill_taxon_endpoint(
-    request: Request,
     data: AutofillTaxonRequest,
-    user_data: dict = Depends(get_current_user),
 ):
     try:
-        result = await async_autofill_taxon(data.field, data.text)
-        return result
+        return await async_autofill_taxon(data.field, data.text)
     except ValueError as e:
         logger.error(f"Value error: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e

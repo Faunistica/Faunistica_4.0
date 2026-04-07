@@ -12,7 +12,8 @@ from back_api.token import get_current_user
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-csv_path = Path(__file__).resolve().parent.parent / "species_export_20250503.csv"
+# FIXME: through config?
+csv_path = Path(__file__).resolve().parent.parent.parent / "species_export_20250503.csv"
 df = pd.read_csv(csv_path, usecols=["family", "genus", "species"])
 executor = ThreadPoolExecutor()
 

@@ -1,9 +1,13 @@
-import httpx
+import aiohttp
 
 from config.config import ADMIN_CHAT_ID, BOT_TOKEN
 
 
-async def send_support_message(data, user_id) -> None:
+async def send_support_message(
+    session: aiohttp.ClientSession,
+    data,
+    user_id,
+) -> None:
     message = (
         f"📢 Новое сообщение в поддержку из веб-формы 📢\n"
         f"🔗 Ссылка на Telegram: {data.link}\n"
@@ -17,9 +21,8 @@ async def send_support_message(data, user_id) -> None:
 
     message_payload = {"chat_id": ADMIN_CHAT_ID, "text": message, "parse_mode": "HTML"}
 
-    async with httpx.AsyncClient() as client:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        response = await client.post(url, json=message_payload)
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    async with session.post(url, json=message_payload) as response:
         response.raise_for_status()
 
 
