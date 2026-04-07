@@ -17,4 +17,3 @@ isort:
 
 lint:
 	uv run ruff check src/
-	uv run pylint src/

@@ -29,7 +29,21 @@ dependencies = [
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["I"]
+select = [
+    "I",      # isort (imports)
+    "E",      # pycodestyle errors
+    "F",      # Pyflakes
+    "W",      # pycodestyle warnings
+    "FAST",   # FastAPI-specific
+    "B",      # flake8-bugbear (best practices)
+    "UP",     # pyupgrade (modern Python)
+    "ASYNC",  # async best practices
+    "C4",     # comprehensions
+    "SIM",    # simplify code
+    "RET",    # return statements
+    "S",      # bandit (security)
+    "PL",     # Pylint
+]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
@@ -40,6 +54,5 @@ order-by-type = true
 
 [dependency-groups]
 dev = [
-    "pylint>=4.0.5",
     "ruff>=0.15.7",
 ]
