@@ -79,7 +79,7 @@ async def get_records_data(
 
             headers = [
                 COLUMN_MAPPING[field]
-                for field in COLUMN_MAPPING.keys()
+                for field in COLUMN_MAPPING
                 if field
                 not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
             ]
@@ -92,7 +92,7 @@ async def get_records_data(
             for record in records:
                 row = [
                     getattr(record, field)
-                    for field in COLUMN_MAPPING.keys()
+                    for field in COLUMN_MAPPING
                     if field
                     not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
                 ]

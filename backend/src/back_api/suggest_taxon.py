@@ -2,7 +2,6 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -18,7 +17,7 @@ df = pd.read_csv(csv_path, usecols=["family", "genus", "species"])
 executor = ThreadPoolExecutor()
 
 
-def suggestion(field: str, text: str, filters: Dict[str, Optional[str]]) -> List[str]:
+def suggestion(field: str, text: str, filters: dict[str, str | None]) -> list[str]:
     if field not in ["species", "genus", "family"]:
         logger.warning("Invalid field. Must be 'species', 'genus', or 'family'")
         raise ValueError("Invalid field. Must be 'species', 'genus', or 'family'.")
@@ -48,8 +47,8 @@ def suggestion(field: str, text: str, filters: Dict[str, Optional[str]]) -> List
 
 
 async def async_suggestion(
-    field: str, text: str, filters: Dict[str, Optional[str]]
-) -> List[str]:
+    field: str, text: str, filters: dict[str, str | None]
+) -> list[str]:
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(executor, suggestion, field, text, filters)
 

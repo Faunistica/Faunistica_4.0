@@ -1,4 +1,3 @@
-from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -17,57 +16,57 @@ class InfoRequest(BaseModel):
 
 
 class InfoResponse(BaseModel):
-    country: Optional[str] = None
-    region: Optional[str] = None
-    district: Optional[str] = None
-    gathering_place: Optional[str] = None
-    coordinate_north: Optional[Dict[str, Optional[float]]] = None
-    coordinate_east: Optional[Dict[str, Optional[float]]] = None
-    date: Optional[str] = None
-    family: Optional[str] = None
-    genus: Optional[str] = None
-    species: Optional[str] = None
-    collector: Optional[str] = None
-    count_males: Optional[int] = None
-    count_females: Optional[int] = None
-    count_juv_male: Optional[int] = None
-    count_juv_female: Optional[int] = None
-    count_juv: Optional[int] = None
+    country: str | None = None
+    region: str | None = None
+    district: str | None = None
+    gathering_place: str | None = None
+    coordinate_north: dict[str, float | None] | None = None
+    coordinate_east: dict[str, float | None] | None = None
+    date: str | None = None
+    family: str | None = None
+    genus: str | None = None
+    species: str | None = None
+    collector: str | None = None
+    count_males: int | None = None
+    count_females: int | None = None
+    count_juv_male: int | None = None
+    count_juv_female: int | None = None
+    count_juv: int | None = None
 
 
 class InsertRecordsRequest(BaseModel):
-    abu_ind_rem: Optional[str] = None
-    adm_verbatim: Optional[bool] = None
-    begin_day: Optional[int] = None
-    begin_month: Optional[int] = None
-    begin_year: Optional[int] = None
-    biotope: Optional[str] = None
-    collector: Optional[str] = None
-    country: Optional[str] = None
-    district: Optional[str] = None
-    east: Optional[str] = None
-    end_day: Optional[int] = None
-    end_month: Optional[int] = None
-    end_year: Optional[int] = None
-    eve_REM: Optional[str] = None
-    family: Optional[str] = None
-    genus: Optional[str] = None
-    geo_origin: Optional[str] = None
-    geo_REM: Optional[str] = None
-    geo_uncert: Optional[float] = None
-    is_defined_species: Optional[bool] = None
-    is_in_wsc: Optional[bool] = None
-    is_new_species: Optional[bool] = None
-    measurement_units: Optional[str] = None
-    north: Optional[str] = None
-    place: Optional[str] = None
-    place_notes: Optional[str] = None
-    region: Optional[str] = None
-    selective_gain: Optional[str] = None
-    species: Optional[str] = None
-    specimens: Optional[Dict[str, Optional[float]]] = None
-    taxonomic_notes: Optional[str] = None
-    type_status: Optional[str] = None
+    abu_ind_rem: str | None = None
+    adm_verbatim: bool | None = None
+    begin_day: int | None = None
+    begin_month: int | None = None
+    begin_year: int | None = None
+    biotope: str | None = None
+    collector: str | None = None
+    country: str | None = None
+    district: str | None = None
+    east: str | None = None
+    end_day: int | None = None
+    end_month: int | None = None
+    end_year: int | None = None
+    eve_REM: str | None = None
+    family: str | None = None
+    genus: str | None = None
+    geo_origin: str | None = None
+    geo_REM: str | None = None
+    geo_uncert: float | None = None
+    is_defined_species: bool | None = None
+    is_in_wsc: bool | None = None
+    is_new_species: bool | None = None
+    measurement_units: str | None = None
+    north: str | None = None
+    place: str | None = None
+    place_notes: str | None = None
+    region: str | None = None
+    selective_gain: str | None = None
+    species: str | None = None
+    specimens: dict[str, float | None] | None = None
+    taxonomic_notes: str | None = None
+    type_status: str | None = None
 
 
 class SpeciesStats(BaseModel):
@@ -87,35 +86,35 @@ class StatisticsResponse(BaseModel):
     processed_publications: int
     total_species: int
     unique_species: int
-    top_species: List[SpeciesStats]
-    latest_records: List[LatestRecord]
+    top_species: list[SpeciesStats]
+    latest_records: list[LatestRecord]
 
 
 class GeoSearchRequest(BaseModel):
     field: str
     text: str
-    filters: Optional[Dict[str, Optional[str]]] = None
+    filters: dict[str, str | None] | None = None
 
 
 class GeoSearchResponse(BaseModel):
-    suggestions: Optional[List[str]] = None
+    suggestions: list[str] | None = None
 
 
 class SuggestTaxonRequest(BaseModel):
     field: str
     text: str
-    filters: Optional[Dict[str, Optional[str]]] = None
+    filters: dict[str, str | None] | None = None
 
 
 class SuggestTaxonResponse(BaseModel):
-    suggestions: Optional[List[str]] = None
+    suggestions: list[str] | None = None
 
 
 class PublResponse(BaseModel):
-    author: Optional[str] = None
-    year: Optional[str] = None
-    name: Optional[str] = None
-    pdf_file: Optional[str] = None
+    author: str | None = None
+    year: str | None = None
+    name: str | None = None
+    pdf_file: str | None = None
 
 
 class AutofillTaxonRequest(BaseModel):
@@ -124,30 +123,30 @@ class AutofillTaxonRequest(BaseModel):
 
 
 class AutofillTaxonResponse(BaseModel):
-    family: Optional[str] = None
-    genus: Optional[str] = None
+    family: str | None = None
+    genus: str | None = None
 
 
 class SupportRequest(BaseModel):
     link: str
-    user_name: Optional[str] = None
+    user_name: str | None = None
     text: str
     issue_type: str
 
 
 class GetLocationRequest(BaseModel):
     degrees_n: float
-    minutes_n: Optional[float] = None
-    seconds_n: Optional[float] = None
+    minutes_n: float | None = None
+    seconds_n: float | None = None
     degrees_e: float
-    minutes_e: Optional[float] = None
-    seconds_e: Optional[float] = None
+    minutes_e: float | None = None
+    seconds_e: float | None = None
 
 
 class GetLocationResponse(BaseModel):
-    country: Optional[str] = None
-    region: Optional[str] = None
-    district: Optional[str] = None
+    country: str | None = None
+    region: str | None = None
+    district: str | None = None
 
 
 class RemoveRecordRequest(BaseModel):
@@ -160,72 +159,72 @@ class GetRecordRequest(BaseModel):
 
 class GetRecordResponse(BaseModel):
     hash: str
-    type: Optional[str] = None
-    adm_country: Optional[str] = None
-    adm_region: Optional[str] = None
-    adm_district: Optional[str] = None
-    adm_loc: Optional[str] = None
-    geo_nn_raw: Optional[str] = None
-    geo_ee_raw: Optional[str] = None
-    geo_origin: Optional[str] = None
-    geo_REM: Optional[str] = None
-    eve_YY: Optional[int] = None
-    eve_MM: Optional[int] = None
-    eve_DD: Optional[int] = None
-    eve_day_def: Optional[bool] = None
-    eve_habitat: Optional[str] = None
-    eve_effort: Optional[str] = None
-    abu_coll: Optional[str] = None
-    eve_REM: Optional[str] = None
-    tax_fam: Optional[str] = None
-    tax_gen: Optional[str] = None
-    tax_sp: Optional[str] = None
-    tax_sp_def: Optional[bool] = None
-    tax_nsp: Optional[bool] = None
-    type_status: Optional[str] = None
-    tax_REM: Optional[str] = None
-    abu: Optional[int] = None
-    abu_details: Optional[str] = None
-    abu_ind_rem: Optional[str] = None
-    geo_uncert: Optional[float] = None
-    eve_YY_end: Optional[int] = None
-    eve_MM_end: Optional[int] = None
-    eve_DD_end: Optional[int] = None
+    type: str | None = None
+    adm_country: str | None = None
+    adm_region: str | None = None
+    adm_district: str | None = None
+    adm_loc: str | None = None
+    geo_nn_raw: str | None = None
+    geo_ee_raw: str | None = None
+    geo_origin: str | None = None
+    geo_REM: str | None = None
+    eve_YY: int | None = None
+    eve_MM: int | None = None
+    eve_DD: int | None = None
+    eve_day_def: bool | None = None
+    eve_habitat: str | None = None
+    eve_effort: str | None = None
+    abu_coll: str | None = None
+    eve_REM: str | None = None
+    tax_fam: str | None = None
+    tax_gen: str | None = None
+    tax_sp: str | None = None
+    tax_sp_def: bool | None = None
+    tax_nsp: bool | None = None
+    type_status: str | None = None
+    tax_REM: str | None = None
+    abu: int | None = None
+    abu_details: str | None = None
+    abu_ind_rem: str | None = None
+    geo_uncert: float | None = None
+    eve_YY_end: int | None = None
+    eve_MM_end: int | None = None
+    eve_DD_end: int | None = None
 
 
 class EditRecordRequest(BaseModel):
     hash: str
-    type: Optional[str] = None
-    adm_country: Optional[str] = None
-    adm_region: Optional[str] = None
-    adm_district: Optional[str] = None
-    adm_loc: Optional[str] = None
-    geo_nn_raw: Optional[str] = None
-    geo_ee_raw: Optional[str] = None
-    geo_origin: Optional[str] = None
-    geo_REM: Optional[str] = None
-    eve_YY: Optional[int] = None
-    eve_MM: Optional[int] = None
-    eve_DD: Optional[int] = None
-    eve_day_def: Optional[bool] = None
-    eve_habitat: Optional[str] = None
-    eve_effort: Optional[str] = None
-    abu_coll: Optional[str] = None
-    eve_REM: Optional[str] = None
-    tax_fam: Optional[str] = None
-    tax_gen: Optional[str] = None
-    tax_sp: Optional[str] = None
-    tax_sp_def: Optional[bool] = None
-    tax_nsp: Optional[bool] = None
-    type_status: Optional[str] = None
-    tax_REM: Optional[str] = None
-    abu: Optional[int] = None
-    abu_details: Optional[str] = None
-    abu_ind_rem: Optional[str] = None
-    geo_uncert: Optional[float] = None
-    eve_YY_end: Optional[int] = None
-    eve_MM_end: Optional[int] = None
-    eve_DD_end: Optional[int] = None
+    type: str | None = None
+    adm_country: str | None = None
+    adm_region: str | None = None
+    adm_district: str | None = None
+    adm_loc: str | None = None
+    geo_nn_raw: str | None = None
+    geo_ee_raw: str | None = None
+    geo_origin: str | None = None
+    geo_REM: str | None = None
+    eve_YY: int | None = None
+    eve_MM: int | None = None
+    eve_DD: int | None = None
+    eve_day_def: bool | None = None
+    eve_habitat: str | None = None
+    eve_effort: str | None = None
+    abu_coll: str | None = None
+    eve_REM: str | None = None
+    tax_fam: str | None = None
+    tax_gen: str | None = None
+    tax_sp: str | None = None
+    tax_sp_def: bool | None = None
+    tax_nsp: bool | None = None
+    type_status: str | None = None
+    tax_REM: str | None = None
+    abu: int | None = None
+    abu_details: str | None = None
+    abu_ind_rem: str | None = None
+    geo_uncert: float | None = None
+    eve_YY_end: int | None = None
+    eve_MM_end: int | None = None
+    eve_DD_end: int | None = None
 
 
 class RecordHashRequest(BaseModel):

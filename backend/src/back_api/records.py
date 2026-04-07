@@ -1,7 +1,6 @@
 import logging
 import re
 from datetime import UTC, datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,7 +55,7 @@ def specimen_parse(specimens):
     return None, 0
 
 
-def num_of_specimen(specimens: Optional[dict]) -> Optional[float]:
+def num_of_specimen(specimens: dict | None) -> float | None:
     if not specimens:
         return 0
     count = 0
@@ -103,7 +102,7 @@ def parse_coordinate(coord: str) -> float:
     raise ValueError(f"Invalid coordinate format: {coord}")
 
 
-def safe_coord_parse(coord: Optional[str]) -> Optional[float]:
+def safe_coord_parse(coord: str | None) -> float | None:
     if not coord:
         return None
     try:

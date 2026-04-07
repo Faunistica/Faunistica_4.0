@@ -36,8 +36,7 @@ async def del_record(
 
     if is_success:
         return {"message": "OK"}
-    else:
-        logger.warning("Record not found or not owned by user")
-        raise HTTPException(
-            status_code=404, detail="Record not found or not owned by user."
-        )
+    logger.warning("Record not found or not owned by user")
+    raise HTTPException(
+        status_code=404, detail="Record not found or not owned by user."
+    )

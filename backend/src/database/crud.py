@@ -2,7 +2,6 @@ import asyncio
 import functools
 import logging
 from datetime import datetime
-from typing import Dict, List
 
 from sqlalchemy import and_, func, text, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -266,7 +265,7 @@ def format_event_date(yy, mm, dd, yy_end, mm_end, dd_end) -> str:
 
 
 @handle_db_errors
-async def get_personal_stats(session: AsyncSession, user_id: int) -> List[Dict]:
+async def get_personal_stats(session: AsyncSession, user_id: int) -> list[dict]:
     stmt = (
         select(
             Record.id,

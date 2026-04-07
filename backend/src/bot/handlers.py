@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from re import fullmatch
 
 from aiogram import Router
@@ -357,10 +357,10 @@ class Handlers:
             if not user:
                 await message.answer(Messages.not_registered())
                 return
-            elif user.reg_stat is None:
+            if user.reg_stat is None:
                 await message.answer(Messages.register_for_old())
                 return
-            elif 1 < user.reg_stat <= 6:
+            if 1 < user.reg_stat <= 6:
                 await message.answer(
                     Messages.unavailable_during_registration(),
                     parse_mode="Markdown",
@@ -384,7 +384,7 @@ class Handlers:
 
             if message.chat.id < 0:
                 return
-            elif not user:
+            if not user:
                 await message.answer(Messages.not_registered())
             elif user.reg_stat is None:
                 await message.answer(Messages.register_for_old())
@@ -442,10 +442,10 @@ class Handlers:
             if not user:
                 await message.answer(Messages.not_registered())
                 return
-            elif user.reg_stat is None:
+            if user.reg_stat is None:
                 await message.answer(Messages.register_for_old())
                 return
-            elif 1 < user.reg_stat <= 6:
+            if 1 < user.reg_stat <= 6:
                 await message.answer(
                     Messages.unavailable_during_registration(),
                     parse_mode="Markdown",
@@ -505,8 +505,8 @@ class Handlers:
         date_str = args[1]
         try:
             if date_str.lower() == "сегодня":
-                service_log = config.LOGS_DIR / f"service.log"
-                errors_log = config.LOGS_DIR / f"errors.log"
+                service_log = config.LOGS_DIR / "service.log"
+                errors_log = config.LOGS_DIR / "errors.log"
             else:
                 date = datetime.strptime(date_str, "%Y-%m-%d")
                 date_str = date.strftime("%Y-%m-%d")
@@ -714,10 +714,10 @@ class Handlers:
 
             await state.clear()
             return
-        elif len(message.text) < 10:
+        if len(message.text) < 10:
             await message.answer(Messages.support_request_too_short())
             return
-        elif len(message.text) > 256:
+        if len(message.text) > 256:
             await message.answer(Messages.message_too_long())
             return
 

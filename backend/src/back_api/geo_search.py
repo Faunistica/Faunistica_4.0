@@ -1,7 +1,6 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
@@ -18,7 +17,7 @@ def _load_location_data():
     global _LOCATION_DATA
     if _LOCATION_DATA is None:
         try:
-            with open(json_path, "r", encoding="utf-8") as f:
+            with open(json_path, encoding="utf-8") as f:
                 _LOCATION_DATA = json.load(f)
         except Exception as e:
             logger.error(f"Failed to load location data: {e}", exc_info=True)
@@ -27,8 +26,8 @@ def _load_location_data():
 
 
 async def get_suggestions(
-    field: str, text: str, filters: Optional[Dict] = None
-) -> List[str]:
+    field: str, text: str, filters: dict | None = None
+) -> list[str]:
     location_data = _load_location_data()
     if not location_data:
         return []
@@ -38,7 +37,7 @@ async def get_suggestions(
     if field == "region":
         return [r["region"] for r in location_data if text in r["region"].lower()][:100]
 
-    elif field == "district":
+    if field == "district":
         region_filter = filters.get("region")
         districts = []
 
