@@ -1,11 +1,11 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from text_processing.splitting import get_separated_parameters
 
 from back_api.rate_limiter import limiter
 from back_api.schemas import InfoRequest, InfoResponse
 from back_api.token import get_current_user
-from text_processing.splitting import get_separated_parameters
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
