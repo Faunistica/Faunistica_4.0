@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,20 +17,18 @@ router = APIRouter()
 @limiter.limit("10/minute")
 async def next_publ(
     request: Request,
-    user_data: dict = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
+    user_data: Annotated[dict, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> bool:
     user_id = int(user_data["sub"])
     user_info = await get_user(session, user_id)
-    print(user_info)
 
-    if not await is_publ_filled(session, user_id, user_info.publ_id):
+    if not await is_publ_filled(session, user_id, int, user_info.publ_id):
         logger.warning("Publication is not filled")
         raise HTTPException(status_code=409, detail="Publication is not filled")
 
-    if not user_info.items:
-        print(user_info.items)
-        logger.warning("No publications available")
+    if len(user_info.items) == 0:
+        logger.warning("No publications available for user %d", user_id)
         raise HTTPException(status_code=404, detail="No publications available")
 
     items = user_info.items.split("|")

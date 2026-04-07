@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from geopy.exc import GeocoderTimedOut
@@ -45,15 +46,14 @@ def dms_to_dd(
 ) -> float:
     minutes = minutes if minutes is not None else 0
     seconds = seconds if seconds is not None else 0
-    dd = degrees + (minutes / 60) + (seconds / 3600)
-    return dd
+    return degrees + (minutes / 60) + (seconds / 3600)
 
 
 @router.post("/get_loc", response_model=GetLocationResponse)
 async def get_loc(
     request: Request,
     data: GetLocationRequest,
-    user_data: dict = Depends(get_current_user),
+    user_data: Annotated[dict, Depends(get_current_user)],
 ):
     latitude = dms_to_dd(data.degrees_n, data.minutes_n, data.seconds_n)
     longitude = dms_to_dd(data.degrees_e, data.minutes_e, data.seconds_e)

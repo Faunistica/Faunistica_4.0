@@ -41,10 +41,10 @@ async def async_autofill_taxon(field: str, text: str) -> AutofillTaxonResponse:
     return await loop.run_in_executor(executor, autofill_taxon, field, text)
 
 
-@router.post("/autofill_taxon", response_model=AutofillTaxonResponse)
+@router.post("/autofill_taxon")
 async def autofill_taxon_endpoint(
     data: AutofillTaxonRequest,
-):
+) -> AutofillTaxonResponse:
     try:
         return await async_autofill_taxon(data.field, data.text)
     except ValueError as e:

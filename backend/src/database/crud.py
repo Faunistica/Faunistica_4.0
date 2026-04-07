@@ -13,6 +13,7 @@ from sqlalchemy.future import select
 
 from database.hash import check_password_hash, encrypt_id
 from database.models import Action, Publ, Record, User
+from model import PublData
 
 logger = logging.getLogger(__name__)
 
@@ -513,29 +514,36 @@ async def edit_record_by_id(
     stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
     result = await session.execute(stmt)
     record = result.scalar_one_or_none()
-    print(record)
+
     if record is None:
         return False
+
     for key, value in new_data.items():
         if key != "hash":
             setattr(record, key, value)
+
     await session.commit()
     return True
 
 
 @handle_db_errors
-async def publ_by_hash(session: AsyncSession, record_id: int, user_id: int) -> dict:
+async def publ_by_hash(
+    session: AsyncSession, record_id: int, user_id: int
+) -> PublData | None:
     record = await get_record_by_id(session, record_id, user_id)
-    data = {}
-    if record is not None:
-        stmt = select(Publ).filter_by(id=record.publ_id)
-        result = await session.execute(stmt)
-        publication = result.scalar_one_or_none()
-        if publication:
-            data = {
-                "author": publication.author,
-                "year": str(publication.year),
-                "name": publication.name,
-                "pdf_file": publication.pdf_file,
-            }
-    return data
+
+    if record is None:
+        return None
+
+    stmt = select(Publ).filter_by(id=record.publ_id)
+    result = await session.execute(stmt)
+    publication = result.scalar_one_or_none()
+    if publication is None:
+        return None
+
+    return PublData(
+        author=publication.author,
+        year=str(publication.year),
+        name=publication.name,
+        pdf_file=publication.pdf_file,
+    )

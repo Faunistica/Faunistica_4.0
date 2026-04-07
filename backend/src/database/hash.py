@@ -19,3 +19,7 @@ def check_password_hash(user_pass: str, db_hash: str) -> bool:
 # FIXME: remove this functions
 def encrypt_id(some_id: int, user_id: int) -> str:
     return f"{user_id}|{some_id}"
+
+
+def decrypt_id(token: str) -> int:
+    return int(token.split("|")[1])

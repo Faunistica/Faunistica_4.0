@@ -1,6 +1,7 @@
 import io
 import logging
 from datetime import datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -58,8 +59,8 @@ COLUMN_MAPPING = {
 @limiter.limit("1/minute")
 async def get_records_data(
     request: Request,
-    user_data: dict = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    user_data: Annotated[dict, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     user_id = int(user_data["sub"])
     username = user_data["username"]

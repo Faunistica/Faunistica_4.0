@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,30 +16,37 @@ router = APIRouter()
 base_url = "https://faunistica.ru/files/"
 
 
+# FIXME: post?
 @router.post("/publ_from_hash")
 @limiter.limit("666/minute")
-async def publ_from_hash(
+async def get_publ_from_hash(
     request: Request,
     data: RecordHashRequest,
-    user_data: dict = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
+    user_data: Annotated[dict, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> PublResponse:
     try:
         user_id = int(user_data["sub"])
-        record_id = decrypt_id(data.hash, user_id)
+        record_id = decrypt_id(data.hash)
+
         if record_id is None:
             logger.warning("Invalid record token")
             raise HTTPException(status_code=400, detail="Invalid record token.")
-        data = await publ_by_hash(session, record_id, user_id)
-        if data is None:
+
+        publ = await publ_by_hash(session, record_id, user_id)
+        if publ is None:
             logger.warning("Publication not found")
             raise HTTPException(status_code=404, detail="Publication not found.")
+
         return PublResponse(
-            author=data["author"],
-            year=data["year"],
-            name=data["name"],
-            pdf_file=base_url + data["pdf_file"],
+            author=publ.author,
+            year=publ.year,
+            name=publ.name,
+            pdf_file=base_url + publ.pdf_file,
         )
+
     except Exception as e:
         logger.error(f"HTTP Error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Server database error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Server database error: {str(e)}"
+        ) from e

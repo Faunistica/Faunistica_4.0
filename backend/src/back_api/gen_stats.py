@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,5 +13,5 @@ router = APIRouter()
 
 @router.get("/get_gen_stats", response_model=StatisticsResponse)
 @limiter.limit("60/minute")
-async def get_gen_stats(request: Request, session: AsyncSession = Depends(get_session)):
+async def get_gen_stats(request: Request, session: Annotated[AsyncSession, Depends(get_session)]):
     return await get_statistics(session)

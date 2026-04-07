@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.messages import send_support_message
 from back_api.rate_limiter import limiter
-from back_api.schemas import SupportRequest
+from back_api.schemas import Message, SupportRequest
 from back_api.util import get_http_session
 from database.crud import get_user_id_by_username
 from database.database import get_session
@@ -23,11 +23,15 @@ async def support(
     data: SupportRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
     http_session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
-):
+) -> Message:
     try:
-        user_id = await get_user_id_by_username(session, data.user_name)
+        user_id = (
+            await get_user_id_by_username(session, data.user_name)
+            if data.user_name is not None
+            else None
+        )
         await send_support_message(http_session, data, user_id)
-        return {"message": "Support request received"}
+        return Message("Support request received")
     except Exception as e:
         logger.error(f"Failed to process support request: {e}", exc_info=True)
         raise HTTPException(

@@ -1,6 +1,7 @@
 import logging
 import re
 from datetime import UTC, datetime
+from typing import Annotated, TypeVar
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,8 +15,10 @@ from database.database import get_session
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+T = TypeVar("T")
 
-def clean_value(value):
+
+def clean_value(value: T | None) -> T | None:
     if value in ("", None, [], 0, 0.0):
         return None
     return value
@@ -29,7 +32,7 @@ def specimen_parse(specimens):
     total = 0
     values = []
 
-    def add_entry(count, label):
+    def add_entry(count, label) -> None:
         nonlocal total
         if count is not None and count != 0:
             values.append(count)
@@ -118,8 +121,8 @@ def safe_coord_parse(coord: str | None) -> float | None:
 async def insert_record(
     request: Request,
     data: InsertRecordsRequest,
-    user_data: dict = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    user_data: Annotated[dict, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     north = safe_coord_parse(data.north)
     east = safe_coord_parse(data.east)

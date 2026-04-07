@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,8 +19,8 @@ base_url = "https://faunistica.ru/files/"
 @limiter.limit("666/minute")
 async def get_publ(
     request: Request,
-    user_data: dict = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    user_data: Annotated[dict, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     try:
         data = await username_and_publication(session, int(user_data["sub"]))

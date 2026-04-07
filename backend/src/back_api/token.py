@@ -27,18 +27,17 @@ def create_refresh_token(data: dict) -> str:
 
 def verify_token(token: str) -> dict:
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        return payload
-    except ExpiredSignatureError:
+        return jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except ExpiredSignatureError as e:
         logger.warning("Token expired")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Token expired"
-        )
-    except JWTError:
+        ) from e
+    except JWTError as e:
         logger.warning("Invalid token")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
-        )
+        ) from e
 
 
 def get_current_user(request: Request) -> dict:

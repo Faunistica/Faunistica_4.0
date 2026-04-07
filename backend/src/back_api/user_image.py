@@ -16,7 +16,7 @@ router = APIRouter()
 async def fetch_telegram_photo(
     session: aiohttp.ClientSession,
     user_id: int,
-):
+) -> io.BytesIO | None:
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUserProfilePhotos"
     async with session.get(url, params={"user_id": user_id, "limit": 1}) as resp:
         data = await resp.json()
@@ -35,6 +35,7 @@ async def fetch_telegram_photo(
     file_path = file_info["result"]["file_path"]
     file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
     async with session.get(file_url) as file_resp:
+        # TODO: Streaming response?
         return io.BytesIO(await file_resp.read())
 
 
@@ -42,7 +43,7 @@ async def fetch_telegram_photo(
 async def stream_photo(
     user_id: int,
     session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
-):
+) -> StreamingResponse:
     photo = await fetch_telegram_photo(session, user_id)
     if not photo:
         logger.warning("No photo found")

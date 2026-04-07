@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
+from back_api.schemas import Message
 from back_api.token import create_access_token, verify_token
 from config.config import ACCESS_TOKEN_EXPIRE
 
@@ -10,7 +11,7 @@ router = APIRouter()
 
 
 @router.post("/refresh_token")
-def refresh(request: Request, response: Response):
+def refresh(request: Request, response: Response) -> Message:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         logger.warning("Refresh token missing")
@@ -37,4 +38,4 @@ def refresh(request: Request, response: Response):
         path="/",
     )
 
-    return {"message": "Access token refreshed"}
+    return Message("Access token refreshed")

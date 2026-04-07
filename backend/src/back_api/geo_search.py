@@ -1,6 +1,7 @@
 import json
 import logging
 from pathlib import Path
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
@@ -58,7 +59,7 @@ async def get_suggestions(
 async def geo_search(
     request: Request,
     data: GeoSearchRequest,
-    user_data: dict = Depends(get_current_user),
+    user_data: Annotated[dict, Depends(get_current_user)],
 ):
     try:
         suggestions = await get_suggestions(data.field, data.text, data.filters)

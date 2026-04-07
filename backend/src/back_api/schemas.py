@@ -228,3 +228,10 @@ class EditRecordRequest(BaseModel):
 
 class RecordHashRequest(BaseModel):
     hash: str
+
+
+class Message(BaseModel):
+    message: str
+
+    def __init__(self, /, message: str) -> None:
+        self.message = message
