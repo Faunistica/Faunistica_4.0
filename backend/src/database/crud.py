@@ -236,8 +236,8 @@ async def get_user_stats(session: AsyncSession, user_id: int):
 
     result = await session.execute(
         text("""
-        SELECT mode() WITHIN GROUP (ORDER BY CONCAT(tax_gen, ' ', tax_sp)) 
-        FROM records 
+        SELECT mode() WITHIN GROUP (ORDER BY CONCAT(tax_gen, ' ', tax_sp))
+        FROM records
         WHERE type = 'rec_ok' AND user_id = :user_id
     """),
         {"user_id": user_id},
@@ -336,11 +336,11 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> list[dict]:
 # === VOLUNTEERS ===
 async def get_volunteers_achievements(session: AsyncSession):
     stmt = text("""
-        SELECT a.user_id, a.object, a.datetime, 
-               u.name, u.tlg_name, u.tlg_username 
-        FROM actions a 
-        INNER JOIN users u ON a.user_id = u.id 
-        WHERE a.action = 'fau_100' 
+        SELECT a.user_id, a.object, a.datetime,
+               u.name, u.tlg_name, u.tlg_username
+        FROM actions a
+        INNER JOIN users u ON a.user_id = u.id
+        WHERE a.action = 'fau_100'
         ORDER BY a.datetime DESC
     """)
     result = await session.execute(stmt)
@@ -427,7 +427,7 @@ async def get_statistics(session: AsyncSession):
             if user_data and "user_name" in user_data
             else "Unknown",
         }
-        for record, user_data in zip(latest_records, user_name_data)
+        for record, user_data in zip(latest_records, user_name_data, strict=False)
     ]
 
     return stats
