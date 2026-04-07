@@ -33,9 +33,10 @@ def specimen_parse(specimens):
         nonlocal total
         if count is not None and count != 0:
             values.append(count)
-            entries.append(
-                f"{int(count) if isinstance(count, float) and count.is_integer() else count} {label}"
+            num = (
+                int(count) if isinstance(count, float) and count.is_integer() else count
             )
+            entries.append(f"{num} {label}")
             total += count
 
     add_entry(specimens.get("male_adult"), "mmm")
