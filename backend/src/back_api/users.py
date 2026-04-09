@@ -25,12 +25,12 @@ async def handle_user_data(
     tokens: Annotated[TokenService, Depends(get_token_service)],
     users: Annotated[UserService, Depends(get_user_service)],
 ) -> Message:
-    user_id = await users.get_user_id_by_username(session, data.username)
+    user_id = await users.get_user_by_username(session, data.username)
     if user_id is None:
         logger.warning("User not found for this username")
         raise HTTPException(status_code=404, detail="User not found for this username")
 
-    if not await users.is_pass_correct(session, user_id, data.password):
+    if not await users.verify_password(session, user_id, data.password):
         logger.warning("Wrong password")
         raise HTTPException(status_code=401, detail="Wrong password")
 

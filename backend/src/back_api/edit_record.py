@@ -35,9 +35,7 @@ async def edit_record(
         dump = data.model_dump()
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"
-        is_success = await records_svc.edit_record_by_id(
-            session, record_id, user_id, dump
-        )
+        is_success = await records_svc.update(session, record_id, user_id, dump)
 
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

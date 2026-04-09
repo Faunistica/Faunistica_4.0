@@ -28,7 +28,7 @@ async def get_records_data(
     user_id = int(user_data["sub"])
     username = user_data["username"]
     try:
-        records = await records_svc.get_user_records(session, user_id)
+        records = await records_svc.get_records(session, user_id)
 
         if not records:
             logger.warning(f"No records found for user: {username} - {user_id}")

@@ -24,10 +24,10 @@ async def next_publ(
     pubs: Annotated[PublicationService, Depends(get_publication_service)],
 ) -> bool:
     user_id = int(user_data["sub"])
-    user = await users.get_user(session, user_id)
+    user = await users.get_user_by_id(session, user_id)
 
     # NOTE: gessing how it should work, shoud check if incorrect
-    if user.publ_id is not None and not await pubs.is_publ_filled(
+    if user.publ_id is not None and not await pubs.is_filled(
         session, user_id, user.publ_id
     ):
         logger.warning("Publication is not filled")
@@ -44,6 +44,6 @@ async def next_publ(
 
     if (num_publ != -1) and (num_publ != len(items) - 1):
         publ_id = int(items[num_publ + 1])
-        await users.update_user(session, user_id, publ_id=publ_id)
+        await users.update(session, user_id, publ_id=publ_id)
         return True
     return False

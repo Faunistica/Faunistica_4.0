@@ -24,7 +24,7 @@ async def get_publ(
     users: Annotated[UserService, Depends(get_user_service)],
 ) -> PublResponse:
     try:
-        data = await users.username_and_publication(session, int(user_data["sub"]))
+        data = await users.get_user_with_publication(session, int(user_data["sub"]))
 
         return PublResponse(
             author=data["publication"]["author"],

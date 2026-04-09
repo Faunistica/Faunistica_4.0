@@ -31,9 +31,7 @@ async def del_record(
         raise HTTPException(status_code=400, detail="Invalid record token.")
 
     try:
-        is_success = await records_svc.remove_record_row_by_id(
-            session, record_id, user_id
-        )
+        is_success = await records_svc.delete(session, record_id, user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e

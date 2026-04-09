@@ -18,9 +18,9 @@ async def get_pers_stats(
     users: Annotated[UserService, Depends(get_user_service)],
 ) -> tuple[str, int, dict, list[dict]]:
     user_id = int(user_data["sub"])
-    user_info = await users.get_user(session, user_id)
+    user_info = await users.get_user_by_id(session, user_id)
     username = user_info.name
-    stats = await users.get_user_stats(session, user_id)
-    table_stats = await users.get_personal_stats(session, user_id)
+    stats = await users.get_stats(session, user_id)
+    table_stats = await users.get_personal(session, user_id)
     # FIXME: this is definitely non-ideal
     return username, user_id, stats, table_stats

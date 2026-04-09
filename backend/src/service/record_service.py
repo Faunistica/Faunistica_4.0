@@ -11,22 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 class RecordService:
-    async def add_record_from_json(
-        self, session: AsyncSession, record_json: dict
-    ) -> None:
+    async def add_record(self, session: AsyncSession, record_json: dict) -> None:
         await record_repo.add_record_from_json(session, record_json)
 
-    async def get_statistics(self, session: AsyncSession) -> dict:
+    async def get_stats(self, session: AsyncSession) -> dict:
         return await record_repo.get_statistics(session)
 
-    async def get_user_records(
+    async def get_records(
         self, session: AsyncSession, user_id: int
     ) -> Sequence[Record]:
         return await record_repo.get_user_records(session, user_id)
 
-    async def remove_record_row_by_id(
-        self, session: AsyncSession, record_id: int, user_id: int
-    ) -> bool:
+    async def delete(self, session: AsyncSession, record_id: int, user_id: int) -> bool:
         return await record_repo.remove_record_row_by_id(session, record_id, user_id)
 
     async def get_record_by_id(
@@ -34,14 +30,14 @@ class RecordService:
     ) -> Record | None:
         return await record_repo.get_record_by_id(session, record_id, user_id)
 
-    async def edit_record_by_id(
+    async def update(
         self, session: AsyncSession, record_id: int, user_id: int, new_data: dict
     ) -> bool:
         return await record_repo.edit_record_by_id(
             session, record_id, user_id, new_data
         )
 
-    async def publ_by_hash(
+    async def get_publication_by_hash(
         self, session: AsyncSession, record_id: int, user_id: int
     ) -> PublData | None:
         return await record_repo.publ_by_hash(session, record_id, user_id)

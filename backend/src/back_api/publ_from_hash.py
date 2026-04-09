@@ -34,7 +34,7 @@ async def get_publ_from_hash(
             logger.warning("Invalid record token")
             raise HTTPException(status_code=400, detail="Invalid record token.")
 
-        publ = await records_svc.publ_by_hash(session, record_id, user_id)
+        publ = await records_svc.get_publication_by_hash(session, record_id, user_id)
         if publ is None:
             logger.warning("Publication not found")
             raise HTTPException(status_code=404, detail="Publication not found.")

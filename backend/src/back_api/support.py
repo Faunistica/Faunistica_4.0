@@ -28,7 +28,7 @@ async def support(
     support_svc: Annotated[SupportService, Depends(get_support_service)],
 ) -> Message:
     try:
-        user_id = await users.get_user_id_by_username(session, data.user_name)
+        user_id = await users.get_user_by_username(session, data.user_name)
 
         if user_id is None:
             raise HTTPException(

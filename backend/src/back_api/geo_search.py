@@ -19,7 +19,7 @@ async def geo_search(
     geo: Annotated[GeoService, Depends(get_geo_service)],
 ) -> GeoSearchResponse:
     try:
-        suggestions = await geo.get_suggestions(
+        suggestions = await geo.get_location_suggestions(
             location_data, data.field, data.text, data.filters
         )
         return GeoSearchResponse(suggestions=suggestions)

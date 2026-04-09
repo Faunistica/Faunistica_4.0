@@ -31,10 +31,10 @@ async def insert_record(
     users: Annotated[UserService, Depends(get_user_service)],
     records_svc: Annotated[RecordService, Depends(get_record_service)],
 ) -> Message:
-    north = geo.safe_coord_parse(data.north)
-    east = geo.safe_coord_parse(data.east)
+    north = geo.parse_coord(data.north)
+    east = geo.parse_coord(data.east)
     sp, num = specimen.parse(clean_value(data.specimens))
-    user_info = await users.get_user(session, int(user_data["sub"]))
+    user_info = await users.get_user_by_id(session, int(user_data["sub"]))
     record_json = {
         "publ_id": user_info.publ_id,
         "user_id": user_info.id,
@@ -78,7 +78,7 @@ async def insert_record(
     }
 
     try:
-        await records_svc.add_record_from_json(session, record_json)
+        await records_svc.add_record(session, record_json)
         return Message(message="ok")
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

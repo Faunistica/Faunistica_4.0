@@ -18,4 +18,4 @@ async def get_gen_stats(
     session: Annotated[AsyncSession, Depends(get_session)],
     records_svc: Annotated[RecordService, Depends(get_record_service)],
 ) -> dict:
-    return await records_svc.get_statistics(session)
+    return await records_svc.get_stats(session)

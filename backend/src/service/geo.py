@@ -41,7 +41,7 @@ class GeoService:
         logger.warning(f"Invalid coordinate format: {coord}")
         raise ValueError(f"Invalid coordinate format: {coord}")
 
-    def safe_coord_parse(self, coord: str | None) -> float | None:
+    def parse_coord(self, coord: str | None) -> float | None:
         if not coord:
             return None
         try:
@@ -50,7 +50,7 @@ class GeoService:
             logger.error(f"Value error: {e}", exc_info=True)
             return None
 
-    async def get_suggestions(
+    async def get_location_suggestions(
         self,
         location_data: list[dict[str, Any]],
         field: str,

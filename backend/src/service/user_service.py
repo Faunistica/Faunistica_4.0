@@ -11,20 +11,20 @@ logger = logging.getLogger(__name__)
 
 
 class UserService:
-    async def get_user_id_by_username(
+    async def get_user_by_id(self, session: AsyncSession, user_id: int) -> User:
+        return await user_repo.get_user(session, user_id)
+
+    async def get_user_by_username(
         self, session: AsyncSession, username: str
     ) -> int | None:
         return await user_repo.get_user_id_by_username(session, username)
 
-    async def is_pass_correct(
-        self, session: AsyncSession, user_id: int, user_pass: str
+    async def verify_password(
+        self, session: AsyncSession, user_id: int, password: str
     ) -> bool:
-        return await user_repo.is_pass_correct(session, user_id, user_pass)
+        return await user_repo.is_pass_correct(session, user_id, password)
 
-    async def get_user(self, session: AsyncSession, user_id: int) -> User:
-        return await user_repo.get_user(session, user_id)
-
-    async def username_and_publication(
+    async def get_user_with_publication(
         self, session: AsyncSession, user_id: int
     ) -> dict:
         return await user_repo.username_and_publication(session, user_id)
@@ -34,7 +34,7 @@ class UserService:
     ) -> None:
         await user_repo.create_user(session, user_id, reg_stat)
 
-    async def update_user(
+    async def update(
         self,
         session: AsyncSession,
         user_id: int,
@@ -42,18 +42,16 @@ class UserService:
     ) -> None:
         await user_repo.update_user(session, user_id, **fields)
 
-    async def count_users_with_name(self, session: AsyncSession, name: str) -> int:
+    async def count_users(self, session: AsyncSession, name: str) -> int:
         return await user_repo.count_users_with_name(session, name)
 
-    async def get_user_stats(self, session: AsyncSession, user_id: int) -> dict:
+    async def get_stats(self, session: AsyncSession, user_id: int) -> dict:
         return await user_repo.get_user_stats(session, user_id)
 
-    async def get_personal_stats(
-        self, session: AsyncSession, user_id: int
-    ) -> list[dict]:
+    async def get_personal(self, session: AsyncSession, user_id: int) -> list[dict]:
         return await user_repo.get_personal_stats(session, user_id)
 
-    def verify_password(self, password: str, password_hash: str) -> bool:
+    def check_password(self, password: str, password_hash: str) -> bool:
         return check_password_hash(password, password_hash)
 
 
