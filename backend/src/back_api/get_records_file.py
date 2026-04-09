@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from back_api.rate_limiter import limiter
 from database.database import get_session
 from repository.record import get_user_records
-from service import repository
+from service import record
 from service.token import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ async def get_records_data(
         }
 
         return StreamingResponse(
-            repository.generate_excel(records),
+            record.generate_excel(records),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers=headers,
         )
