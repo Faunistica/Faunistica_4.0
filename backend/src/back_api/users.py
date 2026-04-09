@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.rate_limiter import limiter
 from back_api.schemas import Message, UserRequest
-from back_api.token import create_access_token, create_refresh_token
 from config.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
 from database.database import get_session
 from repository.user import get_user_id_by_username, is_pass_correct
+from service.token import create_access_token, create_refresh_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

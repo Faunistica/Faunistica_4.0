@@ -1,120 +1,21 @@
 import logging
-import re
 from datetime import UTC, datetime
-from typing import Annotated, TypeVar
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.rate_limiter import limiter
 from back_api.schemas import InsertRecordsRequest, Message
-from back_api.token import get_current_user
+from back_api.util import clean_value
 from database.database import get_session
 from repository.record import add_record_from_json
 from repository.user import get_user
+from service import geo, specimen
+from service.token import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-T = TypeVar("T")
-
-
-def clean_value(value: T | None) -> T | None:
-    if value in ("", None, [], 0, 0.0):
-        return None
-    return value
-
-
-def specimen_parse(specimens: dict[str, float | None] | None) -> tuple[str | None, int]:
-    if specimens is None:
-        return None, 0
-
-    entries = []
-    total = 0
-    values = []
-
-    def add_entry(count: float | None, label: str) -> None:
-        nonlocal total
-        if count is not None and count != 0:
-            values.append(count)
-            num = (
-                int(count) if isinstance(count, float) and count.is_integer() else count
-            )
-            entries.append(f"{num} {label}")
-            total += count
-
-    add_entry(specimens.get("male_adult"), "mmm")
-    add_entry(specimens.get("female_adult"), "fff")
-    add_entry(specimens.get("male_juvenile"), "ssm")
-    add_entry(specimens.get("female_juvenile"), "ssf")
-    add_entry(specimens.get("undefined_adult"), "adu")
-    add_entry(specimens.get("undefined_juvenile"), "juv")
-
-    if entries:
-        all_whole = all(
-            (isinstance(v, int) or (isinstance(v, float) and v.is_integer()))
-            for v in values
-        )
-        result = " | ".join(entries)
-        return result, int(total) if all_whole else round(total, 6)
-    return None, 0
-
-
-def num_of_specimen(specimens: dict | None) -> float | None:
-    if not specimens:
-        return 0
-    count = 0
-    counts = []
-    counts[0] = clean_value(specimens.get("male_adult"))
-    counts[1] = clean_value(specimens.get("female_adult"))
-    counts[2] = clean_value(specimens.get("male_juvenile"))
-    counts[3] = clean_value(specimens.get("female_juvenile"))
-    counts[4] = clean_value(specimens.get("undefined_adult"))
-    counts[5] = clean_value(specimens.get("undefined_juvenile"))
-    for i in range(0, 6):
-        if counts[i] is not None:
-            count += counts[i]
-    return count
-
-
-def parse_coordinate(coord: str) -> float:
-    coord = coord.strip()
-
-    # 1. Degree: 59°
-    if re.match(r"^(-?\d+(?:\.\d+)?)°(?!\S)$", coord):
-        return round(float(coord), 6)
-
-    # 2. Degree + minutes: 59°29'
-    match_deg_min = re.match(r"^(\d{1,3})°\s*(\d{1,2})\'$", coord)
-    if match_deg_min:
-        degrees = int(match_deg_min.group(1))
-        minutes = int(match_deg_min.group(2))
-        decimal = degrees + minutes / 60
-        return round(decimal, 6)
-
-    # 3. Degree + minutes + seconds: 56°51'10"
-    match_deg_min_sec = re.match(
-        r'^(\d{1,3})°\s*(\d{1,2})\'\s*(\d{1,2})(?:["″])$', coord
-    )
-    if match_deg_min_sec:
-        degrees = int(match_deg_min_sec.group(1))
-        minutes = int(match_deg_min_sec.group(2))
-        seconds = int(match_deg_min_sec.group(3))
-        decimal = degrees + (minutes / 60) + (seconds / 3600)
-        return round(decimal, 6)
-
-    logger.warning(f"Invalid coordinate format: {coord}")
-    raise ValueError(f"Invalid coordinate format: {coord}")
-
-
-def safe_coord_parse(coord: str | None) -> float | None:
-    if not coord:
-        return None
-    try:
-        return parse_coordinate(coord)
-    except ValueError as e:
-        logger.error(f"Value error: {e}", exc_info=True)
-        return None
 
 
 @router.post("/insert_record")
@@ -125,9 +26,9 @@ async def insert_record(
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Message:
-    north = safe_coord_parse(data.north)
-    east = safe_coord_parse(data.east)
-    specimen, num = specimen_parse(clean_value(data.specimens))
+    north = geo.safe_coord_parse(data.north)
+    east = geo.safe_coord_parse(data.east)
+    sp, num = specimen.parse(clean_value(data.specimens))
     user_info = await get_user(session, int(user_data["sub"]))
     record_json = {
         "publ_id": user_info.publ_id,
@@ -162,7 +63,7 @@ async def insert_record(
         "type_status": clean_value(data.type_status),
         "tax_REM": clean_value(data.taxonomic_notes),
         "abu": num,
-        "abu_details": specimen,
+        "abu_details": sp,
         "abu_ind_rem": clean_value(data.abu_ind_rem),
         "geo_uncert": clean_value(data.geo_uncert),
         "eve_YY_end": clean_value(data.end_year),

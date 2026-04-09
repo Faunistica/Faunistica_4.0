@@ -3,8 +3,8 @@ import logging
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from back_api.schemas import Message
-from back_api.token import create_access_token, verify_token
 from config.config import ACCESS_TOKEN_EXPIRE
+from service.token import create_access_token, verify_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
