@@ -1,3 +1,6 @@
+from database.models import Publ
+
+
 class Messages:
     # ========== START MESSAGE ========== #
 
@@ -128,7 +131,7 @@ class Messages:
 
     @staticmethod
     # FIXME: object!?
-    def current_publication(publ_info: object) -> str:
+    def current_publication(publ_info: Publ) -> str:
         return (
             f"<b>Ваша текущая публикация</b>\n\n"
             f"Статья: {publ_info.name}\n"

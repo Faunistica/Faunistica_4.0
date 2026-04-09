@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+# FIXME: typing
 def get_location_names(lat: float, lon: float) -> Location:
     geolocator = Nominatim(user_agent="geoapi", timeout=10)
 

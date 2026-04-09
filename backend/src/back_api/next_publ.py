@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.rate_limiter import limiter
 from back_api.token import get_current_user
-from database.crud import get_user, is_publ_filled, update_user
 from database.database import get_session
+from repository.publication import is_publ_filled
+from repository.user import get_user, update_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

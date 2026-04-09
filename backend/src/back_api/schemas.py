@@ -128,7 +128,7 @@ class AutofillTaxonResponse(BaseModel):
 
 class SupportRequest(BaseModel):
     link: str
-    user_name: str | None = None
+    user_name: str
     text: str
     issue_type: str
 

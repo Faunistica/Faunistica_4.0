@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.rate_limiter import limiter
 from back_api.schemas import StatisticsResponse
-from database.crud import get_statistics
 from database.database import get_session
+from repository.record import get_statistics
 
 router = APIRouter()
 

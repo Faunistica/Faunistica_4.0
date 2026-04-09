@@ -12,22 +12,23 @@ from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
 from bot.states import RegistrationStates, RenameStates, SociologyStates, SupportStates
 from config import config, config_vars
-from database.crud import (
-    count_users_with_name,
-    create_user,
-    get_general_stats,
-    get_publication,
-    get_publications_for_language,
-    get_user,
-    get_user_stats,
-    get_volunteers_achievements,
-    is_publ_filled,
-    log_action,
-    update_user,
-)
 from database.database import get_session
 from database.hash import get_password_hash
 from database.models import User
+from repository.log import log_action
+from repository.publication import (
+    get_publication,
+    get_publications_for_language,
+    is_publ_filled,
+)
+from repository.stats import get_general_stats, get_volunteers_achievements
+from repository.user import (
+    count_users_with_name,
+    create_user,
+    get_user,
+    get_user_stats,
+    update_user,
+)
 
 
 class HandlerError(Exception):
@@ -342,7 +343,7 @@ class Handlers:
 
             if message.chat.id == config.ADMIN_CHAT_ID:
                 await get_volunteers_achievements(session)
-                # IN DEVELOPMENT
+                # NOTE: IN DEVELOPMENT
 
     async def rename_command(self, message: Message, state: FSMContext) -> None:
         if message.from_user is None:
@@ -649,6 +650,9 @@ class Handlers:
         await state.clear()
 
     async def reg_name_handler(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         name_msg = message.text
 
         async for session in self.db_session_factory():
@@ -674,6 +678,9 @@ class Handlers:
                 await state.set_state(RegistrationStates.waiting_for_age)
 
     async def reg_age_handler(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         age_msg = message.text
 
         if len(age_msg) > 5:
@@ -705,6 +712,9 @@ class Handlers:
             await state.set_state(RegistrationStates.waiting_for_preferences)
 
     async def reg_prefs_handler(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         comm_msg = message.text.strip()
 
         async for session in self.db_session_factory():
@@ -716,6 +726,9 @@ class Handlers:
         await state.set_state(RegistrationStates.waiting_for_language)
 
     async def reg_lang_handler(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         lang_msg = (
             message.text.strip().replace(" ", "").replace(",", "").replace(".", "")
         )
@@ -751,7 +764,8 @@ class Handlers:
             )
 
         await message.answer(Messages.registration_complete())
-        await message.answer(Messages.auth_prompt())
+        # FIXME: this was in original code, idk what this is supposed to mean
+        # await message.answer(Messages.auth_prompt())
         await state.clear()
 
     async def support_question_handler(

@@ -2,7 +2,13 @@ import logging
 from collections.abc import AsyncGenerator
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    AsyncSessionTransaction,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from config.config import DB_ECHO, DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 from database.models import Base
@@ -18,13 +24,28 @@ _async_session_local = async_sessionmaker(
 )
 
 
+class DBException(Exception):
+    pass
+
+
+async def get_transaction() -> AsyncGenerator[AsyncSessionTransaction]:
+    async with _async_session_local().begin() as transaction:
+        yield transaction
+
+
+# TODO: not sure if its the best pattern
 async def get_session() -> AsyncGenerator[AsyncSession]:
     async with _async_session_local() as session:
         try:
             yield session
-        except:
+        except IntegrityError as e:
             await session.rollback()
-            raise
+            logger.error("IntegrityError", exc_info=True)
+            raise DBException from e
+        except SQLAlchemyError as e:
+            await session.rollback()
+            logger.error("SQLAlchemyError", exc_info=True)
+            raise DBException from e
 
 
 async def init_db() -> None:

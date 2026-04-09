@@ -7,9 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from back_api.rate_limiter import limiter
 from back_api.schemas import PublResponse, RecordHashRequest
 from back_api.token import get_current_user
-from database.crud import publ_by_hash
 from database.database import get_session
 from database.hash import decrypt_id
+from repository.record import publ_by_hash
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -42,7 +42,7 @@ async def get_publ_from_hash(
             author=publ.author,
             year=publ.year,
             name=publ.name,
-            pdf_file=base_url + publ.pdf_file,
+            pdf_file=base_url + publ.pdf_file if publ.pdf_file else None,
         )
 
     except Exception as e:

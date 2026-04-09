@@ -20,3 +20,13 @@ class Location:
     country: str
     region: str
     district: str
+
+
+@dataclass
+class EventDate:
+    yy: int | None
+    mm: int | None
+    dd: int | None
+    yy_end: int | None
+    mm_end: int | None
+    dd_end: int | None

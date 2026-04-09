@@ -14,9 +14,9 @@ from starlette.responses import ContentStream
 
 from back_api.rate_limiter import limiter
 from back_api.token import get_current_user
-from database.crud import get_user_records
 from database.database import get_session
 from database.models import Record
+from repository.record import get_user_records
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

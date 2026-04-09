@@ -8,8 +8,8 @@ from back_api.rate_limiter import limiter
 from back_api.schemas import Message, UserRequest
 from back_api.token import create_access_token, create_refresh_token
 from config.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
-from database.crud import get_user_id_by_username, is_pass_correct
 from database.database import get_session
+from repository.user import get_user_id_by_username, is_pass_correct
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -24,7 +24,7 @@ async def handle_user_data(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Message:
     user_id = await get_user_id_by_username(session, data.username)
-    if user_id == -1:
+    if user_id is None:
         logger.warning("User not found for this username")
         raise HTTPException(status_code=404, detail="User not found for this username")
 

@@ -7,9 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from back_api.rate_limiter import limiter
 from back_api.schemas import GetRecordRequest, GetRecordResponse
 from back_api.token import get_current_user
-from database.crud import get_record_by_id
 from database.database import get_session
 from database.hash import decrypt_id
+from repository.record import get_record_by_id
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
