@@ -11,28 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from api import (
-    autofill_taxon,
-    check_auth,
-    del_record,
-    edit_record,
-    gen_stats,
-    geo_search,
-    get_localion,
-    get_publ,
-    get_record,
-    get_records_file,
-    logout,
-    next_publ,
-    pers_stats,
-    publ_from_hash,
-    records,
-    refresh_token,
-    suggest_taxon,
-    support,
-    user_image,
-    users,
-)
+from api import router
 from api.rate_limiter import limiter, rate_limit_handler
 from bot.bot_main import bot_start, config
 from config.config import ALLOWED_ORIGINS, DEV_MODE, LOG_LEVEL, LOGS_DIR
@@ -169,26 +148,7 @@ app.add_middleware(
 
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
-app.include_router(users.router, prefix="/api")
-app.include_router(records.router, prefix="/api")
-app.include_router(gen_stats.router, prefix="/api")
-app.include_router(refresh_token.router, prefix="/api")
-app.include_router(check_auth.router, prefix="/api")
-app.include_router(logout.router, prefix="/api")
-app.include_router(suggest_taxon.router, prefix="/api")
-app.include_router(autofill_taxon.router, prefix="/api")
-app.include_router(get_publ.router, prefix="/api")
-app.include_router(support.router, prefix="/api")
-app.include_router(pers_stats.router, prefix="/api")
-app.include_router(user_image.router, prefix="/api")
-app.include_router(get_localion.router, prefix="/api")
-app.include_router(get_records_file.router, prefix="/api")
-app.include_router(get_record.router, prefix="/api")
-app.include_router(del_record.router, prefix="/api")
-app.include_router(edit_record.router, prefix="/api")
-app.include_router(next_publ.router, prefix="/api")
-app.include_router(publ_from_hash.router, prefix="/api")
-app.include_router(geo_search.router, prefix="/api")
+app.include_router(router, prefix="/api")
 
 if __name__ == "__main__":
     asyncio.run(bot_start())
