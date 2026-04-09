@@ -38,4 +38,4 @@ def refresh(request: Request, response: Response) -> Message:
         path="/",
     )
 
-    return Message("Access token refreshed")
+    return Message(message="Access token refreshed")

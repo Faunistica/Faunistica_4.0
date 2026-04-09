@@ -172,7 +172,7 @@ async def insert_record(
 
     try:
         await add_record_from_json(session, record_json)
-        return Message("ok")
+        return Message(message="ok")
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(

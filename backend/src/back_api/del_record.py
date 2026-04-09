@@ -36,7 +36,7 @@ async def del_record(
         raise HTTPException(status_code=500, detail="Server database error.") from e
 
     if is_success:
-        return Message("ok")
+        return Message(message="ok")
 
     logger.warning("Record not found or not owned by user")
     raise HTTPException(

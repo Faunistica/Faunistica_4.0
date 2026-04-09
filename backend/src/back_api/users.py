@@ -56,4 +56,4 @@ async def handle_user_data(
         path="/",
     )
 
-    return Message("ok")
+    return Message(message="ok")

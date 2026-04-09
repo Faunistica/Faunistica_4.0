@@ -4,7 +4,6 @@ import logging
 from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
-from typing import Any
 
 import aiohttp
 from fastapi import FastAPI
@@ -103,7 +102,7 @@ for lib_name, level in third_party_libs.items():
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> Any:  # noqa: ANN401
+async def lifespan(app: FastAPI):  # noqa: ANN201
     logger = logging.getLogger(__name__)
 
     await init_db()

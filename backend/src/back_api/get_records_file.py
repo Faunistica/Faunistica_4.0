@@ -1,5 +1,6 @@
 import io
 import logging
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Annotated
 
@@ -9,11 +10,13 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import ContentStream
 
 from back_api.rate_limiter import limiter
 from back_api.token import get_current_user
 from database.crud import get_user_records
 from database.database import get_session
+from database.models import Record
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -73,36 +76,6 @@ async def get_records_data(
                 status_code=404, detail="No records found for this user"
             )
 
-        def generate_excel():
-            output = io.BytesIO()
-            wb = Workbook()
-            ws = wb.active
-
-            headers = [
-                COLUMN_MAPPING[field]
-                for field in COLUMN_MAPPING
-                if field
-                not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
-            ]
-            ws.append(headers)
-
-            for col in range(1, len(headers) + 1):
-                ws.column_dimensions[get_column_letter(col)].width = 20
-                ws.cell(row=1, column=col).font = Font(bold=True)
-
-            for record in records:
-                row = [
-                    getattr(record, field)
-                    for field in COLUMN_MAPPING
-                    if field
-                    not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
-                ]
-                ws.append(row)
-
-            wb.save(output)
-            output.seek(0)
-            yield output.read()
-
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         headers = {
             "Content-Disposition": f"attachment; filename=records_{timestamp}.xlsx",
@@ -110,7 +83,7 @@ async def get_records_data(
         }
 
         return StreamingResponse(
-            generate_excel(),
+            generate_excel(records),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers=headers,
         )
@@ -118,3 +91,37 @@ async def get_records_data(
     except Exception as e:
         logger.error(f"Exception in get_records_data: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+# NOTE: not sure if ContentStream is used correctly here, probably should check later
+def generate_excel(records: Sequence[Record]) -> ContentStream:
+    output = io.BytesIO()
+    wb = Workbook()
+    ws = wb.active
+
+    if ws is None:
+        logger.error("ws is None")
+        raise Exception
+
+    headers = [
+        COLUMN_MAPPING[field]
+        for field in COLUMN_MAPPING
+        if field not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
+    ]
+    ws.append(headers)
+
+    for col in range(1, len(headers) + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 20
+        ws.cell(row=1, column=col).font = Font(bold=True)
+
+    for record in records:
+        row = [
+            getattr(record, field)
+            for field in COLUMN_MAPPING
+            if field not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
+        ]
+        ws.append(row)
+
+    wb.save(output)
+    output.seek(0)
+    yield output.read()

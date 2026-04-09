@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from pathlib import Path
 
 from aiogram import Bot, Router
 from aiogram.filters import Command
@@ -541,23 +542,9 @@ class Handlers:
 
         date_str = args[1]
         try:
-            if date_str.lower() == "сегодня":
-                service_log = config.LOGS_DIR / "service.log"
-                errors_log = config.LOGS_DIR / "errors.log"
-            else:
-                date = datetime.strptime(date_str, "%Y-%m-%d")
-                date_str = date.strftime("%Y-%m-%d")
+            files_to_send = await self._get_log_files(date_str)
 
-                service_log = config.LOGS_DIR / f"service.log.{date_str}"
-                errors_log = config.LOGS_DIR / f"errors.log.{date_str}"
-
-            files_to_send = []
-            if service_log.exists():
-                files_to_send.append(("service.log", service_log))
-            if errors_log.exists():
-                files_to_send.append(("errors.log", errors_log))
-
-            if not files_to_send:
+            if len(files_to_send) == 0:
                 await message.answer(Messages.logs_not_found(date_str))
 
                 dates = set()
@@ -582,6 +569,26 @@ class Handlers:
             await message.answer(Messages.incorrect_date())
         except Exception:
             await message.answer(Messages.unexpected_error())
+
+    async def _get_log_files(self, date_str: str) -> list[tuple[str, Path]]:
+        if date_str.lower() == "сегодня":
+            service_log = config.LOGS_DIR / "service.log"
+            errors_log = config.LOGS_DIR / "errors.log"
+        else:
+            date = datetime.strptime(date_str, "%Y-%m-%d")
+            date_str = date.strftime("%Y-%m-%d")
+
+            service_log = config.LOGS_DIR / f"service.log.{date_str}"
+            errors_log = config.LOGS_DIR / f"errors.log.{date_str}"
+
+        files_to_send: list[tuple[str, Path]] = []
+        if service_log.exists():
+            files_to_send.append(("service.log", service_log))
+
+        if errors_log.exists():
+            files_to_send.append(("errors.log", errors_log))
+
+        return files_to_send
 
     # ========== STATE HANDLERS ========== #
 
