@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from back_api.rate_limiter import limiter
+from api.rate_limiter import limiter
 from database.database import get_session
 from service.export import ExportService, get_record_excel_service
 from service.record import RecordService, get_record_service

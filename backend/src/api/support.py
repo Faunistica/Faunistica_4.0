@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_404_NOT_FOUND
 
-from back_api.rate_limiter import limiter
-from back_api.schemas import Message, SupportRequest
-from back_api.util import get_http_session
+from api.rate_limiter import limiter
+from api.schemas import Message, SupportRequest
+from api.util import get_http_session
 from database.database import get_session
 from service.support import SupportService, get_support_service
 from service.user import UserService, get_user_service

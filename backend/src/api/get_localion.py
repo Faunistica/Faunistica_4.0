@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
 
-from back_api.schemas import GetLocationRequest, GetLocationResponse
+from api.schemas import GetLocationRequest, GetLocationResponse
 from service.geo import GeoService, get_geo_service
 
 logger = logging.getLogger(__name__)

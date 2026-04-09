@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from back_api import (
+from api import (
     autofill_taxon,
     check_auth,
     del_record,
@@ -33,7 +33,7 @@ from back_api import (
     user_image,
     users,
 )
-from back_api.rate_limiter import limiter, rate_limit_handler
+from api.rate_limiter import limiter, rate_limit_handler
 from bot.bot_main import bot_start, config
 from config.config import ALLOWED_ORIGINS, DEV_MODE, LOG_LEVEL, LOGS_DIR
 from database.database import init_db, ping_db

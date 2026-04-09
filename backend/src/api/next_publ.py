@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from back_api.rate_limiter import limiter
+from api.rate_limiter import limiter
 from database.database import get_session
 from service.publication import PublicationService, get_publication_service
 from service.token import get_current_user

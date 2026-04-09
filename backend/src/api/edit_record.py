@@ -1,11 +1,12 @@
 import logging
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from back_api.rate_limiter import limiter
-from back_api.schemas import Message, RemoveRecordRequest
+from api.rate_limiter import limiter
+from api.schemas import EditRecordRequest, Message
 from database.database import get_session
 from database.hash import decrypt_id
 from service.record import RecordService, get_record_service
@@ -15,11 +16,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/del_record")
+@router.post("/edit_record")
 @limiter.limit("20/minute")
-async def del_record(
+async def edit_record(
     request: Request,
-    data: RemoveRecordRequest,
+    data: EditRecordRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     records_svc: Annotated[RecordService, Depends(get_record_service)],
@@ -31,7 +32,11 @@ async def del_record(
         raise HTTPException(status_code=400, detail="Invalid record token.")
 
     try:
-        is_success = await records_svc.delete(session, record_id, user_id)
+        dump = data.model_dump()
+        dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
+        dump["type"] = "rec_ok"
+        is_success = await records_svc.update(session, record_id, user_id, dump)
+
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e

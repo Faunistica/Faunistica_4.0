@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from back_api.schemas import Message
+from api.schemas import Message
 from config.config import ACCESS_TOKEN_EXPIRE
 from service.token import TokenService, get_token_service
 

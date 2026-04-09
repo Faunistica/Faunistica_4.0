@@ -3,8 +3,8 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from back_api import util
-from back_api.schemas import GeoSearchRequest, GeoSearchResponse
+from api import util
+from api.schemas import GeoSearchRequest, GeoSearchResponse
 from service.geo import GeoService, get_geo_service
 
 logger = logging.getLogger(__name__)

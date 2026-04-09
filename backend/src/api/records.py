@@ -5,9 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from back_api.rate_limiter import limiter
-from back_api.schemas import InsertRecordsRequest, Message
-from back_api.util import clean_value
+from api.rate_limiter import limiter
+from api.schemas import InsertRecordsRequest, Message
+from api.util import clean_value
 from database.database import get_session
 from service.geo import GeoService, get_geo_service
 from service.record import RecordService, get_record_service

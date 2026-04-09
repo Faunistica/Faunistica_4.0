@@ -4,8 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from back_api.rate_limiter import limiter
-from back_api.schemas import PublResponse
+from api.rate_limiter import limiter
+from api.schemas import PublResponse
 from database.database import get_session
 from service.token import get_current_user
 from service.user import UserService, get_user_service
