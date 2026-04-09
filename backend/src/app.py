@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from api import router
+from api import api_router
 from api.rate_limiter import limiter, rate_limit_handler
 from bot.bot_main import bot_start, config
 from config.config import ALLOWED_ORIGINS, DEV_MODE, LOG_LEVEL, LOGS_DIR
@@ -148,7 +148,7 @@ app.add_middleware(
 
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
-app.include_router(router, prefix="/api")
+app.include_router(api_router, prefix="/api")
 
 if __name__ == "__main__":
     asyncio.run(bot_start())

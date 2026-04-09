@@ -1,6 +1,6 @@
 import aiohttp
 
-from back_api.schemas import SupportRequest
+from api.schemas import SupportRequest
 from config.config import ADMIN_CHAT_ID, BOT_TOKEN
 
 
