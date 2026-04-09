@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_session
-from repository.user import get_personal_stats, get_user, get_user_stats
 from service.token import get_current_user
+from service.user_service import UserService, get_user_service
 
 router = APIRouter()
 
@@ -15,11 +15,12 @@ async def get_pers_stats(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
+    users: Annotated[UserService, Depends(get_user_service)],
 ) -> tuple[str, int, dict, list[dict]]:
     user_id = int(user_data["sub"])
-    user_info = await get_user(session, user_id)
+    user_info = await users.get_user(session, user_id)
     username = user_info.name
-    stats = await get_user_stats(session, user_id)
-    table_stats = await get_personal_stats(session, user_id)
+    stats = await users.get_user_stats(session, user_id)
+    table_stats = await users.get_personal_stats(session, user_id)
     # FIXME: this is definitely non-ideal
     return username, user_id, stats, table_stats

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from back_api import util
 from back_api.schemas import GeoSearchRequest, GeoSearchResponse
-from service import geo
+from service.geo import GeoService, get_geo_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -16,6 +16,7 @@ async def geo_search(
     request: Request,
     data: GeoSearchRequest,
     location_data: Annotated[list[dict[str, Any]], Depends(util.get_location_data)],
+    geo: Annotated[GeoService, Depends(get_geo_service)],
 ) -> GeoSearchResponse:
     try:
         suggestions = await geo.get_suggestions(

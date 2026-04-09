@@ -1,23 +1,28 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from back_api.schemas import Message
 from config.config import ACCESS_TOKEN_EXPIRE
-from service.token import create_access_token, verify_token
+from service.token import TokenService, get_token_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
 @router.post("/refresh_token")
-def refresh(request: Request, response: Response) -> Message:
+def refresh(
+    request: Request,
+    response: Response,
+    tokens: Annotated[TokenService, Depends(get_token_service)],
+) -> Message:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         logger.warning("Refresh token missing")
         raise HTTPException(status_code=403, detail="Refresh token missing")
 
-    payload = verify_token(refresh_token)
+    payload = tokens.verify_token(refresh_token)
 
     if payload.get("type") != "refresh":
         logger.warning("Invalid refresh token")
@@ -26,7 +31,9 @@ def refresh(request: Request, response: Response) -> Message:
     user_id = payload.get("sub")
     username = payload.get("username")
 
-    new_access_token = create_access_token({"sub": user_id, "username": username})
+    new_access_token = tokens.create_access_token(
+        {"sub": user_id, "username": username}
+    )
 
     response.set_cookie(
         key="access_token",

@@ -47,35 +47,46 @@ COLUMN_MAPPING = {
 }
 
 
-# NOTE: not sure if ContentStream is used correctly here, probably should check later
-def generate_excel(records: Sequence[Record]) -> ContentStream:
-    output = io.BytesIO()
-    wb = Workbook()
-    ws = wb.active
+class RecordExcelService:
+    def generate_excel(self, records: Sequence[Record]) -> ContentStream:
+        output = io.BytesIO()
+        wb = Workbook()
+        ws = wb.active
 
-    if ws is None:
-        logger.error("ws is None")
-        raise Exception
+        if ws is None:
+            logger.error("ws is None")
+            raise Exception
 
-    headers = [
-        COLUMN_MAPPING[field]
-        for field in COLUMN_MAPPING
-        if field not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
-    ]
-    ws.append(headers)
-
-    for col in range(1, len(headers) + 1):
-        ws.column_dimensions[get_column_letter(col)].width = 20
-        ws.cell(row=1, column=col).font = Font(bold=True)
-
-    for record in records:
-        row = [
-            getattr(record, field)
+        headers = [
+            COLUMN_MAPPING[field]
             for field in COLUMN_MAPPING
             if field not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
         ]
-        ws.append(row)
+        ws.append(headers)
 
-    wb.save(output)
-    output.seek(0)
-    yield output.read()
+        for col in range(1, len(headers) + 1):
+            ws.column_dimensions[get_column_letter(col)].width = 20
+            ws.cell(row=1, column=col).font = Font(bold=True)
+
+        for record in records:
+            row = [
+                getattr(record, field)
+                for field in COLUMN_MAPPING
+                if field
+                not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
+            ]
+            ws.append(row)
+
+        wb.save(output)
+        output.seek(0)
+        yield output.read()
+
+
+_record_excel_service: RecordExcelService | None = None
+
+
+def get_record_excel_service() -> RecordExcelService:
+    global _record_excel_service
+    if _record_excel_service is None:
+        _record_excel_service = RecordExcelService()
+    return _record_excel_service

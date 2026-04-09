@@ -10,8 +10,8 @@ from back_api.rate_limiter import limiter
 from back_api.schemas import Message, SupportRequest
 from back_api.util import get_http_session
 from database.database import get_session
-from repository.user import get_user_id_by_username
-from service.support import send_support_message
+from service.support import SupportService, get_support_service
+from service.user_service import UserService, get_user_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -24,9 +24,11 @@ async def support(
     data: SupportRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
     http_session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
+    users: Annotated[UserService, Depends(get_user_service)],
+    support_svc: Annotated[SupportService, Depends(get_support_service)],
 ) -> Message:
     try:
-        user_id = await get_user_id_by_username(session, data.user_name)
+        user_id = await users.get_user_id_by_username(session, data.user_name)
 
         if user_id is None:
             raise HTTPException(
@@ -34,7 +36,7 @@ async def support(
                 detail=f"user not found. username: {data.user_name}",
             )
 
-        await send_support_message(http_session, data, user_id)
+        await support_svc.send_support_message(http_session, data, user_id)
         return Message(message="Support request received")
     except Exception as e:
         logger.error(f"Failed to process support request: {e}", exc_info=True)

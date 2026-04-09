@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from back_api.rate_limiter import limiter
 from back_api.schemas import StatisticsResponse
 from database.database import get_session
-from repository.record import get_statistics
+from service.record_service import RecordService, get_record_service
 
 router = APIRouter()
 
@@ -14,6 +14,8 @@ router = APIRouter()
 @router.get("/get_gen_stats", response_model=StatisticsResponse)
 @limiter.limit("60/minute")
 async def get_gen_stats(
-    request: Request, session: Annotated[AsyncSession, Depends(get_session)]
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    records_svc: Annotated[RecordService, Depends(get_record_service)],
 ) -> dict:
-    return await get_statistics(session)
+    return await records_svc.get_statistics(session)

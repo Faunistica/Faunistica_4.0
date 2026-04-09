@@ -8,7 +8,7 @@ from back_api.rate_limiter import limiter
 from back_api.schemas import GetRecordRequest, GetRecordResponse
 from database.database import get_session
 from database.hash import decrypt_id
-from repository.record import get_record_by_id
+from service.record_service import RecordService, get_record_service
 from service.token import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ async def insert_record(
     data: GetRecordRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
+    records_svc: Annotated[RecordService, Depends(get_record_service)],
 ) -> GetRecordResponse:
     user_id = int(user_data["sub"])
     try:
@@ -31,7 +32,7 @@ async def insert_record(
         raise HTTPException(status_code=400, detail="Invalid record token.") from e
 
     try:
-        record_data = await get_record_by_id(session, record_id, user_id)
+        record_data = await records_svc.get_record_by_id(session, record_id, user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e

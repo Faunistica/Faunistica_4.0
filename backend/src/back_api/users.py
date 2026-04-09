@@ -8,8 +8,8 @@ from back_api.rate_limiter import limiter
 from back_api.schemas import Message, UserRequest
 from config.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
 from database.database import get_session
-from repository.user import get_user_id_by_username, is_pass_correct
-from service.token import create_access_token, create_refresh_token
+from service.token import TokenService, get_token_service
+from service.user_service import UserService, get_user_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -22,19 +22,21 @@ async def handle_user_data(
     response: Response,
     data: UserRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
+    tokens: Annotated[TokenService, Depends(get_token_service)],
+    users: Annotated[UserService, Depends(get_user_service)],
 ) -> Message:
-    user_id = await get_user_id_by_username(session, data.username)
+    user_id = await users.get_user_id_by_username(session, data.username)
     if user_id is None:
         logger.warning("User not found for this username")
         raise HTTPException(status_code=404, detail="User not found for this username")
 
-    if not await is_pass_correct(session, user_id, data.password):
+    if not await users.is_pass_correct(session, user_id, data.password):
         logger.warning("Wrong password")
         raise HTTPException(status_code=401, detail="Wrong password")
 
     token_payload = {"sub": str(user_id), "username": data.username}
-    access_token = create_access_token(token_payload)
-    refresh_token = create_refresh_token(token_payload)
+    access_token = tokens.create_access_token(token_payload)
+    refresh_token = tokens.create_refresh_token(token_payload)
 
     response.set_cookie(
         key="access_token",

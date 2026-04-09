@@ -1,0 +1,57 @@
+import logging
+from collections.abc import Sequence
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database.models import Record
+from model import PublData
+from repository import record as record_repo
+
+logger = logging.getLogger(__name__)
+
+
+class RecordService:
+    async def add_record_from_json(
+        self, session: AsyncSession, record_json: dict
+    ) -> None:
+        await record_repo.add_record_from_json(session, record_json)
+
+    async def get_statistics(self, session: AsyncSession) -> dict:
+        return await record_repo.get_statistics(session)
+
+    async def get_user_records(
+        self, session: AsyncSession, user_id: int
+    ) -> Sequence[Record]:
+        return await record_repo.get_user_records(session, user_id)
+
+    async def remove_record_row_by_id(
+        self, session: AsyncSession, record_id: int, user_id: int
+    ) -> bool:
+        return await record_repo.remove_record_row_by_id(session, record_id, user_id)
+
+    async def get_record_by_id(
+        self, session: AsyncSession, record_id: int, user_id: int
+    ) -> Record | None:
+        return await record_repo.get_record_by_id(session, record_id, user_id)
+
+    async def edit_record_by_id(
+        self, session: AsyncSession, record_id: int, user_id: int, new_data: dict
+    ) -> bool:
+        return await record_repo.edit_record_by_id(
+            session, record_id, user_id, new_data
+        )
+
+    async def publ_by_hash(
+        self, session: AsyncSession, record_id: int, user_id: int
+    ) -> PublData | None:
+        return await record_repo.publ_by_hash(session, record_id, user_id)
+
+
+_record_service: RecordService | None = None
+
+
+def get_record_service() -> RecordService:
+    global _record_service
+    if _record_service is None:
+        _record_service = RecordService()
+    return _record_service

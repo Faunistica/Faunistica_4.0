@@ -8,7 +8,7 @@ from back_api.rate_limiter import limiter
 from back_api.schemas import PublResponse, RecordHashRequest
 from database.database import get_session
 from database.hash import decrypt_id
-from repository.record import publ_by_hash
+from service.record_service import RecordService, get_record_service
 from service.token import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ async def get_publ_from_hash(
     data: RecordHashRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
+    records_svc: Annotated[RecordService, Depends(get_record_service)],
 ) -> PublResponse:
     try:
         user_id = int(user_data["sub"])
@@ -33,7 +34,7 @@ async def get_publ_from_hash(
             logger.warning("Invalid record token")
             raise HTTPException(status_code=400, detail="Invalid record token.")
 
-        publ = await publ_by_hash(session, record_id, user_id)
+        publ = await records_svc.publ_by_hash(session, record_id, user_id)
         if publ is None:
             logger.warning("Publication not found")
             raise HTTPException(status_code=404, detail="Publication not found.")
