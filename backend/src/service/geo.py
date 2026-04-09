@@ -121,13 +121,3 @@ class GeoService:
         minutes = minutes if minutes is not None else 0
         seconds = seconds if seconds is not None else 0
         return degrees + (minutes / 60) + (seconds / 3600)
-
-
-_geo_service: GeoService | None = None
-
-
-def get_geo_service() -> GeoService:
-    global _geo_service
-    if _geo_service is None:
-        _geo_service = GeoService()
-    return _geo_service

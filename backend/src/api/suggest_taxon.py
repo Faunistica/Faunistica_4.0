@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from api.schemas import SuggestTaxonRequest, SuggestTaxonResponse
-from service.taxon import TaxonService, get_taxon_service
+from service.taxon import TaxonService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -14,7 +14,7 @@ router = APIRouter()
 async def suggest_taxon(
     request: Request,
     data: SuggestTaxonRequest,
-    taxons: Annotated[TaxonService, Depends(get_taxon_service)],
+    taxons: Annotated[TaxonService, Depends()],
 ) -> SuggestTaxonResponse:
     try:
         suggestions = await taxons.async_suggestion(

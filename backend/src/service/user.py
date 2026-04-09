@@ -46,13 +46,3 @@ class UserService:
 
     async def get_personal(self, session: AsyncSession, user_id: int) -> list[dict]:
         return await user_repo.get_personal_stats(session, user_id)
-
-
-_user_service: UserService | None = None
-
-
-def get_user_service() -> UserService:
-    global _user_service
-    if _user_service is None:
-        _user_service = UserService()
-    return _user_service

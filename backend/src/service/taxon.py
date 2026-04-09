@@ -51,13 +51,3 @@ class TaxonService:
         return await loop.run_in_executor(
             executor, self.suggestion, field, text, filters
         )
-
-
-_taxon_service: TaxonService | None = None
-
-
-def get_taxon_service() -> TaxonService:
-    global _taxon_service
-    if _taxon_service is None:
-        _taxon_service = TaxonService()
-    return _taxon_service

@@ -3,6 +3,7 @@ from collections.abc import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.schemas import StatisticsResponse
 from database.models import Record
 from model import PublData
 from repository import record as record_repo
@@ -14,8 +15,9 @@ class RecordService:
     async def add(self, session: AsyncSession, record_json: dict) -> None:
         await record_repo.add_record_from_json(session, record_json)
 
-    async def get_stats(self, session: AsyncSession) -> dict:
-        return await record_repo.get_statistics(session)
+    async def get_stats(self, session: AsyncSession) -> StatisticsResponse:
+        # FIXME:
+        return await record_repo.get_statistics(session)  # ty:ignore[invalid-return-type]
 
     async def get_by_user(
         self, session: AsyncSession, user_id: int
@@ -41,13 +43,3 @@ class RecordService:
         self, session: AsyncSession, record_id: int, user_id: int
     ) -> PublData | None:
         return await record_repo.publ_by_hash(session, record_id, user_id)
-
-
-_record_service: RecordService | None = None
-
-
-def get_record_service() -> RecordService:
-    global _record_service
-    if _record_service is None:
-        _record_service = RecordService()
-    return _record_service

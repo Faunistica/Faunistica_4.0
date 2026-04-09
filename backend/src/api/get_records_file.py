@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from database.database import get_session
-from service.export import ExportService, get_record_excel_service
-from service.record import RecordService, get_record_service
+from service.export import ExportService
+from service.record import RecordService
 from service.token import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -22,13 +22,13 @@ async def get_records_data(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    records_svc: Annotated[RecordService, Depends(get_record_service)],
-    records_excel: Annotated[ExportService, Depends(get_record_excel_service)],
+    records_svc: Annotated[RecordService, Depends()],
+    export: Annotated[ExportService, Depends()],
 ) -> StreamingResponse:
     user_id = int(user_data["sub"])
     username = user_data["username"]
     try:
-        records = await records_svc.get_records(session, user_id)
+        records = await records_svc.get_by_user(session, user_id)
 
         if not records:
             logger.warning(f"No records found for user: {username} - {user_id}")
@@ -43,7 +43,7 @@ async def get_records_data(
         }
 
         return StreamingResponse(
-            records_excel.records_to_excel(records),
+            export.records_to_excel(records),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers=headers,
         )

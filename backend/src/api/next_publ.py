@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from database.database import get_session
-from service.publication import PublicationService, get_publication_service
+from service.publication import PublicationService
 from service.token import get_current_user
-from service.user import UserService, get_user_service
+from service.user import UserService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -20,14 +20,14 @@ async def next_publ(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    users: Annotated[UserService, Depends(get_user_service)],
-    pubs: Annotated[PublicationService, Depends(get_publication_service)],
+    users: Annotated[UserService, Depends()],
+    pubs: Annotated[PublicationService, Depends()],
 ) -> bool:
     user_id = int(user_data["sub"])
     user = await users.get_by_id(session, user_id)
 
     # NOTE: gessing how it should work, shoud check if incorrect
-    if user.publ_id is not None and not await pubs.is_filled(
+    if user.publ_id is not None and not await pubs.is_filled_by_user(
         session, user_id, user.publ_id
     ):
         logger.warning("Publication is not filled")

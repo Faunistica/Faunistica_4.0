@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from api.schemas import Message
 from config.config import ACCESS_TOKEN_EXPIRE
-from service.token import TokenService, get_token_service
+from service.token import TokenService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -15,7 +15,7 @@ router = APIRouter()
 def refresh(
     request: Request,
     response: Response,
-    tokens: Annotated[TokenService, Depends(get_token_service)],
+    tokens: Annotated[TokenService, Depends()],
 ) -> Message:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:

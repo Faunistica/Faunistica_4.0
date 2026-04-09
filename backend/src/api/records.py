@@ -9,11 +9,11 @@ from api.rate_limiter import limiter
 from api.schemas import InsertRecordsRequest, Message
 from api.util import clean_value
 from database.database import get_session
-from service.geo import GeoService, get_geo_service
-from service.record import RecordService, get_record_service
-from service.specimen import SpecimenService, get_specimen_service
+from service.geo import GeoService
+from service.record import RecordService
+from service.specimen import SpecimenService
 from service.token import get_current_user
-from service.user import UserService, get_user_service
+from service.user import UserService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -26,13 +26,13 @@ async def insert_record(
     data: InsertRecordsRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    geo: Annotated[GeoService, Depends(get_geo_service)],
-    specimen: Annotated[SpecimenService, Depends(get_specimen_service)],
-    users: Annotated[UserService, Depends(get_user_service)],
-    records_svc: Annotated[RecordService, Depends(get_record_service)],
+    geo: Annotated[GeoService, Depends()],
+    specimen: Annotated[SpecimenService, Depends()],
+    users: Annotated[UserService, Depends()],
+    records_svc: Annotated[RecordService, Depends()],
 ) -> Message:
-    north = geo.parse_coord(data.north)
-    east = geo.parse_coord(data.east)
+    north = geo.parse_coordinate(data.north)
+    east = geo.parse_coordinate(data.east)
     sp, num = specimen.parse(clean_value(data.specimens))
     user_info = await users.get_by_id(session, int(user_data["sub"]))
     record_json = {

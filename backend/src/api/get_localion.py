@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 
 from api.schemas import GetLocationRequest, GetLocationResponse
-from service.geo import GeoService, get_geo_service
+from service.geo import GeoService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -14,7 +14,7 @@ router = APIRouter()
 async def get_loc(
     request: Request,
     data: GetLocationRequest,
-    geo: Annotated[GeoService, Depends(get_geo_service)],
+    geo: Annotated[GeoService, Depends()],
 ) -> GetLocationResponse:
     latitude = geo.dms_to_degrees(data.degrees_n, data.minutes_n, data.seconds_n)
     longitude = geo.dms_to_degrees(data.degrees_e, data.minutes_e, data.seconds_e)

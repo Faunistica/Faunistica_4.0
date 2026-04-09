@@ -8,7 +8,7 @@ from api.rate_limiter import limiter
 from api.schemas import Message, RemoveRecordRequest
 from database.database import get_session
 from database.hash import decrypt_id
-from service.record import RecordService, get_record_service
+from service.record import RecordService
 from service.token import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ async def del_record(
     data: RemoveRecordRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    records_svc: Annotated[RecordService, Depends(get_record_service)],
+    records: Annotated[RecordService, Depends()],
 ) -> Message:
     user_id = int(user_data["sub"])
     record_id = decrypt_id(data.hash)
@@ -31,7 +31,7 @@ async def del_record(
         raise HTTPException(status_code=400, detail="Invalid record token.")
 
     try:
-        is_success = await records_svc.delete(session, record_id, user_id)
+        is_success = await records.delete(session, record_id, user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e

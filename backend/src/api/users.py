@@ -8,8 +8,8 @@ from api.rate_limiter import limiter
 from api.schemas import Message, UserRequest
 from config.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
 from database.database import get_session
-from service.token import TokenService, get_token_service
-from service.user import UserService, get_user_service
+from service.token import TokenService
+from service.user import UserService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -22,8 +22,8 @@ async def handle_user_data(
     response: Response,
     data: UserRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
-    tokens: Annotated[TokenService, Depends(get_token_service)],
-    users: Annotated[UserService, Depends(get_user_service)],
+    tokens: Annotated[TokenService, Depends()],
+    users: Annotated[UserService, Depends()],
 ) -> Message:
     user_id = await users.get_by_username(session, data.username)
     if user_id is None:

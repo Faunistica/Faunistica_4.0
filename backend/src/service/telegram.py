@@ -34,13 +34,3 @@ class TelegramService:
         async with session.get(file_url) as file_resp:
             # TODO: Streaming response?
             return io.BytesIO(await file_resp.read())
-
-
-_telegram_service: TelegramService | None = None
-
-
-def get_telegram_service() -> TelegramService:
-    global _telegram_service
-    if _telegram_service is None:
-        _telegram_service = TelegramService()
-    return _telegram_service

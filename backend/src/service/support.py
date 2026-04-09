@@ -5,7 +5,7 @@ from config.config import ADMIN_CHAT_ID, BOT_TOKEN
 
 
 class SupportService:
-    async def send_support_message(
+    async def send_message(
         self,
         session: aiohttp.ClientSession,
         data: SupportRequest,
@@ -45,13 +45,3 @@ class SupportService:
         }
         # FIXME: wtf
         return issue_types.get(issue_type, issue_type)
-
-
-_support_service: SupportService | None = None
-
-
-def get_support_service() -> SupportService:
-    global _support_service
-    if _support_service is None:
-        _support_service = SupportService()
-    return _support_service

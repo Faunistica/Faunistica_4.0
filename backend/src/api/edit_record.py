@@ -9,7 +9,7 @@ from api.rate_limiter import limiter
 from api.schemas import EditRecordRequest, Message
 from database.database import get_session
 from database.hash import decrypt_id
-from service.record import RecordService, get_record_service
+from service.record import RecordService
 from service.token import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ async def edit_record(
     data: EditRecordRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    records_svc: Annotated[RecordService, Depends(get_record_service)],
+    records: Annotated[RecordService, Depends()],
 ) -> Message:
     user_id = int(user_data["sub"])
     record_id = decrypt_id(data.hash)
@@ -35,7 +35,7 @@ async def edit_record(
         dump = data.model_dump()
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"
-        is_success = await records_svc.update(session, record_id, user_id, dump)
+        is_success = await records.update(session, record_id, user_id, dump)
 
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

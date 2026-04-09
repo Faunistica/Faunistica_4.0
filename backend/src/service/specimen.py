@@ -56,13 +56,3 @@ class SpecimenService:
             if counts[i] is not None:
                 count += counts[i]
         return count
-
-
-_specimen_service: SpecimenService | None = None
-
-
-def get_specimen_service() -> SpecimenService:
-    global _specimen_service
-    if _specimen_service is None:
-        _specimen_service = SpecimenService()
-    return _specimen_service

@@ -8,7 +8,7 @@ from api.rate_limiter import limiter
 from api.schemas import PublResponse
 from database.database import get_session
 from service.token import get_current_user
-from service.user import UserService, get_user_service
+from service.user import UserService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -21,7 +21,7 @@ async def get_publ(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    users: Annotated[UserService, Depends(get_user_service)],
+    users: Annotated[UserService, Depends()],
 ) -> PublResponse:
     try:
         data = await users.get_username_and_current_publication(

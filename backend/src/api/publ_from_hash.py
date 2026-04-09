@@ -8,7 +8,7 @@ from api.rate_limiter import limiter
 from api.schemas import PublResponse, RecordHashRequest
 from database.database import get_session
 from database.hash import decrypt_id
-from service.record import RecordService, get_record_service
+from service.record import RecordService
 from service.token import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ async def get_publ_from_hash(
     data: RecordHashRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    records_svc: Annotated[RecordService, Depends(get_record_service)],
+    records_svc: Annotated[RecordService, Depends()],
 ) -> PublResponse:
     try:
         user_id = int(user_data["sub"])

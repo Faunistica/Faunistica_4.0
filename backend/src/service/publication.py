@@ -25,13 +25,3 @@ class PublicationService:
 
     async def add(self, session: AsyncSession, publ_json: dict) -> None:
         await publication_repo.add_publication_from_json(session, publ_json)
-
-
-_publication_service: PublicationService | None = None
-
-
-def get_publication_service() -> PublicationService:
-    global _publication_service
-    if _publication_service is None:
-        _publication_service = PublicationService()
-    return _publication_service

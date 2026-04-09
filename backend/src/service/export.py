@@ -80,13 +80,3 @@ class ExportService:
         wb.save(output)
         output.seek(0)
         yield output.read()
-
-
-_record_excel_service: ExportService | None = None
-
-
-def get_record_excel_service() -> ExportService:
-    global _record_excel_service
-    if _record_excel_service is None:
-        _record_excel_service = ExportService()
-    return _record_excel_service

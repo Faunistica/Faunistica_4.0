@@ -55,18 +55,8 @@ class TokenService:
         return payload
 
 
-_token_service: TokenService | None = None
-
-
-def get_token_service() -> TokenService:
-    global _token_service
-    if _token_service is None:
-        _token_service = TokenService()
-    return _token_service
-
-
 def get_current_user(
     request: Request,
-    tokens: Annotated[TokenService, Depends(get_token_service)],
+    tokens: Annotated[TokenService, Depends()],
 ) -> dict:
     return tokens.get_payload(request)
