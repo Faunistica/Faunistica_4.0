@@ -25,7 +25,7 @@ class TokenService:
         data.update({"exp": expires, "type": "refresh"})
         return jwt.encode(data, JWT_SECRET)
 
-    def verify_token(self, token: str) -> dict:
+    def verify(self, token: str) -> dict:
         try:
             return jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
         except ExpiredSignatureError as e:
@@ -39,14 +39,14 @@ class TokenService:
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
             ) from e
 
-    def get_current_user(self, request: Request) -> dict:
+    def get_payload(self, request: Request) -> dict:
         token = request.cookies.get("access_token")
         if not token:
             logger.warning("Missing access token")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Missing access token"
             )
-        payload = self.verify_token(token)
+        payload = self.verify(token)
         if payload.get("type") != "access":
             logger.warning("Invalid token type")
             raise HTTPException(
@@ -69,4 +69,4 @@ def get_current_user(
     request: Request,
     tokens: Annotated[TokenService, Depends(get_token_service)],
 ) -> dict:
-    return tokens.get_current_user(request)
+    return tokens.get_payload(request)

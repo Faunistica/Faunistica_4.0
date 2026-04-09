@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_session
 from service.token import get_current_user
-from service.user_service import UserService, get_user_service
+from service.user import UserService, get_user_service
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ async def get_pers_stats(
     users: Annotated[UserService, Depends(get_user_service)],
 ) -> tuple[str, int, dict, list[dict]]:
     user_id = int(user_data["sub"])
-    user_info = await users.get_user_by_id(session, user_id)
+    user_info = await users.get_by_id(session, user_id)
     username = user_info.name
     stats = await users.get_stats(session, user_id)
     table_stats = await users.get_personal(session, user_id)

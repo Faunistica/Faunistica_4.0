@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class GeoService:
-    def parse_coordinate(self, coord: str) -> float:
+    def _parse_coordinate(self, coord: str) -> float:
         coord = coord.strip()
 
         # 1. Degree: 59°
@@ -41,11 +41,11 @@ class GeoService:
         logger.warning(f"Invalid coordinate format: {coord}")
         raise ValueError(f"Invalid coordinate format: {coord}")
 
-    def parse_coord(self, coord: str | None) -> float | None:
+    def parse_coordinate(self, coord: str | None) -> float | None:
         if not coord:
             return None
         try:
-            return self.parse_coordinate(coord)
+            return self._parse_coordinate(coord)
         except ValueError as e:
             logger.error(f"Value error: {e}", exc_info=True)
             return None
@@ -112,7 +112,7 @@ class GeoService:
             logger.error(f"HTTP Error: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
-    def dms_to_dd(
+    def dms_to_degrees(
         self,
         degrees: float,
         minutes: float | None = None,

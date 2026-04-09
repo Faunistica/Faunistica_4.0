@@ -40,6 +40,7 @@ class SpecimenService:
             return result, int(total) if all_whole else round(total, 6)
         return None, 0
 
+    # FIXME: I can't understand what this method does
     def num_of_specimen(self, specimens: dict | None) -> float | None:
         if not specimens:
             return 0

@@ -18,7 +18,7 @@ async def stream_photo(
     session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
     telegram: Annotated[TelegramService, Depends(get_telegram_service)],
 ) -> StreamingResponse:
-    photo = await telegram.fetch_telegram_photo(session, user_id)
+    photo = await telegram.fetch_photo(session, user_id)
     if not photo:
         logger.warning("No photo found")
         raise HTTPException(404, detail="No photo found")

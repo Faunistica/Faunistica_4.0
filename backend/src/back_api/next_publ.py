@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from back_api.rate_limiter import limiter
 from database.database import get_session
-from service.publication_service import PublicationService, get_publication_service
+from service.publication import PublicationService, get_publication_service
 from service.token import get_current_user
-from service.user_service import UserService, get_user_service
+from service.user import UserService, get_user_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -24,7 +24,7 @@ async def next_publ(
     pubs: Annotated[PublicationService, Depends(get_publication_service)],
 ) -> bool:
     user_id = int(user_data["sub"])
-    user = await users.get_user_by_id(session, user_id)
+    user = await users.get_by_id(session, user_id)
 
     # NOTE: gessing how it should work, shoud check if incorrect
     if user.publ_id is not None and not await pubs.is_filled(

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from back_api.rate_limiter import limiter
 from back_api.schemas import StatisticsResponse
 from database.database import get_session
-from service.record_service import RecordService, get_record_service
+from service.record import RecordService, get_record_service
 
 router = APIRouter()
 

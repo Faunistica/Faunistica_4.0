@@ -22,7 +22,7 @@ def refresh(
         logger.warning("Refresh token missing")
         raise HTTPException(status_code=403, detail="Refresh token missing")
 
-    payload = tokens.verify_token(refresh_token)
+    payload = tokens.verify(refresh_token)
 
     if payload.get("type") != "refresh":
         logger.warning("Invalid refresh token")

@@ -12,5 +12,5 @@ async def check_auth(
     request: Request,
     tokens: Annotated[TokenService, Depends(get_token_service)],
 ) -> dict[str, str | bool]:
-    user = tokens.get_current_user(request)
+    user = tokens.get_payload(request)
     return {"authenticated": True, "user_id": user["sub"], "username": user["username"]}

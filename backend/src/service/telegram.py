@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class TelegramService:
-    async def fetch_telegram_photo(
+    async def fetch_photo(
         self,
         session: aiohttp.ClientSession,
         user_id: int,

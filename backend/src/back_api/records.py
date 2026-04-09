@@ -10,10 +10,10 @@ from back_api.schemas import InsertRecordsRequest, Message
 from back_api.util import clean_value
 from database.database import get_session
 from service.geo import GeoService, get_geo_service
-from service.record_service import RecordService, get_record_service
+from service.record import RecordService, get_record_service
 from service.specimen import SpecimenService, get_specimen_service
 from service.token import get_current_user
-from service.user_service import UserService, get_user_service
+from service.user import UserService, get_user_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -34,7 +34,7 @@ async def insert_record(
     north = geo.parse_coord(data.north)
     east = geo.parse_coord(data.east)
     sp, num = specimen.parse(clean_value(data.specimens))
-    user_info = await users.get_user_by_id(session, int(user_data["sub"]))
+    user_info = await users.get_by_id(session, int(user_data["sub"]))
     record_json = {
         "publ_id": user_info.publ_id,
         "user_id": user_info.id,

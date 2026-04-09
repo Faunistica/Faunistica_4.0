@@ -8,7 +8,7 @@ from back_api.rate_limiter import limiter
 from back_api.schemas import GetRecordRequest, GetRecordResponse
 from database.database import get_session
 from database.hash import decrypt_id
-from service.record_service import RecordService, get_record_service
+from service.record import RecordService, get_record_service
 from service.token import get_current_user
 
 logger = logging.getLogger(__name__)

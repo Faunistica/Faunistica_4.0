@@ -11,7 +11,7 @@ from back_api.schemas import Message, SupportRequest
 from back_api.util import get_http_session
 from database.database import get_session
 from service.support import SupportService, get_support_service
-from service.user_service import UserService, get_user_service
+from service.user import UserService, get_user_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -28,7 +28,7 @@ async def support(
     support_svc: Annotated[SupportService, Depends(get_support_service)],
 ) -> Message:
     try:
-        user_id = await users.get_user_by_username(session, data.user_name)
+        user_id = await users.get_by_username(session, data.user_name)
 
         if user_id is None:
             raise HTTPException(
