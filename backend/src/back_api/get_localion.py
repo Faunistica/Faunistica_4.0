@@ -58,7 +58,7 @@ async def get_loc(
     longitude = dms_to_dd(data.degrees_e, data.minutes_e, data.seconds_e)
     location = get_location_names(latitude, longitude)
     return GetLocationResponse(
-        country=location.get("country"),
-        region=location.get("region"),
-        district=location.get("district"),
+        country=location.country,
+        region=location.region,
+        district=location.district,
     )

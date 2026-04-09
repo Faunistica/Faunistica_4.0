@@ -811,8 +811,13 @@ class Handlers:
         await state.clear()
 
     async def rename_name_handler(self, message: Message, state: FSMContext) -> None:
+        if message.from_user is None or message.text is None:
+            raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+
         name_msg = message.text
 
+        # FIXME: isn't it just better to set username as UNIQUE in db
+        # and handle errors if they appear?
         async for session in self.db_session_factory():
             other_users = await count_users_with_name(session, name_msg)
 
