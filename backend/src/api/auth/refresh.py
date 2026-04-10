@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/refresh_token")
+@router.post("/refresh")
 def refresh(
     request: Request,
     response: Response,

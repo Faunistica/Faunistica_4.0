@@ -11,7 +11,9 @@ from api.schemas import AutofillTaxonRequest, AutofillTaxonResponse
 router = APIRouter()
 
 # FIXME: through config?
-csv_path = Path(__file__).resolve().parent.parent.parent / "species_export_20250503.csv"
+csv_path = (
+    Path(__file__).resolve().parent.parent.parent.parent / "species_export_20250503.csv"
+)
 df = pd.read_csv(csv_path, usecols=["family", "genus", "species"])
 executor = ThreadPoolExecutor()
 
@@ -41,8 +43,8 @@ async def async_autofill_taxon(field: str, text: str) -> AutofillTaxonResponse:
     return await loop.run_in_executor(executor, autofill_taxon, field, text)
 
 
-@router.post("/autofill_taxon")
-async def autofill_taxon_endpoint(
+@router.post("/autofill")
+async def autofill(
     data: AutofillTaxonRequest,
 ) -> AutofillTaxonResponse:
     try:

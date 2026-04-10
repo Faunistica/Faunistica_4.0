@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/suggest_taxon")
+@router.post("/suggest")
 async def suggest_taxon(
     request: Request,
     data: SuggestTaxonRequest,

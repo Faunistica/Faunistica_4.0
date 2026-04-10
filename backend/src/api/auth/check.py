@@ -7,7 +7,7 @@ from service.token import TokenService
 router = APIRouter()
 
 
-@router.post("/check_auth")
+@router.post("/check")
 async def check_auth(
     request: Request,
     tokens: Annotated[TokenService, Depends()],

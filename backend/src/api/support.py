@@ -14,12 +14,12 @@ from service.support import SupportService
 from service.user import UserService
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(prefix="/support", tags=["support"])
 
 
-@router.post("/support")
+@router.post("")
 @limiter.limit("1/minute")
-async def support(
+async def submit_support(
     request: Request,
     data: SupportRequest,
     session: Annotated[AsyncSession, Depends(get_session)],

@@ -10,8 +10,8 @@ from service.user import UserService
 router = APIRouter()
 
 
-@router.get("/get_pers_stats")
-async def get_pers_stats(
+@router.get("/me")
+async def personal_stats(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -22,5 +22,4 @@ async def get_pers_stats(
     username = user_info.name
     stats = await users.get_stats(session, user_id)
     table_stats = await users.get_personal(session, user_id)
-    # FIXME: this is definitely non-ideal
     return username, user_id, stats, table_stats

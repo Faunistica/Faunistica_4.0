@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/get_user")
+@router.post("/login")
 @limiter.limit("15/minute")
-async def handle_user_data(
+async def login(
     request: Request,
     response: Response,
     data: UserRequest,
@@ -25,6 +25,7 @@ async def handle_user_data(
     tokens: Annotated[TokenService, Depends()],
     users: Annotated[UserService, Depends()],
 ) -> Message:
+    print("ABOBA")
     user_id = await users.get_by_username(session, data.username)
     if user_id is None:
         logger.warning("User not found for this username")

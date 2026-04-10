@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/get_records_data")
+@router.get("/")
 @limiter.limit("1/minute")
-async def get_records_data(
+async def list_records(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -49,5 +49,5 @@ async def get_records_data(
         )
 
     except Exception as e:
-        logger.error(f"Exception in get_records_data: {str(e)}", exc_info=True)
+        logger.error(f"Exception in list_records: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e

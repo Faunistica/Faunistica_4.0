@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/geo_search")
-async def geo_search(
+@router.post("/search")
+async def search_geo(
     request: Request,
     data: GeoSearchRequest,
     location_data: Annotated[list[dict[str, Any]], Depends(util.get_location_data)],

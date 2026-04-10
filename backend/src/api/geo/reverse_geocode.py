@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/get_loc")
-async def get_loc(
+@router.post("/reverse-geocode")
+async def reverse_geocode(
     request: Request,
     data: GetLocationRequest,
     geo: Annotated[GeoService, Depends()],

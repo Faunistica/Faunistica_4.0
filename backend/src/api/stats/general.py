@@ -11,9 +11,9 @@ from service.record import RecordService
 router = APIRouter()
 
 
-@router.get("/get_gen_stats")
+@router.get("/general")
 @limiter.limit("60/minute")
-async def get_gen_stats(
+async def get_general_stats(
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
     records: Annotated[RecordService, Depends()],

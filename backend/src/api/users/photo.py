@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/user_photo")
-async def stream_photo(
+@router.get("/me/photo")
+async def get_photo(
     user_id: int,
     session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
     telegram: Annotated[TelegramService, Depends()],

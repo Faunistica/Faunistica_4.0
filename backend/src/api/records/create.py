@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/insert_record")
+@router.post("/")
 @limiter.limit("5/minute")
-async def insert_record(
+async def create_record(
     request: Request,
     data: InsertRecordsRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
@@ -78,7 +78,7 @@ async def insert_record(
     }
 
     try:
-        await records_svc.add_record(session, record_json)
+        await records_svc.add(session, record_json)
         return Message(message="ok")
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
