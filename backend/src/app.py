@@ -148,7 +148,7 @@ app.add_middleware(
 
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
-app.include_router(api_router, prefix="/api")
+app.include_router(api_router)
 
 if __name__ == "__main__":
     asyncio.run(bot_start())

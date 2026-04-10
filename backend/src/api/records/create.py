@@ -21,7 +21,7 @@ router = APIRouter()
 
 @router.post("/")
 @limiter.limit("5/minute")
-async def create_record(
+async def create_record(  # noqa: PLR0913
     request: Request,
     data: InsertRecordsRequest,
     user_data: Annotated[dict, Depends(get_current_user)],

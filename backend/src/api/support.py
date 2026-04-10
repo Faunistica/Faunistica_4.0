@@ -19,7 +19,7 @@ router = APIRouter(prefix="/support", tags=["support"])
 
 @router.post("")
 @limiter.limit("1/minute")
-async def submit_support(
+async def submit_support(  # noqa: PLR0913
     request: Request,
     data: SupportRequest,
     session: Annotated[AsyncSession, Depends(get_session)],

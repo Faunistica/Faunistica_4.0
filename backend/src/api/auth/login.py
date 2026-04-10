@@ -12,12 +12,13 @@ from service.token import TokenService
 from service.user import UserService
 
 logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
 @router.post("/login")
 @limiter.limit("15/minute")
-async def login(
+async def login(  # noqa: PLR0913
     request: Request,
     response: Response,
     data: UserRequest,

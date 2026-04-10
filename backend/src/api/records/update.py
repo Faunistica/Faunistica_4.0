@@ -18,7 +18,7 @@ router = APIRouter()
 
 @router.put("/{record_hash}")
 @limiter.limit("20/minute")
-async def update_record(
+async def update_record(  # noqa: PLR0913
     request: Request,
     record_hash: str,
     data: EditRecordRequest,
