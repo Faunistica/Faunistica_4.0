@@ -416,7 +416,7 @@ const FormModePage = ({ isEditMode = false, onSubmit, onCancel }) => {
           <header>
             <h3>{t("header.title")}</h3>
             <p>{t("header.text")}</p>
-            <Link to="/text" className="switch-mode-button">
+            <Link to="/form" className="switch-mode-button">
               {t("header.button")}
             </Link>
           </header>

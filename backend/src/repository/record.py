@@ -1,0 +1,158 @@
+import asyncio
+import logging
+from collections.abc import Sequence
+
+from sqlalchemy import and_, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from database.models import Publ, Record
+from model import PublData
+from repository.user import username_and_publication
+
+logger = logging.getLogger(__name__)
+
+
+async def add_record_from_json(session: AsyncSession, record_json: dict) -> None:
+    record = Record(**record_json)
+    session.add(record)
+    await session.commit()
+
+
+async def get_statistics(session: AsyncSession) -> dict:
+    stats = {}
+
+    stmt = select(func.count()).select_from(Publ)
+    result = await session.execute(stmt)
+    stats["total_publications"] = result.scalar()
+
+    stmt = select(func.count(func.distinct(Record.publ_id)))
+    result = await session.execute(stmt)
+    stats["processed_publications"] = result.scalar()
+
+    stmt = select(func.count()).select_from(Record).where(Record.type == "rec_ok")
+    result = await session.execute(stmt)
+    stats["total_species"] = result.scalar()
+
+    stmt = select(
+        func.count(func.distinct(func.concat(Record.tax_gen, "_", Record.tax_sp)))
+    ).where(Record.type == "rec_ok")
+    result = await session.execute(stmt)
+    stats["unique_species"] = result.scalar()
+
+    stmt = (
+        select(
+            Record.tax_gen, Record.tax_sp, func.count(Record.id).label("spider_count")
+        )
+        .group_by(Record.tax_gen, Record.tax_sp)
+        .order_by(func.count(Record.id).desc())
+        .limit(4)
+    )
+    result = await session.execute(stmt)
+    top_species = result.fetchall()
+    stats["top_species"] = [
+        {"species": f"{row.tax_gen} {row.tax_sp}", "count": row.spider_count}
+        for row in top_species
+    ]
+
+    stmt = (
+        select(
+            func.date(Record.datetime).label("formatted_date"),
+            Record.tax_gen,
+            Record.tax_sp,
+            Record.adm_district,
+            Record.adm_region,
+            Record.user_id,
+        )
+        .order_by(Record.datetime.desc())
+        .limit(4)
+    )
+    result = await session.execute(stmt)
+    latest_records = result.fetchall()
+
+    user_ids = [record.user_id for record in latest_records]
+    user_name_data = await asyncio.gather(
+        *[username_and_publication(session, user_id) for user_id in user_ids]
+    )
+
+    stats["latest_records"] = [
+        {
+            "datetime": record.formatted_date.isoformat(),
+            "species": f"{record.tax_gen} {record.tax_sp}",
+            "location": f"{record.adm_district}, {record.adm_region}",
+            "username": user_data["user_name"]
+            if user_data and "user_name" in user_data
+            else "Unknown",
+        }
+        for record, user_data in zip(latest_records, user_name_data, strict=False)
+    ]
+
+    return stats
+
+
+async def get_user_records(session: AsyncSession, user_id: int) -> Sequence[Record]:
+    stmt = select(Record).where(Record.user_id == user_id)
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
+async def remove_record_row_by_id(
+    session: AsyncSession, record_id: int, user_id: int
+) -> bool:
+    stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
+    result = await session.execute(stmt)
+    record = result.scalar_one_or_none()
+
+    if record is not None:
+        await session.delete(record)
+        await session.commit()
+        return True
+    return False
+
+
+async def get_record_by_id(
+    session: AsyncSession, record_id: int, user_id: int
+) -> Record | None:
+    stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def edit_record_by_id(
+    session: AsyncSession, record_id: int, user_id: int, new_data: dict
+) -> bool:
+    stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
+    result = await session.execute(stmt)
+    record = result.scalar_one_or_none()
+
+    if record is None:
+        return False
+
+    for key, value in new_data.items():
+        if key != "hash":
+            setattr(record, key, value)
+
+    await session.commit()
+    return True
+
+
+async def publ_by_hash(
+    session: AsyncSession, record_id: int, user_id: int
+) -> PublData | None:
+    record = await get_record_by_id(session, record_id, user_id)
+
+    if record is None:
+        return None
+
+    stmt = select(Publ).filter_by(id=record.publ_id)
+    result = await session.execute(stmt)
+    publication = result.scalar_one_or_none()
+    if publication is None:
+        return None
+
+    return PublData(
+        author=publication.author,
+        year=str(publication.year or ""),
+        name=publication.name,
+        pdf_file=publication.pdf_file,
+    )

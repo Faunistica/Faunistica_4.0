@@ -87,7 +87,7 @@ const Home = ({ isAuthenticated, onLoginClick }) => {
                 <span>3</span>
                 <p>
                   <Trans i18nKey="how_to_help.step3" t={t}>
-                    Fill out your first <NavLink to="/text">form</NavLink>
+                    Fill out your first <NavLink to="/form">form</NavLink>
                   </Trans>
                 </p>
               </div>

@@ -17,7 +17,7 @@ dependencies = [
     "argon2-cffi",
     "python-jose[cryptography]",
     "pandas",
-    "httpx",
+    "aiohttp",
     "openpyxl",
     "aiohttp-socks>=0.11.0",
     "python-dotenv>=1.2.2",
@@ -29,7 +29,28 @@ dependencies = [
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["I"]
+select = [
+    "ANN",
+    "PYI",
+    "RSE",
+    "TC",
+    "I",      # isort (imports)
+    "E",      # pycodestyle errors
+    "F",      # Pyflakes
+    "W",      # pycodestyle warnings
+    "FAST",   # FastAPI-specific
+    "B",      # flake8-bugbear (best practices)
+    "UP",     # pyupgrade (modern Python)
+    "ASYNC",  # async best practices
+    "C4",     # comprehensions
+    "SIM",    # simplify code
+    "RET",    # return statements
+    "S",      # bandit (security)
+    "PL",     # Pylint
+]
+ignore = [
+    "PLR2004" # ignore magick variables for now
+]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

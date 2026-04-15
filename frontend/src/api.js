@@ -10,7 +10,7 @@ let refreshTokenPromise = null;
 const apiService = {
   login: async (username, password) => {
     try {
-      const response = await api.post("/api/get_user", { username, password });
+      const response = await api.post("/api/auth/login", { username, password });
       return response.data;
     } catch (error) {
       if (error.response?.status === 401) {
@@ -25,27 +25,22 @@ const apiService = {
   },
 
   logout: async () => {
-    const response = await api.post("/api/logout");
+    const response = await api.post("/api/auth/logout");
     return response.data;
   },
 
   checkAuth: async () => {
     try {
-      await api.post("/api/check_auth");
+      await api.post("/api/auth/check");
       return true;
     } catch {
       return false;
     }
   },
 
-  getInfoFromText: async (text) => {
-    const response = await api.post("/api/get_info", { text });
-    return response.data;
-  },
-
   insertRecord: async (recordData, t) => {
     try {
-      const response = await api.post("/api/insert_record", recordData);
+      const response = await api.post("/api/records", recordData);
       return response.data;
     } catch (error) {
       if (error.response?.status === 422) {
@@ -58,7 +53,7 @@ const apiService = {
 
   getGeneralStats: async (t) => {
     try {
-      const response = await api.get("/api/get_gen_stats");
+      const response = await api.get("/api/stats/general");
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -71,10 +66,9 @@ const apiService = {
     }
   },
 
-  // FIXME: error handling
   refreshToken: async () => {
     if (!refreshTokenPromise) {
-      refreshTokenPromise = api.post("/api/refresh_token").finally(() => {
+      refreshTokenPromise = api.post("/api/auth/refresh").finally(() => {
         refreshTokenPromise = null;
       });
     }
@@ -86,7 +80,7 @@ const apiService = {
       return [];
     }
     try {
-      const response = await api.post("/api/suggest_taxon", filters);
+      const response = await api.post("/api/taxonomy/suggest", filters);
       return response.data;
     } catch (error) {
       console.error(error);
@@ -99,7 +93,7 @@ const apiService = {
       return { suggestions: [] };
     }
     try {
-      const response = await api.post("/api/geo_search", filters);
+      const response = await api.post("/api/geo/search", filters);
       return response.data;
     } catch (error) {
       console.error(error);
@@ -109,7 +103,7 @@ const apiService = {
 
   autofillTaxon: async (field, text) => {
     try {
-      const response = await api.post("/api/autofill_taxon", { field, text });
+      const response = await api.post("/api/taxonomy/autofill", { field, text });
       return response.data;
     } catch (error) {
       console.error("Autofill error:", error);
@@ -119,7 +113,7 @@ const apiService = {
 
   getPublication: async () => {
     try {
-      const response = await api.get("/api/get_publ");
+      const response = await api.get("/api/users/publication");
       return response.data;
     } catch (error) {
       throw new Error(error);
@@ -128,16 +122,16 @@ const apiService = {
 
   getPublicationFromHash: async (hash) => {
     try {
-      const response = await api.post("/api/publ_from_hash", hash);
+      const response = await api.post("/api/users/publication/from-hash", { hash });
       return response.data;
     } catch (error) {
       throw new Error(error);
     }
   },
 
-  ChangePublication: async (t) => {
+  changePublication: async (t) => {
     try {
-      const response = await api.get("/api/next_publ");
+      const response = await api.get("/api/users/publication/next");
       return response.data;
     } catch (error) {
       if (error.response?.status === 409) {
@@ -152,7 +146,7 @@ const apiService = {
 
   getLocationFromCoordinates: async (coordinates) => {
     try {
-      const response = await api.post("/api/get_loc", coordinates);
+      const response = await api.post("/api/geo/reverse-geocode", coordinates);
       return response.data;
     } catch (error) {
       console.error("Error getting location:", error);
@@ -176,7 +170,7 @@ const apiService = {
 
   getProfile: async (t) => {
     try {
-      const response = await api.get("/api/get_pers_stats");
+      const response = await api.get("/api/users/me");
       return response;
     } catch (error) {
       if (error.response) {
@@ -191,7 +185,7 @@ const apiService = {
 
   getProfilePhoto: async (userId) => {
     try {
-      const response = await api.get("/api/user_photo", {
+      const response = await api.get("/api/users/me/photo", {
         params: {
           user_id: userId,
         },
@@ -205,9 +199,8 @@ const apiService = {
 
   downloadRecords: async (t) => {
     try {
-      const response = await api.post(
-        "/api/get_records_data",
-        {},
+      const response = await api.get(
+        "/api/records",
         {
           responseType: "blob",
         },
@@ -225,7 +218,7 @@ const apiService = {
 
   getRecord: async (hash, t) => {
     try {
-      const response = await api.post("/api/get_record", { hash });
+      const response = await api.get(`/api/records/${hash}`);
       return response.data;
     } catch (error) {
       if (error.response?.status === 400) {
@@ -243,7 +236,7 @@ const apiService = {
 
   deleteRecord: async (hash, t) => {
     try {
-      const response = await api.post("/api/del_record", { hash });
+      const response = await api.delete(`/api/records/${hash}`);
       return response.data;
     } catch (error) {
       if (error.response?.status === 400) {
@@ -261,10 +254,7 @@ const apiService = {
 
   editRecord: async (hash, recordData, t) => {
     try {
-      const response = await api.post("/api/edit_record", {
-        hash,
-        ...recordData,
-      });
+      const response = await api.put(`/api/records/${hash}`, recordData);
       return response.data;
     } catch (error) {
       if (error.response?.status === 400) {
@@ -296,12 +286,12 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     const currentPath = window.location.pathname;
-    const shouldRedirect = currentPath === "/text" || currentPath === "/form";
+    const shouldRedirect = currentPath === "/form";
 
     if (error.response?.status === 403 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      if (originalRequest.url.includes("/api/refresh_token")) {
+      if (originalRequest.url.includes("/api/auth/refresh")) {
         console.error("Refresh token failed, logging out");
         if (shouldRedirect) {
           window.location.href = "/";
