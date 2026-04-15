@@ -73,7 +73,7 @@ class Action(Base):
 
 
 class Record(Base):
-    __tablename__ = "records"
+    __tablename__ = "spiders"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     publ_id: Mapped[int | None] = mapped_column(
