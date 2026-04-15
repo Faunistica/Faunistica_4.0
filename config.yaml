@@ -1,6 +1,0 @@
-dev_mode:
-  enabled: true
-
-allowed_origins:
-  - "http://localhost:5173"
-  - "http://localhost:8000"
