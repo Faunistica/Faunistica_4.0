@@ -23,6 +23,7 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "greenlet>=3.3.2",
     "pyyaml",
+    "alembic>=1.18.4",
 ]
 
 [tool.ruff]
