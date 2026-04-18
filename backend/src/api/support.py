@@ -11,7 +11,7 @@ from api.util import get_http_session
 from core.database import get_session
 from repository.user import find_user_by_username
 from schemas import Message, SupportRequest
-from service.support import SupportService
+from service import support
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/support", tags=["support"])
@@ -24,7 +24,6 @@ async def submit_support(  # noqa: PLR0913
     data: SupportRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
     http_session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
-    support: Annotated[SupportService, Depends()],
 ) -> Message[Literal["ok"]]:
     try:
         user = await find_user_by_username(session, data.user_name)

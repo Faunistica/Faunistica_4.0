@@ -10,7 +10,7 @@ from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import get_current_user
 from repository import record as record_repo
-from service.export import ExportService
+from service import export
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -22,7 +22,6 @@ async def list_records(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    export: Annotated[ExportService, Depends()],
 ) -> StreamingResponse:
     user_id = int(user_data["sub"])
     username = user_data["username"]

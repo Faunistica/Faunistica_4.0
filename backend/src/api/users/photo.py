@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from api.util import get_http_session
-from service.telegram import TelegramService
+from service import telegram
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -16,7 +16,6 @@ router = APIRouter()
 async def get_photo(
     user_id: int,
     session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
-    telegram: Annotated[TelegramService, Depends()],
 ) -> StreamingResponse:
     photo = await telegram.fetch_photo(session, user_id)
     if not photo:

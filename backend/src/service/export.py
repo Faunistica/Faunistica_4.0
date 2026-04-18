@@ -49,27 +49,34 @@ COLUMN_MAPPING = {
 }
 
 
-class ExportService:
-    def records_to_excel(self, records: Sequence[Record]) -> ContentStream:
-        output = io.BytesIO()
-        wb = Workbook()
-        ws = wb.active
+def records_to_excel(records: Sequence[Record]) -> ContentStream:
+    output = io.BytesIO()
+    wb = Workbook()
+    ws = wb.active
 
-        if ws is None:
-            logger.error("ws is None")
-            raise Exception
+    if ws is None:
+        logger.error("ws is None")
+        raise Exception
 
-        headers = list(COLUMN_MAPPING.values())
-        ws.append(headers)
+    headers = [
+        COLUMN_MAPPING[field]
+        for field in COLUMN_MAPPING
+        if field not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
+    ]
+    ws.append(headers)
 
-        for col in range(1, len(headers) + 1):
-            ws.column_dimensions[get_column_letter(col)].width = 20
-            ws.cell(row=1, column=col).font = Font(bold=True)
+    for col in range(1, len(headers) + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 20
+        ws.cell(row=1, column=col).font = Font(bold=True)
 
-        for record in records:
-            row = [getattr(record, field) for field in COLUMN_MAPPING]
-            ws.append(row)
+    for record in records:
+        row = [
+            getattr(record, field)
+            for field in COLUMN_MAPPING
+            if field not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
+        ]
+        ws.append(row)
 
-        wb.save(output)
-        output.seek(0)
-        yield output.read()
+    wb.save(output)
+    output.seek(0)
+    yield output.read()

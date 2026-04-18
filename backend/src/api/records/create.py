@@ -12,8 +12,7 @@ from core.utils import clean_value
 from repository.record import add_record_from_json
 from repository.user import get_user
 from schemas import InsertRecordsRequest, Message
-from service.geo import GeoService
-from service.specimen import SpecimenService
+from service import geo, specimen
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -26,8 +25,6 @@ async def create_record(  # noqa: PLR0913
     data: InsertRecordsRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    geo: Annotated[GeoService, Depends()],
-    specimen: Annotated[SpecimenService, Depends()],
 ) -> Message:
     north = geo.parse_coordinate(data.north)
     east = geo.parse_coordinate(data.east)

@@ -1,7 +1,6 @@
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 
 from core.config import ACCESS_TOKEN_EXPIRE
 from core.security import create_access_token, verify_token
