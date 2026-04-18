@@ -6,12 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from api.schemas import PublResponse, RecordHashRequest
-from database.database import get_session
+from core.security import get_current_user
+from core.database import get_session
 from database.hash import decrypt_id
-from service.publication import PublicationService
-from service.record import RecordService
-from service.token import get_current_user
-from service.user import UserService
+from repository import publication as publication_repo
+from repository import record as record_repo
+from repository import user as user_repo
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -24,12 +24,9 @@ async def get_publication(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    users: Annotated[UserService, Depends()],
 ) -> PublResponse:
     try:
-        data = await users.get_username_and_current_publication(
-            session, int(user_data["sub"])
-        )
+        data = await user_repo.username_and_publication(session, int(user_data["sub"]))
 
         return PublResponse(
             author=data["publication"]["author"],
@@ -50,13 +47,11 @@ async def get_next_publication(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    users: Annotated[UserService, Depends()],
-    pubs: Annotated[PublicationService, Depends()],
 ) -> bool:
     user_id = int(user_data["sub"])
-    user = await users.get_by_id(session, user_id)
+    user = await user_repo.get_user(session, user_id)
 
-    if user.publ_id is not None and not await pubs.is_filled_by_user(
+    if user.publ_id is not None and not await publication_repo.is_publ_filled(
         session, user_id, user.publ_id
     ):
         logger.warning("Publication is not filled")
@@ -73,7 +68,7 @@ async def get_next_publication(
 
     if (num_publ != -1) and (num_publ != len(items) - 1):
         publ_id = int(items[num_publ + 1])
-        await users.update(session, user_id, publ_id=publ_id)
+        await user_repo.update_user(session, user_id, publ_id=publ_id)
         return True
     return False
 
@@ -85,7 +80,6 @@ async def get_publication_from_hash(
     data: RecordHashRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    records_svc: Annotated[RecordService, Depends()],
 ) -> PublResponse:
     try:
         user_id = int(user_data["sub"])
@@ -95,7 +89,7 @@ async def get_publication_from_hash(
             logger.warning("Invalid record token")
             raise HTTPException(status_code=400, detail="Invalid record token.")
 
-        publ = await records_svc.get_publication_by_hash(session, record_id, user_id)
+        publ = await record_repo.publ_by_hash(session, record_id, user_id)
         if publ is None:
             logger.warning("Publication not found")
             raise HTTPException(status_code=404, detail="Publication not found.")

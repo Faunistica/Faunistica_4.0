@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from api.schemas import Message
-from database.database import get_session
+from core.security import get_current_user
+from core.database import get_session
 from database.hash import decrypt_id
-from service.record import RecordService
-from service.token import get_current_user
+from repository import record as record_repo
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -22,7 +22,6 @@ async def delete_record(
     record_hash: str,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    records: Annotated[RecordService, Depends()],
 ) -> Message:
     user_id = int(user_data["sub"])
     record_id = decrypt_id(record_hash)
@@ -31,7 +30,9 @@ async def delete_record(
         raise HTTPException(status_code=400, detail="Invalid record token.")
 
     try:
-        is_success = await records.delete(session, record_id, user_id)
+        is_success = await record_repo.remove_record_row_by_id(
+            session, record_id, user_id
+        )
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e

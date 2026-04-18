@@ -4,8 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from api.schemas import Message
-from config.config import ACCESS_TOKEN_EXPIRE
-from service.token import TokenService
+from core.config import ACCESS_TOKEN_EXPIRE
+from core.security import TokenService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

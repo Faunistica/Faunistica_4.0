@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from api.schemas import Message, UserRequest
-from config.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
-from database.database import get_session
-from service.token import TokenService
-from service.user import UserService
+from core.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
+from core.security import TokenService
+from core.database import get_session
+from repository import user as user_repo
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +24,13 @@ async def login(  # noqa: PLR0913
     data: UserRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
     tokens: Annotated[TokenService, Depends()],
-    users: Annotated[UserService, Depends()],
 ) -> Message:
-    user_id = await users.get_by_username(session, data.username)
+    user_id = await user_repo.get_user_id_by_username(session, data.username)
     if user_id is None:
         logger.warning("User not found for this username")
         raise HTTPException(status_code=404, detail="User not found for this username")
 
-    if not await users.verify_password(session, user_id, data.password):
+    if not await user_repo.is_pass_correct(session, user_id, data.password):
         logger.warning("Wrong password")
         raise HTTPException(status_code=401, detail="Wrong password")
 

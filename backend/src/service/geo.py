@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from geopy.exc import GeocoderTimedOut
 from geopy.geocoders import Nominatim
 
-from model import Location
+from schemas import Location
 
 logger = logging.getLogger(__name__)
 

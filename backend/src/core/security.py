@@ -5,11 +5,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Request, status
 from jose import ExpiredSignatureError, JWTError, jwt
 
-from config.config import (
-    ACCESS_TOKEN_EXPIRE,
-    JWT_SECRET,
-    REFRESH_TOKEN_EXPIRE,
-)
+from core.config import ACCESS_TOKEN_EXPIRE, JWT_SECRET, REFRESH_TOKEN_EXPIRE
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-from service.util import clean_value
+from core.utils import clean_value
 
 
 class SpecimenService:

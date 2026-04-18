@@ -9,9 +9,9 @@ from starlette.status import HTTP_404_NOT_FOUND
 from api.rate_limiter import limiter
 from api.schemas import Message, SupportRequest
 from api.util import get_http_session
-from database.database import get_session
+from core.database import get_session
+from repository import user as user_repo
 from service.support import SupportService
-from service.user import UserService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/support", tags=["support"])
@@ -24,11 +24,10 @@ async def submit_support(  # noqa: PLR0913
     data: SupportRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
     http_session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
-    users: Annotated[UserService, Depends()],
     support: Annotated[SupportService, Depends()],
 ) -> Message[Literal["ok"]]:
     try:
-        user_id = await users.get_by_username(session, data.user_name)
+        user_id = await user_repo.get_user_id_by_username(session, data.user_name)
 
         if user_id is None:
             raise HTTPException(

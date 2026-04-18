@@ -3,7 +3,7 @@ import logging
 
 import aiohttp
 
-from config.config import BOT_TOKEN
+from core.config import BOT_TOKEN
 
 logger = logging.getLogger(__name__)
 

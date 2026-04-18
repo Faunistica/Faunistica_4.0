@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from api.schemas import StatisticsResponse
-from database.database import get_session
-from service.record import RecordService
+from core.database import get_session
+from repository import record as record_repo
 
 router = APIRouter()
 
@@ -16,6 +16,5 @@ router = APIRouter()
 async def get_general_stats(
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
-    records: Annotated[RecordService, Depends()],
 ) -> StatisticsResponse:
-    return await records.get_stats(session)
+    return await record_repo.get_statistics(session)

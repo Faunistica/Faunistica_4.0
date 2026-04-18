@@ -14,8 +14,8 @@ from slowapi.middleware import SlowAPIMiddleware
 from api import api_router
 from api.rate_limiter import limiter, rate_limit_handler
 from bot.bot_main import bot_start, config
-from config.config import ALLOWED_ORIGINS, DEV_MODE, LOG_LEVEL, LOGS_DIR
-from database.database import init_db, ping_db
+from core.config import ALLOWED_ORIGINS, DEV_MODE, LOG_LEVEL, LOGS_DIR
+from core.database import init_db, ping_db
 
 logs_dir = LOGS_DIR
 logs_dir.mkdir(exist_ok=True)

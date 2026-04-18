@@ -7,13 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from api.schemas import InsertRecordsRequest, Message
-from api.util import clean_value
-from database.database import get_session
+from core.security import get_current_user
+from core.utils import clean_value
+from core.database import get_session
+from repository import record as record_repo
+from repository import user as user_repo
 from service.geo import GeoService
-from service.record import RecordService
 from service.specimen import SpecimenService
-from service.token import get_current_user
-from service.user import UserService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -28,13 +28,11 @@ async def create_record(  # noqa: PLR0913
     session: Annotated[AsyncSession, Depends(get_session)],
     geo: Annotated[GeoService, Depends()],
     specimen: Annotated[SpecimenService, Depends()],
-    users: Annotated[UserService, Depends()],
-    records_svc: Annotated[RecordService, Depends()],
 ) -> Message:
     north = geo.parse_coordinate(data.north)
     east = geo.parse_coordinate(data.east)
     sp, num = specimen.parse(clean_value(data.specimens))
-    user_info = await users.get_by_id(session, int(user_data["sub"]))
+    user_info = await user_repo.get_user(session, int(user_data["sub"]))
     record_json = {
         "publ_id": user_info.publ_id,
         "user_id": user_info.id,
@@ -81,7 +79,7 @@ async def create_record(  # noqa: PLR0913
     }
 
     try:
-        await records_svc.add(session, record_json)
+        await record_repo.add_record_from_json(session, record_json)
         return Message(message="ok")
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

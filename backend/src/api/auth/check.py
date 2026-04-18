@@ -1,8 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
-
-from service.token import TokenService
+from core.security import TokenService
 
 router = APIRouter()
 

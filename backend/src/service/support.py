@@ -1,7 +1,7 @@
 import aiohttp
 
-from api.schemas import SupportRequest
-from config.config import ADMIN_CHAT_ID, BOT_TOKEN
+from schemas import SupportRequest
+from core.config import ADMIN_CHAT_ID, BOT_TOKEN
 
 
 class SupportService:
