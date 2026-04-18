@@ -6,11 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
-from api.schemas import EditRecordRequest, Message
-from core.security import get_current_user
 from core.database import get_session
-from database.hash import decrypt_id
-from repository import record as record_repo
+from core.security import decrypt_id, get_current_user
+from repository.record import edit_record_by_id
+from schemas import EditRecordRequest, Message
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -76,9 +75,7 @@ async def update_record(  # noqa: PLR0913
         dump = data.model_dump()
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"
-        is_success = await record_repo.edit_record_by_id(
-            session, record_id, user_id, dump
-        )
+        is_success = await edit_record_by_id(session, record_id, user_id, dump)
 
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

@@ -6,12 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
-from api.schemas import InsertRecordsRequest, Message
+from core.database import get_session
 from core.security import get_current_user
 from core.utils import clean_value
-from core.database import get_session
-from repository import record as record_repo
-from repository import user as user_repo
+from repository.record import add_record_from_json
+from repository.user import get_user
+from schemas import InsertRecordsRequest, Message
 from service.geo import GeoService
 from service.specimen import SpecimenService
 
@@ -32,7 +32,7 @@ async def create_record(  # noqa: PLR0913
     north = geo.parse_coordinate(data.north)
     east = geo.parse_coordinate(data.east)
     sp, num = specimen.parse(clean_value(data.specimens))
-    user_info = await user_repo.get_user(session, int(user_data["sub"]))
+    user_info = await get_user(session, int(user_data["sub"]))
     record_json = {
         "publ_id": user_info.publ_id,
         "user_id": user_info.id,
@@ -79,7 +79,7 @@ async def create_record(  # noqa: PLR0913
     }
 
     try:
-        await record_repo.add_record_from_json(session, record_json)
+        await add_record_from_json(session, record_json)
         return Message(message="ok")
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

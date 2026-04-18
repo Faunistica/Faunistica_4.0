@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from api.schemas import SuggestTaxonRequest, SuggestTaxonResponse
+from schemas import SuggestTaxonRequest, SuggestTaxonResponse
 from service.taxon import TaxonService
 
 logger = logging.getLogger(__name__)

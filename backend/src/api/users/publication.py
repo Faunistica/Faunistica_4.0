@@ -5,13 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
-from api.schemas import PublResponse, RecordHashRequest
-from core.security import get_current_user
 from core.database import get_session
-from database.hash import decrypt_id
-from repository import publication as publication_repo
-from repository import record as record_repo
-from repository import user as user_repo
+from core.security import decrypt_id, get_current_user
+from repository.publication import user_filled_publication
+from repository.record import find_publ_by_hash
+from repository.user import get_user, get_username_and_publications, update_user
+from schemas import PublResponse, RecordHashRequest
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -26,7 +25,7 @@ async def get_publication(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> PublResponse:
     try:
-        data = await user_repo.username_and_publication(session, int(user_data["sub"]))
+        data = await get_username_and_publications(session, int(user_data["sub"]))
 
         return PublResponse(
             author=data["publication"]["author"],
@@ -49,9 +48,9 @@ async def get_next_publication(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> bool:
     user_id = int(user_data["sub"])
-    user = await user_repo.get_user(session, user_id)
+    user = await get_user(session, user_id)
 
-    if user.publ_id is not None and not await publication_repo.is_publ_filled(
+    if user.publ_id is not None and not await user_filled_publication(
         session, user_id, user.publ_id
     ):
         logger.warning("Publication is not filled")
@@ -68,7 +67,7 @@ async def get_next_publication(
 
     if (num_publ != -1) and (num_publ != len(items) - 1):
         publ_id = int(items[num_publ + 1])
-        await user_repo.update_user(session, user_id, publ_id=publ_id)
+        await update_user(session, user_id, publ_id=publ_id)
         return True
     return False
 
@@ -89,7 +88,7 @@ async def get_publication_from_hash(
             logger.warning("Invalid record token")
             raise HTTPException(status_code=400, detail="Invalid record token.")
 
-        publ = await record_repo.publ_by_hash(session, record_id, user_id)
+        publ = await find_publ_by_hash(session, record_id, user_id)
         if publ is None:
             logger.warning("Publication not found")
             raise HTTPException(status_code=404, detail="Publication not found.")

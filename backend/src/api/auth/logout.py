@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Response
 
-from api.schemas import Message
+from schemas import Message
 
 router = APIRouter()
 

@@ -6,7 +6,7 @@ from sqlalchemy import func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from database.models import Publ, Record, User
+from models import Publ, Record, User
 
 logger = logging.getLogger(__name__)
 

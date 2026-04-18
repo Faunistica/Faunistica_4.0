@@ -5,7 +5,6 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
-    AsyncSessionTransaction,
     async_sessionmaker,
     create_async_engine,
 )
@@ -26,11 +25,6 @@ _async_session_local = async_sessionmaker(
 
 class DBException(Exception):
     pass
-
-
-async def get_transaction() -> AsyncGenerator[AsyncSessionTransaction]:
-    async with _async_session_local().begin() as transaction:
-        yield transaction
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:

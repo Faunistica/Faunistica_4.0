@@ -7,19 +7,19 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import FSInputFile, Message
 
+from bot import NO_WORDS, YES_WORDS
 from bot.button_markups import Keyboards
 from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
 from bot.states import RegistrationStates, RenameStates, SociologyStates, SupportStates
-from config import config, config_vars
-from database.database import get_session
-from database.hash import get_password_hash
-from database.models import User
+from core.database import get_session
+from core.security import get_password_hash
+from models import User
 from repository.log import log_action
 from repository.publication import (
     get_publication,
     get_publications_for_language,
-    is_publ_filled,
+    user_filled_publication,
 )
 from repository.stats import get_general_stats, get_volunteers_achievements
 from repository.user import (
@@ -69,12 +69,12 @@ class Handlers:
 
         self.router.message.register(
             self.reg_accept_handler,
-            lambda msg: msg.text.lower() in config_vars.YES_WORDS,
+            lambda msg: msg.text.lower() in YES_WORDS,
             RegistrationStates.waiting_for_agreement,
         )
         self.router.message.register(
             self.reg_decline_handler,
-            lambda msg: msg.text.lower() in config_vars.NO_WORDS,
+            lambda msg: msg.text.lower() in NO_WORDS,
             RegistrationStates.waiting_for_agreement,
         )
         self.router.message.register(
@@ -285,7 +285,7 @@ class Handlers:
             elif user.publ_id is None:
                 await message.answer(Messages.not_authorization())
             else:
-                if not await is_publ_filled(
+                if not await user_filled_publication(
                     session, message.from_user.id, int(user.items.split("|")[0])
                 ):
                     await message.answer(Messages.not_finished_publ(user.name))
@@ -963,9 +963,9 @@ class Handlers:
 
         answer = message.text.lower()
 
-        if answer in config_vars.YES_WORDS:
+        if answer in YES_WORDS:
             rating_value = 1
-        elif answer in config_vars.NO_WORDS:
+        elif answer in NO_WORDS:
             rating_value = 0
         else:
             await message.answer(Messages.selection_not_recognized())

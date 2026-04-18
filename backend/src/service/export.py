@@ -7,7 +7,7 @@ from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 from starlette.responses import ContentStream
 
-from database.models import Record
+from models import Record
 
 logger = logging.getLogger(__name__)
 

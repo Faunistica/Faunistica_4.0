@@ -7,16 +7,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import text
 
-from database.hash import check_password_hash, encrypt_id
-from database.models import Publ, Record, User
+from core.security import check_password_hash, encrypt_id
+from core.utils import format_event_date
 from model import EventDate
-from repository.util import format_event_date
+from models import Publ, Record, User
 
 logger = logging.getLogger(__name__)
 
 
-async def get_user_id_by_username(session: AsyncSession, username: str) -> int | None:
-    stmt = select(User.id).where(User.name == username)
+async def find_user_by_username(session: AsyncSession, username: str) -> User | None:
+    stmt = select(User).where(User.name == username)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -39,7 +39,8 @@ async def get_user(session: AsyncSession, user_id: int) -> User:
     return result.scalar_one()
 
 
-async def username_and_publication(session: AsyncSession, user_id: int) -> dict:
+# FIXME: N+1, dict as return type
+async def get_username_and_publications(session: AsyncSession, user_id: int) -> dict:
     user = await get_user(session, user_id)
     if not user:
         return {"error": "User not found"}

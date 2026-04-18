@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 
-from api.schemas import AutofillTaxonRequest, AutofillTaxonResponse
+from schemas import AutofillTaxonRequest, AutofillTaxonResponse
 
 router = APIRouter()
 

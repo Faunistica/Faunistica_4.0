@@ -6,9 +6,9 @@ from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from database.models import Publ, Record
 from model import PublData
-from repository.user import username_and_publication
+from models import Publ, Record
+from repository.user import get_username_and_publications
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ async def get_statistics(session: AsyncSession) -> dict:
 
     user_ids = [record.user_id for record in latest_records]
     user_name_data = await asyncio.gather(
-        *[username_and_publication(session, user_id) for user_id in user_ids]
+        *[get_username_and_publications(session, user_id) for user_id in user_ids]
     )
 
     stats["latest_records"] = [
@@ -136,7 +136,7 @@ async def edit_record_by_id(
     return True
 
 
-async def publ_by_hash(
+async def find_publ_by_hash(
     session: AsyncSession, record_id: int, user_id: int
 ) -> PublData | None:
     record = await get_record_by_id(session, record_id, user_id)

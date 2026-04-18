@@ -4,7 +4,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from api import util
-from api.schemas import GeoSearchRequest, GeoSearchResponse
+from schemas import GeoSearchRequest, GeoSearchResponse
 from service.geo import GeoService
 
 logger = logging.getLogger(__name__)

@@ -5,11 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
-from api.schemas import Message, UserRequest
 from core.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
-from core.security import TokenService
 from core.database import get_session
-from repository import user as user_repo
+from core.security import create_access_token, create_refresh_token
+from repository.user import find_user_by_username, is_pass_correct
+from schemas import Message, UserRequest
 
 logger = logging.getLogger(__name__)
 
@@ -23,20 +23,19 @@ async def login(  # noqa: PLR0913
     response: Response,
     data: UserRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
-    tokens: Annotated[TokenService, Depends()],
 ) -> Message:
-    user_id = await user_repo.get_user_id_by_username(session, data.username)
-    if user_id is None:
+    user = await find_user_by_username(session, data.username)
+    if user is None:
         logger.warning("User not found for this username")
         raise HTTPException(status_code=404, detail="User not found for this username")
 
-    if not await user_repo.is_pass_correct(session, user_id, data.password):
+    if not await is_pass_correct(session, user.id, data.password):
         logger.warning("Wrong password")
         raise HTTPException(status_code=401, detail="Wrong password")
 
-    token_payload = {"sub": str(user_id), "username": data.username}
-    access_token = tokens.create_access_token(token_payload)
-    refresh_token = tokens.create_refresh_token(token_payload)
+    token_payload = {"sub": str(user.id), "username": data.username}
+    access_token = create_access_token(token_payload)
+    refresh_token = create_refresh_token(token_payload)
 
     response.set_cookie(
         key="access_token",

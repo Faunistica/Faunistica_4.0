@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from database.models import Publ, Record
+from models import Publ, Record
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,9 @@ async def get_publications_for_language(
     return result.scalars().all()
 
 
-async def is_publ_filled(session: AsyncSession, user_id: int, publ_id: int) -> bool:
+async def user_filled_publication(
+    session: AsyncSession, user_id: int, publ_id: int
+) -> bool:
     stmt = (
         select(Record.type)
         .where(Record.user_id == user_id, Record.publ_id == publ_id)
