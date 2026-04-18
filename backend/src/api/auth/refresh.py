@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 
 from core.config import ACCESS_TOKEN_EXPIRE
 from core.security import create_access_token, verify_token
-from schemas import Message
+from schemas.common import Message
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

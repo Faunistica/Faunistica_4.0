@@ -6,9 +6,9 @@ from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from model import PublData
 from models import Publ, Record
 from repository.user import get_username_and_publications
+from schemas.common import Publication
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ async def edit_record_by_id(
 
 async def find_publ_by_hash(
     session: AsyncSession, record_id: int, user_id: int
-) -> PublData | None:
+) -> Publication | None:
     record = await get_record_by_id(session, record_id, user_id)
 
     if record is None:
@@ -150,7 +150,7 @@ async def find_publ_by_hash(
     if publication is None:
         return None
 
-    return PublData(
+    return Publication(
         author=publication.author,
         year=str(publication.year or ""),
         name=publication.name,

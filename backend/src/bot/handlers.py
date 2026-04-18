@@ -12,6 +12,7 @@ from bot.button_markups import Keyboards
 from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
 from bot.states import RegistrationStates, RenameStates, SociologyStates, SupportStates
+from core import config
 from core.database import get_session
 from core.security import get_password_hash
 from models import User

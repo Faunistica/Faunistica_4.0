@@ -9,8 +9,8 @@ from sqlalchemy.sql.expression import text
 
 from core.security import check_password_hash, encrypt_id
 from core.utils import format_event_date
-from model import EventDate
 from models import Publ, Record, User
+from schemas.common import EventDate
 
 logger = logging.getLogger(__name__)
 

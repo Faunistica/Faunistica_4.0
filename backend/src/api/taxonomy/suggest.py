@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request
 
-from schemas import SuggestTaxonRequest, SuggestTaxonResponse
+from schemas.taxonomy import SuggestTaxonRequest, SuggestTaxonResponse
 from service import taxon
 
 logger = logging.getLogger(__name__)

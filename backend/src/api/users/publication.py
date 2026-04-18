@@ -10,7 +10,7 @@ from core.security import decrypt_id, get_current_user
 from repository.publication import user_filled_publication
 from repository.record import find_publ_by_hash
 from repository.user import get_user, get_username_and_publications, update_user
-from schemas import PublResponse, RecordHashRequest
+from schemas.common import Publication, RecordHashRequest
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -23,11 +23,11 @@ async def get_publication(
     request: Request,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> PublResponse:
+) -> Publication:
     try:
         data = await get_username_and_publications(session, int(user_data["sub"]))
 
-        return PublResponse(
+        return Publication(
             author=data["publication"]["author"],
             year=data["publication"]["year"],
             name=data["publication"]["name"],
@@ -79,7 +79,7 @@ async def get_publication_from_hash(
     data: RecordHashRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> PublResponse:
+) -> Publication:
     try:
         user_id = int(user_data["sub"])
         record_id = decrypt_id(data.hash)
@@ -93,7 +93,7 @@ async def get_publication_from_hash(
             logger.warning("Publication not found")
             raise HTTPException(status_code=404, detail="Publication not found.")
 
-        return PublResponse(
+        return Publication(
             author=publ.author,
             year=publ.year,
             name=publ.name,

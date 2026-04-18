@@ -1,7 +1,7 @@
 import aiohttp
 
 from core.config import ADMIN_CHAT_ID, BOT_TOKEN
-from schemas import SupportRequest
+from schemas.common import SupportRequest
 
 
 async def send_message(

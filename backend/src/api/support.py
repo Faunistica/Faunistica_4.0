@@ -1,16 +1,16 @@
 import logging
-from typing import Annotated, Literal
+from typing import Annotated
 
 import aiohttp
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_404_NOT_FOUND
 
+from api.dependencies import get_http_session
 from api.rate_limiter import limiter
-from api.util import get_http_session
 from core.database import get_session
 from repository.user import find_user_by_username
-from schemas import Message, SupportRequest
+from schemas.common import Message, SupportRequest
 from service import support
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ async def submit_support(  # noqa: PLR0913
     data: SupportRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
     http_session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
-) -> Message[Literal["ok"]]:
+) -> Message:
     try:
         user = await find_user_by_username(session, data.user_name)
 

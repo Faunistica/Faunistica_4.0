@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, Request
 
-from schemas import GetLocationRequest, GetLocationResponse
+from schemas.geo import GetLocationRequest, GetLocationResponse
 from service import geo
 
 logger = logging.getLogger(__name__)

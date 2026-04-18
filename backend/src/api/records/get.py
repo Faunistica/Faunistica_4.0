@@ -8,7 +8,7 @@ from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import decrypt_id, get_current_user
 from repository.record import get_record_by_id
-from schemas import GetRecordResponse
+from schemas.records import GetRecordResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

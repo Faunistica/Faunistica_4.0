@@ -8,7 +8,7 @@ from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import decrypt_id, get_current_user
 from repository.record import remove_record_row_by_id
-from schemas import Message
+from schemas.common import Message
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

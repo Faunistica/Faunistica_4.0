@@ -5,7 +5,7 @@ import aiohttp
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
-from api.util import get_http_session
+from api.dependencies import get_http_session
 from service import telegram
 
 logger = logging.getLogger(__name__)

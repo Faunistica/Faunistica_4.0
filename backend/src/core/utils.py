@@ -1,4 +1,4 @@
-from model import EventDate
+from schemas.common import EventDate
 
 
 def clean_value[T](value: T | None) -> T | None:

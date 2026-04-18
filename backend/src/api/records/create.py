@@ -11,7 +11,8 @@ from core.security import get_current_user
 from core.utils import clean_value
 from repository.record import add_record_from_json
 from repository.user import get_user
-from schemas import InsertRecordsRequest, Message
+from schemas.common import Message
+from schemas.records import InsertRecordsRequest
 from service import geo, specimen
 
 logger = logging.getLogger(__name__)

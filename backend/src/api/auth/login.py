@@ -9,7 +9,7 @@ from core.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
 from core.database import get_session
 from core.security import create_access_token, create_refresh_token
 from repository.user import find_user_by_username, is_pass_correct
-from schemas import Message, UserRequest
+from schemas.common import LoginRequest, Message
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ router = APIRouter()
 async def login(  # noqa: PLR0913
     request: Request,
     response: Response,
-    data: UserRequest,
+    data: LoginRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Message:
     user = await find_user_by_username(session, data.username)

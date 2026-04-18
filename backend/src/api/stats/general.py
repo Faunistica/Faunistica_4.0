@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.rate_limiter import limiter
 from core.database import get_session
 from repository.record import get_statistics
-from schemas import StatisticsResponse
+from schemas.statistics import StatisticsResponse
 
 router = APIRouter()
 
