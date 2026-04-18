@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated
+from typing import Annotated, Literal
 
 import aiohttp
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -26,7 +26,7 @@ async def submit_support(  # noqa: PLR0913
     http_session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
     users: Annotated[UserService, Depends()],
     support: Annotated[SupportService, Depends()],
-) -> Message:
+) -> Message[Literal["ok"]]:
     try:
         user_id = await users.get_by_username(session, data.user_name)
 
@@ -37,7 +37,7 @@ async def submit_support(  # noqa: PLR0913
             )
 
         await support.send_message(http_session, data, user_id)
-        return Message(message="Support request received")
+        return Message(message="ok")
     except Exception as e:
         logger.error(f"Failed to process support request: {e}", exc_info=True)
         raise HTTPException(

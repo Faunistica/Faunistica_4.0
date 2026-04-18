@@ -26,7 +26,6 @@ async def login(  # noqa: PLR0913
     tokens: Annotated[TokenService, Depends()],
     users: Annotated[UserService, Depends()],
 ) -> Message:
-    print("ABOBA")
     user_id = await users.get_by_username(session, data.username)
     if user_id is None:
         logger.warning("User not found for this username")

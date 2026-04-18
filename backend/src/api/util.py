@@ -1,15 +1,7 @@
-from typing import Any, TypeVar
+from typing import Any
 
 import aiohttp
 from fastapi import Request
-
-T = TypeVar("T")
-
-
-def clean_value(value: T | None) -> T | None:
-    if value in ("", None, [], 0, 0.0):
-        return None
-    return value
 
 
 async def get_http_session(request: Request) -> aiohttp.ClientSession:

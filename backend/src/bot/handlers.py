@@ -532,7 +532,6 @@ class Handlers:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
         if message.chat.id != config.ADMIN_CHAT_ID:
-            print(message.chat.id)
             await message.answer(Messages.no_access_to_command())
             return
 

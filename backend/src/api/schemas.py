@@ -234,5 +234,5 @@ class RecordHashRequest(BaseModel):
     hash: str
 
 
-class Message(BaseModel):
-    message: str
+class Message[T](BaseModel):
+    message: T
