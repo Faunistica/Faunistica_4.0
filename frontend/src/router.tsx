@@ -36,7 +36,9 @@ function NavigationWrapper() {
 
 const requireAuth = () => {
     const { auth } = store.getState().user;
+    console.log('[Router] requireAuth check:', { auth });
     if (!auth) {
+        console.log('[Router] Redirecting to login (unauthenticated)');
         return redirect('/auth/login');
     }
     return null;
@@ -44,13 +46,15 @@ const requireAuth = () => {
 
 const requireGuest = () => {
     const { auth } = store.getState().user;
+    console.log('[Router] requireGuest check:', { auth });
     if (auth) {
+        console.log('[Router] Redirecting to dashboard (authenticated)');
         return redirect('/dashboard');
     }
     return null;
 };
 
-export const router = createBrowserRouter([
+export const routes = [
     {
         path: '/',
         element: <Layout />,
@@ -93,4 +97,6 @@ export const router = createBrowserRouter([
             { path: '*', element: <Navigate to="/" replace /> },
         ],
     },
-]);
+];
+
+export const router = createBrowserRouter(routes);

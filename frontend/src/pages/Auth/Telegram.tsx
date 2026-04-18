@@ -1,6 +1,7 @@
 import { type FC } from 'react';
 import { Send, Key, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from 'react-router';
 
@@ -20,13 +21,13 @@ const TelegramAuth: FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          
+
           <div className="flex justify-center my-4">
             <div className="h-40 w-40 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center p-2 shadow-inner">
-               <div className="w-full h-full border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 gap-2">
-                  <Send className="h-8 w-8 opacity-50" />
-                  <span className="text-xs font-mono">QR / Widget Area</span>
-               </div>
+              <div className="w-full h-full border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 gap-2">
+                <Send className="h-8 w-8 opacity-50" />
+                <span className="text-xs font-mono">QR / Widget Area</span>
+              </div>
             </div>
           </div>
 
@@ -35,7 +36,7 @@ const TelegramAuth: FC = () => {
               <Send className="h-4 w-4" />
               Log in via Telegram
             </Button>
-            
+
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-slate-200" />
@@ -45,8 +46,8 @@ const TelegramAuth: FC = () => {
               </div>
             </div>
 
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full border-slate-300 text-slate-700 hover:bg-slate-50 gap-2"
               onClick={() => navigate('/auth/login')}
             >
