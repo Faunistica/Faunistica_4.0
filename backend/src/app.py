@@ -13,8 +13,8 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from api import api_router
 from api.rate_limiter import limiter, rate_limit_handler
-from bot.bot_main import bot_start, config
-from core.config import ALLOWED_ORIGINS, DEV_MODE, LOG_LEVEL, LOGS_DIR
+from bot.bot_main import bot_start
+from core.config import ALLOWED_ORIGINS, BOT_PROXY, DEV_MODE, LOG_LEVEL, LOGS_DIR
 from core.database import init_db, ping_db
 
 logs_dir = LOGS_DIR
@@ -24,7 +24,7 @@ log_format = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 
 handlers = []
 
-if config.DEV_MODE:
+if DEV_MODE:
     handler = logging.StreamHandler()
 
     handler.setLevel(logging.DEBUG)
@@ -86,9 +86,9 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
 
     await init_db()
 
-    if len(config.BOT_PROXY) > 0:
-        app.state.http_session = aiohttp.ClientSession(proxy=config.BOT_PROXY)
-        logger.info(f"HTTP session configured with proxy: {config.BOT_PROXY}")
+    if len(BOT_PROXY) > 0:
+        app.state.http_session = aiohttp.ClientSession(proxy=BOT_PROXY)
+        logger.info(f"HTTP session configured with proxy: {BOT_PROXY}")
     else:
         app.state.http_session = aiohttp.ClientSession()
         logger.info("HTTP session created without proxy")
