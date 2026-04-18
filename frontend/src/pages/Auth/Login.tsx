@@ -1,13 +1,42 @@
 import { type FC } from 'react';
+import { useForm } from 'react-hook-form';
+
 import { Send } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+
 import { Link, useNavigate } from 'react-router';
+
+import { authAPI } from '@/api/authAPI';
+import type { UserRequest } from '@/types/api.dto';
 
 const Login: FC = () => {
   const navigate = useNavigate();
+  const [login, { isLoading, error }] = authAPI.useLoginMutation();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<UserRequest>();
+
+  const onSubmit = async (data: UserRequest) => {
+    try {
+      await login(data).unwrap();
+      navigate('/dashboard');
+    } catch {
+      // Error is handled via the `error` state from the mutation
+    }
+  };
+
+  const apiErrorMessage =
+    error && 'status' in error
+      ? (error.data as { detail?: string })?.detail ?? 'Login failed. Please try again.'
+      : error
+        ? 'Network error. Please check your connection.'
+        : null;
 
   return (
     <div className="w-full max-w-[400px] space-y-6 mx-auto">
@@ -22,9 +51,9 @@ const Login: FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-3">
-            <Button 
-            variant="outline" 
-            className="w-full bg-white border-slate-300 text-slate-700 hover:bg-slate-50">
+            <Button
+              variant="outline"
+              className="w-full bg-white border-slate-300 text-slate-700 hover:bg-slate-50">
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -33,8 +62,8 @@ const Login: FC = () => {
               </svg>
               Google
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
               onClick={() => navigate('/auth/telegram')}
             >
@@ -42,7 +71,7 @@ const Login: FC = () => {
               Telegram
             </Button>
           </div>
-          
+
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-slate-200" />
@@ -54,10 +83,18 @@ const Login: FC = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="name@example.com" />
+              <Label htmlFor="username">Email or username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="name@example.com"
+                {...register('username', { required: 'Username is required' })}
+              />
+              {errors.username && (
+                <p className="text-sm text-red-500">{errors.username.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -66,12 +103,28 @@ const Login: FC = () => {
                   Forgot your password?
                 </Link>
               </div>
-              <Input id="password" type="password" />
+              <Input
+                id="password"
+                type="password"
+                {...register('password', { required: 'Password is required' })}
+              />
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
             </div>
-            <Button className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold shadow-sm">
-              Login
+
+            {apiErrorMessage && (
+              <p className="text-sm text-red-500 text-center">{apiErrorMessage}</p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold shadow-sm"
+            >
+              {isLoading ? 'Logging in...' : 'Login'}
             </Button>
-          </div>
+          </form>
         </CardContent>
         <CardFooter className="flex flex-col justify-center bg-white border-t border-slate-100 p-4">
           <div className="text-sm text-slate-600">
@@ -95,3 +148,4 @@ const Login: FC = () => {
 };
 
 export default Login;
+

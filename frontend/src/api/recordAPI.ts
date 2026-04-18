@@ -1,9 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import * as Types from '../types/api.dto.ts';
+import { baseQueryWithReauth } from './baseQuery.ts';
 
 export const recordAPI = createApi({
     reducerPath: 'recordAPI',
-    baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8000/api' }),
+    baseQuery: baseQueryWithReauth,
     tagTypes: ['record'],
     endpoints: (build) => ({
         getRecordsData: build.query<any, void>({

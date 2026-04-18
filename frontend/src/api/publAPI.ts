@@ -1,9 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import * as Types from '../types/api.dto.ts';
+import { baseQueryWithReauth } from './baseQuery.ts';
 
 export const publAPI = createApi({
     reducerPath: 'publAPI',
-    baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8000/api' }),
+    baseQuery: baseQueryWithReauth,
     tagTypes: ['publ'],
     endpoints: (build) => ({
         getPublications: build.query<any, void>({
