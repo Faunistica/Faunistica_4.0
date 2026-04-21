@@ -10,6 +10,7 @@ from core.database import get_session
 from core.security import create_access_token, create_refresh_token
 from repository.user import find_user_by_username, is_pass_correct
 from schemas.common import LoginRequest, Message
+from schemas.jwt import TokenPayload
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ router = APIRouter()
 
 @router.post("/login")
 @limiter.limit("15/minute")
-async def login(  # noqa: PLR0913
+async def login(
     request: Request,
     response: Response,
     data: LoginRequest,
@@ -33,7 +34,7 @@ async def login(  # noqa: PLR0913
         logger.warning("Wrong password")
         raise HTTPException(status_code=401, detail="Wrong password")
 
-    token_payload = {"sub": str(user.id), "username": data.username}
+    token_payload = TokenPayload(user_id=user.id, username=data.username)
     access_token = create_access_token(token_payload)
     refresh_token = create_refresh_token(token_payload)
 

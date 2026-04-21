@@ -3,8 +3,9 @@ import logging
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from core.config import settings
-from core.security import create_access_token, verify_token
+from core.security import create_access_token, create_refresh_token, verify_token
 from schemas.common import Message
+from schemas.jwt import TokenPayload
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -22,14 +23,16 @@ def refresh(
 
     payload = verify_token(refresh_token)
 
-    if payload.get("type") != "refresh":
+    if payload.type != "refresh":
         logger.warning("Invalid refresh token")
         raise HTTPException(status_code=403, detail="Invalid refresh token")
 
-    user_id = payload.get("sub")
-    username = payload.get("username")
+    user_id = payload.user_id
+    username = payload.username
 
-    new_access_token = create_access_token({"sub": user_id, "username": username})
+    token_payload = TokenPayload(user_id=user_id, username=username)
+    new_access_token = create_access_token(token_payload)
+    new_refresh_token = create_refresh_token(token_payload)
 
     response.set_cookie(
         key="access_token",
@@ -38,7 +41,17 @@ def refresh(
         secure=True,
         samesite="strict",
         max_age=settings.ACCESS_TOKEN_EXPIRE_SECONDS,
-        path="/",
+        path="/api",
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_SECONDS,
+        path="/api",
     )
 
     return Message(message="Access token refreshed")

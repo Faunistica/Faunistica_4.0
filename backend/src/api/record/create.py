@@ -7,11 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import get_current_user
+from core.security import get_request_user
 from core.utils import clean_value
 from repository.record import add_record_from_json
 from repository.user import get_user
 from schemas.common import Message
+from schemas.jwt import TokenPayload
 from schemas.records import InsertRecordsRequest
 from service import geo, specimen
 
@@ -24,13 +25,13 @@ router = APIRouter()
 async def create_record(  # noqa: PLR0913
     request: Request,
     data: InsertRecordsRequest,
-    user_data: Annotated[dict, Depends(get_current_user)],
+    token: Annotated[TokenPayload, Depends(get_request_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Message:
     north = geo.parse_coordinate(data.north)
     east = geo.parse_coordinate(data.east)
     sp, num = specimen.parse(clean_value(data.specimens))
-    user_info = await get_user(session, int(user_data["sub"]))
+    user_info = await get_user(session, token.user_id)
     record_json = {
         "publ_id": user_info.publ_id,
         "user_id": user_info.id,

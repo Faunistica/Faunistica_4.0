@@ -20,14 +20,14 @@ log_format = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 
 handlers = []
 
-if settings.DEV_MODE:
-    handler = logging.StreamHandler()
+handler = logging.StreamHandler()
 
-    handler.setLevel(logging.DEBUG)
-    handler.setFormatter(logging.Formatter(log_format))
+handler.setLevel(logging.DEBUG)
+handler.setFormatter(logging.Formatter(log_format))
 
-    handlers.append(handler)
-else:
+handlers.append(handler)
+
+if not settings.DEV_MODE:
     settings.LOGS_DIR.mkdir(exist_ok=True)
 
     app_handler = TimedRotatingFileHandler(
@@ -55,9 +55,8 @@ else:
         error_handler,
     )
 
-
 logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL, logging.WARNING),
+    level=logging.getLevelName(settings.LOG_LEVEL),
     handlers=handlers,
     format=log_format,
     force=True,

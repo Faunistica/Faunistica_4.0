@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import get_current_user
+from core.security import get_request_user
 from repository.record import get_record_by_id
+from schemas.jwt import TokenPayload
 from schemas.records import GetRecordResponse
 
 logger = logging.getLogger(__name__)
@@ -19,13 +20,11 @@ router = APIRouter()
 async def get_record(
     request: Request,
     record_id: int,
-    user_data: Annotated[dict, Depends(get_current_user)],
+    token: Annotated[TokenPayload, Depends(get_request_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GetRecordResponse:
-    current_user_id = int(user_data["sub"])
-
     try:
-        record_data = await get_record_by_id(session, record_id, current_user_id)
+        record_data = await get_record_by_id(session, record_id, token.user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e

@@ -6,8 +6,10 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from fastapi import Depends, HTTPException, Request, status
 from jose import ExpiredSignatureError, JWTError, jwt
+from pydantic import ValidationError
 
 from core.config import settings
+from schemas.jwt import Token, TokenPayload
 
 logger = logging.getLogger(__name__)
 
@@ -27,26 +29,41 @@ def check_password_hash(user_pass: str, db_hash: str) -> bool:
     return True
 
 
-def create_access_token(data: dict) -> str:
+def create_access_token(payload: TokenPayload) -> str:
     expires = datetime.now(UTC) + timedelta(
         seconds=settings.ACCESS_TOKEN_EXPIRE_SECONDS
     )
-    data.update({"exp": expires, "type": "access"})
+
+    data = {
+        "sub": str(payload.user_id),
+        "username": payload.username,
+        "exp": expires,
+        "type": "access",
+    }
+
     return jwt.encode(data, settings.JWT_SECRET.get_secret_value())
 
 
-def create_refresh_token(data: dict) -> str:
+def create_refresh_token(payload: TokenPayload) -> str:
     expires = datetime.now(UTC) + timedelta(
         seconds=settings.REFRESH_TOKEN_EXPIRE_SECONDS
     )
-    data.update({"exp": expires, "type": "refresh"})
+
+    data = {
+        "sub": str(payload.user_id),
+        "username": payload.username,
+        "exp": expires,
+        "type": "refresh",
+    }
+
     return jwt.encode(data, settings.JWT_SECRET.get_secret_value())
 
 
-def verify_token(token: str) -> dict:
+# FIXME: token blacklist
+def verify_token(token: str) -> Token:
     try:
-        return jwt.decode(
-            token, settings.JWT_SECRET.get_secret_value(), algorithms=["HS256"]
+        return Token.model_validate(
+            jwt.decode(token, settings.JWT_SECRET.get_secret_value())
         )
     except ExpiredSignatureError as e:
         logger.warning("Token expired")
@@ -54,39 +71,42 @@ def verify_token(token: str) -> dict:
             status_code=status.HTTP_403_FORBIDDEN, detail="Token expired"
         ) from e
     except JWTError as e:
-        logger.warning("Invalid token")
+        logger.warning("Invalid token %e", e)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
+        ) from e
+    except ValidationError as e:
+        logger.warning("Invalid token %e", e)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
         ) from e
 
 
-def get_token_payload(request: Request) -> dict:
+def get_request_user(
+    request: Request,
+) -> TokenPayload:
     token = request.cookies.get("access_token")
     if not token:
         logger.warning("Missing access token")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Missing access token"
         )
+
     payload = verify_token(token)
-    if payload.get("type") != "access":
+    if payload.type != "access":
         logger.warning("Invalid token type")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token type"
         )
+
     return payload
-
-
-def get_current_user(
-    request: Request,
-) -> dict:
-    return get_token_payload(request)
 
 
 def validate_user_id(
     user_id: int,
-    current_user: Annotated[dict, Depends(get_current_user)],
+    token: Annotated[TokenPayload, Depends(get_request_user)],
 ) -> None:
-    if user_id != int(current_user["sub"]):
+    if user_id != token.user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )

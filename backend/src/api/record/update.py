@@ -7,9 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import get_current_user
+from core.security import get_request_user
 from repository.record import edit_record_by_id
 from schemas.common import Message
+from schemas.jwt import TokenPayload
 from schemas.records import EditRecordRequest
 
 logger = logging.getLogger(__name__)
@@ -22,11 +23,9 @@ async def update_record(
     request: Request,
     record_id: int,
     data: EditRecordRequest,
-    user_data: Annotated[dict, Depends(get_current_user)],
+    token: Annotated[TokenPayload, Depends(get_request_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Message:
-    current_user_id = int(user_data["sub"])
-
     try:
         # Заменить на (наверное)
         # Преобразуем поля из запроса (старые имена) в новые атрибуты модели
@@ -72,7 +71,7 @@ async def update_record(
         dump = data.model_dump()
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"
-        is_success = await edit_record_by_id(session, record_id, current_user_id, dump)
+        is_success = await edit_record_by_id(session, record_id, token.user_id, dump)
 
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

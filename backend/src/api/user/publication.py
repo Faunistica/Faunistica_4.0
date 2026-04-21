@@ -6,10 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import get_current_user
+from core.security import get_request_user
 from repository.publication import user_filled_publication
 from repository.user import get_user, get_username_and_publications, update_user
 from schemas.common import Publication
+from schemas.jwt import TokenPayload
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -20,11 +21,11 @@ base_url = "https://faunistica.ru/files/"
 @limiter.limit("666/minute")
 async def get_publication(
     request: Request,
-    user_data: Annotated[dict, Depends(get_current_user)],
+    token: Annotated[TokenPayload, Depends(get_request_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Publication:
     try:
-        data = await get_username_and_publications(session, int(user_data["sub"]))
+        data = await get_username_and_publications(session, token.user_id)
 
         return Publication(
             author=data["publication"]["author"],
@@ -43,10 +44,10 @@ async def get_publication(
 @limiter.limit("10/minute")
 async def get_next_publication(
     request: Request,
-    user_data: Annotated[dict, Depends(get_current_user)],
+    token: Annotated[TokenPayload, Depends(get_request_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> bool:
-    user_id = int(user_data["sub"])
+    user_id = token.user_id
     user = await get_user(session, user_id)
 
     if user.publ_id is not None and not await user_filled_publication(
