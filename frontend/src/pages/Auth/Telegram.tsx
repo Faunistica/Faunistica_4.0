@@ -1,7 +1,6 @@
 import { type FC } from 'react';
 import { Send, Key, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from 'react-router';
 
@@ -11,7 +10,7 @@ const TelegramAuth: FC = () => {
   return (
     <div className="w-full max-w-[400px] space-y-6 mx-auto">
       <Card className="border-slate-200 shadow-sm overflow-hidden relative">
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#229ED9]"></div>
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-telegram"></div>
         <CardHeader className="space-y-1 text-center pl-6">
           <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
             Telegram Secure Login
@@ -32,7 +31,7 @@ const TelegramAuth: FC = () => {
           </div>
 
           <div className="space-y-4">
-            <Button className="w-full bg-[#229ED9] text-white hover:bg-[#1E8CC0] font-semibold shadow-md gap-2">
+            <Button className="w-full bg-telegram text-white hover:bg-[#1E8CC0] font-semibold shadow-md gap-2">
               <Send className="h-4 w-4" />
               Log in via Telegram
             </Button>
@@ -58,7 +57,7 @@ const TelegramAuth: FC = () => {
         </CardContent>
         <CardFooter className="flex justify-center bg-slate-50 border-t border-slate-100 py-4">
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <Loader2 className="h-4 w-4 animate-spin text-[#229ED9]" />
+            <Loader2 className="h-4 w-4 animate-spin text-telegram" />
             <span>Waiting for authentication...</span>
           </div>
         </CardFooter>

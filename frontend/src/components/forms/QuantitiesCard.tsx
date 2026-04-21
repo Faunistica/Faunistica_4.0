@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import type { InsertRecordsRequest } from "@/types/api.dto";
+import { Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
     data?: Partial<InsertRecordsRequest>;
@@ -19,7 +21,10 @@ const QuantitiesCard: FC<Props> = ({ data = {}, updateData }) => {
     };
 
     return (
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-slate-200 shadow-sm relative">
+            <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 bg-slate-50">
+                <Lock className="h-4 w-4" />
+            </Button>
             <CardHeader>
                 <CardTitle className="text-xl font-semibold">Количественные характеристики</CardTitle>
             </CardHeader>
@@ -57,10 +62,10 @@ const QuantitiesCard: FC<Props> = ({ data = {}, updateData }) => {
                     </div>
                     <div className="space-y-2 lg:col-span-1">
                         <Label htmlFor="ind_rem">Дополнительные комментарии</Label>
-                        <Textarea 
-                            id="ind_rem" 
-                            className="min-h-[105px] resize-none" 
-                            placeholder="Укажите специфические детали экземпляра..." 
+                        <Textarea
+                            id="ind_rem"
+                            className="min-h-[105px] resize-none"
+                            placeholder="Укажите специфические детали экземпляра..."
                             value={data.abu_ind_rem || ''}
                             onChange={e => updateData?.({ abu_ind_rem: e.target.value })}
                         />

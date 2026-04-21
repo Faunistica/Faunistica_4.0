@@ -2,7 +2,7 @@ import { type FC } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, LogOut, X, MoreHorizontal, Trash2 } from 'lucide-react';
 import type { InsertRecordsRequest } from "@/types/api.dto";
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 
 interface SidebarProps {
     isOpen: boolean;
@@ -23,7 +23,6 @@ const Sidebar: FC<SidebarProps> = ({
     addSample,
     removeSample
 }) => {
-    const navigate = useNavigate();
 
     return (
         <>
@@ -108,12 +107,14 @@ const Sidebar: FC<SidebarProps> = ({
                 </nav>
 
                 <div className="mt-auto border-t border-slate-200 p-4 bg-slate-50/50">
-                    <Button onClick={() => {
-                        navigate('/dashboard');
+                    <Button asChild onClick={() => {
+                        setIsOpen(false);
                         window.scrollTo(0, 0);
                     }} variant="ghost" className="w-full justify-start gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50">
-                        <LogOut className="h-4 w-4" />
-                        Назад
+                        <Link to="/dashboard">
+                            <LogOut className="h-4 w-4" />
+                            Назад
+                        </Link>
                     </Button>
                 </div>
             </aside>

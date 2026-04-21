@@ -55,7 +55,7 @@ export default function About() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-slate-600 leading-relaxed relative z-10">
-                                Мы создаем платформу, чтобы перевести литературные данные в цифровую форму. Это сделает их доступными для глобальных баз, таких как <strong>GBIF</strong>.
+                                Мы создаем платформу, чтобы перевести литературные данные в цифровую форму. Это сделает их доступными для глобальных баз, таких как <a href="https://www.gbif.org/"><strong>GBIF</strong></a>.
                             </p>
                         </CardContent>
                     </Card>

@@ -7,7 +7,7 @@ import {
     useOutletContext,
 } from 'react-router';
 import { store } from './store/store';
-import Spinner from './components/Spinner';
+import LoadingScreen from './components/LoadingScreen';
 import Layout from './layouts/Layout';
 
 import Landing from './pages/Landing';
@@ -28,7 +28,7 @@ function NavigationWrapper() {
     const context = useOutletContext();
 
     if (isNavigating) {
-        return <Spinner />;
+        return <LoadingScreen />;
     }
 
     return <Outlet context={context} />;
@@ -36,9 +36,7 @@ function NavigationWrapper() {
 
 const requireAuth = () => {
     const { auth } = store.getState().user;
-    console.log('[Router] requireAuth check:', { auth });
     if (!auth) {
-        console.log('[Router] Redirecting to login (unauthenticated)');
         return redirect('/auth/login');
     }
     return null;
@@ -46,9 +44,7 @@ const requireAuth = () => {
 
 const requireGuest = () => {
     const { auth } = store.getState().user;
-    console.log('[Router] requireGuest check:', { auth });
     if (auth) {
-        console.log('[Router] Redirecting to dashboard (authenticated)');
         return redirect('/dashboard');
     }
     return null;
@@ -57,10 +53,10 @@ const requireGuest = () => {
 export const routes = [
     {
         path: '/',
-        element: <Layout />,
+        element: <NavigationWrapper />,
         children: [
             {
-                element: <NavigationWrapper />,
+                element: <Layout />,
                 children: [
                     {
                         index: true,
