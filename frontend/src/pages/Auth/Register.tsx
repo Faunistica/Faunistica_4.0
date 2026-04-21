@@ -18,29 +18,29 @@ const Register: FC = () => {
             Fill in the form below to create your account
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input id="username" type="text" placeholder="johndoe" />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="name@example.com" />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="confirm-password">Confirm password</Label>
               <Input id="confirm-password" type="password" />
             </div>
-            
+
             <Button className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold shadow-sm mt-2">
               Create Account
             </Button>
@@ -67,14 +67,14 @@ const Register: FC = () => {
               </svg>
               Sign up with Google
             </Button>
-            
+
             <Button variant="outline" className="w-full bg-white border-slate-300 text-slate-700 hover:bg-slate-50 gap-2">
-              <Send className="h-4 w-4 text-[#229ED9]" />
+              <Send className="h-4 w-4 text-telegram" />
               Sign up with Telegram
             </Button>
           </div>
         </CardContent>
-        
+
         <CardFooter className="flex flex-col justify-center bg-white border-t border-slate-100 p-4">
           <div className="text-sm text-slate-600">
             Already have an account? <Link to="/auth/login" className="text-slate-900 font-semibold hover:underline">Log in</Link>

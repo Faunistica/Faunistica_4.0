@@ -9,7 +9,7 @@ import { login } from './store/reducers/userSlice.ts'
 import { routes } from './router.tsx'
 import { createBrowserRouter } from 'react-router'
 
-import Spinner from './components/Spinner'
+import LoadingScreen from './components/LoadingScreen.tsx'
 
 import './index.css'
 
@@ -63,7 +63,7 @@ const App = () => {
     }, []);
 
     if (isInitializing) {
-        return <Spinner />;
+        return <LoadingScreen />;
     }
 
     return <AppRouter />;

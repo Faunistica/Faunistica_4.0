@@ -1,7 +1,7 @@
 import { type FC, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from 'lucide-react';
-import { Link, useLocation, useNavigate } from "react-router";
+import { Menu, X } from "lucide-react";
+import { Link, useLocation } from "react-router";
 
 interface HeaderProps {
     isSidebarEnabled?: boolean;
@@ -9,20 +9,16 @@ interface HeaderProps {
 }
 
 const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
-    // const { auth } = store.getState().user;
-
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const location = useLocation();
-    const navigate = useNavigate();
-    const isLanding = location.pathname === '/';
-    const isAuth = location.pathname.startsWith('/auth');
-    const isPrivate = !isLanding && isAuth; // TODO: Replace with auth state
+    const isLanding = location.pathname === "/";
+    const isAuth = location.pathname.startsWith("/auth");
+    const isPrivate = !isLanding && isAuth;
 
     return (
-        <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-            <div className="h-16 flex items-center justify-between px-4 md:px-8">
+        <header className="sticky top-0 z-50 w-full overflow-x-clip bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div className="relative h-16 flex items-center justify-between px-4 md:px-8">
                 <div className="flex items-center gap-4">
-                    {/* Кнопка меню (Sidebar) для FormFilling */}
                     {isSidebarEnabled && setSidebarOpen && (
                         <Button
                             variant="ghost"
@@ -34,13 +30,12 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                         </Button>
                     )}
 
-                    {/* Кнопка навигационного меню */}
-                    {!isSidebarEnabled && (
+                    {!isSidebarEnabled && !isAuth && (
                         <Button
                             variant="ghost"
                             size="icon"
                             className="md:hidden rounded-md text-slate-600 h-9 w-9"
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            onClick={() => setIsMobileMenuOpen((v) => !v)}
                         >
                             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                         </Button>
@@ -73,8 +68,8 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                 {!isPrivate && (
                     <div className="flex items-center gap-3">
                         {isLanding ? (
-                            <Button onClick={() => navigate('/auth/login')} variant="default" className="bg-[#229ED9] text-white hover:bg-[#1E8CC0] shadow-sm">
-                                Личный кабинет
+                            <Button asChild variant="default" className="bg-[#229ED9] text-white hover:bg-[#1E8CC0] shadow-sm">
+                                <Link to="/auth/login">Личный кабинет</Link>
                             </Button>
                         ) : (
                             <div className="h-9 w-9 rounded-full bg-slate-900 flex items-center justify-center text-xs font-bold text-white shadow-sm cursor-pointer hover:bg-slate-800 transition-transform hover:scale-105">
@@ -85,9 +80,8 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                 )}
             </div>
 
-            {/* Мобильное меню навигации */}
             {isMobileMenuOpen && !isSidebarEnabled && !isPrivate && (
-                <div className="md:hidden absolute top-16 left-0 right-0 z-30 bg-white border-b border-slate-200 p-4 shadow-xl animate-in slide-in-from-top-2">
+                <div className="md:hidden absolute inset-x-0 top-full z-50 bg-white border-b border-slate-200 p-4 shadow-xl animate-in slide-in-from-top-2 overflow-x-clip">
                     <nav className="flex flex-col gap-2 text-base font-medium text-slate-700">
                         {isLanding ? (
                             <>

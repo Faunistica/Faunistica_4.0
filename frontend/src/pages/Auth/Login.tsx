@@ -23,11 +23,9 @@ const Login: FC = () => {
   } = useForm<UserRequest>();
 
   const onSubmit = async (data: UserRequest) => {
-    try {
-      await login(data).unwrap();
+    const result = await login(data);
+    if (!result.error) {
       navigate('/dashboard');
-    } catch {
-      // Error is handled via the `error` state from the mutation
     }
   };
 
@@ -43,10 +41,10 @@ const Login: FC = () => {
       <Card className="border-slate-200 shadow-sm">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
-            Welcome back
+            Добро пожаловать
           </CardTitle>
           <CardDescription className="text-slate-500">
-            Login with your Apple or Google account
+            Войдите с помощью вашей учётной записи
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -62,13 +60,14 @@ const Login: FC = () => {
               </svg>
               Google
             </Button>
-            <Button
+            <Button asChild
               variant="outline"
               className="w-full bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
-              onClick={() => navigate('/auth/telegram')}
             >
-              <Send className="mr-2 h-4 w-4 text-[#229ED9]" />
-              Telegram
+              <Link to="/auth/telegram">
+                <Send className="mr-2 h-4 w-4 text-[#229ED9]" />
+                Telegram
+              </Link>
             </Button>
           </div>
 
@@ -78,7 +77,7 @@ const Login: FC = () => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-2 text-slate-500 font-medium">
-                Or continue with
+                Или войдите с помощью
               </span>
             </div>
           </div>
@@ -100,7 +99,7 @@ const Login: FC = () => {
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
                 <Link to="/auth/recovery" className="text-sm font-medium text-slate-900 hover:underline">
-                  Forgot your password?
+                  Забыли пароль?
                 </Link>
               </div>
               <Input
@@ -122,26 +121,27 @@ const Login: FC = () => {
               disabled={isLoading}
               className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold shadow-sm"
             >
-              {isLoading ? 'Logging in...' : 'Login'}
+              {isLoading ? 'Вход...' : 'Войти'}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col justify-center bg-white border-t border-slate-100 p-4">
           <div className="text-sm text-slate-600">
-            Don't have an account? <Link to="/auth/register" className="text-slate-900 font-semibold hover:underline">Sign up</Link>
+            Нет аккаунта? <Link to="/auth/register" className="text-slate-900 font-semibold hover:underline">Зарегистрироваться</Link>
           </div>
         </CardFooter>
       </Card>
 
       <p className="px-4 text-center text-sm text-slate-500 leading-relaxed">
-        By clicking continue, you agree to our{' '}
+        {"Продолжая, вы соглашаетесь с нашими "}
         <Link to="#" className="underline underline-offset-4 hover:text-slate-900 transition-colors">
-          Terms of Service
-        </Link>{' '}
-        and{' '}
+          Условиями обслуживания
+        </Link>
+        {" и "}
         <Link to="#" className="underline underline-offset-4 hover:text-slate-900 transition-colors">
-          Privacy Policy
-        </Link>.
+          Политикой конфиденциальности
+        </Link>
+        {"."}
       </p>
     </div>
   );

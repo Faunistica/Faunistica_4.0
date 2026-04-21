@@ -2,7 +2,7 @@ import { type FC } from "react";
 import { Users, CheckCircle2, FileText, XCircle, FileSearch, BookOpen, ArrowRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 
 export interface Publication {
     publ_id: number;
@@ -23,8 +23,6 @@ interface PublicationRowProps {
 }
 
 export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
-    const navigate = useNavigate();
-
     return (
         <div className="flex flex-col lg:flex-row gap-4 p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50/80 transition-colors items-start lg:items-center">
 
@@ -71,9 +69,11 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                             <XCircle className="h-4 w-4" />
                             <span>Отказаться</span>
                         </Button>
-                        <Button onClick={() => navigate(`/article/${pub.publ_id}`)} size="sm" className="h-9 rounded-md gap-2 bg-amber-600 hover:bg-amber-700 text-white w-full sm:w-auto justify-center shadow-sm">
-                            <FileSearch className="h-4 w-4" />
-                            <span>Взять в работу</span>
+                        <Button asChild size="sm" className="h-9 rounded-md gap-2 bg-amber-600 hover:bg-amber-700 text-white w-full sm:w-auto justify-center shadow-sm">
+                            <Link to={`/article/${pub.publ_id}`}>
+                                <FileSearch className="h-4 w-4" />
+                                <span>Взять в работу</span>
+                            </Link>
                         </Button>
                     </div>
                 )}
@@ -84,9 +84,11 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                             <XCircle className="h-4 w-4" />
                             <span>Отказаться</span>
                         </Button>
-                        <Button onClick={() => navigate(`/article/${pub.publ_id}`)} size="sm" className="h-9 rounded-md gap-2 bg-slate-900 hover:bg-slate-800 text-white w-full sm:w-auto justify-center shadow-sm">
-                            <BookOpen className="h-4 w-4" />
-                            <span>Продолжить</span>
+                        <Button asChild size="sm" className="h-9 rounded-md gap-2 bg-slate-900 hover:bg-slate-800 text-white w-full sm:w-auto justify-center shadow-sm">
+                            <Link to={`/article/${pub.publ_id}`}>
+                                <BookOpen className="h-4 w-4" />
+                                <span>Продолжить</span>
+                            </Link>
                         </Button>
                     </div>
                 )}
