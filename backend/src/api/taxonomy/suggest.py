@@ -10,14 +10,12 @@ router = APIRouter()
 
 
 @router.post("/suggest")
-async def suggest_taxon(
+def suggest_taxon(
     request: Request,
     data: SuggestTaxonRequest,
 ) -> SuggestTaxonResponse:
     try:
-        suggestions = await taxon.async_suggestion(
-            data.field, data.text, data.filters or {}
-        )
+        suggestions = taxon.suggest(data.field, data.text, data.filters or {})
         return SuggestTaxonResponse(suggestions=suggestions)
     except ValueError as e:
         logger.error(f"Value error: {e}", exc_info=True)

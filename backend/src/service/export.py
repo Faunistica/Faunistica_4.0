@@ -1,11 +1,10 @@
 import io
 import logging
-from collections.abc import Sequence
+from collections.abc import Generator, Sequence
 
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
-from starlette.responses import ContentStream
 
 from models import Record
 
@@ -49,7 +48,7 @@ COLUMN_MAPPING = {
 }
 
 
-def records_to_excel(records: Sequence[Record]) -> ContentStream:
+def records_to_excel(records: Sequence[Record]) -> Generator[bytes]:
     output = io.BytesIO()
     wb = Workbook()
     ws = wb.active
