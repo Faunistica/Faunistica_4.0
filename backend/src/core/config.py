@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+from pydantic import ConfigDict, Field, SecretStr
 from pydantic_core import Url
 from pydantic_settings import (
     BaseSettings,
@@ -8,6 +8,16 @@ from pydantic_settings import (
     SettingsConfigDict,
     YamlConfigSettingsSource,
 )
+
+
+def to_camel_case(string: str) -> str:
+    components = string.split("_")
+    return "".join(c.title() for c in components)
+
+
+# THX: https://github.com/lsst-sqre/safir/blob/main/src/safir/pydantic/_camel.py
+class CamelCaseModel(BaseSettings):
+    model_config = ConfigDict(alias_generator=to_camel_case, populate_by_name=True)
 
 
 class DatabaseSettings(BaseSettings):
@@ -37,7 +47,7 @@ class LoggingSettings(BaseSettings):
     LOGS_DIR: Path = Path("logs")
 
 
-class AppSettings(BaseSettings):
+class AppSettings(CamelCaseModel):
     DEV_MODE: bool = False
     ALLOWED_ORIGINS: list[str] = []
 
@@ -66,7 +76,13 @@ class Settings(
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         yaml_source = YamlConfigSettingsSource(settings_cls)
-        return (env_settings, dotenv_settings, yaml_source)
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            file_secret_settings,
+            yaml_source,
+        )
 
     @property
     def ACCESS_TOKEN_EXPIRE_SECONDS(self) -> int:

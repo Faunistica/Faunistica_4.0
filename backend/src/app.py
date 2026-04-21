@@ -17,8 +17,6 @@ from bot.bot_main import bot_start
 from core.config import settings
 from core.database import init_db, ping_db
 
-settings.LOGS_DIR.mkdir(exist_ok=True)
-
 log_format = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 
 handlers = []
@@ -31,6 +29,8 @@ if settings.DEV_MODE:
 
     handlers.append(handler)
 else:
+    settings.LOGS_DIR.mkdir(exist_ok=True)
+
     app_handler = TimedRotatingFileHandler(
         filename=settings.LOGS_DIR / "service.log",
         when="midnight",
@@ -86,7 +86,9 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
     await init_db()
 
     if settings.BOT_PROXY is not None:
-        app.state.http_session = aiohttp.ClientSession(proxy=settings.BOT_PROXY)
+        app.state.http_session = aiohttp.ClientSession(
+            proxy=settings.BOT_PROXY.unicode_string()
+        )
         logger.info(f"HTTP session configured with proxy: {settings.BOT_PROXY}")
     else:
         app.state.http_session = aiohttp.ClientSession()

@@ -1,6 +1,5 @@
-# App settings
-DEV_MODE: false
-ALLOWED_ORIGINS:
+DevMode: false
+AllowedOrigins:
   - "http://localhost:5173"
   - "http://localhost:8000"
 
