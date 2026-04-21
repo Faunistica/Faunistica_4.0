@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import get_current_user, validate_user_id
+from core.security import get_current_user
 from repository import record as record_repo
 from service import export
 
@@ -20,10 +20,8 @@ router = APIRouter()
 @limiter.limit("1/minute")
 async def list_records(
     request: Request,
-    user_id: int,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    _: Annotated[None, Depends(validate_user_id)],
 ) -> StreamingResponse:
     user_id = int(user_data["sub"])
     username = user_data["username"]

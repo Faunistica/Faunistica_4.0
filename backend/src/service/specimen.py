@@ -1,6 +1,3 @@
-from core.utils import clean_value
-
-
 def parse(specimens: dict[str, float | None] | None) -> tuple[str | None, int]:
     if specimens is None:
         return None, 0

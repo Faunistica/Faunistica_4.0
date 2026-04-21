@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import get_current_user, validate_user_id
+from core.security import get_current_user
 from core.utils import clean_value
 from repository.record import add_record_from_json
 from repository.user import get_user
@@ -23,11 +23,9 @@ router = APIRouter()
 @limiter.limit("5/minute")
 async def create_record(  # noqa: PLR0913
     request: Request,
-    user_id: int,
     data: InsertRecordsRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    _: Annotated[None, Depends(validate_user_id)],
 ) -> Message:
     north = geo.parse_coordinate(data.north)
     east = geo.parse_coordinate(data.east)

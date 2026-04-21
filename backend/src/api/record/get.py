@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import get_current_user, validate_user_id
+from core.security import get_current_user
 from repository.record import get_record_by_id
 from schemas.records import GetRecordResponse
 
@@ -18,11 +18,9 @@ router = APIRouter()
 @limiter.limit("20/minute")
 async def get_record(
     request: Request,
-    user_id: int,
     record_id: int,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    _: Annotated[None, Depends(validate_user_id)],
 ) -> GetRecordResponse:
     current_user_id = int(user_data["sub"])
 

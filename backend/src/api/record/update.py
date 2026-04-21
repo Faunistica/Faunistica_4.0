@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import get_current_user, validate_user_id
+from core.security import get_current_user
 from repository.record import edit_record_by_id
 from schemas.common import Message
 from schemas.records import EditRecordRequest
@@ -18,14 +18,12 @@ router = APIRouter()
 
 @router.put("/{record_id}")
 @limiter.limit("20/minute")
-async def update_record(  # noqa: PLR0913
+async def update_record(
     request: Request,
-    user_id: int,
     record_id: int,
     data: EditRecordRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    _: Annotated[None, Depends(validate_user_id)],
 ) -> Message:
     current_user_id = int(user_data["sub"])
 

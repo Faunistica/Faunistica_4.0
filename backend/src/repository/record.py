@@ -5,8 +5,7 @@ from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from models import Publ, Record
-from schemas.common import Publication
+from models import Record
 
 logger = logging.getLogger(__name__)
 

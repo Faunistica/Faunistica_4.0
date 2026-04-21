@@ -1,5 +1,6 @@
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -83,7 +84,7 @@ def get_current_user(
 
 def validate_user_id(
     user_id: int,
-    current_user: dict = Depends(get_current_user),  # noqa: B008
+    current_user: Annotated[dict, Depends(get_current_user)],
 ) -> None:
     if user_id != int(current_user["sub"]):
         raise HTTPException(
