@@ -15,7 +15,7 @@ dependencies = [
     "aiogram",
     "cryptography",
     "argon2-cffi",
-    "python-jose[cryptography]",
+    "python-jose[cryptography]", # FIXME: this one is unmaintained, probably should switch
     "pandas",
     "aiohttp",
     "openpyxl",

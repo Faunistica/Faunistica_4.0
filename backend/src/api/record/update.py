@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import decrypt_id, get_current_user
+from core.security import get_current_user, validate_user_id
 from repository.record import edit_record_by_id
 from schemas.common import Message
 from schemas.records import EditRecordRequest
@@ -16,20 +16,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.put("/{record_hash}")
+@router.put("/{record_id}")
 @limiter.limit("20/minute")
 async def update_record(  # noqa: PLR0913
     request: Request,
-    record_hash: str,
+    user_id: int,
+    record_id: int,
     data: EditRecordRequest,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
+    _: Annotated[None, Depends(validate_user_id)],
 ) -> Message:
-    user_id = int(user_data["sub"])
-    record_id = decrypt_id(record_hash)
-    if record_id is None:
-        logger.warning("Invalid record token")
-        raise HTTPException(status_code=400, detail="Invalid record token.")
+    current_user_id = int(user_data["sub"])
 
     try:
         # Заменить на (наверное)
@@ -76,7 +74,7 @@ async def update_record(  # noqa: PLR0913
         dump = data.model_dump()
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"
-        is_success = await edit_record_by_id(session, record_id, user_id, dump)
+        is_success = await edit_record_by_id(session, record_id, current_user_id, dump)
 
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

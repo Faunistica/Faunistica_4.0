@@ -61,25 +61,3 @@ async def edit_record_by_id(
 
     await session.commit()
     return True
-
-
-async def find_publ_by_hash(
-    session: AsyncSession, record_id: int, user_id: int
-) -> Publication | None:
-    record = await get_record_by_id(session, record_id, user_id)
-
-    if record is None:
-        return None
-
-    stmt = select(Publ).filter_by(id=record.publ_id)
-    result = await session.execute(stmt)
-    publication = result.scalar_one_or_none()
-    if publication is None:
-        return None
-
-    return Publication(
-        author=publication.author,
-        year=str(publication.year or ""),
-        name=publication.name,
-        pdf_file=publication.pdf_file,
-    )

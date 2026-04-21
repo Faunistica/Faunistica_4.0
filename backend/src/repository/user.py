@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import text
 
-from core.security import check_password_hash, encrypt_id
+from core.security import check_password_hash
 from core.utils import format_event_date
 from models import Publ, Record, User
 from schemas.common import EventDate
@@ -188,7 +188,7 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> list[dict]:
 
         records.append(
             {
-                "hash": encrypt_id(row.id, user_id),
+                "id": row.id,
                 "date": str(row.datetime),
                 "author": row.author,
                 "species": species,

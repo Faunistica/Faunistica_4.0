@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from fastapi import HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, status
 from jose import ExpiredSignatureError, JWTError, jwt
 
 from core.config import settings
@@ -24,15 +24,6 @@ def check_password_hash(user_pass: str, db_hash: str) -> bool:
     except VerifyMismatchError:
         return False
     return True
-
-
-# FIXME: remove this functions
-def encrypt_id(some_id: int, user_id: int) -> str:
-    return f"{user_id}|{some_id}"
-
-
-def decrypt_id(token: str) -> int:
-    return int(token.split("|")[1])
 
 
 def create_access_token(data: dict) -> str:
@@ -88,3 +79,13 @@ def get_current_user(
     request: Request,
 ) -> dict:
     return get_token_payload(request)
+
+
+def validate_user_id(
+    user_id: int,
+    current_user: dict = Depends(get_current_user),  # noqa: B008
+) -> None:
+    if user_id != int(current_user["sub"]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )

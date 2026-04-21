@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from api.records import create, delete, get, list, update
+from api.record import create, delete, get, list, update
 
-router = APIRouter(prefix="/records", tags=["records"])
+router = APIRouter(prefix="/user/{user_id}/record", tags=["records"])
 
 router.include_router(create.router)
 router.include_router(list.router)

@@ -1,10 +1,6 @@
 from pydantic import BaseModel
 
 
-class RecordHashRequest(BaseModel):
-    hash: str
-
-
 class LoginRequest(BaseModel):
     username: str
     password: str

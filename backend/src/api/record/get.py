@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import decrypt_id, get_current_user
+from core.security import get_current_user, validate_user_id
 from repository.record import get_record_by_id
 from schemas.records import GetRecordResponse
 
@@ -14,23 +14,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/{record_hash}")
+@router.get("/{record_id}")
 @limiter.limit("20/minute")
 async def get_record(
     request: Request,
-    record_hash: str,
+    user_id: int,
+    record_id: int,
     user_data: Annotated[dict, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
+    _: Annotated[None, Depends(validate_user_id)],
 ) -> GetRecordResponse:
-    user_id = int(user_data["sub"])
-    try:
-        record_id = decrypt_id(record_hash)
-    except Exception as e:
-        logger.warning("Invalid record token")
-        raise HTTPException(status_code=400, detail="Invalid record token.") from e
+    current_user_id = int(user_data["sub"])
 
     try:
-        record_data = await get_record_by_id(session, record_id, user_id)
+        record_data = await get_record_by_id(session, record_id, current_user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e
@@ -42,7 +39,7 @@ async def get_record(
         )
 
     return GetRecordResponse(
-        hash=record_hash,
+        id=record_id,
         type=record_data.type,
         countrycode=record_data.country,
         stateprovince=record_data.region,

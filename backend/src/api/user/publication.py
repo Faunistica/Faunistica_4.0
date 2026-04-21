@@ -6,11 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
 from core.database import get_session
-from core.security import decrypt_id, get_current_user
+from core.security import get_current_user
 from repository.publication import user_filled_publication
-from repository.record import find_publ_by_hash
 from repository.user import get_user, get_username_and_publications, update_user
-from schemas.common import Publication, RecordHashRequest
+from schemas.common import Publication
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -70,38 +69,3 @@ async def get_next_publication(
         await update_user(session, user_id, publ_id=publ_id)
         return True
     return False
-
-
-@router.post("/from-hash")
-@limiter.limit("666/minute")
-async def get_publication_from_hash(
-    request: Request,
-    data: RecordHashRequest,
-    user_data: Annotated[dict, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
-) -> Publication:
-    try:
-        user_id = int(user_data["sub"])
-        record_id = decrypt_id(data.hash)
-
-        if record_id is None:
-            logger.warning("Invalid record token")
-            raise HTTPException(status_code=400, detail="Invalid record token.")
-
-        publ = await find_publ_by_hash(session, record_id, user_id)
-        if publ is None:
-            logger.warning("Publication not found")
-            raise HTTPException(status_code=404, detail="Publication not found.")
-
-        return Publication(
-            author=publ.author,
-            year=publ.year,
-            name=publ.name,
-            pdf_file=base_url + publ.pdf_file if publ.pdf_file else None,
-        )
-
-    except Exception as e:
-        logger.error(f"HTTP Error: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Server database error: {str(e)}"
-        ) from e

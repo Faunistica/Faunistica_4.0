@@ -37,7 +37,7 @@ class InsertRecordsRequest(BaseModel):
 
 
 class GetRecordResponse(BaseModel):
-    hash: str
+    id: int
     type: str | None = None
     adm_country: str | None = None
     adm_region: str | None = None
@@ -72,7 +72,6 @@ class GetRecordResponse(BaseModel):
 
 
 class EditRecordRequest(BaseModel):
-    hash: str
     type: str | None = None
     adm_country: str | None = None
     adm_region: str | None = None
