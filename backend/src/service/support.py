@@ -42,5 +42,4 @@ def _get_issue_type(issue_type: str) -> str:
         "confirmation": "Проблемы с отправкой формы",
         "other": "Другая проблема",
     }
-    # FIXME: wtf
     return issue_types.get(issue_type, issue_type)

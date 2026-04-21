@@ -232,17 +232,6 @@ class Messages:
             f"Пользователь @{username}, ID: {user_id} обратился в поддержку:\n\n{text}"
         )
 
-    @staticmethod
-    def request_for_support_from_website(
-        username: str, user_id: int, text: str, user_link: str
-    ) -> str:
-        return (
-            f"Пользователь @{username}, ID: {user_id} обратился в "
-            f"поддержку <b>из веб-формы</b>:\n\n"
-            f"{text}\n\n"
-            f"Ссылка на юзера: {user_link}"
-        )
-
     # ========== STATS MESSAGE ========== #
 
     @staticmethod
@@ -490,14 +479,6 @@ class Messages:
     def message_no_digits() -> str:
         return (
             "Мои искусственные глаза не могут разглядеть здесь цифру 😞\n"
-            "Попробуйте ещё раз"
-        )
-
-    @staticmethod
-    def message_not_only_digits() -> str:
-        return (
-            "Возможно, вы промахнулись, когда писали цифру, "
-            "но в вашем сообщении есть другие символы 🙄\n"
             "Попробуйте ещё раз"
         )
 

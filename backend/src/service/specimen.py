@@ -34,21 +34,3 @@ def parse(specimens: dict[str, float | None] | None) -> tuple[str | None, int]:
         result = " | ".join(entries)
         return result, int(total) if all_whole else round(total, 6)
     return None, 0
-
-
-# FIXME: I can't understand what this method does
-def num_of_specimen(specimens: dict | None) -> float | None:
-    if not specimens:
-        return 0
-    count = 0
-    counts = []
-    counts[0] = clean_value(specimens.get("male_adult"))
-    counts[1] = clean_value(specimens.get("female_adult"))
-    counts[2] = clean_value(specimens.get("male_juvenile"))
-    counts[3] = clean_value(specimens.get("female_juvenile"))
-    counts[4] = clean_value(specimens.get("undefined_adult"))
-    counts[5] = clean_value(specimens.get("undefined_juvenile"))
-    for i in range(0, 6):
-        if counts[i] is not None:
-            count += counts[i]
-    return count

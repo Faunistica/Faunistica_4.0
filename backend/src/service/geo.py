@@ -81,7 +81,6 @@ async def get_location_suggestions(
     return []
 
 
-# FIXME: typing
 def get_location_names(lat: float, lon: float) -> Location:
     geolocator = Nominatim(user_agent="geoapi", timeout=10)
 

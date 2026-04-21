@@ -44,9 +44,3 @@ async def user_filled_publication(
         return False
 
     return record_type == "rec_ok"
-
-
-async def add_publication_from_json(session: AsyncSession, publ_json: dict) -> None:
-    publ = Publ(**publ_json)
-    session.add(publ)
-    await session.commit()

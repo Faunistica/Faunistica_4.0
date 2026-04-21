@@ -33,7 +33,6 @@ class SecuritySettings(CamelCaseSettings):
     JWT_SECRET: SecretStr = Field(init=False)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
-    ENCRYPT_SECRET: SecretStr = Field(init=False)
 
 
 class BotSettings(CamelCaseSettings):

@@ -26,11 +26,6 @@ class GetLocationResponse(BaseModel):
     district: str | None = None
 
 
-class LocationList(BaseModel):
-    region: str
-    districts: list[str]
-
-
 class Location(BaseModel):
     country: str
     region: str
