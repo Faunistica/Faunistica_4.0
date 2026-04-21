@@ -3,7 +3,6 @@ import json
 import logging
 from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
-from pathlib import Path
 
 import aiohttp
 from fastapi import FastAPI

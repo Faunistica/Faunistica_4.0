@@ -16,11 +16,11 @@ def to_camel_case(string: str) -> str:
 
 
 # THX: https://github.com/lsst-sqre/safir/blob/main/src/safir/pydantic/_camel.py
-class CamelCaseModel(BaseSettings):
+class CamelCaseSettings(BaseSettings):
     model_config = ConfigDict(alias_generator=to_camel_case, populate_by_name=True)
 
 
-class DatabaseSettings(BaseSettings):
+class DatabaseSettings(CamelCaseSettings):
     DB_NAME: str = "faunistica"
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
@@ -29,30 +29,30 @@ class DatabaseSettings(BaseSettings):
     DB_ECHO: bool = False
 
 
-class SecuritySettings(BaseSettings):
+class SecuritySettings(CamelCaseSettings):
     JWT_SECRET: SecretStr = Field(init=False)
-    ACCESS_TOKEN_EXPIRE: int = 30
-    REFRESH_TOKEN_EXPIRE: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     ENCRYPT_SECRET: SecretStr = Field(init=False)
 
 
-class BotSettings(BaseSettings):
+class BotSettings(CamelCaseSettings):
     BOT_TOKEN: SecretStr = Field(init=False)
     BOT_PROXY: Url | None = None
     ADMIN_CHAT_ID: int = Field(init=False)
 
 
-class LoggingSettings(BaseSettings):
+class LoggingSettings(CamelCaseSettings):
     LOG_LEVEL: str = "INFO"
     LOGS_DIR: Path = Path("logs")
 
 
-class AppSettings(CamelCaseModel):
+class AppSettings(CamelCaseSettings):
     DEV_MODE: bool = False
     ALLOWED_ORIGINS: list[str] = []
 
 
-class DataSettings(BaseSettings):
+class DataSettings(CamelCaseSettings):
     SPECIES_CSV_PATH: Path = Path("data/species_export.csv")
     LOCATIONS_JSON_PATH: Path = Path("data/locations.json")
 
@@ -92,11 +92,11 @@ class Settings(
 
     @property
     def ACCESS_TOKEN_EXPIRE_SECONDS(self) -> int:
-        return self.ACCESS_TOKEN_EXPIRE * 60
+        return self.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 
     @property
     def REFRESH_TOKEN_EXPIRE_SECONDS(self) -> int:
-        return self.REFRESH_TOKEN_EXPIRE * 24 * 60 * 60
+        return self.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
 
 settings = Settings()
