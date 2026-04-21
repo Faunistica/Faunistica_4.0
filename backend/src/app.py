@@ -94,7 +94,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
         app.state.http_session = aiohttp.ClientSession()
         logger.info("HTTP session created without proxy")
 
-    json_path = Path(__file__).resolve().parent.parent / "locations.json"  # noqa: ASYNC240
+    json_path = settings.LOCATIONS_JSON_PATH
     if json_path.exists():
         try:
             with open(json_path, encoding="utf-8") as f:  # noqa: ASYNC230

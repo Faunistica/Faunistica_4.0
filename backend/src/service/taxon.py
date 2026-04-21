@@ -1,14 +1,13 @@
 import logging
-from pathlib import Path
 
 import pandas as pd
 
+from core.config import settings
 from schemas.taxonomy import AutofillTaxonResponse
 
 logger = logging.getLogger(__name__)
 
-# FIXME: through config?
-csv_path = Path(__file__).resolve().parent.parent.parent / "species_export_20250503.csv"
+csv_path = settings.SPECIES_CSV_PATH
 df = pd.read_csv(csv_path, usecols=["family", "genus", "species"])
 
 

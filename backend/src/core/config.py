@@ -52,12 +52,18 @@ class AppSettings(CamelCaseModel):
     ALLOWED_ORIGINS: list[str] = []
 
 
+class DataSettings(BaseSettings):
+    SPECIES_CSV_PATH: Path = Path("data/species_export.csv")
+    LOCATIONS_JSON_PATH: Path = Path("data/locations.json")
+
+
 class Settings(
     DatabaseSettings,
     SecuritySettings,
     BotSettings,
     LoggingSettings,
     AppSettings,
+    DataSettings,
 ):
     model_config = SettingsConfigDict(
         yaml_file=Path("config.yaml"),
