@@ -7,7 +7,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import FSInputFile, Message
 
-from bot import NO_WORDS, YES_WORDS
+from api.auth.login import logger
 from bot.button_markups import Keyboards
 from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
@@ -30,6 +30,9 @@ from repository.user import (
     get_user_stats,
     update_user,
 )
+
+YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
+NO_WORDS = ["no", "nope", "нет", "не", "refuse"]
 
 
 class HandlerError(Exception):
@@ -222,6 +225,13 @@ class Handlers:
                         publ_id = user.publ_id
 
                     publ = await get_publication(session, publ_id)
+
+                    if publ is None:
+                        logger.warning(
+                            "user %d requested his publ while it's none", user.id
+                        )
+                        raise Exception
+
                     await message.answer(
                         text=Messages.current_publication(publ),
                         parse_mode="HTML",
@@ -307,6 +317,12 @@ class Handlers:
                     await message.answer(Messages.accept_next_publ())
 
                     publ = await get_publication(session, user.publ_id)
+                    if publ is None:
+                        logger.warning(
+                            "user %d requested his publ while it's none", user.id
+                        )
+                        raise Exception
+
                     await message.answer(
                         text=Messages.current_publication(publ),
                         parse_mode="HTML",
@@ -804,7 +820,7 @@ class Handlers:
         )
 
         await self.bot.send_message(
-            chat_id=settings.admin_chat_id,
+            chat_id=settings.ADMIN_CHAT_ID,
             text=Messages.request_for_support(
                 message.from_user.username, message.from_user.id, message.text
             ),

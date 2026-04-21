@@ -10,9 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
+import bot
 from api import api_router
 from api.rate_limiter import limiter, rate_limit_handler
-from bot.bot_main import bot_start
 from core.config import settings
 from core.database import init_db, ping_db
 
@@ -107,7 +107,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
         app.state.location_data = []
 
     try:
-        bot_task = asyncio.create_task(bot_start())
+        bot_task = asyncio.create_task(bot.start())
     except Exception as db_error:
         logger.error(f"Database initialization failed: {db_error}", exc_info=True)
         raise
@@ -151,4 +151,4 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 app.include_router(api_router)
 
 if __name__ == "__main__":
-    asyncio.run(bot_start())
+    asyncio.run(bot.start())

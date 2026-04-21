@@ -17,3 +17,4 @@ isort:
 
 lint:
 	uv run ruff check src/ alembic/
+	uv run ty check src/ alembic/

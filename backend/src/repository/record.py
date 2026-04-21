@@ -1,13 +1,11 @@
-import asyncio
 import logging
 from collections.abc import Sequence
 
-from sqlalchemy import and_, func
+from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from models import Publ, Record
-from repository.user import get_username_and_publications
 from schemas.common import Publication
 
 logger = logging.getLogger(__name__)
@@ -17,77 +15,6 @@ async def add_record_from_json(session: AsyncSession, record_json: dict) -> None
     record = Record(**record_json)
     session.add(record)
     await session.commit()
-
-
-async def get_statistics(session: AsyncSession) -> dict:
-    stats = {}
-
-    stmt = select(func.count()).select_from(Publ)
-    result = await session.execute(stmt)
-    stats["total_publications"] = result.scalar()
-
-    stmt = select(func.count(func.distinct(Record.publ_id)))
-    result = await session.execute(stmt)
-    stats["processed_publications"] = result.scalar()
-
-    stmt = select(func.count()).select_from(Record).where(Record.type == "rec_ok")
-    result = await session.execute(stmt)
-    stats["total_species"] = result.scalar()
-
-    stmt = select(
-        func.count(func.distinct(func.concat(Record.genus, "_", Record.species)))
-    ).where(Record.type == "rec_ok")
-    result = await session.execute(stmt)
-    stats["unique_species"] = result.scalar()
-
-    stmt = (
-        select(
-            Record.genus, Record.species, func.count(Record.id).label("spider_count")
-        )
-        .group_by(Record.genus, Record.species)
-        .order_by(func.count(Record.id).desc())
-        .limit(4)
-    )
-    result = await session.execute(stmt)
-    top_species = result.fetchall()
-    stats["top_species"] = [
-        {"species": f"{row.genus} {row.species}", "count": row.spider_count}
-        for row in top_species
-    ]
-
-    stmt = (
-        select(
-            func.date(Record.datetime).label("formatted_date"),
-            Record.genus,
-            Record.species,
-            Record.district,
-            Record.region,
-            Record.user_id,
-        )
-        .order_by(Record.datetime.desc())
-        .limit(4)
-    )
-    result = await session.execute(stmt)
-    latest_records = result.fetchall()
-
-    user_ids = [record.user_id for record in latest_records]
-    user_name_data = await asyncio.gather(
-        *[get_username_and_publications(session, user_id) for user_id in user_ids]
-    )
-
-    stats["latest_records"] = [
-        {
-            "datetime": record.formatted_date.isoformat(),
-            "species": f"{record.genus} {record.species}",
-            "location": f"{record.district}, {record.region}",
-            "username": user_data["user_name"]
-            if user_data and "user_name" in user_data
-            else "Unknown",
-        }
-        for record, user_data in zip(latest_records, user_name_data, strict=False)
-    ]
-
-    return stats
 
 
 async def get_user_records(session: AsyncSession, user_id: int) -> Sequence[Record]:

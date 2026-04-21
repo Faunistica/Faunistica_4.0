@@ -130,7 +130,6 @@ class Messages:
         )
 
     @staticmethod
-    # FIXME: object!?
     def current_publication(publ_info: Publ) -> str:
         return (
             f"<b>Ваша текущая публикация</b>\n\n"

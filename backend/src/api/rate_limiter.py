@@ -1,5 +1,13 @@
+from fastapi import Request, Response
 from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 limiter = Limiter(key_func=get_remote_address)
-rate_limit_handler = _rate_limit_exceeded_handler
+
+
+# https://github.com/muhannad-hash/slowapi/blob/fix/issue-188/slowapi/extension.py
+def rate_limit_handler(request: Request, exc: Exception) -> Response:
+    if isinstance(exc, RateLimitExceeded):
+        return _rate_limit_exceeded_handler(request, exc)
+    raise exc

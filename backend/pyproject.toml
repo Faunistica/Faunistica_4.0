@@ -49,7 +49,8 @@ select = [
     "PL",     # Pylint
 ]
 ignore = [
-    "PLR2004" # ignore magick variables for now
+    "PLR2004", # ignore magick variables for now
+    "PLR0912"  # ignore too many branches
 ]
 
 [tool.ruff.lint.isort]
@@ -61,9 +62,9 @@ order-by-type = true
 
 [dependency-groups]
 dev = [
-    "mypy>=1.20.1",
     "pandas-stubs>=3.0.0.260204",
     "ruff>=0.15.7",
+    "ty>=0.0.32",
     "types-openpyxl>=3.1.5.20260408",
     "types-python-jose>=3.5.0.20260408",
     "types-pyyaml>=6.0.12.20260408",
