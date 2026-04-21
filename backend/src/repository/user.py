@@ -36,9 +36,6 @@ async def is_pass_correct(session: AsyncSession, user_id: int, user_pass: str) -
 async def get_user(session: AsyncSession, user_id: int) -> User:
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
-
-    # NOTE: i'm not sure if this is better then before
-    # maybe some more robust error handling is required here and in similar places
     return result.scalar_one()
 
 
@@ -73,8 +70,7 @@ async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> Non
 async def update_user(
     session: AsyncSession,
     user_id: int,
-    # FIXME: proper typing
-    **fields: Any,  # noqa: ANN401
+    **fields: Any,
 ) -> None:
     stmt = update(User).where(User.id == user_id).values(**fields)
     await session.execute(stmt)
@@ -116,15 +112,15 @@ async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
     )
 
     species_stmt = select(
-        func.count(func.distinct(func.concat(Record.tax_gen, "_", Record.tax_sp)))
+        func.count(func.distinct(func.concat(Record.genus, "_", Record.species)))
     ).where(Record.type == "rec_ok", Record.user_id == user_id)
     result = await session.execute(species_stmt)
     stats["species_count"] = result.scalar()
 
     result = await session.execute(
         text("""
-        SELECT mode() WITHIN GROUP (ORDER BY CONCAT(tax_gen, ' ', tax_sp))
-        FROM records
+        SELECT mode() WITHIN GROUP (ORDER BY CONCAT(genus, ' ', specificepithet))
+        FROM spiders
         WHERE type = 'rec_ok' AND user_id = :user_id
     """),
         {"user_id": user_id},
@@ -140,17 +136,17 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> list[dict]:
             Record.id,
             Record.publ_id,
             Record.datetime,
-            Record.adm_district,
-            Record.adm_region,
-            Record.tax_gen,
-            Record.tax_sp,
-            Record.abu,
-            Record.eve_YY,
-            Record.eve_MM,
-            Record.eve_DD,
-            Record.eve_YY_end,
-            Record.eve_MM_end,
-            Record.eve_DD_end,
+            Record.district,
+            Record.region,
+            Record.genus,
+            Record.species,
+            Record.quantity,
+            Record.year,
+            Record.month,
+            Record.day,
+            Record.year_end,
+            Record.month_end,
+            Record.day_end,
             Publ.author,
         )
         .join(Publ, Publ.id == Record.publ_id)
@@ -165,27 +161,27 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> list[dict]:
     for row in rows:
         date = format_event_date(
             EventDate(
-                yy=row.eve_YY,
-                mm=row.eve_MM,
-                dd=row.eve_DD,
-                yy_end=row.eve_YY_end,
-                mm_end=row.eve_MM_end,
-                dd_end=row.eve_DD_end,
+                yy=row.year,
+                mm=row.month,
+                dd=row.day,
+                yy_end=row.year_end,
+                mm_end=row.month_end,
+                dd_end=row.day_end,
             )
         )
         location_parts = []
-        if row.adm_district is not None:
-            location_parts.append(row.adm_district)
-        if row.adm_region is not None:
-            location_parts.append(row.adm_region)
+        if row.district is not None:
+            location_parts.append(row.district)
+        if row.region is not None:
+            location_parts.append(row.region)
 
         location = ", ".join(location_parts) if location_parts else "Не заполнено"
 
         species_parts = []
-        if row.tax_gen is not None:
-            species_parts.append(row.tax_gen)
-        if row.tax_sp is not None:
-            species_parts.append(row.tax_sp)
+        if row.genus is not None:
+            species_parts.append(row.genus)
+        if row.species is not None:
+            species_parts.append(row.species)
 
         species = " ".join(species_parts) if species_parts else "Не заполнено"
 
@@ -195,7 +191,7 @@ async def get_personal_stats(session: AsyncSession, user_id: int) -> list[dict]:
                 "date": str(row.datetime),
                 "author": row.author,
                 "species": species,
-                "abundance": row.abu,
+                "abundance": row.quantity,
                 "locality": location,
                 "even_date": date,
             }

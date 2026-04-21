@@ -52,9 +52,9 @@ async def get_general_stats(session: AsyncSession) -> dict:
     )
 
     species_stmt = select(
-        func.count(func.distinct(func.concat(Record.tax_gen, "_", Record.tax_sp)))
+        func.count(func.distinct(func.concat(Record.genus, "_", Record.species)))
     ).where(Record.type == "rec_ok")
-    families_stmt = select(func.count(func.distinct(Record.tax_fam))).where(
+    families_stmt = select(func.count(func.distinct(Record.family))).where(
         Record.type == "rec_ok"
     )
 
