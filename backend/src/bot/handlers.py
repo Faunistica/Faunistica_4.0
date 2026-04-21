@@ -12,7 +12,7 @@ from bot.button_markups import Keyboards
 from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
 from bot.states import RegistrationStates, RenameStates, SociologyStates, SupportStates
-from core import config
+from core.config import settings
 from core.database import get_session
 from core.security import get_password_hash
 from models import User
@@ -129,7 +129,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         await message.answer(
@@ -143,7 +143,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         async for session in self.db_session_factory():
@@ -184,7 +184,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         async for session in self.db_session_factory():
@@ -257,7 +257,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         async for session in self.db_session_factory():
@@ -316,7 +316,7 @@ class Handlers:
                     await message.answer(Messages.no_publications_left())
 
     async def menu_command(self, message: Message) -> None:
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         await message.answer(Messages.called_menu(), parse_mode="HTML")
@@ -325,7 +325,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         async for session in self.db_session_factory():
@@ -342,7 +342,7 @@ class Handlers:
                 reply_markup=Keyboards.remove(),
             )
 
-            if message.chat.id == config.ADMIN_CHAT_ID:
+            if message.chat.id == settings.ADMIN_CHAT_ID:
                 await get_volunteers_achievements(session)
                 # NOTE: IN DEVELOPMENT
 
@@ -350,7 +350,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         async for session in self.db_session_factory():
@@ -376,7 +376,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             await message.answer(Messages.support_for_admins())
             return
 
@@ -408,7 +408,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         async for session in self.db_session_factory():
@@ -466,7 +466,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         async for session in self.db_session_factory():
@@ -498,7 +498,7 @@ class Handlers:
         if message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id != config.ADMIN_CHAT_ID:
+        if message.chat.id != settings.ADMIN_CHAT_ID:
             await message.answer(Messages.no_access_to_command())
             return
 
@@ -532,7 +532,7 @@ class Handlers:
         if message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id != config.ADMIN_CHAT_ID:
+        if message.chat.id != settings.ADMIN_CHAT_ID:
             await message.answer(Messages.no_access_to_command())
             return
 
@@ -549,7 +549,8 @@ class Handlers:
                 await message.answer(Messages.logs_not_found(date_str))
 
                 dates = set()
-                for file in config.LOGS_DIR.glob("*.log*"):
+                logs_dir = settings.LOGS_DIR
+                for file in logs_dir.glob("*.log*"):
                     try:
                         date_part = file.name.split(".")[-1]
                         datetime.strptime(date_part, "%Y-%m-%d")
@@ -572,15 +573,16 @@ class Handlers:
             await message.answer(Messages.unexpected_error())
 
     async def _get_log_files(self, date_str: str) -> list[tuple[str, Path]]:
+        logs_dir = settings.LOGS_DIR
         if date_str.lower() == "сегодня":
-            service_log = config.LOGS_DIR / "service.log"
-            errors_log = config.LOGS_DIR / "errors.log"
+            service_log = logs_dir / "service.log"
+            errors_log = logs_dir / "errors.log"
         else:
             date = datetime.strptime(date_str, "%Y-%m-%d")
             date_str = date.strftime("%Y-%m-%d")
 
-            service_log = config.LOGS_DIR / f"service.log.{date_str}"
-            errors_log = config.LOGS_DIR / f"errors.log.{date_str}"
+            service_log = logs_dir / f"service.log.{date_str}"
+            errors_log = logs_dir / f"errors.log.{date_str}"
 
         files_to_send: list[tuple[str, Path]] = []
         if service_log.exists():
@@ -596,7 +598,7 @@ class Handlers:
     async def continue_registration(
         self, message: Message, user: User, state: FSMContext
     ) -> None:
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
         reg_stat = user.reg_stat
 
@@ -802,7 +804,7 @@ class Handlers:
         )
 
         await self.bot.send_message(
-            chat_id=config.ADMIN_CHAT_ID,
+            chat_id=settings.admin_chat_id,
             text=Messages.request_for_support(
                 message.from_user.username, message.from_user.id, message.text
             ),
@@ -1038,7 +1040,7 @@ class Handlers:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        if message.chat.id == config.ADMIN_CHAT_ID:
+        if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
         async for session in self.db_session_factory():

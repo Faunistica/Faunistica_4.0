@@ -1,6 +1,6 @@
 import aiohttp
 
-from core.config import ADMIN_CHAT_ID, BOT_TOKEN
+from core.config import settings
 from schemas.common import SupportRequest
 
 
@@ -21,12 +21,12 @@ async def send_message(
     )
 
     message_payload = {
-        "chat_id": ADMIN_CHAT_ID,
+        "chat_id": settings.ADMIN_CHAT_ID,
         "text": message,
         "parse_mode": "HTML",
     }
 
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{settings.BOT_TOKEN.get_secret_value()}/sendMessage"
     async with session.post(url, json=message_payload) as response:
         response.raise_for_status()
 

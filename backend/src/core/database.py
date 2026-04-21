@@ -9,15 +9,21 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from core.config import DB_ECHO, DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
+from core.config import settings
 from models import Base
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = (
-    f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
-_engine = create_async_engine(DATABASE_URL, echo=DB_ECHO)
+
+def _get_database_url() -> str:
+    return (
+        f"postgresql+asyncpg://{settings.DB_USER}:"
+        f"{settings.DB_PASSWORD.get_secret_value()}"
+        f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+    )
+
+
+_engine = create_async_engine(_get_database_url(), echo=settings.DB_ECHO)
 _async_session_local = async_sessionmaker(
     bind=_engine, class_=AsyncSession, expire_on_commit=False
 )

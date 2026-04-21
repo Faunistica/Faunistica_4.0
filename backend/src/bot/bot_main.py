@@ -8,18 +8,18 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import DeleteWebhook
 
 from bot.handlers import Handlers
-from core.config import BOT_PROXY, BOT_TOKEN
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 async def bot_start() -> None:
     session = None
-    if len(BOT_PROXY) > 0:
-        session = AiohttpSession(proxy=BOT_PROXY)
-        logger.info(f"Bot session configured with proxy: {BOT_PROXY}")
+    if settings.BOT_PROXY is not None:
+        session = AiohttpSession(proxy=settings.BOT_PROXY.unicode_string())
+        logger.info(f"Bot session configured with proxy: {settings.BOT_PROXY}")
 
-    bot_instance = Bot(token=BOT_TOKEN, session=session)
+    bot_instance = Bot(token=settings.BOT_TOKEN.get_secret_value(), session=session)
     dp_instance = Dispatcher(storage=MemoryStorage())
 
     handlers = Handlers(bot_instance)

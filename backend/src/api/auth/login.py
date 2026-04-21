@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
-from core.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
+from core.config import settings
 from core.database import get_session
 from core.security import create_access_token, create_refresh_token
 from repository.user import find_user_by_username, is_pass_correct
@@ -43,7 +43,7 @@ async def login(  # noqa: PLR0913
         httponly=True,
         secure=True,
         samesite="strict",
-        max_age=ACCESS_TOKEN_EXPIRE * 60,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_SECONDS,
         path="/",
     )
 
@@ -53,7 +53,7 @@ async def login(  # noqa: PLR0913
         httponly=True,
         secure=True,
         samesite="strict",
-        max_age=REFRESH_TOKEN_EXPIRE * 60,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_SECONDS,
         path="/",
     )
 

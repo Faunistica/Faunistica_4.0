@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
-from core.config import ACCESS_TOKEN_EXPIRE
+from core.config import settings
 from core.security import create_access_token, verify_token
 from schemas.common import Message
 
@@ -37,7 +37,7 @@ def refresh(
         httponly=True,
         secure=True,
         samesite="strict",
-        max_age=ACCESS_TOKEN_EXPIRE,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_SECONDS,
         path="/",
     )
 

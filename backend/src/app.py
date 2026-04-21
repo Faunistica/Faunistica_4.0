@@ -14,17 +14,16 @@ from slowapi.middleware import SlowAPIMiddleware
 from api import api_router
 from api.rate_limiter import limiter, rate_limit_handler
 from bot.bot_main import bot_start
-from core.config import ALLOWED_ORIGINS, BOT_PROXY, DEV_MODE, LOG_LEVEL, LOGS_DIR
+from core.config import settings
 from core.database import init_db, ping_db
 
-logs_dir = LOGS_DIR
-logs_dir.mkdir(exist_ok=True)
+settings.LOGS_DIR.mkdir(exist_ok=True)
 
 log_format = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 
 handlers = []
 
-if DEV_MODE:
+if settings.DEV_MODE:
     handler = logging.StreamHandler()
 
     handler.setLevel(logging.DEBUG)
@@ -33,7 +32,7 @@ if DEV_MODE:
     handlers.append(handler)
 else:
     app_handler = TimedRotatingFileHandler(
-        filename=logs_dir / "service.log",
+        filename=settings.LOGS_DIR / "service.log",
         when="midnight",
         backupCount=30,
         encoding="utf-8",
@@ -42,7 +41,7 @@ else:
     app_handler.setFormatter(logging.Formatter(log_format))
 
     error_handler = TimedRotatingFileHandler(
-        filename=logs_dir / "errors.log",
+        filename=settings.LOGS_DIR / "errors.log",
         when="midnight",
         backupCount=90,
         encoding="utf-8",
@@ -59,7 +58,7 @@ else:
 
 
 logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL, logging.WARNING),
+    level=getattr(logging, settings.LOG_LEVEL, logging.WARNING),
     handlers=handlers,
     format=log_format,
     force=True,
@@ -86,9 +85,9 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
 
     await init_db()
 
-    if len(BOT_PROXY) > 0:
-        app.state.http_session = aiohttp.ClientSession(proxy=BOT_PROXY)
-        logger.info(f"HTTP session configured with proxy: {BOT_PROXY}")
+    if settings.BOT_PROXY is not None:
+        app.state.http_session = aiohttp.ClientSession(proxy=settings.BOT_PROXY)
+        logger.info(f"HTTP session configured with proxy: {settings.BOT_PROXY}")
     else:
         app.state.http_session = aiohttp.ClientSession()
         logger.info("HTTP session created without proxy")
@@ -131,15 +130,15 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
 app = FastAPI(lifespan=lifespan)
 
 logger = logging.getLogger(__name__)
-logger.info(f"Running in {'DEVELOPMENT' if DEV_MODE else 'PRODUCTION'} mode")
-logger.info(f"Allowed origins: {ALLOWED_ORIGINS}")
+logger.info(f"Running in {'DEVELOPMENT' if settings.DEV_MODE else 'PRODUCTION'} mode")
+logger.info(f"Allowed origins: {settings.ALLOWED_ORIGINS}")
 
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization"],

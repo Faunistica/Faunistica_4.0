@@ -6,7 +6,7 @@ from argon2.exceptions import VerifyMismatchError
 from fastapi import HTTPException, Request, status
 from jose import ExpiredSignatureError, JWTError, jwt
 
-from core.config import ACCESS_TOKEN_EXPIRE, JWT_SECRET, REFRESH_TOKEN_EXPIRE
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -36,20 +36,26 @@ def decrypt_id(token: str) -> int:
 
 
 def create_access_token(data: dict) -> str:
-    expires = datetime.now(UTC) + timedelta(seconds=ACCESS_TOKEN_EXPIRE)
+    expires = datetime.now(UTC) + timedelta(
+        seconds=settings.ACCESS_TOKEN_EXPIRE_SECONDS
+    )
     data.update({"exp": expires, "type": "access"})
-    return jwt.encode(data, JWT_SECRET)
+    return jwt.encode(data, settings.JWT_SECRET.get_secret_value())
 
 
 def create_refresh_token(data: dict) -> str:
-    expires = datetime.now(UTC) + timedelta(seconds=REFRESH_TOKEN_EXPIRE)
+    expires = datetime.now(UTC) + timedelta(
+        seconds=settings.REFRESH_TOKEN_EXPIRE_SECONDS
+    )
     data.update({"exp": expires, "type": "refresh"})
-    return jwt.encode(data, JWT_SECRET)
+    return jwt.encode(data, settings.JWT_SECRET.get_secret_value())
 
 
 def verify_token(token: str) -> dict:
     try:
-        return jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        return jwt.decode(
+            token, settings.JWT_SECRET.get_secret_value(), algorithms=["HS256"]
+        )
     except ExpiredSignatureError as e:
         logger.warning("Token expired")
         raise HTTPException(
