@@ -1,13 +1,14 @@
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, Literal
+from typing import Literal
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from fastapi import Depends, HTTPException, Request, Response, status
+from fastapi import HTTPException, Request, Response, status
 from jose import ExpiredSignatureError, JWTError, jwt
 from pydantic import ValidationError
 
+from api.dependencies import Token as TokenDependency
 from core.config import settings
 from schemas.jwt import Token, TokenPayload
 
@@ -129,7 +130,7 @@ def get_request_user(
 
 def validate_user_id_path(
     user_id: int | Literal["me"],
-    token: Annotated[TokenPayload, Depends(get_request_user)],
+    token: TokenDependency,
 ) -> None:
     if user_id == "me":
         return

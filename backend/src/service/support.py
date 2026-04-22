@@ -5,7 +5,7 @@ from schemas.common import SupportRequest
 
 
 async def send_message(
-    session: aiohttp.ClientSession,
+    client: aiohttp.ClientSession,
     data: SupportRequest,
     user_id: int,
 ) -> None:
@@ -27,7 +27,7 @@ async def send_message(
     }
 
     url = f"https://api.telegram.org/bot{settings.BOT_TOKEN.get_secret_value()}/sendMessage"
-    async with session.post(url, json=message_payload) as response:
+    async with client.post(url, json=message_payload) as response:
         response.raise_for_status()
 
 

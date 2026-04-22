@@ -1,15 +1,12 @@
 import logging
 from datetime import UTC, datetime
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 
-from api.dependencies import DBSession
+from api.dependencies import DBSession, Token
 from api.rate_limiter import limiter
-from core.security import get_request_user
 from repository.record import update_record
 from schemas.common import Message
-from schemas.jwt import TokenPayload
 from schemas.records import EditRecordRequest
 
 logger = logging.getLogger(__name__)
@@ -22,7 +19,7 @@ async def update_record(
     request: Request,
     record_id: int,
     data: EditRecordRequest,
-    token: Annotated[TokenPayload, Depends(get_request_user)],
+    token: Token,
     session: DBSession,
 ) -> Message:
     try:

@@ -1,15 +1,10 @@
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, HTTPException, Request
 
-from api.dependencies import DBSession
+from api.dependencies import DBSession, Token
 from api.rate_limiter import limiter
-from core.database import get_session
-from core.security import get_request_user
 from repository import record
-from schemas.jwt import TokenPayload
 from schemas.records import GetRecordResponse
 
 logger = logging.getLogger(__name__)
@@ -21,7 +16,7 @@ router = APIRouter()
 async def get_record(
     request: Request,
     record_id: int,
-    token: Annotated[TokenPayload, Depends(get_request_user)],
+    token: Token,
     session: DBSession,
 ) -> GetRecordResponse:
     try:

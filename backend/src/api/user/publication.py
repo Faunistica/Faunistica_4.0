@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.dependencies import DBSession
+from api.dependencies import DBSession, Token
 from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import get_request_user
@@ -23,7 +23,7 @@ router = APIRouter()
 @limiter.limit("666/minute")
 async def get_publication(
     request: Request,
-    token: Annotated[TokenPayload, Depends(get_request_user)],
+    token: Token,
     session: DBSession,
 ) -> Publication:
     data = await get_current_publication(session, token.user_id)
@@ -48,7 +48,7 @@ async def get_publication(
 @limiter.limit("10/minute")
 async def get_next_publication(
     request: Request,
-    token: Annotated[TokenPayload, Depends(get_request_user)],
+    token: Token,
     session: DBSession,
 ) -> bool:
     user_id = token.user_id

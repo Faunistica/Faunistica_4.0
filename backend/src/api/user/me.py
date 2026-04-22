@@ -1,11 +1,7 @@
-from typing import Annotated
+from fastapi import APIRouter, Request
 
-from fastapi import APIRouter, Depends, Request
-
-from api.dependencies import DBSession
-from core.security import get_request_user
+from api.dependencies import DBSession, Token
 from repository.user import get_personal_stats, get_user, get_user_stats
-from schemas.jwt import TokenPayload
 
 router = APIRouter()
 
@@ -13,7 +9,7 @@ router = APIRouter()
 @router.get("/me")
 async def personal_stats(
     request: Request,
-    token: Annotated[TokenPayload, Depends(get_request_user)],
+    token: Token,
     session: DBSession,
 ) -> tuple[str, int, dict, list[dict]]:
     user_id = token.user_id

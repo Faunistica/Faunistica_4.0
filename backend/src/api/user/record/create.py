@@ -1,17 +1,14 @@
 import logging
 from datetime import UTC, datetime
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 
-from api.dependencies import DBSession
+from api.dependencies import DBSession, Token
 from api.rate_limiter import limiter
-from core.security import get_request_user
 from core.utils import clean_value
 from repository import record
 from repository.user import get_user
 from schemas.common import Message
-from schemas.jwt import TokenPayload
 from schemas.records import InsertRecordsRequest
 from service import geo, specimen
 
@@ -24,7 +21,7 @@ router = APIRouter()
 async def create_record(
     request: Request,
     data: InsertRecordsRequest,
-    token: Annotated[TokenPayload, Depends(get_request_user)],
+    token: Token,
     session: DBSession,
 ) -> Message:
     north = geo.parse_coordinate(data.north)
