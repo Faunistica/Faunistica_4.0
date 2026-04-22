@@ -33,10 +33,25 @@ async def is_password_correct(
     return check_password_hash(user_pass, user_hash)
 
 
-async def get_user(session: AsyncSession, user_id: int) -> User:
+async def get_user_unsafe(session: AsyncSession, user_id: int) -> User:
+    """
+    THIS METHOD WILL THROW IN USER DOESN'T EXIST
+    ONLY USE IN TELEGRAM BOT
+    """
+
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
+
+    # NOTE: i'm not sure if this is better then before
+    # maybe some more robust error handling is required here and in similar places
     return result.scalar_one()
+
+
+async def get_user(session: AsyncSession, user_id: int) -> User | None:
+    stmt = select(User).where(User.id == user_id)
+    result = await session.execute(stmt)
+
+    return result.scalar_one_or_none()
 
 
 async def get_current_publication(session: AsyncSession, user_id: int) -> Publ | None:

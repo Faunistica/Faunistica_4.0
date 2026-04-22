@@ -53,6 +53,11 @@ async def get_next_publication(
     user_id = token.user_id
     user = await get_user(session, user_id)
 
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
     if user.publ_id is not None and not await user_filled_publication(
         session, user_id, user.publ_id
     ):

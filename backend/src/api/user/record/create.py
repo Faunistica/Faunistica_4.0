@@ -1,7 +1,7 @@
 import logging
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, status
 
 from core.dependencies import DBSession, TokenUser
 from core.rate_limiter import limiter
@@ -24,13 +24,19 @@ async def create_record(
     token: TokenUser,
     session: DBSession,
 ) -> Message:
+    user = await get_user(session, token.user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
     north = geo.parse_coordinate(data.north)
     east = geo.parse_coordinate(data.east)
     sp, num = specimen.parse(clean_value(data.specimens))
-    user_info = await get_user(session, token.user_id)
+
     record_json = {
-        "publ_id": user_info.publ_id,
-        "user_id": user_info.id,
+        "publ_id": user.publ_id,
+        "user_id": user.id,
         "datetime": datetime.now(UTC).replace(tzinfo=None, microsecond=0),
         "ip": None,
         "errors": None,
