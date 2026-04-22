@@ -26,6 +26,7 @@ async def list_records(
 ) -> StreamingResponse:
     user_id = token.user_id
     username = token.username
+
     try:
         records = await record_repo.get_user_records(session, user_id)
 

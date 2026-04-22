@@ -9,7 +9,7 @@ from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import get_request_user
 from core.utils import clean_value
-from repository.record import add_record_from_json
+from repository import record
 from repository.user import get_user
 from schemas.common import Message
 from schemas.jwt import TokenPayload
@@ -22,7 +22,7 @@ router = APIRouter()
 
 @router.post("/")
 @limiter.limit("5/minute")
-async def create_record(  # noqa: PLR0913
+async def create_record(
     request: Request,
     data: InsertRecordsRequest,
     token: Annotated[TokenPayload, Depends(get_request_user)],
@@ -78,7 +78,7 @@ async def create_record(  # noqa: PLR0913
     }
 
     try:
-        await add_record_from_json(session, record_json)
+        await record.create_record(session, record_json)
         return Message(message="ok")
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

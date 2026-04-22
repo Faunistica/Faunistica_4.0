@@ -2,8 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
-from core.config import settings
-from core.security import create_access_token, create_refresh_token, verify_token
+from core.security import set_response_token_cookies, verify_token
 from schemas.common import Message
 from schemas.jwt import TokenPayload
 
@@ -31,27 +30,6 @@ def refresh(
     username = payload.username
 
     token_payload = TokenPayload(user_id=user_id, username=username)
-    new_access_token = create_access_token(token_payload)
-    new_refresh_token = create_refresh_token(token_payload)
-
-    response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        secure=True,
-        samesite="strict",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_SECONDS,
-        path="/api",
-    )
-
-    response.set_cookie(
-        key="refresh_token",
-        value=new_refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="strict",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_SECONDS,
-        path="/api",
-    )
+    set_response_token_cookies(response, token_payload)
 
     return Message(message="Access token refreshed")

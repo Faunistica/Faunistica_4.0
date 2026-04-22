@@ -5,9 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.rate_limiter import limiter
-from core.config import settings
 from core.database import get_session
-from core.security import create_access_token, create_refresh_token
+from core.security import set_response_token_cookies
 from repository.user import find_user_by_username, is_pass_correct
 from schemas.common import LoginRequest, Message
 from schemas.jwt import TokenPayload
@@ -35,27 +34,6 @@ async def login(
         raise HTTPException(status_code=401, detail="Wrong password")
 
     token_payload = TokenPayload(user_id=user.id, username=data.username)
-    access_token = create_access_token(token_payload)
-    refresh_token = create_refresh_token(token_payload)
-
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=True,
-        samesite="strict",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_SECONDS,
-        path="/",
-    )
-
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="strict",
-        max_age=settings.REFRESH_TOKEN_EXPIRE_SECONDS,
-        path="/",
-    )
+    set_response_token_cookies(response, token_payload)
 
     return Message(message="ok")

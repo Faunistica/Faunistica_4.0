@@ -10,7 +10,7 @@ from models import Record
 logger = logging.getLogger(__name__)
 
 
-async def add_record_from_json(session: AsyncSession, record_json: dict) -> None:
+async def create_record(session: AsyncSession, record_json: dict) -> None:
     record = Record(**record_json)
     session.add(record)
     await session.commit()
@@ -22,9 +22,7 @@ async def get_user_records(session: AsyncSession, user_id: int) -> Sequence[Reco
     return result.scalars().all()
 
 
-async def remove_record_row_by_id(
-    session: AsyncSession, record_id: int, user_id: int
-) -> bool:
+async def delete_record(session: AsyncSession, record_id: int, user_id: int) -> bool:
     stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
     result = await session.execute(stmt)
     record = result.scalar_one_or_none()
@@ -36,7 +34,7 @@ async def remove_record_row_by_id(
     return False
 
 
-async def get_record_by_id(
+async def get_record(
     session: AsyncSession, record_id: int, user_id: int
 ) -> Record | None:
     stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
@@ -44,7 +42,8 @@ async def get_record_by_id(
     return result.scalar_one_or_none()
 
 
-async def edit_record_by_id(
+# FIXME: wtf
+async def update_record(
     session: AsyncSession, record_id: int, user_id: int, new_data: dict
 ) -> bool:
     stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))

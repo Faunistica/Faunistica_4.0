@@ -1,10 +1,10 @@
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Literal
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, Response, status
 from jose import ExpiredSignatureError, JWTError, jwt
 from pydantic import ValidationError
 
@@ -27,6 +27,31 @@ def check_password_hash(user_pass: str, db_hash: str) -> bool:
     except VerifyMismatchError:
         return False
     return True
+
+
+def set_response_token_cookies(response: Response, payload: TokenPayload) -> None:
+    access_token = create_access_token(payload)
+    refresh_token = create_refresh_token(payload)
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_SECONDS,
+        path="/api",
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_SECONDS,
+        path="/api",
+    )
 
 
 def create_access_token(payload: TokenPayload) -> str:
@@ -102,10 +127,13 @@ def get_request_user(
     return payload
 
 
-def validate_user_id(
-    user_id: int,
+def validate_user_id_path(
+    user_id: int | Literal["me"],
     token: Annotated[TokenPayload, Depends(get_request_user)],
 ) -> None:
+    if user_id == "me":
+        return
+
     if user_id != token.user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"

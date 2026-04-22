@@ -8,13 +8,14 @@ from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import get_request_user
 from repository.publication import user_filled_publication
-from repository.user import get_user, get_username_and_publications, update_user
+from repository.user import get_current_publication, get_user, update_user
 from schemas.common import Publication
 from schemas.jwt import TokenPayload
 
+PUBLICATION_BASE_URL = "https://faunistica.ru/files/"
+
 logger = logging.getLogger(__name__)
 router = APIRouter()
-base_url = "https://faunistica.ru/files/"
 
 
 @router.get("/publication")
@@ -24,20 +25,22 @@ async def get_publication(
     token: Annotated[TokenPayload, Depends(get_request_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Publication:
-    try:
-        data = await get_username_and_publications(session, token.user_id)
+    data = await get_current_publication(session, token.user_id)
 
-        return Publication(
-            author=data["publication"]["author"],
-            year=data["publication"]["year"],
-            name=data["publication"]["name"],
-            pdf_file=base_url + data["publication"]["pdf_file"],
-        )
-    except Exception as e:
-        logger.error(f"HTTP Error: {e}", exc_info=True)
+    if data is None:
         raise HTTPException(
-            status_code=500, detail=f"Server database error: {str(e)}"
-        ) from e
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No publication is assigned to user",
+        )
+
+    return Publication(
+        author=data.author,
+        year=str(data.year) if data.year is not None else None,
+        name=data.name,
+        pdf_file=PUBLICATION_BASE_URL + data.pdf_file
+        if data.pdf_file is not None
+        else None,
+    )
 
 
 @router.get("/publication/next")

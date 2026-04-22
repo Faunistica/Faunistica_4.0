@@ -39,27 +39,11 @@ async def get_user(session: AsyncSession, user_id: int) -> User:
     return result.scalar_one()
 
 
-# FIXME: N+1, dict as return type
-async def get_username_and_publications(session: AsyncSession, user_id: int) -> dict:
-    user = await get_user(session, user_id)
-    if not user:
-        return {"error": "User not found"}
+async def get_current_publication(session: AsyncSession, user_id: int) -> Publ | None:
+    stmt = select(Publ).join(User.publ_id).where(User.id == user_id)
+    result = await session.execute(stmt)
 
-    data: dict[str, str | dict | None] = {"user_name": user.name, "publication": None}
-
-    if user.publ_id:
-        stmt = select(Publ).filter_by(id=user.publ_id)
-        result = await session.execute(stmt)
-        publication = result.scalar_one_or_none()
-        if publication is not None:
-            data["publication"] = {
-                "author": publication.author,
-                "year": str(publication.year),
-                "name": publication.name,
-                "pdf_file": publication.pdf_file,
-            }
-
-    return data
+    return result.scalar_one_or_none()
 
 
 async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> None:
