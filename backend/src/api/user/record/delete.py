@@ -2,10 +2,9 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.dependencies import DBSession
 from api.rate_limiter import limiter
-from core.database import get_session
 from core.security import get_request_user
 from repository.record import delete_record
 from schemas.common import Message
@@ -21,7 +20,7 @@ async def delete_record(
     request: Request,
     record_id: int,
     token: Annotated[TokenPayload, Depends(get_request_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: DBSession,
 ) -> Message:
     try:
         is_success = await delete_record(session, record_id, token.user_id)

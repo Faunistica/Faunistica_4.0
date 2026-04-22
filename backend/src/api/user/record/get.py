@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.dependencies import DBSession
 from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import get_request_user
@@ -21,7 +22,7 @@ async def get_record(
     request: Request,
     record_id: int,
     token: Annotated[TokenPayload, Depends(get_request_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: DBSession,
 ) -> GetRecordResponse:
     try:
         record_data = await record.get_record(session, record_id, token.user_id)

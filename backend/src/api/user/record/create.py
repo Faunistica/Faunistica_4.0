@@ -3,10 +3,9 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.dependencies import DBSession
 from api.rate_limiter import limiter
-from core.database import get_session
 from core.security import get_request_user
 from core.utils import clean_value
 from repository import record
@@ -26,7 +25,7 @@ async def create_record(
     request: Request,
     data: InsertRecordsRequest,
     token: Annotated[TokenPayload, Depends(get_request_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: DBSession,
 ) -> Message:
     north = geo.parse_coordinate(data.north)
     east = geo.parse_coordinate(data.east)

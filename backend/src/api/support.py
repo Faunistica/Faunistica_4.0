@@ -3,12 +3,10 @@ from typing import Annotated
 
 import aiohttp
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_404_NOT_FOUND
 
-from api.dependencies import get_http_session
+from api.dependencies import DBSession, get_http_session
 from api.rate_limiter import limiter
-from core.database import get_session
 from repository.user import find_user_by_username
 from schemas.common import Message, SupportRequest
 from service import support
@@ -22,7 +20,7 @@ router = APIRouter(prefix="/support", tags=["support"])
 async def submit_support(  # noqa: PLR0913
     request: Request,
     data: SupportRequest,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: DBSession,
     http_session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
 ) -> Message:
     try:

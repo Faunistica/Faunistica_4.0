@@ -1,11 +1,9 @@
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, HTTPException, Request, Response
 
+from api.dependencies import DBSession
 from api.rate_limiter import limiter
-from core.database import get_session
 from core.security import set_response_token_cookies
 from repository.user import find_user_by_username, is_password_correct
 from schemas.common import LoginRequest, Message
@@ -22,7 +20,7 @@ async def login(
     request: Request,
     response: Response,
     data: LoginRequest,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: DBSession,
 ) -> Message:
     user = await find_user_by_username(session, data.username)
     if user is None:

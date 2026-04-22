@@ -4,10 +4,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.dependencies import DBSession
 from api.rate_limiter import limiter
-from core.database import get_session
 from core.security import get_request_user
 from repository import record as record_repo
 from schemas.jwt import TokenPayload
@@ -22,7 +21,7 @@ router = APIRouter()
 async def list_records(
     request: Request,
     token: Annotated[TokenPayload, Depends(get_request_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: DBSession,
 ) -> StreamingResponse:
     user_id = token.user_id
     username = token.username
