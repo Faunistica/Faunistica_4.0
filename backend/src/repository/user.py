@@ -51,6 +51,7 @@ async def get_current_publication(session: AsyncSession, user_id: int) -> Publ |
 async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> None:
     user = User(id=user_id, reg_stat=reg_stat, reg_run=datetime.now())
     session.add(user)
+
     await session.commit()
 
 
@@ -115,73 +116,3 @@ async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
     stats["most_common_species"] = result.scalar()
 
     return stats
-
-
-async def get_personal_stats(session: AsyncSession, user_id: int) -> list[dict]:
-    stmt = (
-        select(
-            Record.id,
-            Record.publ_id,
-            Record.datetime,
-            Record.district,
-            Record.region,
-            Record.genus,
-            Record.species,
-            Record.quantity,
-            Record.year,
-            Record.month,
-            Record.day,
-            Record.year_end,
-            Record.month_end,
-            Record.day_end,
-            Publ.author,
-        )
-        .join(Publ, Publ.id == Record.publ_id)
-        .where(and_(Record.user_id == user_id, Record.type == "rec_ok"))
-        .order_by(Record.datetime.desc())
-    )
-
-    result = await session.execute(stmt)
-    rows = result.all()
-
-    records = []
-    for row in rows:
-        date = format_event_date(
-            EventDate(
-                yy=row.year,
-                mm=row.month,
-                dd=row.day,
-                yy_end=row.year_end,
-                mm_end=row.month_end,
-                dd_end=row.day_end,
-            )
-        )
-        location_parts = []
-        if row.district is not None:
-            location_parts.append(row.district)
-        if row.region is not None:
-            location_parts.append(row.region)
-
-        location = ", ".join(location_parts) if location_parts else "Не заполнено"
-
-        species_parts = []
-        if row.genus is not None:
-            species_parts.append(row.genus)
-        if row.species is not None:
-            species_parts.append(row.species)
-
-        species = " ".join(species_parts) if species_parts else "Не заполнено"
-
-        records.append(
-            {
-                "id": row.id,
-                "date": str(row.datetime),
-                "author": row.author,
-                "species": species,
-                "abundance": row.quantity,
-                "locality": location,
-                "even_date": date,
-            }
-        )
-
-    return records

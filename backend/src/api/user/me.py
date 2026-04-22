@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 
-from api.dependencies import DBSession, Token
-from repository.user import get_personal_stats, get_user, get_user_stats
+from api.dependencies import Token
+from schemas.common import User
 
 router = APIRouter()
 
@@ -10,11 +10,5 @@ router = APIRouter()
 async def personal_stats(
     request: Request,
     token: Token,
-    session: DBSession,
-) -> tuple[str, int, dict, list[dict]]:
-    user_id = token.user_id
-    user_info = await get_user(session, user_id)
-    username = user_info.name
-    stats = await get_user_stats(session, user_id)
-    table_stats = await get_personal_stats(session, user_id)
-    return username, user_id, stats, table_stats
+) -> User:
+    return User(user_id=token.user_id, username=token.username)
