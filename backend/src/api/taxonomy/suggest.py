@@ -17,7 +17,7 @@ def suggest_taxon(
     data: SuggestTaxonRequest,
 ) -> SuggestTaxonResponse:
     try:
-        suggestions = taxon.suggest(data.field, data.text, data.filters or {})
+        suggestions = taxon.suggest(data.field, data.text, data.filters)
         return SuggestTaxonResponse(suggestions=suggestions)
     except ValueError as e:
         logger.error(f"Value error: {e}", exc_info=True)

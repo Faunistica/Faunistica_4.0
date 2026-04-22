@@ -1,4 +1,16 @@
+from typing import Literal
+
 from pydantic import BaseModel
+
+
+class SpecimenCount(BaseModel):
+    gender: Literal["male", "female", "undefined"]
+    maturity: Literal["adult", "juvenile"]
+    count: float | None = None
+
+
+class SpecimenCounts(BaseModel):
+    specimens: list[SpecimenCount] = []
 
 
 class InsertRecordsRequest(BaseModel):
@@ -31,7 +43,7 @@ class InsertRecordsRequest(BaseModel):
     region: str | None = None
     selective_gain: str | None = None
     species: str | None = None
-    specimens: dict[str, float | None] | None = None
+    specimens: SpecimenCounts | None = None
     taxonomic_notes: str | None = None
     type_status: str | None = None
 

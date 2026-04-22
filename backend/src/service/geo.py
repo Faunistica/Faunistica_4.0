@@ -1,12 +1,11 @@
 import logging
 import re
-from typing import Any
 
 from fastapi import HTTPException
 from geopy.exc import GeocoderTimedOut
 from geopy.geocoders import Nominatim
 
-from schemas.geo import Location
+from schemas.geo import GeoFilters, RegionData, ReverseGeoCodeLocation
 
 logger = logging.getLogger(__name__)
 
@@ -52,36 +51,35 @@ def parse_coordinate(coord: str | None) -> float | None:
 
 
 async def get_location_suggestions(
-    location_data: list[dict[str, Any]],
+    location_data: list[RegionData],
     field: str,
     text: str,
-    filters: dict | None = None,
+    filters: GeoFilters | None = None,
 ) -> list[str]:
     if not location_data:
         return []
 
     text = text.lower().strip()
-    filters = filters or {}
+    region_filter = filters.region if filters else None
 
     if field == "region":
-        return [r["region"] for r in location_data if text in r["region"].lower()][:100]
+        return [r.region for r in location_data if text in r.region.lower()][:100]
 
     if field == "district":
-        region_filter = filters.get("region")
         districts = []
 
         for entry in location_data:
-            if region_filter and entry["region"] != region_filter:
+            if region_filter and entry.region != region_filter:
                 continue
 
-            districts.extend([d for d in entry["districts"] if text in d.lower()])
+            districts.extend([d for d in entry.districts if text in d.lower()])
 
         return districts[:200]
 
     return []
 
 
-def get_location_names(lat: float, lon: float) -> Location:
+def get_location_names(lat: float, lon: float) -> ReverseGeoCodeLocation:
     geolocator = Nominatim(user_agent="geoapi", timeout=10)
 
     try:
@@ -100,7 +98,7 @@ def get_location_names(lat: float, lon: float) -> Location:
         region = address.get("state", address.get("region", None))
         district = address.get("county", address.get("district", None))
 
-        return Location(country=country, region=region, district=district)
+        return ReverseGeoCodeLocation(country=country, region=region, district=district)
     except GeocoderTimedOut as e:
         logger.error(f"GeocoderTimedOut: {e}", exc_info=True)
         raise HTTPException(status_code=408, detail="Geocoding service timeout") from e

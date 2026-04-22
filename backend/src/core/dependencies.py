@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 import aiohttp
 from fastapi import Depends, Request
@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_session
 from core.security import get_request_user
+from schemas.geo import RegionData
 from schemas.user import UserMinimal
 
 
@@ -13,7 +14,7 @@ def get_http_session(request: Request) -> aiohttp.ClientSession:
     return request.app.state.http_session
 
 
-def get_location_data(request: Request) -> list[dict[str, Any]]:
+def get_location_data(request: Request) -> list[RegionData]:
     return request.app.state.location_data
 
 

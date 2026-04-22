@@ -15,6 +15,7 @@ from api import api_router
 from core.config import settings
 from core.database import init_db, ping_db
 from core.rate_limiter import limiter, rate_limit_handler
+from schemas.geo import RegionData
 
 log_format = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 
@@ -96,7 +97,8 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
     if json_path.exists():
         try:
             with open(json_path, encoding="utf-8") as f:  # noqa: ASYNC230
-                app.state.location_data = json.load(f)
+                raw_data = json.load(f)
+                app.state.location_data = [RegionData(**item) for item in raw_data]
             logger.info("Location data loaded")
         except Exception as e:
             logger.error(f"Failed to load location data: {e}", exc_info=True)

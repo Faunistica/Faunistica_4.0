@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 
 from core.config import settings
-from schemas.taxonomy import AutofillTaxonResponse
+from schemas.taxonomy import AutofillTaxonResponse, TaxonomyFilters
 
 logger = logging.getLogger(__name__)
 
@@ -11,20 +11,24 @@ csv_path = settings.SPECIES_CSV_PATH
 df = pd.read_csv(csv_path, usecols=["family", "genus", "species"])
 
 
-def suggest(field: str, text: str, filters: dict[str, str | None]) -> list[str]:
+def suggest(field: str, text: str, filters: TaxonomyFilters | None) -> list[str]:
     if field not in ["species", "genus", "family"]:
         logger.warning("Invalid field. Must be 'species', 'genus', or 'family'")
         raise ValueError("Invalid field. Must be 'species', 'genus', or 'family'.")
 
+    print(filters)
+
     query_df = df.copy()
 
-    if family := filters.get("family"):
+    if filters is not None and filters.family is not None:
         query_df = query_df[
-            query_df["family"].str.contains(family, case=False, na=False)
+            query_df["family"].str.contains(filters.family, case=False, na=False)
         ]
 
-    if genus := filters.get("genus"):
-        query_df = query_df[query_df["genus"].str.contains(genus, case=False, na=False)]
+    if filters is not None and filters.genus is not None:
+        query_df = query_df[
+            query_df["genus"].str.contains(filters.genus, case=False, na=False)
+        ]
 
     suggestions = query_df[field]
 

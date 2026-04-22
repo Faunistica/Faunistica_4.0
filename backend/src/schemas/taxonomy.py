@@ -1,10 +1,15 @@
 from pydantic import BaseModel
 
 
+class TaxonomyFilters(BaseModel):
+    family: str | None = None
+    genus: str | None = None
+
+
 class SuggestTaxonRequest(BaseModel):
     field: str
     text: str
-    filters: dict[str, str | None] | None = None
+    filters: TaxonomyFilters | None = None
 
 
 class SuggestTaxonResponse(BaseModel):

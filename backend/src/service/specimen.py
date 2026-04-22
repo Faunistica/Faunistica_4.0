@@ -1,5 +1,8 @@
-def parse(specimens: dict[str, float | None] | None) -> tuple[str | None, int]:
-    if specimens is None:
+from schemas.records import SpecimenCounts
+
+
+def parse(specimens: SpecimenCounts | None) -> tuple[str | None, int]:
+    if specimens is None or not specimens.specimens:
         return None, 0
 
     entries = []
@@ -16,12 +19,19 @@ def parse(specimens: dict[str, float | None] | None) -> tuple[str | None, int]:
             entries.append(f"{num} {label}")
             total += count
 
-    add_entry(specimens.get("male_adult"), "mmm")
-    add_entry(specimens.get("female_adult"), "fff")
-    add_entry(specimens.get("male_juvenile"), "ssm")
-    add_entry(specimens.get("female_juvenile"), "ssf")
-    add_entry(specimens.get("undefined_adult"), "adu")
-    add_entry(specimens.get("undefined_juvenile"), "juv")
+    gender_maturity_map = {
+        ("male", "adult"): "mmm",
+        ("female", "adult"): "fff",
+        ("male", "juvenile"): "ssm",
+        ("female", "juvenile"): "ssf",
+        ("undefined", "adult"): "adu",
+        ("undefined", "juvenile"): "juv",
+    }
+
+    for spec in specimens.specimens:
+        label = gender_maturity_map.get((spec.gender, spec.maturity))
+        if label:
+            add_entry(spec.count, label)
 
     if entries:
         all_whole = all(
