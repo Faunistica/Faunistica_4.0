@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from core.rate_limiter import limiter
 from schemas.taxonomy import AutofillTaxonRequest, AutofillTaxonResponse
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 @router.post("/autofill")
 @limiter.limit("10/second")
 def autofill(
+    request: Request,
     data: AutofillTaxonRequest,
 ) -> AutofillTaxonResponse:
     try:

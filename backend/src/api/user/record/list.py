@@ -1,7 +1,8 @@
 import logging
 from datetime import datetime
+from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 
 from core.dependencies import DBSession, TokenUser
@@ -19,7 +20,11 @@ async def list_records(
     request: Request,
     token: TokenUser,
     session: DBSession,
+    type: str = "json",
 ) -> StreamingResponse:
+    if type != "excel":
+        raise HTTPException(status_code=400, detail="Only excel export is supported")
+
     user_id = token.user_id
     username = token.username
 

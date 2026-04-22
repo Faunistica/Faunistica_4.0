@@ -12,10 +12,9 @@ from schemas.common import Publication
 PUBLICATION_BASE_URL = "https://faunistica.ru/files/"
 
 logger = logging.getLogger(__name__)
-router = APIRouter(
-    prefix="/{user_id}",
-    dependencies=[Depends(validate_user_id_path)],
-)
+
+# TODO: improve user_id type in generated api docs
+router = APIRouter(dependencies=[Depends(validate_user_id_path)], tags=["publications"])
 
 
 @router.get("/publication")
@@ -66,9 +65,11 @@ async def get_next_publication(
             status_code=status.HTTP_409_CONFLICT, detail="Publication is not filled"
         )
 
-    if user.items is None or len(user.items) == 0:
+    if user.publ_id is None or user.items is None or len(user.items) == 0:
         logger.warning("No publications available for user %d", user_id)
-        raise HTTPException(status_code=404, detail="No publications available")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="No publications available"
+        )
 
     items = user.items.split("|")
     num_publ = items.index(str(user.publ_id)) if str(user.publ_id) in items else -1

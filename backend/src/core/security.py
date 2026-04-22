@@ -138,13 +138,13 @@ def get_request_user(
 
 
 def validate_user_id_path(
-    sub: int | Literal["me"],
+    user_id: int | Literal["me"],
     token: Annotated[TokenPayload, Depends(get_request_user)],
 ) -> None:
-    if sub == "me":
+    if user_id == "me":
         return
 
-    if sub != token.sub:
+    if user_id != token.sub:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )

@@ -5,7 +5,7 @@ from core.security import validate_user_id_path
 from . import create, delete, get, list, update
 
 router = APIRouter(
-    prefix="/{user_id}/record",
+    prefix="/record",
     tags=["records"],
     dependencies=[Depends(validate_user_id_path)],
 )
