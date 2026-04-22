@@ -1,9 +1,13 @@
+from enum import Enum
+
 from pydantic import BaseModel
 
 
-class User(BaseModel):
-    user_id: int
-    username: str
+class Unset(Enum):
+    TOKEN = 0
+
+
+UNSET = Unset.TOKEN
 
 
 class LoginRequest(BaseModel):

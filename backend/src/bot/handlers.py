@@ -30,6 +30,7 @@ from repository.user import (
     get_user_unsafe,
     update_user,
 )
+from schemas.user import UpdateUser
 
 YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
 NO_WORDS = ["no", "nope", "нет", "не", "refuse"]
@@ -162,7 +163,7 @@ class Handlers:
                 )
                 await state.set_state(RegistrationStates.waiting_for_agreement)
             elif user.reg_stat is None:
-                await update_user(session, user_id=message.from_user.id, reg_stat=2)
+                await update_user(session, message.from_user.id, UpdateUser(reg_stat=2))
 
                 await message.answer(Messages.old_user(user.name))
 
@@ -243,10 +244,12 @@ class Handlers:
 
                     await update_user(
                         session,
-                        user_id=message.from_user.id,
-                        hash=hashed_password,
-                        hash_date=datetime.now(),
-                        publ_id=publ_id,
+                        message.from_user.id,
+                        UpdateUser(
+                            hash=hashed_password,
+                            hash_date=datetime.now(),
+                            publ_id=publ_id,
+                        ),
                     )
 
                     await message.answer(
@@ -255,7 +258,7 @@ class Handlers:
                         disable_web_page_preview=True,
                     )
 
-                await update_user(session, user_id=message.from_user.id, reg_stat=1)
+                await update_user(session, message.from_user.id, UpdateUser(reg_stat=1))
                 await log_action(
                     session,
                     user_id=message.from_user.id,
@@ -311,8 +314,8 @@ class Handlers:
                 if (num_publ != -1) and (num_publ != len(items) - 1):
                     await update_user(
                         session,
-                        user_id=message.from_user.id,
-                        publ_id=int(items[num_publ + 1]),
+                        message.from_user.id,
+                        UpdateUser(publ_id=int(items[num_publ + 1])),
                     )
                     await message.answer(Messages.accept_next_publ())
 
@@ -414,7 +417,7 @@ class Handlers:
                 return
 
         async for session in self.db_session_factory():
-            await update_user(session, user_id=message.from_user.id, reg_stat=7)
+            await update_user(session, message.from_user.id, UpdateUser(reg_stat=7))
         await message.answer(
             Messages.support_request(), reply_markup=Keyboards.remove()
         )
@@ -504,7 +507,7 @@ class Handlers:
 
             await state.clear()
 
-            await update_user(session, user_id=message.from_user.id, reg_stat=1)
+            await update_user(session, message.from_user.id, UpdateUser(reg_stat=1))
 
         await message.answer(
             Messages.rollback_completed(), reply_markup=Keyboards.remove()
@@ -657,7 +660,7 @@ class Handlers:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
         async for session in self.db_session_factory():
-            await update_user(session, user_id=message.from_user.id, reg_stat=3)
+            await update_user(session, message.from_user.id, UpdateUser(reg_stat=3))
 
         await message.answer(Messages.consent_taken())
         await message.answer(Messages.ask_name())
@@ -687,9 +690,11 @@ class Handlers:
             else:
                 await update_user(
                     session,
-                    user_id=message.from_user.id,
-                    name=name_msg,
-                    reg_stat=4,
+                    message.from_user.id,
+                    UpdateUser(
+                        name=name_msg,
+                        reg_stat=4,
+                    ),
                 )
                 await message.answer(Messages.greeting(name_msg))
                 await message.answer(Messages.ask_age())
@@ -717,9 +722,11 @@ class Handlers:
             async for session in self.db_session_factory():
                 await update_user(
                     session,
-                    user_id=message.from_user.id,
-                    age=int(age_msg),
-                    reg_stat=5,
+                    message.from_user.id,
+                    UpdateUser(
+                        age=int(age_msg),
+                        reg_stat=5,
+                    ),
                 )
             await message.answer(Messages.age_accepted())
 
@@ -737,7 +744,7 @@ class Handlers:
 
         async for session in self.db_session_factory():
             await update_user(
-                session, user_id=message.from_user.id, comm=comm_msg, reg_stat=6
+                session, message.from_user.id, UpdateUser(comm=comm_msg, reg_stat=6)
             )
         await message.answer(Messages.publication_preferences_accepted(comm_msg))
         await message.answer(Messages.ask_language())
@@ -767,18 +774,22 @@ class Handlers:
                 await message.answer(Messages.no_publication())
                 await update_user(
                     session,
-                    user_id=message.from_user.id,
-                    reg_stat=1,
-                    reg_end=datetime.now(),
+                    message.from_user.id,
+                    UpdateUser(
+                        reg_stat=1,
+                        reg_end=datetime.now(),
+                    ),
                 )
 
             await update_user(
                 session,
-                user_id=message.from_user.id,
-                lng=lang_value,
-                items=items_str,
-                reg_stat=1,
-                reg_end=datetime.now(),
+                message.from_user.id,
+                UpdateUser(
+                    lng=lang_value,
+                    items=items_str,
+                    reg_stat=1,
+                    reg_end=datetime.now(),
+                ),
             )
 
         await message.answer(Messages.registration_complete())
@@ -799,7 +810,7 @@ class Handlers:
         if message.text.lower().strip() in ["cancel", "отмена"]:
             await message.answer(Messages.cancellation_support_request())
             async for session in self.db_session_factory():
-                await update_user(session, user_id=message.from_user.id, reg_stat=1)
+                await update_user(session, message.from_user.id, UpdateUser(reg_stat=1))
 
             await state.clear()
             return
@@ -811,7 +822,7 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            await update_user(session, user_id=message.from_user.id, reg_stat=1)
+            await update_user(session, message.from_user.id, UpdateUser(reg_stat=1))
 
         await message.answer(
             Messages.support_request_received(),
@@ -861,9 +872,11 @@ class Handlers:
 
                 await update_user(
                     session,
-                    user_id=message.from_user.id,
-                    name=name_msg,
-                    reg_stat=1,
+                    message.from_user.id,
+                    UpdateUser(
+                        name=name_msg,
+                        reg_stat=1,
+                    ),
                 )
 
                 await message.answer(Messages.rename_success(name_msg))
@@ -892,9 +905,11 @@ class Handlers:
             async for session in self.db_session_factory():
                 await update_user(
                     session,
-                    user_id=message.from_user.id,
-                    age=int(age_msg),
-                    reg_stat=1,
+                    message.from_user.id,
+                    UpdateUser(
+                        age=int(age_msg),
+                        reg_stat=1,
+                    ),
                 )
             await message.answer(Messages.age_accepted())
 
@@ -922,9 +937,11 @@ class Handlers:
         async for session in self.db_session_factory():
             await update_user(
                 session,
-                user_id=message.from_user.id,
-                lng=lang_value,
-                reg_stat=1,
+                message.from_user.id,
+                UpdateUser(
+                    lng=lang_value,
+                    reg_stat=1,
+                ),
             )
 
         await message.answer(Messages.language_selection_accepted())
@@ -940,7 +957,7 @@ class Handlers:
         comm_msg = message.text.strip()
         async for session in self.db_session_factory():
             await update_user(
-                session, user_id=message.from_user.id, comm=comm_msg, reg_stat=1
+                session, message.from_user.id, UpdateUser(comm=comm_msg, reg_stat=1)
             )
         await message.answer(Messages.publication_preferences_accepted(comm_msg))
         await message.answer(Messages.go_back_to_sociology())
@@ -965,9 +982,11 @@ class Handlers:
         async for session in self.db_session_factory():
             await update_user(
                 session,
-                user_id=message.from_user.id,
-                sex=gender_value,
-                reg_stat=1,
+                message.from_user.id,
+                UpdateUser(
+                    sex=gender_value,
+                    reg_stat=1,
+                ),
             )
 
         await message.answer(Messages.gratitude())
@@ -993,9 +1012,11 @@ class Handlers:
         async for session in self.db_session_factory():
             await update_user(
                 session,
-                user_id=message.from_user.id,
-                rating=rating_value,
-                reg_stat=1,
+                message.from_user.id,
+                UpdateUser(
+                    rating=rating_value,
+                    reg_stat=1,
+                ),
             )
 
         await message.answer(Messages.gratitude())
@@ -1017,9 +1038,11 @@ class Handlers:
         async for session in self.db_session_factory():
             await update_user(
                 session,
-                user_id=message.from_user.id,
-                region=region_msg,
-                reg_stat=1,
+                message.from_user.id,
+                UpdateUser(
+                    region=region_msg,
+                    reg_stat=1,
+                ),
             )
 
         await message.answer(Messages.region_accepted())
@@ -1041,9 +1064,11 @@ class Handlers:
         async for session in self.db_session_factory():
             await update_user(
                 session,
-                user_id=message.from_user.id,
-                email=email_msg,
-                reg_stat=1,
+                message.from_user.id,
+                UpdateUser(
+                    email=email_msg,
+                    reg_stat=1,
+                ),
             )
 
         await message.answer(Messages.email_accepted())

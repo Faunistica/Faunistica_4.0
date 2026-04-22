@@ -10,8 +10,8 @@ from jwt import DecodeError
 from pydantic import ValidationError
 
 from core.config import settings
-from schemas.common import User
 from schemas.jwt import Token, TokenPayload
+from schemas.user import UserMinimal
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ def verify_token(token: str) -> Token:
 
 def get_request_user(
     request: Request,
-) -> User:
+) -> UserMinimal:
     token = request.cookies.get("access_token")
     if not token:
         logger.warning("Missing access token")
@@ -135,7 +135,7 @@ def get_request_user(
         )
 
     try:
-        return User(user_id=int(payload.sub), username=payload.username)
+        return UserMinimal(user_id=int(payload.sub), username=payload.username)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"

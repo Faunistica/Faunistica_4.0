@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_session
 from core.security import get_request_user
-from schemas.common import User
+from schemas.user import UserMinimal
 
 
 def get_http_session(request: Request) -> aiohttp.ClientSession:
@@ -18,5 +18,5 @@ def get_location_data(request: Request) -> list[dict[str, Any]]:
 
 
 type DBSession = Annotated[AsyncSession, Depends(get_session)]
-type TokenUser = Annotated[User, Depends(get_request_user)]
+type TokenUser = Annotated[UserMinimal, Depends(get_request_user)]
 type HTTPClient = Annotated[aiohttp.ClientSession, Depends(get_http_session)]

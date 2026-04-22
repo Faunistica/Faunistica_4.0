@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import Any
 
 from sqlalchemy import func, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +8,7 @@ from sqlalchemy.sql.expression import text
 
 from core.security import check_password_hash
 from models import Publ, Record, User
+from schemas.user import UpdateUser
 
 logger = logging.getLogger(__name__)
 
@@ -68,12 +68,12 @@ async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> Non
     await session.commit()
 
 
-async def update_user(
-    session: AsyncSession,
-    user_id: int,
-    **fields: Any,
-) -> None:
-    stmt = update(User).where(User.id == user_id).values(**fields)
+async def update_user(session: AsyncSession, user_id: int, data: UpdateUser) -> None:
+    stmt = (
+        update(User)
+        .where(User.id == user_id)
+        .values(**data.model_dump(exclude_unset=True))
+    )
     await session.execute(stmt)
     await session.commit()
 

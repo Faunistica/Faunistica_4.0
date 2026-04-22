@@ -8,6 +8,7 @@ from core.security import validate_user_id_path
 from repository.publication import user_filled_publication
 from repository.user import get_current_publication, get_user, update_user
 from schemas.common import Publication
+from schemas.user import UpdateUser
 
 PUBLICATION_BASE_URL = "https://faunistica.ru/files/"
 
@@ -76,6 +77,6 @@ async def get_next_publication(
 
     if (num_publ != -1) and (num_publ != len(items) - 1):
         publ_id = int(items[num_publ + 1])
-        await update_user(session, user_id, publ_id=publ_id)
+        await update_user(session, user_id, UpdateUser(publ_id=publ_id))
         return True
     return False
