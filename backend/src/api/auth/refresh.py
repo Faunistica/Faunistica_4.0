@@ -29,7 +29,7 @@ def refresh(
     user_id = payload.user_id
     username = payload.username
 
-    token_payload = TokenPayload(user_id=user_id, username=username)
+    token_payload = TokenPayload(sub=user_id, username=username)
     set_response_token_cookies(response, token_payload)
 
     return Message(message="Access token refreshed")

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import get_request_user
-from repository.record import edit_record_by_id
+from repository.record import update_record
 from schemas.common import Message
 from schemas.jwt import TokenPayload
 from schemas.records import EditRecordRequest
@@ -71,7 +71,7 @@ async def update_record(
         dump = data.model_dump()
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"
-        is_success = await edit_record_by_id(session, record_id, token.user_id, dump)
+        is_success = await update_record(session, record_id, token.user_id, dump)
 
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

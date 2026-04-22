@@ -21,10 +21,12 @@ async def find_user_by_username(session: AsyncSession, username: str) -> User | 
     return result.scalar_one_or_none()
 
 
-async def is_pass_correct(session: AsyncSession, user_id: int, user_pass: str) -> bool:
+async def is_password_correct(
+    session: AsyncSession, user_id: int, user_pass: str
+) -> bool:
     stmt = select(User.hash).where(User.id == user_id)
     result = await session.execute(stmt)
-    user_hash = result.scalar_one()
+    user_hash = result.scalar_one_or_none()
 
     if user_hash is None:
         logger.warning("trying to check password for user without one: id: %d", user_id)

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import get_request_user
-from repository.record import get_record_by_id
+from repository import record
 from schemas.jwt import TokenPayload
 from schemas.records import GetRecordResponse
 
@@ -24,7 +24,7 @@ async def get_record(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GetRecordResponse:
     try:
-        record_data = await get_record_by_id(session, record_id, token.user_id)
+        record_data = await record.get_record(session, record_id, token.user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e

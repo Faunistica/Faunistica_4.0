@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.rate_limiter import limiter
 from core.database import get_session
 from core.security import get_request_user
-from repository.record import remove_record_row_by_id
+from repository.record import delete_record
 from schemas.common import Message
 from schemas.jwt import TokenPayload
 
@@ -24,7 +24,7 @@ async def delete_record(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Message:
     try:
-        is_success = await remove_record_row_by_id(session, record_id, token.user_id)
+        is_success = await delete_record(session, record_id, token.user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e
