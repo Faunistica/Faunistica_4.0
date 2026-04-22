@@ -1,9 +1,10 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from api.dependencies import DBSession, Token
 from api.rate_limiter import limiter
+from core.security import validate_user_id_path
 from repository.publication import user_filled_publication
 from repository.user import get_current_publication, get_user, update_user
 from schemas.common import Publication
@@ -11,7 +12,10 @@ from schemas.common import Publication
 PUBLICATION_BASE_URL = "https://faunistica.ru/files/"
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(
+    prefix="/{user_id}",
+    dependencies=[Depends(validate_user_id_path)],
+)
 
 
 @router.get("/publication")
