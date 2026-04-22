@@ -1,3 +1,5 @@
+from dotenv import load_dotenv # для загрузки переменных окружения из .env файла
+load_dotenv()
 from logging.config import fileConfig
 import asyncio
 from sqlalchemy.ext.asyncio import async_engine_from_config, create_async_engine

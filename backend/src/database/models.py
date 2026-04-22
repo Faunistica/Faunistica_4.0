@@ -124,7 +124,6 @@ class Record(Base):
     collection_code: Mapped[str | None] = mapped_column("collectioncode", Text)
     recorded_by: Mapped[str | None] = mapped_column("recordedby", Text)
 
-    occurrence_remarks: Mapped[str | None] = mapped_column("occurrenceremarks", Text)
     family: Mapped[str | None] = mapped_column(Text)
     genus: Mapped[str | None] = mapped_column(Text)
     species: Mapped[str | None] = mapped_column("specificepithet", Text)
