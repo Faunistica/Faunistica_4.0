@@ -2,8 +2,8 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from api.dependencies import DBSession, Token
-from api.rate_limiter import limiter
+from core.dependencies import DBSession, Token
+from core.rate_limiter import limiter
 from core.security import validate_user_id_path
 from repository.publication import user_filled_publication
 from repository.user import get_current_publication, get_user, update_user

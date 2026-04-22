@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 
-from api.dependencies import Token
+from core.dependencies import Token
 from schemas.common import User
 
 router = APIRouter()

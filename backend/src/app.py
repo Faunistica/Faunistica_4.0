@@ -12,9 +12,9 @@ from slowapi.middleware import SlowAPIMiddleware
 
 import bot
 from api import api_router
-from api.rate_limiter import limiter, rate_limit_handler
 from core.config import settings
 from core.database import init_db, ping_db
+from core.rate_limiter import limiter, rate_limit_handler
 
 log_format = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 

@@ -2,8 +2,8 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request
 
-from api.dependencies import DBSession, Token
-from api.rate_limiter import limiter
+from core.dependencies import DBSession, Token
+from core.rate_limiter import limiter
 from repository import record
 from schemas.records import GetRecordResponse
 

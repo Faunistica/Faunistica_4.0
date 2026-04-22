@@ -3,8 +3,8 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request
 
-from api.dependencies import DBSession, Token
-from api.rate_limiter import limiter
+from core.dependencies import DBSession, Token
+from core.rate_limiter import limiter
 from core.utils import clean_value
 from repository import record
 from repository.user import get_user

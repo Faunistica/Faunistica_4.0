@@ -3,7 +3,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from api.dependencies import get_location_data
+from core.dependencies import get_location_data
 from schemas.geo import GeoSearchRequest, GeoSearchResponse
 from service import geo
 
