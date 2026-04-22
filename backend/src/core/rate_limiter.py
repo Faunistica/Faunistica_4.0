@@ -3,6 +3,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+# NOTE: also use user_id as key_func param?
 limiter = Limiter(key_func=get_remote_address)
 
 

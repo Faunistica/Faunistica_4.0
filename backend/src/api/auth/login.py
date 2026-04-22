@@ -31,7 +31,7 @@ async def login(
         logger.warning("Wrong password")
         raise HTTPException(status_code=401, detail="Wrong password")
 
-    token_payload = TokenPayload(sub=user.id, username=data.username)
+    token_payload = TokenPayload(sub=str(user.id), username=data.username)
     set_response_token_cookies(response, token_payload)
 
     return Message(message="ok")

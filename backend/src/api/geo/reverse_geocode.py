@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, Request
 
+from core.rate_limiter import limiter
 from schemas.geo import GetLocationRequest, GetLocationResponse
 from service import geo
 
@@ -10,6 +11,7 @@ router = APIRouter()
 
 
 @router.post("/reverse-geocode")
+@limiter.limit("10/second")
 async def reverse_geocode(
     request: Request,
     data: GetLocationRequest,

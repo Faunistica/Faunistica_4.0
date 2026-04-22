@@ -4,6 +4,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from core.dependencies import get_location_data
+from core.rate_limiter import limiter
 from schemas.geo import GeoSearchRequest, GeoSearchResponse
 from service import geo
 
@@ -12,6 +13,7 @@ router = APIRouter()
 
 
 @router.post("/search")
+@limiter.limit("10/second")
 async def search_geo(
     request: Request,
     data: GeoSearchRequest,

@@ -19,7 +19,7 @@ router = APIRouter(
 
 
 @router.get("/publication")
-@limiter.limit("666/minute")
+@limiter.limit("1/second")
 async def get_publication(
     request: Request,
     token: TokenUser,

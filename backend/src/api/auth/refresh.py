@@ -26,7 +26,7 @@ def refresh(
         logger.warning("Invalid refresh token")
         raise HTTPException(status_code=403, detail="Invalid refresh token")
 
-    token_payload = TokenPayload(sub=payload.sub, username=payload.username)
+    token_payload = TokenPayload(sub=str(payload.sub), username=payload.username)
     set_response_token_cookies(response, token_payload)
 
     return Message(message="Access token refreshed")

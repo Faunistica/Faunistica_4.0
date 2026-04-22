@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Request
 
 from core.dependencies import TokenUser
+from core.rate_limiter import limiter
 from schemas.common import User
 
 router = APIRouter()
 
 
 @router.get("/me")
-async def personal_stats(
+@limiter.limit("10/second")
+async def me(
     request: Request,
     token: TokenUser,
 ) -> User:

@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request
 
+from core.rate_limiter import limiter
 from schemas.taxonomy import SuggestTaxonRequest, SuggestTaxonResponse
 from service import taxon
 
@@ -10,6 +11,7 @@ router = APIRouter()
 
 
 @router.post("/suggest")
+@limiter.limit("10/second")
 def suggest_taxon(
     request: Request,
     data: SuggestTaxonRequest,

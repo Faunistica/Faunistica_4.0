@@ -2,10 +2,11 @@ import logging
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
 
+import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from fastapi import Depends, HTTPException, Request, Response, status
-from jose import ExpiredSignatureError, JWTError, jwt
+from jwt import DecodeError
 from pydantic import ValidationError
 
 from core.config import settings
@@ -67,7 +68,9 @@ def create_access_token(payload: TokenPayload) -> str:
         exp=expires,
     )
 
-    return jwt.encode(data.model_dump(), settings.JWT_SECRET.get_secret_value())
+    return jwt.encode(
+        data.model_dump(), settings.JWT_SECRET.get_secret_value(), algorithm="HS256"
+    )
 
 
 def create_refresh_token(payload: TokenPayload) -> str:
@@ -82,21 +85,27 @@ def create_refresh_token(payload: TokenPayload) -> str:
         exp=expires,
     )
 
-    return jwt.encode(data.model_dump(), settings.JWT_SECRET.get_secret_value())
+    return jwt.encode(
+        data.model_dump(), settings.JWT_SECRET.get_secret_value(), algorithm="HS256"
+    )
 
 
 # FIXME: token blacklist
 def verify_token(token: str) -> Token:
     try:
         return Token.model_validate(
-            jwt.decode(token, settings.JWT_SECRET.get_secret_value())
+            jwt.decode(
+                token,
+                settings.JWT_SECRET.get_secret_value(),
+                algorithms=["HS256"],
+            )
         )
-    except ExpiredSignatureError as e:
+    except jwt.ExpiredSignatureError as e:
         logger.warning("Token expired")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Token expired"
         ) from e
-    except JWTError as e:
+    except DecodeError as e:
         logger.warning("Invalid token %e", e)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
@@ -125,7 +134,7 @@ def get_request_user(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token type"
         )
 
-    return User(user_id=payload.sub, username=payload.username)
+    return User(user_id=int(payload.sub), username=payload.username)
 
 
 def validate_user_id_path(
