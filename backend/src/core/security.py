@@ -131,10 +131,15 @@ def get_request_user(
     if payload.type != "access":
         logger.warning("Invalid token type")
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token type"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
         )
 
-    return User(user_id=int(payload.sub), username=payload.username)
+    try:
+        return User(user_id=int(payload.sub), username=payload.username)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
+        ) from e
 
 
 def validate_user_id_path(

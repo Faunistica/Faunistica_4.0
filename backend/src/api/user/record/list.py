@@ -1,8 +1,7 @@
 import logging
 from datetime import datetime
-from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from core.dependencies import DBSession, TokenUser
