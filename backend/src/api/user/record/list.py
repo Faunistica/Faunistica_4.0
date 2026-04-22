@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 
 from api.dependencies import DBSession, Token
 from api.rate_limiter import limiter
-from repository import record as record_repo
+from repository import record
 from service import export
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ async def list_records(
     username = token.username
 
     try:
-        records = await record_repo.get_user_records(session, user_id)
+        records = await record.get_user_records(session, user_id)
 
         if not records:
             logger.warning(f"No records found for user: {username} - {user_id}")

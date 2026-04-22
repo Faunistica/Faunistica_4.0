@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from api.dependencies import DBSession, Token
 from api.rate_limiter import limiter
-from repository.record import update_record
+from repository import record
 from schemas.common import Message
 from schemas.records import EditRecordRequest
 
@@ -67,7 +67,7 @@ async def update_record(
         dump = data.model_dump()
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"
-        is_success = await update_record(session, record_id, token.user_id, dump)
+        is_success = await record.update_record(session, record_id, token.user_id, dump)
 
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

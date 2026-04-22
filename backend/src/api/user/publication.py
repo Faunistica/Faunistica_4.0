@@ -1,17 +1,12 @@
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, HTTPException, Request, status
 
 from api.dependencies import DBSession, Token
 from api.rate_limiter import limiter
-from core.database import get_session
-from core.security import get_request_user
 from repository.publication import user_filled_publication
 from repository.user import get_current_publication, get_user, update_user
 from schemas.common import Publication
-from schemas.jwt import TokenPayload
 
 PUBLICATION_BASE_URL = "https://faunistica.ru/files/"
 

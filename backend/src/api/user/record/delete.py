@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from api.dependencies import DBSession, Token
 from api.rate_limiter import limiter
-from repository.record import delete_record
+from repository import record
 from schemas.common import Message
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ async def delete_record(
     session: DBSession,
 ) -> Message:
     try:
-        is_success = await delete_record(session, record_id, token.user_id)
+        is_success = await record.delete_record(session, record_id, token.user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e
