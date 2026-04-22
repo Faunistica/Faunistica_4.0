@@ -42,7 +42,7 @@ async def get_user(session: AsyncSession, user_id: int) -> User:
 
 
 async def get_current_publication(session: AsyncSession, user_id: int) -> Publ | None:
-    stmt = select(Publ).join(User.publ_id).where(User.id == user_id)
+    stmt = select(Publ).join(User, User.publ_id == Publ.id).where(User.id == user_id)
     result = await session.execute(stmt)
 
     return result.scalar_one_or_none()
