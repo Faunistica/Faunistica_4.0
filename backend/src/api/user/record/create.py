@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request
 
-from core.dependencies import DBSession, Token
+from core.dependencies import DBSession, TokenUser
 from core.rate_limiter import limiter
 from core.utils import clean_value
 from repository import record
@@ -21,7 +21,7 @@ router = APIRouter()
 async def create_record(
     request: Request,
     data: InsertRecordsRequest,
-    token: Token,
+    token: TokenUser,
     session: DBSession,
 ) -> Message:
     north = geo.parse_coordinate(data.north)

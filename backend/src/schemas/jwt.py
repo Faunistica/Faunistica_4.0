@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class TokenPayload(BaseModel):
-    user_id: int = Field(alias="sub", by_alias=False)
+    sub: int
     username: str
 
 

@@ -9,6 +9,7 @@ from jose import ExpiredSignatureError, JWTError, jwt
 from pydantic import ValidationError
 
 from core.config import settings
+from schemas.common import User
 from schemas.jwt import Token, TokenPayload
 
 logger = logging.getLogger(__name__)
@@ -59,14 +60,14 @@ def create_access_token(payload: TokenPayload) -> str:
         seconds=settings.ACCESS_TOKEN_EXPIRE_SECONDS
     )
 
-    data = {
-        "sub": str(payload.user_id),
-        "username": payload.username,
-        "exp": expires,
-        "type": "access",
-    }
+    data = Token(
+        sub=payload.sub,
+        username=payload.username,
+        type="access",
+        exp=expires,
+    )
 
-    return jwt.encode(data, settings.JWT_SECRET.get_secret_value())
+    return jwt.encode(data.model_dump(), settings.JWT_SECRET.get_secret_value())
 
 
 def create_refresh_token(payload: TokenPayload) -> str:
@@ -74,14 +75,14 @@ def create_refresh_token(payload: TokenPayload) -> str:
         seconds=settings.REFRESH_TOKEN_EXPIRE_SECONDS
     )
 
-    data = {
-        "sub": str(payload.user_id),
-        "username": payload.username,
-        "exp": expires,
-        "type": "refresh",
-    }
+    data = Token(
+        sub=payload.sub,
+        username=payload.username,
+        type="refresh",
+        exp=expires,
+    )
 
-    return jwt.encode(data, settings.JWT_SECRET.get_secret_value())
+    return jwt.encode(data.model_dump(), settings.JWT_SECRET.get_secret_value())
 
 
 # FIXME: token blacklist
@@ -109,7 +110,7 @@ def verify_token(token: str) -> Token:
 
 def get_request_user(
     request: Request,
-) -> TokenPayload:
+) -> User:
     token = request.cookies.get("access_token")
     if not token:
         logger.warning("Missing access token")
@@ -124,17 +125,17 @@ def get_request_user(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token type"
         )
 
-    return payload
+    return User(user_id=payload.sub, username=payload.username)
 
 
 def validate_user_id_path(
-    user_id: int | Literal["me"],
+    sub: int | Literal["me"],
     token: Annotated[TokenPayload, Depends(get_request_user)],
 ) -> None:
-    if user_id == "me":
+    if sub == "me":
         return
 
-    if user_id != token.user_id:
+    if sub != token.sub:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )

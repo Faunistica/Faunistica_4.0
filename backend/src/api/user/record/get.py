@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request
 
-from core.dependencies import DBSession, Token
+from core.dependencies import DBSession, TokenUser
 from core.rate_limiter import limiter
 from repository import record
 from schemas.records import GetRecordResponse
@@ -16,7 +16,7 @@ router = APIRouter()
 async def get_record(
     request: Request,
     record_id: int,
-    token: Token,
+    token: TokenUser,
     session: DBSession,
 ) -> GetRecordResponse:
     try:

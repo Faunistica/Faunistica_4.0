@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
-from core.dependencies import DBSession, Token
+from core.dependencies import DBSession, TokenUser
 from core.rate_limiter import limiter
 from repository import record
 from service import export
@@ -17,7 +17,7 @@ router = APIRouter()
 @limiter.limit("1/minute")
 async def list_records(
     request: Request,
-    token: Token,
+    token: TokenUser,
     session: DBSession,
 ) -> StreamingResponse:
     user_id = token.user_id

@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from core.dependencies import DBSession, Token
+from core.dependencies import DBSession, TokenUser
 from core.rate_limiter import limiter
 from core.security import validate_user_id_path
 from repository.publication import user_filled_publication
@@ -22,7 +22,7 @@ router = APIRouter(
 @limiter.limit("666/minute")
 async def get_publication(
     request: Request,
-    token: Token,
+    token: TokenUser,
     session: DBSession,
 ) -> Publication:
     data = await get_current_publication(session, token.user_id)
@@ -47,7 +47,7 @@ async def get_publication(
 @limiter.limit("10/minute")
 async def get_next_publication(
     request: Request,
-    token: Token,
+    token: TokenUser,
     session: DBSession,
 ) -> bool:
     user_id = token.user_id

@@ -2,15 +2,13 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import and_, func, update
+from sqlalchemy import func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql.expression import text
 
 from core.security import check_password_hash
-from core.utils import format_event_date
 from models import Publ, Record, User
-from schemas.common import EventDate
 
 logger = logging.getLogger(__name__)
 

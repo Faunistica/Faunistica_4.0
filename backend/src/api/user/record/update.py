@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request
 
-from core.dependencies import DBSession, Token
+from core.dependencies import DBSession, TokenUser
 from core.rate_limiter import limiter
 from repository import record
 from schemas.common import Message
@@ -19,7 +19,7 @@ async def update_record(
     request: Request,
     record_id: int,
     data: EditRecordRequest,
-    token: Token,
+    token: TokenUser,
     session: DBSession,
 ) -> Message:
     try:
