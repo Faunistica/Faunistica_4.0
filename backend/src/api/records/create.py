@@ -69,6 +69,9 @@ async def create_record(  # noqa: PLR0913
         "type_status": clean_value(data.type_status),
         "taxon_remarks": clean_value(data.taxonomic_notes),
         "quantity": num,
+        "quantity_type": None,
+        "sex": None,
+        "life_stage": None,
         "abu_details": sp,  # временно
         "occurrence_remarks": clean_value(data.abu_ind_rem),
         "uncertainty": clean_value(data.geo_uncert),
