@@ -21,6 +21,11 @@ async def submit_support(  # noqa: PLR0913
     session: DBSession,
     client: HTTPClient,
 ) -> Message:
+    """
+    Отправка запроса в поддержку.
+
+    Создает запрос в поддержку, который отправляется в Telegram.
+    """
     try:
         user = await find_user_by_username(session, data.user_name)
 

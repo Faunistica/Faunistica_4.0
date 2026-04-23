@@ -13,4 +13,9 @@ async def get_current_user(
     request: Request,
     token: TokenUser,
 ) -> UserMinimal:
+    """
+    Получение информации о текущем пользователе.
+
+    Возвращает минимальные данные аутентифицированного пользователя.
+    """
     return UserMinimal(user_id=token.user_id, username=token.username)

@@ -22,6 +22,11 @@ async def list_records(
     session: DBSession,
     type: str = "json",
 ) -> StreamingResponse:
+    """
+    Экспорт записей пользователя в Excel.
+
+    Возвращает все записи пользователя в виде Excel-файла.
+    """
     if type != "excel":
         raise HTTPException(status_code=400, detail="Only excel export is supported")
 

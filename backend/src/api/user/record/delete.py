@@ -19,6 +19,11 @@ async def delete_record(
     token: TokenUser,
     session: DBSession,
 ) -> Message:
+    """
+    Удаление записи.
+
+    Удаляет запись навсегда.
+    """
     try:
         is_success = await record.delete_record(session, record_id, token.user_id)
     except Exception as e:

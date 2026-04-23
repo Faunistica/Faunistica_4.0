@@ -17,6 +17,11 @@ async def reverse_geocode(
     request: Request,
     data: Annotated[GetLocationRequest, Query()],
 ) -> GetLocationResponse:
+    """
+    Обратное геокодирование координат.
+
+    Конвертирует координаты DMS в названия страны, региона и района.
+    """
     latitude = geo.dms_to_degrees(data.degrees_n, data.minutes_n, data.seconds_n)
     longitude = geo.dms_to_degrees(data.degrees_e, data.minutes_e, data.seconds_e)
     location = geo.get_location_names(latitude, longitude)

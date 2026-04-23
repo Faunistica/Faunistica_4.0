@@ -17,6 +17,11 @@ def autofill(
     request: Request,
     data: Annotated[AutofillTaxonRequest, Query()],
 ) -> AutofillTaxonResponse:
+    """
+    Автозаполнение полей таксономии.
+
+    Автоматически заполняет семейство и род по частичному вводу.
+    """
     try:
         return taxon.autofill(data.field, data.text)
     except ValueError as e:

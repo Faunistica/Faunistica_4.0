@@ -17,6 +17,11 @@ def suggest_taxon(
     request: Request,
     data: Annotated[SuggestTaxonRequest, Query()],
 ) -> SuggestTaxonResponse:
+    """
+    Подсказки таксонов.
+
+    Предлагает таксоны для автодополнения с фильтрацией по семейству и роду.
+    """
     try:
         suggestions = taxon.suggest(data.field, data.text, data.filters)
         return SuggestTaxonResponse(suggestions=suggestions)

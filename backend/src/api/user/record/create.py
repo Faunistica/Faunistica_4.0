@@ -24,6 +24,11 @@ async def create_record(
     token: TokenUser,
     session: DBSession,
 ) -> Message:
+    """
+    Создание новой записи наблюдения вида.
+
+    Создает новую запись с данными таксономии, географии и экземпляров.
+    """
     user = await get_user(session, token.user_id)
     if user is None:
         raise HTTPException(

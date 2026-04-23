@@ -19,6 +19,11 @@ async def get_record(
     token: TokenUser,
     session: DBSession,
 ) -> GetRecordResponse:
+    """
+    Получение деталей одной записи.
+
+    Возвращает полные данные конкретной записи по ID.
+    """
     try:
         record_data = await record.get_record(session, record_id, token.user_id)
     except Exception as e:

@@ -19,6 +19,11 @@ async def search_geo(
     data: Annotated[GeoSearchRequest, Query()],
     location_data: LocationData,
 ) -> GeoSearchResponse:
+    """
+    Поиск географических локаций.
+
+    Ищет подсказки локаций по полю и тексту с фильтрацией по региону.
+    """
     try:
         suggestions = await geo.get_location_suggestions(
             location_data, data.field, data.text, data.filters

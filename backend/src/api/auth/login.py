@@ -22,6 +22,11 @@ async def login(
     data: LoginRequest,
     session: DBSession,
 ) -> Message:
+    """
+    Аутентификация пользователя по логину и паролю.
+
+    Устанавливает JWT токены доступа и обновления в HTTP-only куках при успехе.
+    """
     user = await find_user_by_username(session, data.username)
     if user is None:
         logger.warning("User not found for this username")

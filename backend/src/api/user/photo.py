@@ -16,6 +16,11 @@ router = APIRouter()
 async def get_photo(
     request: Request, user_id: int, client: HTTPClient
 ) -> StreamingResponse:
+    """
+    Получение фотографии профиля пользователя из Telegram.
+
+    Возвращает изображение в формате JPEG.
+    """
     photo = await telegram.fetch_photo(client, user_id)
     if not photo:
         logger.warning("No photo found")

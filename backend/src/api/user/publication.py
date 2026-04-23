@@ -25,6 +25,11 @@ async def get_publication(
     token: TokenUser,
     session: DBSession,
 ) -> Publication:
+    """
+    Получение назначенной пользователю публикации.
+
+    Возвращает публикацию с автором, годом, названием и URL PDF-файла.
+    """
     data = await get_current_publication(session, token.user_id)
 
     if data is None:
@@ -50,6 +55,11 @@ async def get_next_publication(
     token: TokenUser,
     session: DBSession,
 ) -> bool:
+    """
+    Переход к следующей доступной публикации.
+
+    Переводит пользователя к следующей публикации в его списке.
+    """
     user_id = token.user_id
     user = await get_user(session, user_id)
 

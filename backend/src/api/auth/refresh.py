@@ -15,6 +15,11 @@ def refresh(
     request: Request,
     response: Response,
 ) -> Message:
+    """
+    Обновление токена доступа.
+
+    Проверяет refresh токен из куки и выдает новый токен доступа.
+    """
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         logger.warning("Refresh token missing")
