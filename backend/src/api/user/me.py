@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.get("/me")
 @limiter.limit("10/second")
-async def me(
+async def get_current_user(
     request: Request,
     token: TokenUser,
 ) -> UserMinimal:

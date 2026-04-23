@@ -22,11 +22,14 @@ from repository.publication import (
     get_publications_for_language,
     user_filled_publication,
 )
-from repository.stats import get_general_stats, get_volunteers_achievements
+from repository.stats import (
+    get_general_stats,
+    get_user_stats,
+    get_volunteers_achievements,
+)
 from repository.user import (
     count_users_with_name,
     create_user,
-    get_user_stats,
     get_user_unsafe,
     update_user,
 )

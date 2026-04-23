@@ -7,7 +7,7 @@ from core.dependencies import DBSession, HTTPClient
 from core.rate_limiter import limiter
 from repository.user import find_user_by_username
 from schemas.common import Message, SupportRequest
-from service import support
+from service import telegram
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/support", tags=["support"])
@@ -30,7 +30,7 @@ async def submit_support(  # noqa: PLR0913
                 detail=f"user not found. username: {data.user_name}",
             )
 
-        await support.send_message(client, data, user.id)
+        await telegram.support_message(client, data, user.id)
         return Message(message="ok")
     except Exception as e:
         logger.error(f"Failed to process support request: {e}", exc_info=True)

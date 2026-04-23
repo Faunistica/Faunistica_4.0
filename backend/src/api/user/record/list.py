@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+# FIXME: support json, maybe paginated
 @router.get("/")
 @limiter.limit("1/minute")
 async def list_records(
