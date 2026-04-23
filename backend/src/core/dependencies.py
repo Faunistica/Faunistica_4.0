@@ -21,3 +21,4 @@ def get_location_data(request: Request) -> list[RegionData]:
 type DBSession = Annotated[AsyncSession, Depends(get_session)]
 type TokenUser = Annotated[UserMinimal, Depends(get_request_user)]
 type HTTPClient = Annotated[aiohttp.ClientSession, Depends(get_http_session)]
+type LocationData = Annotated[list[RegionData], Depends(get_location_data)]

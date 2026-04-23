@@ -1,6 +1,7 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 
 from core.rate_limiter import limiter
 from schemas.geo import GetLocationRequest, GetLocationResponse
@@ -10,11 +11,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/reverse-geocode")
+@router.get("/reverse-geocode")
 @limiter.limit("10/second")
 async def reverse_geocode(
     request: Request,
-    data: GetLocationRequest,
+    data: Annotated[GetLocationRequest, Query()],
 ) -> GetLocationResponse:
     latitude = geo.dms_to_degrees(data.degrees_n, data.minutes_n, data.seconds_n)
     longitude = geo.dms_to_degrees(data.degrees_e, data.minutes_e, data.seconds_e)

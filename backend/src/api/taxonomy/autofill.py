@@ -1,6 +1,7 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from core.rate_limiter import limiter
 from schemas.taxonomy import AutofillTaxonRequest, AutofillTaxonResponse
@@ -10,11 +11,11 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/autofill")
+@router.get("/autofill")
 @limiter.limit("10/second")
 def autofill(
     request: Request,
-    data: AutofillTaxonRequest,
+    data: Annotated[AutofillTaxonRequest, Query()],
 ) -> AutofillTaxonResponse:
     try:
         return taxon.autofill(data.field, data.text)

@@ -1,6 +1,7 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from core.rate_limiter import limiter
 from schemas.taxonomy import SuggestTaxonRequest, SuggestTaxonResponse
@@ -10,11 +11,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/suggest")
+@router.get("/suggest")
 @limiter.limit("10/second")
 def suggest_taxon(
     request: Request,
-    data: SuggestTaxonRequest,
+    data: Annotated[SuggestTaxonRequest, Query()],
 ) -> SuggestTaxonResponse:
     try:
         suggestions = taxon.suggest(data.field, data.text, data.filters)
