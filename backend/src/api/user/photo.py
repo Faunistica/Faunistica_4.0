@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/me/photo")
+@router.get("/photo")
 @limiter.limit("1/minute")
 async def get_photo(
     request: Request, user_id: int, client: HTTPClient

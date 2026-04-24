@@ -1,21 +1,17 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 from core.dependencies import DBSession, TokenUser
 from core.rate_limiter import limiter
-from core.security import validate_user_id_path
-from repository.publication import user_filled_publication
-from repository.user import get_current_publication, get_user, update_user
+from repository.user import get_current_publication
 from schemas.common import Publication
-from schemas.user import UpdateUser
 
 PUBLICATION_BASE_URL = "https://faunistica.ru/files/"
 
 logger = logging.getLogger(__name__)
 
-# TODO: improve user_id type in generated api docs
-router = APIRouter(dependencies=[Depends(validate_user_id_path)], tags=["publications"])
+router = APIRouter(tags=["publications"])
 
 
 @router.get("/publication")

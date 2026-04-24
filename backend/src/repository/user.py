@@ -4,10 +4,9 @@ from datetime import datetime
 from sqlalchemy import func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.sql.expression import text
 
 from core.security import check_password_hash
-from models import Publ, Record, User
+from models import Publ, User
 from schemas.user import UpdateUser
 
 logger = logging.getLogger(__name__)

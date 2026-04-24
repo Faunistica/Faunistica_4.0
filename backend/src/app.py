@@ -10,8 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-import bot
 from api import api_router
+from bot import bot
 from core.config import settings
 from core.database import init_db, ping_db
 from core.rate_limiter import limiter, rate_limit_handler

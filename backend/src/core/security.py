@@ -1,6 +1,6 @@
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, Literal
+from typing import Annotated
 
 import jwt
 from argon2 import PasswordHasher
@@ -117,7 +117,7 @@ def verify_token(token: str) -> Token:
         ) from e
 
 
-def get_request_user(
+def get_jwt_user(
     request: Request,
 ) -> UserMinimal:
     token = request.cookies.get("access_token")
@@ -143,13 +143,10 @@ def get_request_user(
 
 
 def validate_user_id_path(
-    user_id: int | Literal["me"],
-    token: Annotated[TokenPayload, Depends(get_request_user)],
+    user_id: int,
+    token: Annotated[UserMinimal, Depends(get_jwt_user)],
 ) -> None:
-    if user_id == "me":
-        return
-
-    if user_id != token.sub:
+    if user_id != token.user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )
