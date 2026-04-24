@@ -73,7 +73,7 @@ async def update_record(  # noqa: PLR0913
         # update_dict = {k: v for k, v in update_dict.items() if v is not None}
 
         # is_success = await records.update(session, record_id, user_id, update_dict)
-        
+
         dump = data.model_dump()
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"

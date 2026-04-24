@@ -55,7 +55,6 @@ async def create_record(  # noqa: PLR0913
         "year": clean_value(data.begin_year),
         "month": clean_value(data.begin_month),
         "day": clean_value(data.begin_day),
-        # day_defined можно вычислить как (data.begin_day is not None), но поле в модели есть
         "day_defined": clean_value(data.begin_day) is not None,
         "habitat": clean_value(data.biotope),
         "sampling_effort": clean_value(data.selective_gain),

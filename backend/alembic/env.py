@@ -1,13 +1,16 @@
-from dotenv import load_dotenv # для загрузки переменных окружения из .env файла
-load_dotenv()
-from logging.config import fileConfig
 import asyncio
-from sqlalchemy.ext.asyncio import async_engine_from_config, create_async_engine
+from logging.config import fileConfig
+
+from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import create_async_engine
+
 from alembic import context
-from src.database.models import Base
 from src.config.config import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
+from src.database.models import Base
+
+load_dotenv()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -20,7 +23,7 @@ if config.config_file_name is not None:
 
 config.set_main_option(
     "sqlalchemy.url",
-    f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
 )
 
 # add your model's MetaData object here
@@ -48,11 +51,13 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def do_run_migrations(connection: Connection) -> None:
     context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 async def run_async_migrations() -> None:
     """In this scenario we need to create an Engine
@@ -68,9 +73,11 @@ async def run_async_migrations() -> None:
 
     await connectable.dispose()
 
+
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     asyncio.run(run_async_migrations())
+
 
 if context.is_offline_mode():
     run_migrations_offline()

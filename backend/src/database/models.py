@@ -94,7 +94,9 @@ class Record(Base):
     is_manual_location: Mapped[bool | None] = mapped_column("adm_verbatim", Boolean)
     latitude: Mapped[float | None] = mapped_column("decimallatitude", Double)
     longitude: Mapped[float | None] = mapped_column("decimallongitude", Double)
-    uncertainty: Mapped[float | None] = mapped_column("coordinateuncertaintyinmeters", Double)
+    uncertainty: Mapped[float | None] = mapped_column(
+        "coordinateuncertaintyinmeters", Double
+    )
 
     verbatimlatitude: Mapped[str | None] = mapped_column(String(255))
     verbatimlongitude: Mapped[str | None] = mapped_column(String(255))
@@ -140,7 +142,9 @@ class Record(Base):
     sex: Mapped[str | None] = mapped_column(Text)
     life_stage: Mapped[str | None] = mapped_column("lifestage", Text)
     occurrence_remarks: Mapped[str | None] = mapped_column("occurrenceremarks", Text)
-    identification_remarks: Mapped[str | None] = mapped_column("identificationremarks", Text)
+    identification_remarks: Mapped[str | None] = mapped_column(
+        "identificationremarks", Text
+    )
 
     abu_details: Mapped[str | None] = mapped_column(Text)
     abu_ind_rem: Mapped[str | None] = mapped_column(Text)
