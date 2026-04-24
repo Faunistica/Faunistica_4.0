@@ -76,7 +76,7 @@ def downgrade() -> None:
     op.drop_column('records', 'dttm_interval')
     op.drop_column('records', 'dttm_precision')
     
-    op.alter_column('records', 'field_number', new_column_name='abu_coll')
+    op.alter_column('records', 'fieldnumber', new_column_name='abu_coll')
     op.alter_column('records', 'organismquantity', new_column_name='abu')
     
     op.alter_column('records', 'taxonremarks', new_column_name='tax_REM')
