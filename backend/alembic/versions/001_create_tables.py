@@ -67,7 +67,7 @@ def upgrade() -> None:
     )
 
     op.create_table(
-        'spiders',
+        'records',
         sa.Column('id', sa.Integer(), primary_key=True),
         sa.Column('publ_id', sa.Integer(), nullable=True),
         sa.Column('user_id', sa.BigInteger(), nullable=False),
@@ -125,19 +125,19 @@ def upgrade() -> None:
         sa.Column('abu_ind_rem', sa.Text(), nullable=True),
     )
 
-    op.create_index('ix_spiders_user_id', 'spiders', ['user_id'])
-    op.create_index('ix_spiders_publ_id', 'spiders', ['publ_id'])
-    op.create_index('ix_spiders_type', 'spiders', ['type'])
-    op.create_index('ix_spiders_datetime', 'spiders', ['datetime'])
+    op.create_index('ix_records_user_id', 'records', ['user_id'])
+    op.create_index('ix_records_publ_id', 'records', ['publ_id'])
+    op.create_index('ix_records_type', 'records', ['type'])
+    op.create_index('ix_records_datetime', 'records', ['datetime'])
 
 
 def downgrade() -> None:
-    op.drop_index('ix_spiders_datetime', table_name='spiders')
-    op.drop_index('ix_spiders_type', table_name='spiders')
-    op.drop_index('ix_spiders_publ_id', table_name='spiders')
-    op.drop_index('ix_spiders_user_id', table_name='spiders')
+    op.drop_index('ix_records_datetime', table_name='records')
+    op.drop_index('ix_records_type', table_name='records')
+    op.drop_index('ix_records_publ_id', table_name='records')
+    op.drop_index('ix_records_user_id', table_name='records')
 
-    op.drop_table('spiders')
+    op.drop_table('records')
     op.drop_table('actions')
     op.drop_table('publs')
     op.drop_table('users')
