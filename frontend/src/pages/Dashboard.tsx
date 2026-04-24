@@ -1,9 +1,30 @@
-import { type FC } from "react";
+import { type FC, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PublicationRow, type Publication } from "@/components/articles/PublicationRow";
+import { useLocation, useNavigate } from "react-router";
+import { toast } from "sonner";
 
 const Dashboard: FC = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const isToastShown = useRef(false);
+
+    useEffect(() => {
+        const state = location.state as { showSuccessAlert?: boolean } | null;
+
+        if (state?.showSuccessAlert && !isToastShown.current) {
+            isToastShown.current = true;
+
+            toast.success("Успех!", {
+                description: "Ваши данные были успешно отправлены.",
+                duration: 3000,
+            });
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location, navigate, toast]);
+
     const MOCK_SUGGESTED: Publication[] = [
         {
             publ_id: 3855, type: "S", author: "Logunov D.V.", year: 2012,

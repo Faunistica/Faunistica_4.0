@@ -1,6 +1,6 @@
 import { type FC, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, PanelLeft } from "lucide-react";
 import { Link } from "react-router";
 import { useRouteHandle } from "@/hooks/useRouteMeta";
 
@@ -25,7 +25,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             className="lg:hidden rounded-md text-slate-600 h-9 w-9"
                             onClick={() => setSidebarOpen(true)}
                         >
-                            <Menu className="h-5 w-5" />
+                            <PanelLeft className="h-5 w-5" />
                         </Button>
                     )}
 
@@ -39,10 +39,11 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                         </Button>
                     )}
-
-                    <div className="text-xl font-black tracking-tight text-slate-900">
-                        Faunistics
-                    </div>
+                    <Link to="/">
+                        <div className="text-xl font-black tracking-tight text-slate-900">
+                            Faunistics
+                        </div>
+                    </Link>
                 </div>
 
                 {isNavigateEnabled && (
@@ -78,7 +79,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                 )}
             </div>
 
-            {isMobileMenuOpen && !isSidebarEnabled && isNavigateEnabled && (
+            {isMobileMenuOpen && isNavigateEnabled && (
                 <div className="md:hidden absolute inset-x-0 top-full z-50 bg-white border-b border-slate-200 p-4 shadow-xl animate-in slide-in-from-top-2 overflow-x-clip">
                     <nav className="flex flex-col gap-2 text-base font-medium text-slate-700">
                         {isLanding ? (
