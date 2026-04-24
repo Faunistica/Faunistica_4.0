@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useMemo } from 'react'
+import { StrictMode, useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider, createBrowserRouter } from 'react-router'
 import { Provider, useSelector } from 'react-redux'
@@ -9,10 +9,11 @@ import { store, type RootState } from './store/store.ts'
 import { routes } from './router.tsx'
 
 import LoadingScreen from './components/LoadingScreen.tsx'
+import NetworkErrorAlert from './components/alerts/NetworkErrorAlert.tsx'
 
 import './index.css'
 
-async function verifyAuthInBackground() {
+async function verifyAuthInBackground(setNetworkError: (value: boolean) => void) {
     try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/check`, {
             method: 'POST',
@@ -38,7 +39,8 @@ async function verifyAuthInBackground() {
         store.dispatch(logout());
 
     } catch (error) {
-        console.error("Auth verification failed due to network error", error);
+        store.dispatch(logout());
+        setNetworkError(true);
     }
 }
 
@@ -51,16 +53,22 @@ const AppRouter = () => {
 
 const App = () => {
     const auth = useSelector((state: RootState) => state.user.auth);
+    const [networkError, setNetworkError] = useState(false);
 
     useEffect(() => {
-        verifyAuthInBackground();
+        verifyAuthInBackground(setNetworkError);
     }, []);
 
     if (auth === null) {
         return <LoadingScreen />;
     }
 
-    return <AppRouter />;
+    return (
+        <>
+            {networkError && <NetworkErrorAlert onClose={() => setNetworkError(false)} />}
+            <AppRouter />
+        </>
+    );
 };
 
 createRoot(document.getElementById('root')!).render(

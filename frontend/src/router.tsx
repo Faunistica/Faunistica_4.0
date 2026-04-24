@@ -4,6 +4,7 @@ import {
     redirect,
     useNavigation,
     useOutletContext,
+    ScrollRestoration,
     type LoaderFunctionArgs, type RouteObject
 } from 'react-router';
 import { store } from './store/store';
@@ -23,6 +24,9 @@ import Statistics from './pages/Statistics';
 import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import Onboarding from './pages/Onboarding';
+
+import { Toaster } from "sonner";
 
 function NavigationWrapper() {
     const navigation = useNavigation();
@@ -33,7 +37,13 @@ function NavigationWrapper() {
         return <LoadingScreen />;
     }
 
-    return <Outlet context={context} />;
+    return (
+        <>
+            <Toaster position="bottom-right" />
+            <ScrollRestoration />
+            <Outlet context={context} />
+        </>
+    )
 }
 
 const requireAuth = ({ request }: LoaderFunctionArgs) => {
@@ -60,6 +70,7 @@ export const routes: RouteObject[] = [
     {
         path: '/',
         element: <NavigationWrapper />,
+        HydrateFallback: LoadingScreen,
         children: [
             {
                 element: <Layout />,
@@ -99,7 +110,8 @@ export const routes: RouteObject[] = [
                         handle: { isNavigateEnabled: true },
                         children: [
                             { path: 'dashboard', element: <Dashboard /> },
-                            { path: 'article/:id', element: <FormFilling />, handle: { isNavigateEnabled: false, isSidebarEnabled: true } },
+                            { path: 'onboarding', element: <Onboarding />, handle: { isNavigateEnabled: false } },
+                            { path: 'article/:id', element: <FormFilling />, handle: { isSidebarEnabled: true } },
                             { path: 'instructions', element: <Instructions /> },
                             { path: 'support', element: <Support /> },
                             { path: 'statistics', element: <Statistics /> },

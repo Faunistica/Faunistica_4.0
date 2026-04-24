@@ -33,7 +33,7 @@ const FormFilling: FC = () => {
 
     const addSample = () => {
         setSamples(prev => [{}, ...prev]);
-        setActiveSampleIndex(0); // The new item is at the top
+        setActiveSampleIndex(0);
     };
 
     const removeSample = (index: number) => {
@@ -45,16 +45,14 @@ const FormFilling: FC = () => {
 
         setActiveSampleIndex(prev => {
             if (samples.length - 1 === 0) return 0;
-            // If we deleted the active one, fallback to 0
             if (prev === index) return 0;
-            // If the deleted one was before the active one, shift active index down
             if (index < prev) return prev - 1;
             return prev;
         });
     };
 
     return (
-        <SidebarProvider open={true} openMobile={isSidebarOpen} onOpenMobileChange={setIsSidebarOpen} className="min-h-0 flex-1">
+        <SidebarProvider open={true} openMobile={isSidebarOpen} onOpenMobileChange={setIsSidebarOpen} className="flex-1">
             <Sidebar
                 isOpen={isSidebarOpen}
                 setIsOpen={setIsSidebarOpen}
@@ -64,8 +62,8 @@ const FormFilling: FC = () => {
                 addSample={addSample}
                 removeSample={removeSample}
             />
-            <main className="flex-1 flex flex-col w-full min-h-0">
-                <div className="flex-1 w-full p-4 md:p-8 overflow-y-auto pb-32">
+            <main className="flex-1 flex flex-col w-full min-w-0 relative">
+                <div className="flex-1 w-full p-4 md:p-8 pb-[180px] md:pb-[120px]">
                     <div className="max-w-6xl mx-auto space-y-6">
                         <ArticleSourceCard data={activeSample} updateData={updateSample} />
                         <GeographyCard data={activeSample} updateData={updateSample} />
@@ -74,6 +72,7 @@ const FormFilling: FC = () => {
                         <CollectionEventCard data={activeSample} updateData={updateSample} />
                     </div>
                 </div>
+
                 <Footer />
             </main>
         </SidebarProvider>
