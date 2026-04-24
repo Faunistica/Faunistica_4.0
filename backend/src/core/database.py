@@ -15,15 +15,7 @@ from models import Base
 logger = logging.getLogger(__name__)
 
 
-def _get_database_url() -> str:
-    return (
-        f"postgresql+asyncpg://{settings.DB_USER}:"
-        f"{settings.DB_PASSWORD.get_secret_value()}"
-        f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-    )
-
-
-_engine = create_async_engine(_get_database_url(), echo=settings.DB_ECHO)
+_engine = create_async_engine(str(settings.DB_URL), echo=settings.DB_ECHO)
 _async_session_local = async_sessionmaker(
     bind=_engine, class_=AsyncSession, expire_on_commit=False
 )

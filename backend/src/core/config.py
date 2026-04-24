@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from pydantic import ConfigDict, Field, SecretStr
+from pydantic import ConfigDict, Field, SecretStr, computed_field
 from pydantic_core import Url
+from pydantic_extra_types.dsn import PostgresDsn
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -27,6 +28,18 @@ class DatabaseSettings(CamelCaseSettings):
     DB_USER: str = "faunistica"
     DB_PASSWORD: SecretStr = Field(init=False)
     DB_ECHO: bool = False
+
+    @computed_field
+    @property
+    def DB_URL(self) -> PostgresDsn:
+        return PostgresDsn.build(
+            scheme="postgresql+asyncpg",
+            username=self.DB_USER,
+            password=self.DB_PASSWORD.get_secret_value(),
+            host=self.DB_HOST,
+            port=self.DB_PORT,
+            path=self.DB_NAME,
+        )
 
 
 class SecuritySettings(CamelCaseSettings):
