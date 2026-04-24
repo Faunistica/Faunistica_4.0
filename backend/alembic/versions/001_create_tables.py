@@ -37,6 +37,7 @@ def upgrade() -> None:
         sa.Column('rating', sa.Integer(), nullable=True),
         sa.Column('email', sa.Text(), nullable=True),
         sa.Column('region', sa.Text(), nullable=True),
+        if_not_exists=True,
     )
 
     op.create_table(
@@ -59,6 +60,7 @@ def upgrade() -> None:
         sa.Column('spec', sa.Integer(), nullable=True),
         sa.Column('e_author', sa.Text(), nullable=True),
         sa.Column('e_name', sa.Text(), nullable=True),
+        if_not_exists=True,
     )
 
     op.create_table(
@@ -68,6 +70,7 @@ def upgrade() -> None:
         sa.Column('action', sa.Text(), nullable=False),
         sa.Column('object', sa.Text(), nullable=True),
         sa.Column('datetime', sa.TIMESTAMP(), nullable=False),
+        if_not_exists=True,
     )
 
     op.create_table(
@@ -111,6 +114,7 @@ def upgrade() -> None:
         sa.Column('eve_MM_end', sa.Numeric(), nullable=True),
         sa.Column('eve_DD_end', sa.Numeric(), nullable=True),
         sa.Column('adm_verbatim', sa.Integer(), nullable=True),
+        if_not_exists=True,
     )
 
     op.create_table(
@@ -211,6 +215,7 @@ def upgrade() -> None:
         sa.Column('shortlink', sa.String(30), nullable=False),
         sa.Column('year1', sa.Integer(), nullable=True),
         sa.Column('year2', sa.Integer(), nullable=True),
+        if_not_exists=True,
     )
 
 
