@@ -75,16 +75,22 @@ class Action(Base):
 class Record(Base):
     __tablename__ = "records"
 
+    # DEPRECATED
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # DEPRECATED
     publ_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("publs.id", ondelete="CASCADE")
     )
+    # DEPRECATED
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE")
     )
+    # DEPRECATED
     datetime: Mapped[datetime | None] = mapped_column(TIMESTAMP)
     ip: Mapped[str | None] = mapped_column(Text)
+    # DEPRECATED
     errors: Mapped[str | None] = mapped_column(Text)
+    # DEPRECATED
     type: Mapped[str | None] = mapped_column(Text)
 
     country: Mapped[str | None] = mapped_column("countrycode", Text)
@@ -94,9 +100,11 @@ class Record(Base):
     is_manual_location: Mapped[bool | None] = mapped_column("adm_verbatim", Boolean)
     latitude: Mapped[float | None] = mapped_column("decimallatitude", Double)
     longitude: Mapped[float | None] = mapped_column("decimallongitude", Double)
+    # DEPRECATED
     decimallongitude_raw: Mapped[float | None] = mapped_column(
         "decimallongitude_raw", Double
     )
+    # DEPRECATED
     decimallatitude_raw: Mapped[float | None] = mapped_column(
         "decimallatitude_raw", Double
     )
@@ -110,12 +118,19 @@ class Record(Base):
     georef_source: Mapped[str | None] = mapped_column("georeferencedby", Text)
     location_remarks: Mapped[str | None] = mapped_column("locationremarks", Text)
 
+    # DEPRECATED
     year: Mapped[int | None] = mapped_column("eve_YY", Integer)
+    # DEPRECATED
     month: Mapped[int | None] = mapped_column("eve_MM", Integer)
+    # DEPRECATED
     day: Mapped[int | None] = mapped_column("eve_DD", Integer)
+    # DEPRECATED
     day_defined: Mapped[bool | None] = mapped_column("day_defined", Boolean)
+    # DEPRECATED
     year_end: Mapped[int | None] = mapped_column("eve_YY_end", Integer)
+    # DEPRECATED
     month_end: Mapped[int | None] = mapped_column("eve_MM_end", Integer)
+    # DEPRECATED
     day_end: Mapped[int | None] = mapped_column("eve_DD_end", Integer)
 
     verbatim_date: Mapped[str | None] = mapped_column("verbatimeventdate", Text)
@@ -138,6 +153,7 @@ class Record(Base):
     species: Mapped[str | None] = mapped_column("specificepithet", Text)
     tax_verbatim: Mapped[bool | None] = mapped_column(Boolean)
     taxon_rank: Mapped[bool | None] = mapped_column("taxonrank", Boolean)
+    # DEPRECATED
     is_new_species: Mapped[bool | None] = mapped_column("tax_nsp", Boolean)
     type_status: Mapped[str | None] = mapped_column(Text)
     accepted_name: Mapped[str | None] = mapped_column("acceptednameusage", Text)
