@@ -1,23 +1,22 @@
 import { type FC, useState } from "react";
-import { Outlet, useLocation } from "react-router";
-import Header from "@/components/layout/Header";
+import { Outlet } from "react-router";
+import { useRouteHandle } from "@/hooks/useRouteMeta";
+import Header from "@/layout/Header";
 
 const Layout: FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const location = useLocation();
 
-    const isFormFilling = location.pathname.includes("/article/");
-    const isLanding = location.pathname === "/";
+    const { isLanding, isSidebarEnabled } = useRouteHandle();
 
     return (
         <div className="flex min-h-screen flex-col overflow-x-clip bg-slate-50 font-sans text-slate-900">
             <Header
-                isSidebarEnabled={isFormFilling}
+                isSidebarEnabled={isSidebarEnabled}
                 setSidebarOpen={setIsSidebarOpen}
             />
 
             <div className={`relative flex flex-1 w-full overflow-x-clip ${isLanding ? "bg-white" : ""}`}>
-                {isFormFilling ? (
+                {isSidebarEnabled ? (
                     <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
                 ) : (
                     <main className="flex min-w-0 flex-1 flex-col w-full">

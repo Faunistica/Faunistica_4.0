@@ -1,10 +1,10 @@
-.PHONY: oxlint oxlint:fix oxformat
+.PHONY: lint lint-fix format
 
 lint:
-	npm oxlint
+	pnpm lint
 
 lint-fix:
-	npm oxlint:fix
+	pnpm lint:fix
 
 format:
-	npm oxformat
+	pnpm format

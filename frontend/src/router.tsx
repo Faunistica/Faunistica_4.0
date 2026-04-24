@@ -1,14 +1,14 @@
 import {
-    createBrowserRouter,
     Navigate,
     Outlet,
     redirect,
     useNavigation,
     useOutletContext,
+    type LoaderFunctionArgs, type RouteObject
 } from 'react-router';
 import { store } from './store/store';
 import LoadingScreen from './components/LoadingScreen';
-import Layout from './layouts/Layout';
+import Layout from './layout/Layout';
 
 import Landing from './pages/Landing';
 import AuthLayout from './pages/Auth';
@@ -21,6 +21,8 @@ import FormFilling from './pages/FormFilling';
 import Instructions from './pages/Instructions';
 import Statistics from './pages/Statistics';
 import Support from './pages/Support';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 
 function NavigationWrapper() {
     const navigation = useNavigation();
@@ -34,23 +36,27 @@ function NavigationWrapper() {
     return <Outlet context={context} />;
 }
 
-const requireAuth = () => {
+const requireAuth = ({ request }: LoaderFunctionArgs) => {
     const { auth } = store.getState().user;
     if (!auth) {
-        return redirect('/auth/login');
+        const url = new URL(request.url);
+        const redirectTo = url.pathname + url.search;
+        return redirect(`/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`);
     }
     return null;
 };
 
-const requireGuest = () => {
+const requireGuest = ({ request }: LoaderFunctionArgs) => {
     const { auth } = store.getState().user;
     if (auth) {
-        return redirect('/dashboard');
+        const url = new URL(request.url);
+        const redirectTo = url.searchParams.get('redirectTo');
+        return redirect(redirectTo || '/dashboard');
     }
     return null;
 };
 
-export const routes = [
+export const routes: RouteObject[] = [
     {
         path: '/',
         element: <NavigationWrapper />,
@@ -61,7 +67,18 @@ export const routes = [
                     {
                         index: true,
                         loader: requireGuest,
-                        element: <Landing />
+                        element: <Landing />,
+                        handle: { isLanding: true, isNavigateEnabled: true }
+                    },
+
+                    {
+                        path: 'privacy-policy',
+                        element: <PrivacyPolicy />
+                    },
+
+                    {
+                        path: 'terms-of-service',
+                        element: <TermsOfService />
                     },
 
                     {
@@ -79,9 +96,10 @@ export const routes = [
 
                     {
                         loader: requireAuth,
+                        handle: { isNavigateEnabled: true },
                         children: [
                             { path: 'dashboard', element: <Dashboard /> },
-                            { path: 'article/:id', element: <FormFilling /> },
+                            { path: 'article/:id', element: <FormFilling />, handle: { isNavigateEnabled: false, isSidebarEnabled: true } },
                             { path: 'instructions', element: <Instructions /> },
                             { path: 'support', element: <Support /> },
                             { path: 'statistics', element: <Statistics /> },
@@ -94,5 +112,3 @@ export const routes = [
         ],
     },
 ];
-
-export const router = createBrowserRouter(routes);
