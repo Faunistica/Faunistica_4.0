@@ -18,6 +18,7 @@ router = APIRouter()
 @limiter.limit("1/minute")
 async def list_records(
     request: Request,
+    user_id: int,
     token: TokenUser,
     session: DBSession,
     type: str = "json",
@@ -30,7 +31,6 @@ async def list_records(
     if type != "excel":
         raise HTTPException(status_code=400, detail="Only excel export is supported")
 
-    user_id = token.user_id
     username = token.username
 
     try:

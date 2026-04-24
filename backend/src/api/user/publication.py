@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request, status
 
-from core.dependencies import DBSession, TokenUser
+from core.dependencies import DBSession
 from core.rate_limiter import limiter
 from repository.user import get_current_publication
 from schemas.common import Publication
@@ -18,7 +18,7 @@ router = APIRouter(tags=["publications"])
 @limiter.limit("1/second")
 async def get_publication(
     request: Request,
-    token: TokenUser,
+    user_id: int,
     session: DBSession,
 ) -> Publication:
     """
@@ -26,7 +26,7 @@ async def get_publication(
 
     Возвращает публикацию с автором, годом, названием и URL PDF-файла.
     """
-    data = await get_current_publication(session, token.user_id)
+    data = await get_current_publication(session, user_id)
 
     if data is None:
         raise HTTPException(

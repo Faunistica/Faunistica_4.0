@@ -18,7 +18,8 @@ def get_location_data(request: Request) -> list[RegionData]:
     return request.app.state.location_data
 
 
-type DBSession = Annotated[AsyncSession, Depends(get_session)]
+# NOTE: Don't use this dependency to get {user_id} path parameter
 type TokenUser = Annotated[UserMinimal, Depends(get_jwt_user)]
+type DBSession = Annotated[AsyncSession, Depends(get_session)]
 type HTTPClient = Annotated[aiohttp.ClientSession, Depends(get_http_session)]
 type LocationData = Annotated[list[RegionData], Depends(get_location_data)]

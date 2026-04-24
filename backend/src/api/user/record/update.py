@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request
 
-from core.dependencies import DBSession, TokenUser
+from core.dependencies import DBSession
 from core.rate_limiter import limiter
 from repository import record
 from schemas.common import Message
@@ -19,7 +19,7 @@ async def update_record(
     request: Request,
     record_id: int,
     data: EditRecordRequest,
-    token: TokenUser,
+    user_id: int,
     session: DBSession,
 ) -> Message:
     """
@@ -72,7 +72,7 @@ async def update_record(
         dump = data.model_dump()
         dump["datetime"] = datetime.now(UTC).replace(tzinfo=None, microsecond=0)
         dump["type"] = "rec_ok"
-        is_success = await record.update_record(session, record_id, token.user_id, dump)
+        is_success = await record.update_record(session, record_id, user_id, dump)
 
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)

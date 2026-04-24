@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request, status
 
-from core.dependencies import DBSession, TokenUser
+from core.dependencies import DBSession
 from core.rate_limiter import limiter
 from core.utils import clean_value
 from repository import record
@@ -21,7 +21,7 @@ router = APIRouter()
 async def create_record(
     request: Request,
     data: InsertRecordsRequest,
-    token: TokenUser,
+    user_id: int,
     session: DBSession,
 ) -> Message:
     """
@@ -29,7 +29,7 @@ async def create_record(
 
     Создает новую запись с данными таксономии, географии и экземпляров.
     """
-    user = await get_user(session, token.user_id)
+    user = await get_user(session, user_id)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"

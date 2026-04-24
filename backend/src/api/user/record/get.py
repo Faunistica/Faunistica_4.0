@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request
 
-from core.dependencies import DBSession, TokenUser
+from core.dependencies import DBSession
 from core.rate_limiter import limiter
 from repository import record
 from schemas.records import GetRecordResponse
@@ -15,8 +15,8 @@ router = APIRouter()
 @limiter.limit("20/minute")
 async def get_record(
     request: Request,
+    user_id: int,
     record_id: int,
-    token: TokenUser,
     session: DBSession,
 ) -> GetRecordResponse:
     """
@@ -25,7 +25,7 @@ async def get_record(
     Возвращает полные данные конкретной записи по ID.
     """
     try:
-        record_data = await record.get_record(session, record_id, token.user_id)
+        record_data = await record.get_record(session, record_id, user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e
