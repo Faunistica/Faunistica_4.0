@@ -120,7 +120,7 @@ async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
     result = await session.execute(
         text("""
         SELECT mode() WITHIN GROUP (ORDER BY CONCAT(genus, ' ', specificepithet))
-        FROM spiders
+        FROM records
         WHERE type = 'rec_ok' AND user_id = :user_id
     """),
         {"user_id": user_id},
