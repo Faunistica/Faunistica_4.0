@@ -1,68 +1,62 @@
-import { StrictMode, useState, useEffect, useMemo } from 'react'
+import { StrictMode, useEffect, useMemo } from 'react'
 import { createRoot } from 'react-dom/client'
-import { RouterProvider } from 'react-router'
-import { Provider } from 'react-redux'
+import { RouterProvider, createBrowserRouter } from 'react-router'
+import { Provider, useSelector } from 'react-redux'
 
-import { store } from './store/store.ts'
-import { login } from './store/reducers/userSlice.ts'
+import { login, logout } from './store/reducers/userSlice.ts'
+import { store, type RootState } from './store/store.ts'
 
 import { routes } from './router.tsx'
-import { createBrowserRouter } from 'react-router'
 
 import LoadingScreen from './components/LoadingScreen.tsx'
 
 import './index.css'
 
-/**
- * Before rendering the app, verify the user's session with the server.
- * Since JWTs are stored in HttpOnly cookies, we can't read them in JS —
- * the server is the single source of truth for auth state.
- *
- * We use a raw fetch here (not RTK Query) so that the store is properly
- * hydrated before the router runs its loaders (requireAuth / requireGuest).
- */
-async function initAuth() {
+async function verifyAuthInBackground() {
     try {
-        const response = await fetch('http://localhost:8000/api/auth/check', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/check`, {
             method: 'POST',
             credentials: 'include',
         });
 
         if (response.ok) {
-            store.dispatch(login());
+            store.dispatch(login("Imperator"));
             return;
         }
 
-        // Access token expired — try to refresh
         if (response.status === 401) {
-            const refreshResponse = await fetch('http://localhost:8000/api/auth/refresh', {
+            const refreshResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
                 method: 'POST',
                 credentials: 'include',
             });
+
             if (refreshResponse.ok) {
-                store.dispatch(login());
+                return;
             }
         }
-    } catch {
-        // Server unreachable — stay logged out
+
+        store.dispatch(logout());
+
+    } catch (error) {
+        console.error("Auth verification failed due to network error", error);
     }
 }
 
 const AppRouter = () => {
-    const router = useMemo(() => createBrowserRouter(routes), []);
+    const auth = useSelector((state: RootState) => state.user.auth);
+
+    const router = useMemo(() => createBrowserRouter(routes), [auth]);
     return <RouterProvider router={router} />;
 };
 
 const App = () => {
-    const [isInitializing, setIsInitializing] = useState(true);
+    const auth = useSelector((state: RootState) => state.user.auth);
 
     useEffect(() => {
-        initAuth().finally(() => {
-            setIsInitializing(false);
-        });
+        verifyAuthInBackground();
     }, []);
 
-    if (isInitializing) {
+    if (auth === null) {
         return <LoadingScreen />;
     }
 

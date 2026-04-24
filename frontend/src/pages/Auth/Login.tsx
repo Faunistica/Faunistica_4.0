@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { authAPI } from '@/api/authAPI';
 import type { UserRequest } from '@/types/api.dto';
 
 const Login: FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [login, { isLoading, error }] = authAPI.useLoginMutation();
 
   const {
@@ -25,7 +26,8 @@ const Login: FC = () => {
   const onSubmit = async (data: UserRequest) => {
     const result = await login(data);
     if (!result.error) {
-      navigate('/dashboard');
+      const redirectTo = searchParams.get('redirectTo');
+      navigate(redirectTo || '/dashboard', { replace: true });
     }
   };
 
@@ -84,12 +86,12 @@ const Login: FC = () => {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Email or username</Label>
+              <Label htmlFor="username">Email или логин</Label>
               <Input
                 id="username"
                 type="text"
                 placeholder="name@example.com"
-                {...register('username', { required: 'Username is required' })}
+                {...register('username', { required: 'Email or username is required' })}
               />
               {errors.username && (
                 <p className="text-sm text-red-500">{errors.username.message}</p>
@@ -97,7 +99,7 @@ const Login: FC = () => {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Пароль</Label>
                 <Link to="/auth/recovery" className="text-sm font-medium text-slate-900 hover:underline">
                   Забыли пароль?
                 </Link>
@@ -134,11 +136,11 @@ const Login: FC = () => {
 
       <p className="px-4 text-center text-sm text-slate-500 leading-relaxed">
         {"Продолжая, вы соглашаетесь с нашими "}
-        <Link to="#" className="underline underline-offset-4 hover:text-slate-900 transition-colors">
+        <Link to="/terms-of-service" className="underline underline-offset-4 hover:text-slate-900 transition-colors">
           Условиями обслуживания
         </Link>
         {" и "}
-        <Link to="#" className="underline underline-offset-4 hover:text-slate-900 transition-colors">
+        <Link to="/privacy-policy" className="underline underline-offset-4 hover:text-slate-900 transition-colors">
           Политикой конфиденциальности
         </Link>
         {"."}
