@@ -94,6 +94,8 @@ class Record(Base):
     is_manual_location: Mapped[bool | None] = mapped_column("adm_verbatim", Boolean)
     latitude: Mapped[float | None] = mapped_column("decimallatitude", Double)
     longitude: Mapped[float | None] = mapped_column("decimallongitude", Double)
+    decimallongitude_raw: Mapped[float | None] = mapped_column("decimallongitude_raw", Double)
+    decimallatitude_raw: Mapped[float | None] = mapped_column("decimallatitude_raw", Double)
     uncertainty: Mapped[float | None] = mapped_column(
         "coordinateuncertaintyinmeters", Double
     )
@@ -146,5 +148,7 @@ class Record(Base):
         "identificationremarks", Text
     )
 
+    #DEPRECATED
     abu_details: Mapped[str | None] = mapped_column(Text)
+    #DEPRECATED
     abu_ind_rem: Mapped[str | None] = mapped_column(Text)

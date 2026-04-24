@@ -34,6 +34,8 @@ def upgrade() -> None:
 
     op.alter_column("records", "geo_nn", new_column_name="decimallatitude")
     op.alter_column("records", "geo_ee", new_column_name="decimallongitude")
+    op.alter_column("records", "geo_ee_raw", new_column_name="decimallongitude_raw")
+    op.alter_column("records", "geo_nn_raw", new_column_name="decimallatitude_raw")
     op.alter_column("records", "geo_origin", new_column_name="georeferencedby")
     op.alter_column("records", "geo_REM", new_column_name="locationremarks")
     op.alter_column(
@@ -105,6 +107,8 @@ def downgrade() -> None:
     op.alter_column("records", "georeferencedby", new_column_name="geo_origin")
     op.alter_column("records", "decimallongitude", new_column_name="geo_ee")
     op.alter_column("records", "decimallatitude", new_column_name="geo_nn")
+    op.alter_column("records", "decimallongitude_raw", new_column_name="geo_ee_raw")
+    op.alter_column("records", "decimallatitude_raw", new_column_name="geo_nn_raw")
 
     op.alter_column("records", "verbatimlocality", new_column_name="adm_loc")
     op.alter_column(
