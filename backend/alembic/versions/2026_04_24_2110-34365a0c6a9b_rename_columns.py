@@ -1,20 +1,20 @@
-"""rename columns to darwin core
+"""rename_columns
 
-Revision ID: 002_rename_columns
-Revises: 001_create_tables
-Create Date: 2026-04-24
+Revision ID: 34365a0c6a9b
+Revises: 27041cf0b012
+Create Date: 2026-04-24 21:10:20.487911
 
 """
 
-import re
 from collections.abc import Sequence
 
 import sqlalchemy as sa
 
 from alembic import op
 
-revision: str = "002_rename_columns"
-down_revision: str | None = "001_create_tables"
+# revision identifiers, used by Alembic.
+revision: str = "34365a0c6a9b"
+down_revision: str | None = "27041cf0b012"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
