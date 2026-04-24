@@ -10,10 +10,10 @@ sync:
 	uv sync
 
 format: isort
-	uv run ruff format src/
+	uv run ruff format src/ alembic/
 
 isort:
-	uv run ruff check --select I --fix src/
+	uv run ruff check --select I --fix src/ alembic/
 
 lint:
-	uv run ruff check src/
+	uv run ruff check src/ alembic/

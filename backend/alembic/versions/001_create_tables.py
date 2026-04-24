@@ -75,67 +75,46 @@ def upgrade() -> None:
         sa.Column('ip', sa.Text(), nullable=True),
         sa.Column('errors', sa.Text(), nullable=True),
         sa.Column('type', sa.Text(), nullable=True),
-        sa.Column('country', sa.Text(), nullable=True),
-        sa.Column('region', sa.Text(), nullable=True),
-        sa.Column('district', sa.Text(), nullable=True),
-        sa.Column('locality', sa.Text(), nullable=True),
+        sa.Column('adm_country', sa.Text(), nullable=True),
+        sa.Column('adm_region', sa.Text(), nullable=True),
+        sa.Column('adm_district', sa.Text(), nullable=True),
+        sa.Column('adm_loc', sa.Text(), nullable=True),
         sa.Column('adm_verbatim', sa.Text(), nullable=True),
-        sa.Column('latitude', sa.Float(), nullable=True),
-        sa.Column('longitude', sa.Float(), nullable=True),
-        sa.Column('uncertainty', sa.Float(), nullable=True),
-        sa.Column('verbatimlatitude', sa.String(255), nullable=True),
-        sa.Column('verbatimlongitude', sa.String(255), nullable=True),
-        sa.Column('georef_source', sa.Text(), nullable=True),
-        sa.Column('location_remarks', sa.Text(), nullable=True),
-        sa.Column('year', sa.Integer(), nullable=True),
-        sa.Column('month', sa.Integer(), nullable=True),
-        sa.Column('day', sa.Integer(), nullable=True),
-        sa.Column('year_end', sa.Integer(), nullable=True),
-        sa.Column('month_end', sa.Integer(), nullable=True),
-        sa.Column('day_end', sa.Integer(), nullable=True),
-        sa.Column('verbatim_date', sa.Text(), nullable=True),
-        sa.Column('date_precision', sa.Text(), nullable=True),
-        sa.Column('is_interval', sa.Boolean(), nullable=True),
-        sa.Column('habitat', sa.Text(), nullable=True),
-        sa.Column('sampling_protocol', sa.Text(), nullable=True),
-        sa.Column('sampling_effort', sa.Text(), nullable=True),
-        sa.Column('sample_size_value', sa.Float(), nullable=True),
-        sa.Column('sample_size_unit', sa.Text(), nullable=True),
-        sa.Column('event_remarks', sa.Text(), nullable=True),
-        sa.Column('field_number', sa.Text(), nullable=True),
-        sa.Column('catalog_number', sa.Text(), nullable=True),
-        sa.Column('collection_code', sa.Text(), nullable=True),
-        sa.Column('recorded_by', sa.Text(), nullable=True),
-        sa.Column('family', sa.Text(), nullable=True),
-        sa.Column('genus', sa.Text(), nullable=True),
-        sa.Column('species', sa.Text(), nullable=True),
-        sa.Column('tax_verbatim', sa.Boolean(), nullable=True),
-        sa.Column('taxon_rank', sa.Text(), nullable=True),
-        sa.Column('is_new_species', sa.Boolean(), nullable=True),
+        sa.Column('geo_nn', sa.Float(), nullable=True),
+        sa.Column('geo_ee', sa.Float(), nullable=True),
+        sa.Column('geo_nn_raw', sa.Text(), nullable=True),
+        sa.Column('geo_ee_raw', sa.Text(), nullable=True),
+        sa.Column('geo_origin', sa.Text(), nullable=True),
+        sa.Column('geo_REM', sa.Text(), nullable=True),
+        sa.Column('geo_uncert', sa.Float(), nullable=True),
+        sa.Column('eve_YY', sa.Integer(), nullable=True),
+        sa.Column('eve_MM', sa.Integer(), nullable=True),
+        sa.Column('eve_DD', sa.Integer(), nullable=True),
+        sa.Column('eve_day_def', sa.Boolean(), nullable=True),
+        sa.Column('eve_YY_end', sa.Integer(), nullable=True),
+        sa.Column('eve_MM_end', sa.Integer(), nullable=True),
+        sa.Column('eve_DD_end', sa.Integer(), nullable=True),
+        sa.Column('eve_habitat', sa.Text(), nullable=True),
+        sa.Column('eve_effort', sa.Text(), nullable=True),
+        sa.Column('tax_fam', sa.Text(), nullable=True),
+        sa.Column('tax_gen', sa.Text(), nullable=True),
+        sa.Column('tax_sp', sa.Text(), nullable=True),
+        sa.Column('tax_sp_def', sa.Boolean(), nullable=True),
+        sa.Column('tax_nsp', sa.Boolean(), nullable=True),
         sa.Column('type_status', sa.Text(), nullable=True),
-        sa.Column('accepted_name', sa.Text(), nullable=True),
-        sa.Column('taxon_remarks', sa.Text(), nullable=True),
-        sa.Column('quantity', sa.Integer(), nullable=True),
-        sa.Column('quantity_type', sa.Text(), nullable=True),
-        sa.Column('sex', sa.Text(), nullable=True),
-        sa.Column('life_stage', sa.Text(), nullable=True),
-        sa.Column('occurrence_remarks', sa.Text(), nullable=True),
-        sa.Column('identification_remarks', sa.Text(), nullable=True),
+        sa.Column('tax_REM', sa.Text(), nullable=True),
+        sa.Column('abu', sa.Integer(), nullable=True),
         sa.Column('abu_details', sa.Text(), nullable=True),
         sa.Column('abu_ind_rem', sa.Text(), nullable=True),
     )
 
     op.create_index('ix_records_user_id', 'records', ['user_id'])
     op.create_index('ix_records_publ_id', 'records', ['publ_id'])
-    op.create_index('ix_records_type', 'records', ['type'])
-    op.create_index('ix_records_datetime', 'records', ['datetime'])
 
 
 def downgrade() -> None:
-    op.drop_index('ix_records_datetime', table_name='records')
-    op.drop_index('ix_records_type', table_name='records')
-    op.drop_index('ix_records_publ_id', table_name='records')
-    op.drop_index('ix_records_user_id', table_name='records')
+    op.drop_index('ix_records_publ_id', table_name='records', if_exists=True)
+    op.drop_index('ix_records_user_id', table_name='records', if_exists=True)
 
     op.drop_table('records')
     op.drop_table('actions')
