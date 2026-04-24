@@ -6,6 +6,7 @@ Create Date: 2026-04-24
 
 """
 
+import re
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -39,8 +40,7 @@ def upgrade() -> None:
         "records", "geo_uncert", new_column_name="coordinateuncertaintyinmeters"
     )
 
-    op.execute('ALTER TABLE records RENAME COLUMN "eve_day.def" TO day_defined')
-
+    op.alter_column("records", "eve_day.def", new_column_name="day_defined")
     op.alter_column("records", "eve_effort", new_column_name="samplingprotocol")
 
     op.alter_column("records", "tax_sp", new_column_name="specificepithet")
@@ -97,8 +97,7 @@ def downgrade() -> None:
 
     op.alter_column("records", "samplingprotocol", new_column_name="eve_effort")
 
-    op.execute('ALTER TABLE records RENAME COLUMN day_defined TO "eve_day.def"')
-
+    op.alter_column("records", "day_defined", new_column_name="eve_day.def")
     op.alter_column(
         "records", "coordinateuncertaintyinmeters", new_column_name="geo_uncert"
     )
