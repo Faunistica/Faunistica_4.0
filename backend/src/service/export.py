@@ -10,37 +10,39 @@ from starlette.responses import ContentStream
 from database.models import Record
 
 logger = logging.getLogger(__name__)
+
+# Ключи — атрибуты модели Record
 COLUMN_MAPPING = {
     "datetime": "Дата добавления записи",
-    "adm_country": "Страна",
-    "adm_region": "Регион",
-    "adm_district": "Район",
-    "adm_loc": "Место сбора",
-    "geo_nn": "Широта (десятич.)",
-    "geo_ee": "Долгота (десятич.)",
-    "geo_nn_raw": "Широта (изнач.)",
-    "geo_ee_raw": "Долгота (изнач.)",
-    "geo_origin": "Происхождение координат",
-    "geo_REM": "Примечания к расположению",
+    "countrycode": "Страна",
+    "stateprovince": "Регион",
+    "county": "Район",
+    "verbatimlocality": "Место сбора",
+    "decimallatitude": "Широта (десятич.)",
+    "decimallongitude": "Долгота (десятич.)",
+    "verbatimlatitude": "Широта (изнач.)",
+    "verbatimlongitude": "Долгота (изнач.)",
+    "georeferencedby": "Происхождение координат",
+    "locationremarks": "Примечания к расположению",
     "eve_YY": "Год",
     "eve_MM": "Месяц",
     "eve_DD": "День",
-    "eve_day_def": "Определён ли день",
-    "eve_habitat": "Биотоп",
-    "eve_effort": "Выборочное усиление",
-    "abu_coll": "Коллектор",
-    "eve_REM": "Примечания к сбору материала",
-    "tax_fam": "Семейство",
-    "tax_gen": "Род",
-    "tax_sp": "Вид",
-    "tax_sp_def": "Определён ли вид",
+    "day_defined": "Определён ли день",
+    "habitat": "Биотоп",
+    "samplingeffort": "Выборочное усиление",
+    "recordedby": "Коллектор",
+    "eventremarks": "Примечания к сбору материала",
+    "family": "Семейство",
+    "genus": "Род",
+    "specificepithet": "Вид",
+    "taxonrank": "Определён ли вид",
     "tax_nsp": "Описан ли как новый вид",
     "type_status": "Типовой статус",
-    "tax_REM": "Таксономические примечания",
-    "abu": "Общее кол-во особей",
+    "taxonremarks": "Таксономические примечания",
+    "organismquantity": "Общее кол-во особей",
     "abu_details": "Кол-во особей каждого пола/зрелости",
-    "abu_ind_rem": "Комментарий к особям",
-    "geo_uncert": "Радиус неточности координат, м",
+    "occurrenceremarks": "Комментарий к особям",
+    "coordinateuncertaintyinmeters": "Радиус неточности координат, м",
     "eve_YY_end": "Конечный год",
     "eve_MM_end": "Конечный месяц",
     "eve_DD_end": "Конечный день",
@@ -57,11 +59,7 @@ class ExportService:
             logger.error("ws is None")
             raise Exception
 
-        headers = [
-            COLUMN_MAPPING[field]
-            for field in COLUMN_MAPPING
-            if field not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
-        ]
+        headers = list(COLUMN_MAPPING.values())
         ws.append(headers)
 
         for col in range(1, len(headers) + 1):
@@ -69,12 +67,7 @@ class ExportService:
             ws.cell(row=1, column=col).font = Font(bold=True)
 
         for record in records:
-            row = [
-                getattr(record, field)
-                for field in COLUMN_MAPPING
-                if field
-                not in ["id", "publ_id", "ip", "errors", "type", "adm_verbatim"]
-            ]
+            row = [getattr(record, field) for field in COLUMN_MAPPING]
             ws.append(row)
 
         wb.save(output)

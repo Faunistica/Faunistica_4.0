@@ -75,47 +75,100 @@ class Action(Base):
 class Record(Base):
     __tablename__ = "records"
 
+    # DEPRECATED
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # DEPRECATED
     publ_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("publs.id", ondelete="CASCADE")
     )
+    # DEPRECATED
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE")
     )
+    # DEPRECATED
     datetime: Mapped[datetime | None] = mapped_column(TIMESTAMP)
     ip: Mapped[str | None] = mapped_column(Text)
+    # DEPRECATED
     errors: Mapped[str | None] = mapped_column(Text)
+    # DEPRECATED
     type: Mapped[str | None] = mapped_column(Text)
-    adm_country: Mapped[str | None] = mapped_column(Text)
-    adm_region: Mapped[str | None] = mapped_column(Text)
-    adm_district: Mapped[str | None] = mapped_column(Text)
-    adm_loc: Mapped[str | None] = mapped_column(Text)
-    geo_nn: Mapped[float | None] = mapped_column(Double)
-    geo_ee: Mapped[float | None] = mapped_column(Double)
-    geo_nn_raw: Mapped[str | None] = mapped_column(String(255))
-    geo_ee_raw: Mapped[str | None] = mapped_column(String(255))
-    geo_origin: Mapped[str | None] = mapped_column(Text)
-    geo_REM: Mapped[str | None] = mapped_column(Text)
-    eve_YY: Mapped[int | None] = mapped_column(Integer)
-    eve_MM: Mapped[int | None] = mapped_column(Integer)
-    eve_DD: Mapped[int | None] = mapped_column(Integer)
-    eve_day_def: Mapped[bool | None] = mapped_column(Boolean)
-    eve_habitat: Mapped[str | None] = mapped_column(Text)
-    eve_effort: Mapped[str | None] = mapped_column(Text)
-    abu_coll: Mapped[str | None] = mapped_column(Text)
-    eve_REM: Mapped[str | None] = mapped_column(Text)
-    tax_fam: Mapped[str | None] = mapped_column(Text)
-    tax_gen: Mapped[str | None] = mapped_column(Text)
-    tax_sp: Mapped[str | None] = mapped_column(Text)
-    tax_sp_def: Mapped[bool | None] = mapped_column(Boolean)
-    tax_nsp: Mapped[bool | None] = mapped_column(Boolean)
+
+    country: Mapped[str | None] = mapped_column("countrycode", Text)
+    region: Mapped[str | None] = mapped_column("stateprovince", Text)
+    district: Mapped[str | None] = mapped_column("county", Text)
+    locality: Mapped[str | None] = mapped_column("verbatimlocality", Text)
+    is_manual_location: Mapped[bool | None] = mapped_column("adm_verbatim", Boolean)
+    latitude: Mapped[float | None] = mapped_column("decimallatitude", Double)
+    longitude: Mapped[float | None] = mapped_column("decimallongitude", Double)
+    # DEPRECATED
+    decimallongitude_raw: Mapped[float | None] = mapped_column(
+        "decimallongitude_raw", Double
+    )
+    # DEPRECATED
+    decimallatitude_raw: Mapped[float | None] = mapped_column(
+        "decimallatitude_raw", Double
+    )
+    uncertainty: Mapped[float | None] = mapped_column(
+        "coordinateuncertaintyinmeters", Double
+    )
+
+    verbatimlatitude: Mapped[str | None] = mapped_column(String(255))
+    verbatimlongitude: Mapped[str | None] = mapped_column(String(255))
+
+    georef_source: Mapped[str | None] = mapped_column("georeferencedby", Text)
+    location_remarks: Mapped[str | None] = mapped_column("locationremarks", Text)
+
+    # DEPRECATED
+    year: Mapped[int | None] = mapped_column("eve_YY", Integer)
+    # DEPRECATED
+    month: Mapped[int | None] = mapped_column("eve_MM", Integer)
+    # DEPRECATED
+    day: Mapped[int | None] = mapped_column("eve_DD", Integer)
+    # DEPRECATED
+    day_defined: Mapped[bool | None] = mapped_column("day_defined", Boolean)
+    # DEPRECATED
+    year_end: Mapped[int | None] = mapped_column("eve_YY_end", Integer)
+    # DEPRECATED
+    month_end: Mapped[int | None] = mapped_column("eve_MM_end", Integer)
+    # DEPRECATED
+    day_end: Mapped[int | None] = mapped_column("eve_DD_end", Integer)
+
+    verbatim_date: Mapped[str | None] = mapped_column("verbatimeventdate", Text)
+    date_precision: Mapped[str | None] = mapped_column("dttm_precision", Text)
+    is_interval: Mapped[bool | None] = mapped_column("dttm_interval", Boolean)
+
+    habitat: Mapped[str | None] = mapped_column(Text)
+    sampling_protocol: Mapped[str | None] = mapped_column("samplingprotocol", Text)
+    sampling_effort: Mapped[str | None] = mapped_column("samplingeffort", Text)
+    sample_size_value: Mapped[float | None] = mapped_column("samplesizevalue", Double)
+    sample_size_unit: Mapped[str | None] = mapped_column("samplesizeunit", Text)
+    event_remarks: Mapped[str | None] = mapped_column("eventremarks", Text)
+    field_number: Mapped[str | None] = mapped_column("fieldnumber", Text)
+    catalog_number: Mapped[str | None] = mapped_column("catalognumber", Text)
+    collection_code: Mapped[str | None] = mapped_column("collectioncode", Text)
+    recorded_by: Mapped[str | None] = mapped_column("recordedby", Text)
+
+    family: Mapped[str | None] = mapped_column(Text)
+    genus: Mapped[str | None] = mapped_column(Text)
+    species: Mapped[str | None] = mapped_column("specificepithet", Text)
+    tax_verbatim: Mapped[bool | None] = mapped_column(Boolean)
+    taxon_rank: Mapped[bool | None] = mapped_column("taxonrank", Boolean)
+    # DEPRECATED
+    is_new_species: Mapped[bool | None] = mapped_column("tax_nsp", Boolean)
     type_status: Mapped[str | None] = mapped_column(Text)
-    tax_REM: Mapped[str | None] = mapped_column(Text)
-    abu: Mapped[int | None] = mapped_column(Integer)
+    accepted_name: Mapped[str | None] = mapped_column("acceptednameusage", Text)
+    taxon_remarks: Mapped[str | None] = mapped_column("taxonremarks", Text)
+
+    quantity: Mapped[int | None] = mapped_column("organismquantity", Integer)
+    quantity_type: Mapped[str | None] = mapped_column("organismquantitytype", Text)
+    sex: Mapped[str | None] = mapped_column(Text)
+    life_stage: Mapped[str | None] = mapped_column("lifestage", Text)
+    occurrence_remarks: Mapped[str | None] = mapped_column("occurrenceremarks", Text)
+    identification_remarks: Mapped[str | None] = mapped_column(
+        "identificationremarks", Text
+    )
+
+    # DEPRECATED
     abu_details: Mapped[str | None] = mapped_column(Text)
+    # DEPRECATED
     abu_ind_rem: Mapped[str | None] = mapped_column(Text)
-    geo_uncert: Mapped[float | None] = mapped_column(Double)
-    eve_YY_end: Mapped[int | None] = mapped_column(Integer)
-    eve_MM_end: Mapped[int | None] = mapped_column(Integer)
-    eve_DD_end: Mapped[int | None] = mapped_column(Integer)
-    adm_verbatim: Mapped[str | None] = mapped_column(Text)

@@ -35,33 +35,33 @@ async def get_statistics(session: AsyncSession) -> dict:
     stats["total_species"] = result.scalar()
 
     stmt = select(
-        func.count(func.distinct(func.concat(Record.tax_gen, "_", Record.tax_sp)))
+        func.count(func.distinct(func.concat(Record.genus, "_", Record.species)))
     ).where(Record.type == "rec_ok")
     result = await session.execute(stmt)
     stats["unique_species"] = result.scalar()
 
     stmt = (
         select(
-            Record.tax_gen, Record.tax_sp, func.count(Record.id).label("spider_count")
+            Record.genus, Record.species, func.count(Record.id).label("spider_count")
         )
-        .group_by(Record.tax_gen, Record.tax_sp)
+        .group_by(Record.genus, Record.species)
         .order_by(func.count(Record.id).desc())
         .limit(4)
     )
     result = await session.execute(stmt)
     top_species = result.fetchall()
     stats["top_species"] = [
-        {"species": f"{row.tax_gen} {row.tax_sp}", "count": row.spider_count}
+        {"species": f"{row.genus} {row.species}", "count": row.spider_count}
         for row in top_species
     ]
 
     stmt = (
         select(
             func.date(Record.datetime).label("formatted_date"),
-            Record.tax_gen,
-            Record.tax_sp,
-            Record.adm_district,
-            Record.adm_region,
+            Record.genus,
+            Record.species,
+            Record.district,
+            Record.region,
             Record.user_id,
         )
         .order_by(Record.datetime.desc())
@@ -78,8 +78,8 @@ async def get_statistics(session: AsyncSession) -> dict:
     stats["latest_records"] = [
         {
             "datetime": record.formatted_date.isoformat(),
-            "species": f"{record.tax_gen} {record.tax_sp}",
-            "location": f"{record.adm_district}, {record.adm_region}",
+            "species": f"{record.genus} {record.species}",
+            "location": f"{record.district}, {record.region}",
             "username": user_data["user_name"]
             if user_data and "user_name" in user_data
             else "Unknown",
