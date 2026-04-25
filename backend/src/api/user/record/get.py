@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Request
 from core.dependencies import DBSession
 from core.rate_limiter import limiter
 from repository import record
-from schemas.records import GetRecordResponse
+from schemas.records import RecordFull
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -18,7 +18,7 @@ async def get_record(
     user_id: int,
     record_id: int,
     session: DBSession,
-) -> GetRecordResponse:
+) -> RecordFull:
     """
     Получение деталей одной записи.
 

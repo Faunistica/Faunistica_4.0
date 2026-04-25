@@ -1,4 +1,16 @@
+from typing import Literal
+
 from pydantic import BaseModel
+
+
+class SpecimenCount(BaseModel):
+    gender: Literal["male", "female", "undefined"]
+    maturity: Literal["adult", "juvenile"]
+    count: float | None = None
+
+
+class SpecimenCounts(BaseModel):
+    specimens: list[SpecimenCount] = []
 
 
 class TaxonomyFilters(BaseModel):

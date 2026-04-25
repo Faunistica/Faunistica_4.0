@@ -1,18 +1,18 @@
 import logging
 from collections.abc import Sequence
 
-from sqlalchemy import and_
+from sqlalchemy import and_, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from core.model import Record
+from schemas.records import RecordBase
 
 logger = logging.getLogger(__name__)
 
 
-async def create_record(session: AsyncSession, record_json: dict) -> None:
-    record = Record(**record_json)
-    session.add(record)
+async def create_record(session: AsyncSession, record: RecordBase) -> None:
+    stmt = insert(Record).values(**record.model_dump())
+    await session.execute(stmt)
     await session.commit()
 
 

@@ -1,119 +1,137 @@
-from typing import Literal
+from datetime import datetime
 
 from pydantic import BaseModel
 
-
-class SpecimenCount(BaseModel):
-    gender: Literal["male", "female", "undefined"]
-    maturity: Literal["adult", "juvenile"]
-    count: float | None = None
+from schemas.common import UNSET, Unset
 
 
-class SpecimenCounts(BaseModel):
-    specimens: list[SpecimenCount] = []
+class RecordBase(BaseModel):
+    id: int | None = None
+    publ_id: int | None = None
+    user_id: int | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    ip: str | None = None
 
 
-class InsertRecordsRequest(BaseModel):
-    abu_ind_rem: str | None = None
-    adm_verbatim: bool | None = None
-    begin_day: int | None = None
-    begin_month: int | None = None
-    begin_year: int | None = None
-    biotope: str | None = None
-    collector: str | None = None
+class RecordFull(RecordBase):
+    errors: str | None = None
+    type: str | None = None
     country: str | None = None
-    district: str | None = None
-    east: str | None = None
-    end_day: int | None = None
-    end_month: int | None = None
-    end_year: int | None = None
-    eve_REM: str | None = None
-    family: str | None = None
-    genus: str | None = None
-    geo_origin: str | None = None
-    geo_REM: str | None = None
-    geo_uncert: float | None = None
-    is_defined_species: bool | None = None
-    is_in_wsc: bool | None = None
-    is_new_species: bool | None = None
-    measurement_units: str | None = None
-    north: str | None = None
-    place: str | None = None
-    place_notes: str | None = None
     region: str | None = None
-    selective_gain: str | None = None
-    species: str | None = None
-    specimens: SpecimenCounts | None = None
-    taxonomic_notes: str | None = None
-    type_status: str | None = None
-
-
-class GetRecordResponse(BaseModel):
-    id: int
-    type: str | None = None
-    countrycode: str | None = None
-    stateprovince: str | None = None
-    county: str | None = None
-    verbatimlocality: str | None = None
-    decimallatitude: float | None = None
-    decimallongitude: float | None = None
-    verbatimlatitude: str | None = None
-    verbatimlongitude: str | None = None
-    georeferencedby: str | None = None
-    locationremarks: str | None = None
-    eve_YY: int | None = None
-    eve_MM: int | None = None
-    eve_DD: int | None = None
-    day_defined: bool | None = None
+    district: str | None = None
+    locality: str | None = None
+    is_manual_location: bool | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    verbatimcoordinates: str | None = None
+    coordinate_uncertainty: float | None = None
+    georef_source: str | None = None
+    location_remarks: str | None = None
+    year: int | None = None
+    month: int | None = None
+    day: int | None = None
+    year_end: int | None = None
+    month_end: int | None = None
+    day_end: int | None = None
+    verbatim_date: str | None = None
+    date_precision: str | None = None
+    is_interval: bool | None = None
     habitat: str | None = None
-    samplingeffort: str | None = None
-    recordedby: str | None = None
-    eventremarks: str | None = None
+    sampling_protocol: str | None = None
+    sampling_effort: str | None = None
+    sample_size_value: float | None = None
+    sample_size_unit: str | None = None
+    event_remarks: str | None = None
+    field_number: str | None = None
+    catalog_number: str | None = None
+    collection_code: str | None = None
+    recorded_by: str | None = None
     family: str | None = None
     genus: str | None = None
-    specificepithet: str | None = None
-    taxonrank: bool | None = None
-    tax_nsp: bool | None = None
+    species: str | None = None
+    tax_verbatim: bool | None = None
+    taxon_rank: str | None = None
     type_status: str | None = None
-    taxonremarks: str | None = None
-    organismquantity: int | None = None
-    abu_details: str | None = None
-    occurrenceremarks: str | None = None
-    coordinateuncertaintyinmeters: float | None = None
-    eve_YY_end: int | None = None
-    eve_MM_end: int | None = None
-    eve_DD_end: int | None = None
+    accepted_name: str | None = None
+    taxon_remarks: str | None = None
+    quantity: float | None = None
+    quantity_type: str | None = None
+    sex: str | None = None
+    life_stage: str | None = None
+    occurrence_remarks: str | None = None
+    identification_remarks: str | None = None
 
-
-class EditRecordRequest(BaseModel):
-    type: str | None = None
-    adm_country: str | None = None
-    adm_region: str | None = None
-    adm_district: str | None = None
-    adm_loc: str | None = None
-    geo_nn_raw: str | None = None
-    geo_ee_raw: str | None = None
-    geo_origin: str | None = None
-    geo_REM: str | None = None
-    eve_YY: int | None = None
-    eve_MM: int | None = None
-    eve_DD: int | None = None
-    eve_day_def: bool | None = None
-    eve_habitat: str | None = None
-    eve_effort: str | None = None
-    abu_coll: str | None = None
-    eve_REM: str | None = None
-    tax_fam: str | None = None
-    tax_gen: str | None = None
-    tax_sp: str | None = None
+    # DEPRECATED
+    longitude_raw: str | None = None
+    latitude_raw: str | None = None
     tax_sp_def: bool | None = None
-    tax_nsp: bool | None = None
-    type_status: str | None = None
-    tax_REM: str | None = None
-    abu: int | None = None
+    abu: float | None = None
+    is_new_species: bool | None = None
     abu_details: str | None = None
     abu_ind_rem: str | None = None
-    geo_uncert: float | None = None
-    eve_YY_end: int | None = None
-    eve_MM_end: int | None = None
-    eve_DD_end: int | None = None
+
+
+class RecordUpdate(BaseModel):
+    id: int | None | Unset = UNSET
+    publ_id: int | None | Unset = UNSET
+    user_id: int | None | Unset = UNSET
+    created_at: datetime | None | Unset = UNSET
+    updated_at: datetime | None | Unset = UNSET
+    ip: str | None | Unset = UNSET
+    errors: str | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+
+    country: str | None | Unset = UNSET
+    region: str | None | Unset = UNSET
+    district: str | None | Unset = UNSET
+    locality: str | None | Unset = UNSET
+    is_manual_location: bool | None | Unset = UNSET
+    latitude: float | None | Unset = UNSET
+    longitude: float | None | Unset = UNSET
+    verbatimcoordinates: str | None | Unset = UNSET
+    coordinate_uncertainty: float | None | Unset = UNSET
+    georef_source: str | None | Unset = UNSET
+    location_remarks: str | None | Unset = UNSET
+    year: int | None | Unset = UNSET
+    month: int | None | Unset = UNSET
+    day: int | None | Unset = UNSET
+    year_end: int | None | Unset = UNSET
+    month_end: int | None | Unset = UNSET
+    day_end: int | None | Unset = UNSET
+    verbatim_date: str | None | Unset = UNSET
+    date_precision: str | None | Unset = UNSET
+    is_interval: bool | None | Unset = UNSET
+    habitat: str | None | Unset = UNSET
+    sampling_protocol: str | None | Unset = UNSET
+    sampling_effort: str | None | Unset = UNSET
+    sample_size_value: float | None | Unset = UNSET
+    sample_size_unit: str | None | Unset = UNSET
+    event_remarks: str | None | Unset = UNSET
+    field_number: str | None | Unset = UNSET
+    catalog_number: str | None | Unset = UNSET
+    collection_code: str | None | Unset = UNSET
+    recorded_by: str | None | Unset = UNSET
+    family: str | None | Unset = UNSET
+    genus: str | None | Unset = UNSET
+    species: str | None | Unset = UNSET
+    tax_verbatim: bool | None | Unset = UNSET
+    taxon_rank: str | None | Unset = UNSET
+    type_status: str | None | Unset = UNSET
+    accepted_name: str | None | Unset = UNSET
+    taxon_remarks: str | None | Unset = UNSET
+    quantity: float | None | Unset = UNSET
+    quantity_type: str | None | Unset = UNSET
+    sex: str | None | Unset = UNSET
+    life_stage: str | None | Unset = UNSET
+    occurrence_remarks: str | None | Unset = UNSET
+    identification_remarks: None | Unset = UNSET
+
+    # DEPRECATED
+    longitude_raw: str | None | Unset = UNSET
+    latitude_raw: str | None | Unset = UNSET
+    tax_sp_def: bool | None | Unset = UNSET
+    abu: float | None | Unset = UNSET
+    is_new_species: bool | None | Unset = UNSET
+    abu_details: str | None | Unset = UNSET
+    abu_ind_rem: str | None | Unset = UNSET

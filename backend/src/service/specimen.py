@@ -1,4 +1,4 @@
-from schemas.records import SpecimenCounts
+from schemas.taxonomy import SpecimenCounts
 
 
 def parse(specimens: SpecimenCounts | None) -> tuple[str | None, int]:

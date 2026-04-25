@@ -76,22 +76,19 @@ class Action(Base):
 class Record(Base):
     __tablename__ = "records"
 
-    # DEPRECATED
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    # DEPRECATED
     publ_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("publs.id", ondelete="CASCADE")
     )
-    # DEPRECATED
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE")
     )
-    # DEPRECATED
-    datetime: Mapped[datetime | None] = mapped_column(TIMESTAMP(precision=6))
+    created_at: Mapped[datetime | None] = mapped_column(
+        "datetime", TIMESTAMP(precision=6)
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(precision=6))
     ip: Mapped[str | None] = mapped_column(Text)
-    # DEPRECATED
     errors: Mapped[str | None] = mapped_column(Text)
-    # DEPRECATED
     type: Mapped[str | None] = mapped_column(Text)
 
     country: Mapped[str | None] = mapped_column("countrycode", Text)

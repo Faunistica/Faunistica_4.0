@@ -9,6 +9,7 @@ Create Date: 2026-04-25 12:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from alembic import op
 
@@ -35,6 +36,10 @@ def upgrade() -> None:
 
     op.alter_column("records", "id", nullable=False)
 
+    op.add_column(
+        "records", sa.Column("updated_at", TIMESTAMP(precision=6), nullable=True)
+    )
+
     op.execute(
         "ALTER TABLE records ALTER COLUMN adm_verbatim TYPE boolean USING CASE WHEN adm_verbatim = 1 THEN true ELSE false END"
     )
@@ -45,4 +50,5 @@ def downgrade() -> None:
         "ALTER TABLE records ALTER COLUMN adm_verbatim TYPE integer USING CASE WHEN adm_verbatim THEN 1 ELSE 0 END"
     )
 
+    op.drop_column("records", "created_at")
     op.drop_column("records", "id")
