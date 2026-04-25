@@ -5,8 +5,10 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     Double,
+    Float,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
 )
@@ -101,35 +103,32 @@ class Record(Base):
     latitude: Mapped[float | None] = mapped_column("decimallatitude", Double)
     longitude: Mapped[float | None] = mapped_column("decimallongitude", Double)
     # DEPRECATED
-    decimallongitude_raw: Mapped[float | None] = mapped_column("geo_ee_raw", Double)
+    longitude_raw: Mapped[str | None] = mapped_column("geo_ee_raw", Text)
     # DEPRECATED
-    decimallatitude_raw: Mapped[float | None] = mapped_column("geo_nn_raw", Double)
+    latitude_raw: Mapped[str | None] = mapped_column("geo_nn_raw", Text)
     # DEPRECATED
     tax_sp_def: Mapped[bool | None] = mapped_column("tax_sp.def", Boolean)
     # DEPRECATED
     abu: Mapped[float | None] = mapped_column("abu", Double)
     coordinate_uncertainty: Mapped[float | None] = mapped_column(
-        "coordinateuncertaintyinmeters", Double
+        "coordinateuncertaintyinmeters", Numeric
     )
-
-    verbatimlatitude: Mapped[str | None] = mapped_column(String(255))
-    verbatimlongitude: Mapped[str | None] = mapped_column(String(255))
 
     georef_source: Mapped[str | None] = mapped_column("georeferencedby", Text)
     location_remarks: Mapped[str | None] = mapped_column("locationremarks", Text)
 
     # DEPRECATED
-    year: Mapped[int | None] = mapped_column("eve_YY", Integer)
+    year: Mapped[int | None] = mapped_column("eve_YY", Numeric)
     # DEPRECATED
-    month: Mapped[int | None] = mapped_column("eve_MM", Integer)
+    month: Mapped[int | None] = mapped_column("eve_MM", Numeric)
     # DEPRECATED
-    day: Mapped[int | None] = mapped_column("eve_DD", Integer)
+    day: Mapped[int | None] = mapped_column("eve_DD", Numeric)
     # DEPRECATED
-    year_end: Mapped[int | None] = mapped_column("eve_YY_end", Integer)
+    year_end: Mapped[int | None] = mapped_column("eve_YY_end", Numeric)
     # DEPRECATED
-    month_end: Mapped[int | None] = mapped_column("eve_MM_end", Integer)
+    month_end: Mapped[int | None] = mapped_column("eve_MM_end", Numeric)
     # DEPRECATED
-    day_end: Mapped[int | None] = mapped_column("eve_DD_end", Integer)
+    day_end: Mapped[int | None] = mapped_column("eve_DD_end", Numeric)
 
     verbatim_date: Mapped[str | None] = mapped_column("verbatimeventdate", Text)
     date_precision: Mapped[str | None] = mapped_column("dttm_precision", Text)
@@ -157,7 +156,7 @@ class Record(Base):
     accepted_name: Mapped[str | None] = mapped_column("acceptednameusage", Text)
     taxon_remarks: Mapped[str | None] = mapped_column("taxonremarks", Text)
 
-    quantity: Mapped[int | None] = mapped_column("organismquantity", Integer)
+    quantity: Mapped[float | None] = mapped_column("organismquantity", Double)
     quantity_type: Mapped[str | None] = mapped_column("organismquantitytype", Text)
     sex: Mapped[str | None] = mapped_column(Text)
     life_stage: Mapped[str | None] = mapped_column("lifestage", Text)
