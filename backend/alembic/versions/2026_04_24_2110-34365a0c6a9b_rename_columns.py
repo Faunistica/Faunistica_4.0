@@ -59,7 +59,6 @@ def upgrade() -> None:
     # tax_sp.def -> taxonrank isn't a column rename because of datatype change
     op.add_column("records", sa.Column("taxonrank", sa.Text(), nullable=True))
     # Leave tax_nsp, type_status as is
-    op.add_column("records", sa.Column("type_status", sa.Text(), nullable=True))
     op.add_column("records", sa.Column("acceptednameusage", sa.Text(), nullable=True))
     op.alter_column("records", "tax_REM", new_column_name="taxonremarks")
 
@@ -84,38 +83,36 @@ def downgrade() -> None:
     op.drop_column("records", "sex")
     op.drop_column("records", "organismquantitytype")
     op.drop_column("records", "organismquantity")
+
+    op.alter_column("records", "taxonremarks", new_column_name="tax_REM")
     op.drop_column("records", "acceptednameusage")
     op.drop_column("records", "taxonrank")
-    op.drop_column("records", "type_status")
-    op.drop_column("records", "verbatimeventdate")
+    op.drop_column("records", "tax_verbatim")
+    op.alter_column("records", "specificepithet", new_column_name="tax_sp")
+    op.alter_column("records", "genus", new_column_name="tax_gen")
+    op.alter_column("records", "family", new_column_name="tax_fam")
+
+    op.alter_column("records", "recordedby", new_column_name="abu_coll")
     op.drop_column("records", "fieldnumber")
     op.drop_column("records", "collectioncode")
     op.drop_column("records", "catalognumber")
-    op.drop_column("records", "eventremarks")
+    op.alter_column("records", "eventremarks", new_column_name="eve_REM")
     op.drop_column("records", "samplesizeunit")
     op.drop_column("records", "samplesizevalue")
-    op.drop_column("records", "tax_verbatim")
-    op.drop_column("records", "samplingprotocol")
-    op.drop_column("records", "dttm_interval")
-    op.drop_column("records", "dttm_precision")
-    op.drop_column("records", "verbatimcoordinates")
-
-    op.alter_column("records", "recordedby", new_column_name="abu_coll")
-
-    op.alter_column("records", "family", new_column_name="tax_fam")
-    op.alter_column("records", "genus", new_column_name="tax_gen")
-    op.alter_column("records", "taxonremarks", new_column_name="tax_REM")
-    op.alter_column("records", "specificepithet", new_column_name="tax_sp")
-
     op.alter_column("records", "samplingeffort", new_column_name="eve_effort")
-
-    op.alter_column("records", "day_defined", new_column_name="eve_day.def")
+    op.drop_column("records", "samplingprotocol")
     op.alter_column("records", "habitat", new_column_name="eve_habitat")
+    op.drop_column("records", "dttm_interval")
+    op.alter_column("records", "dttm_precision", new_column_name="eve_day.def")
+    op.drop_column("records", "verbatimeventdate")
+
+    op.alter_column("records", "locationremarks", new_column_name="geo_REM")
+    op.alter_column("records", "georeferencedby", new_column_name="geo_origin")
+
+    op.drop_column("records", "verbatimcoordinates")
     op.alter_column(
         "records", "coordinateuncertaintyinmeters", new_column_name="geo_uncert"
     )
-    op.alter_column("records", "locationremarks", new_column_name="geo_REM")
-    op.alter_column("records", "georeferencedby", new_column_name="geo_origin")
     op.alter_column("records", "decimallongitude", new_column_name="geo_ee")
     op.alter_column("records", "decimallatitude", new_column_name="geo_nn")
 
