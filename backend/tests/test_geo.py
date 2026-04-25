@@ -99,4 +99,3 @@ class TestReverseGeocode:
                 },
             )
         assert response.status_code == 200
-

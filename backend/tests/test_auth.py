@@ -2,11 +2,10 @@ import pytest
 from httpx import AsyncClient
 
 
-@pytest.mark.skip(reason="Requires seeded test user in DB")
 @pytest.mark.asyncio
 async def test_login_valid_credentials(
     async_client: AsyncClient,
-    test_users,
+    seed_test_data,
 ) -> None:
     response = await async_client.post(
         "/api/auth/login",
@@ -15,11 +14,10 @@ async def test_login_valid_credentials(
     assert response.status_code == 200
 
 
-@pytest.mark.skip(reason="Requires seeded test user in DB")
 @pytest.mark.asyncio
 async def test_login_wrong_password(
     async_client: AsyncClient,
-    test_users,
+    seed_test_data,
 ) -> None:
     response = await async_client.post(
         "/api/auth/login",
@@ -28,10 +26,10 @@ async def test_login_wrong_password(
     assert response.status_code == 401
 
 
-@pytest.mark.skip(reason="Requires seeded test user in DB")
 @pytest.mark.asyncio
 async def test_login_nonexistent_user(
     async_client: AsyncClient,
+    seed_test_data,
 ) -> None:
     response = await async_client.post(
         "/api/auth/login",

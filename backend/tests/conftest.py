@@ -44,7 +44,7 @@ def get_db_engine():
             url, echo=False, pool_pre_ping=True, poolclass=NullPool
         )
 
-        async def init():
+        async def init() -> None:
             async with _db_engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
 
@@ -58,11 +58,81 @@ def db_engine():
     return get_db_engine()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def db_session_maker(db_engine):
     return async_sessionmaker(
         bind=db_engine, class_=AsyncSession, expire_on_commit=False
     )
+
+
+@pytest_asyncio.fixture(scope="session")
+async def seed_test_data(db_engine, db_session_maker, test_users):
+    """Seed test user and records once per session."""
+    from sqlalchemy import text
+
+    from core.model import Base, Record, User
+    from core.security import get_password_hash
+
+    engine = db_engine
+    maker = db_session_maker
+
+    async with engine.connect() as conn:
+        await conn.execute(text("DROP TABLE IF EXISTS records CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS actions CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS publs CASCADE"))
+        await conn.commit()
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    user_data = test_users[0]
+
+    async with maker() as session:
+        user = User(
+            id=user_data["id"],
+            name=user_data["username"],
+            tlg_name=user_data["username"],
+            tlg_username=user_data["username"],
+            hash=get_password_hash(user_data["password"]),
+            items="[]",
+        )
+        session.add(user)
+        await session.flush()
+
+        records = [
+            Record(
+                user_id=user_data["id"],
+                type="test_type",
+                genus="Testus",
+                latitude=55.5,
+                longitude=37.5,
+            ),
+            Record(
+                user_id=user_data["id"],
+                type="test_type",
+                genus="Testus",
+                latitude=55.6,
+                longitude=37.6,
+            ),
+            Record(
+                user_id=user_data["id"],
+                type="no_coords",
+            ),
+        ]
+        for record in records:
+            session.add(record)
+
+        await session.commit()
+
+    yield
+
+    async with db_session_maker() as session:
+        await session.execute(text("DROP TABLE IF EXISTS records CASCADE"))
+        await session.execute(text("DROP TABLE IF EXISTS users CASCADE"))
+        await session.execute(text("DROP TABLE IF EXISTS actions CASCADE"))
+        await session.execute(text("DROP TABLE IF EXISTS publs CASCADE"))
+        await session.commit()
 
 
 @pytest_asyncio.fixture
@@ -96,7 +166,7 @@ async def async_client(db_session_maker):
             del app.dependency_overrides[get_session]
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def test_users():
     return [
         {"id": 1, "username": "testuser1", "password": "password1"},
@@ -118,10 +188,9 @@ def create_test_token(user_id: int, username: str, token_type: str) -> str:
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def auth_token():
     return {
         "access_token": create_test_token(1, "testuser1", "access"),
         "refresh_token": create_test_token(1, "testuser1", "refresh"),
     }
-

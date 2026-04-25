@@ -25,15 +25,15 @@ async def get_record(
     Возвращает полные данные конкретной записи по ID.
     """
     try:
-        record_data = await record.get_record(session, record_id, user_id)
+        data = await record.get_record(session, record_id, user_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e
 
-    if not record_data:
+    if not data:
         logger.warning("Record not found or not owned by user")
         raise HTTPException(
             status_code=404, detail="Record not found or not owned by user."
         )
 
-    return RecordFull.model_validate(record)
+    return RecordFull.model_validate(data)

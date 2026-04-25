@@ -47,12 +47,15 @@ async def update_record(
     record_id: int,
     user_id: int,
     data: RecordUpdate,
-) -> None:
+) -> bool:
     stmt = (
         update(Record)
         .where(and_(Record.id == record_id, Record.user_id == user_id))
         .values(data.model_dump(exclude_unset=True))
+        .returning(Record.id)
     )
 
-    await session.execute(stmt)
+    result = await session.execute(stmt)
     await session.commit()
+
+    return result.scalar_one_or_none() is not None

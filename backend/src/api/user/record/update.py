@@ -1,5 +1,4 @@
 import logging
-from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request
 
@@ -28,7 +27,7 @@ async def update_record(
     Обновляет поля записи новыми данными.
     """
     try:
-        record.update_record()
+        is_success = await record.update_record(session, record_id, user_id, data)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Server database error.") from e
