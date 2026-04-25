@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from models import Publ, Record
+from core.model import Publ, Record
 
 logger = logging.getLogger(__name__)
 

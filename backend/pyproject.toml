@@ -24,6 +24,9 @@ dependencies = [
     "pydantic-settings[yaml]>=2.13.1",
 ]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.vulture]
 exclude = ["src/models"]
 ignore_decorators = ["@router.*"]

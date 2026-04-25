@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Action
+from core.model import Action
 
 logger = logging.getLogger(__name__)
 

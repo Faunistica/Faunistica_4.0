@@ -1,4 +1,4 @@
-from models import Publ
+from core.model import Publ
 
 
 class Messages:

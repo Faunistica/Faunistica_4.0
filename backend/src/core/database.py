@@ -10,14 +10,17 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from core.config import settings
-from models import Base
+from core.model import Base
 
 logger = logging.getLogger(__name__)
 
 
 _engine = create_async_engine(str(settings.DB_URL), echo=settings.DB_ECHO)
 _async_session_local = async_sessionmaker(
-    bind=_engine, class_=AsyncSession, expire_on_commit=False
+    bind=_engine,
+    class_=AsyncSession,
+    autoflush=False,
+    expire_on_commit=False,
 )
 
 

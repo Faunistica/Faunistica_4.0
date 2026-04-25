@@ -6,7 +6,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 
-from models import Record
+from core.model import Record
 
 logger = logging.getLogger(__name__)
 

@@ -14,8 +14,8 @@ from bot.messages import Messages
 from bot.states import RegistrationStates, RenameStates, SociologyStates, SupportStates
 from core.config import settings
 from core.database import get_session
+from core.model import User
 from core.security import get_password_hash
-from models import User
 from repository.log import log_action
 from repository.publication import (
     get_publication,
