@@ -14,6 +14,7 @@ router = APIRouter()
 
 
 # FIXME: support json, maybe paginated
+# I think also drop excel support, limit to CSV, TSV, JSON
 @router.get("/")
 @limiter.limit("1/minute")
 async def list_records(

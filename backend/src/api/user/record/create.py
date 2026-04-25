@@ -1,40 +1,36 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel
 
-from core.dependencies import DBSession
+from core.dependencies import ClientIP, DBSession
 from core.rate_limiter import limiter
 from repository import record
-from repository.user import get_user
-from schemas.common import Message
-from schemas.records import RecordBase
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/")
+class RecordCreated(BaseModel):
+    id: int
+
+
+@router.post("/", status_code=201)
 @limiter.limit("5/minute")
 async def create_record(
     request: Request,
-    data: RecordBase,
-    user_id: int,
+    data: record.RecordBase,
+    ip: ClientIP,
     session: DBSession,
-) -> Message:
+) -> RecordCreated:
     """
     Создание новой записи наблюдения вида.
 
     Создает новую запись с данными таксономии, географии и экземпляров.
     """
-    user = await get_user(session, user_id)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
-
     try:
-        await record.create_record(session, data)
-        return Message(message="ok")
+        new_id = await record.create_record(session, data, ip)
+        return RecordCreated(id=new_id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(

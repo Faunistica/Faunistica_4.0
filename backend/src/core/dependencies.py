@@ -18,8 +18,16 @@ def get_location_data(request: Request) -> list[RegionData]:
     return request.app.state.location_data
 
 
-# NOTE: Don't use this dependency to get {user_id} path parameter
+def get_client_ip(request: Request) -> str:
+    """Extract client IP, checking X-Forwarded-For header first."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
 type TokenUser = Annotated[UserMinimal, Depends(get_jwt_user)]
 type DBSession = Annotated[AsyncSession, Depends(get_session)]
 type HTTPClient = Annotated[aiohttp.ClientSession, Depends(get_http_session)]
 type LocationData = Annotated[list[RegionData], Depends(get_location_data)]
+type ClientIP = Annotated[str, Depends(get_client_ip)]

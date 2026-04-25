@@ -1,7 +1,9 @@
 import logging
 from collections.abc import Sequence
+from datetime import datetime
 
-from sqlalchemy import and_, delete, insert, select, update
+from sqlalchemy import and_, delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import Record
@@ -10,10 +12,36 @@ from schemas.records import RecordBase, RecordUpdate
 logger = logging.getLogger(__name__)
 
 
-async def create_record(session: AsyncSession, record: RecordBase) -> None:
-    stmt = insert(Record).values(**record.model_dump())
-    await session.execute(stmt)
+async def create_record(
+    session: AsyncSession, record: RecordBase, ip: str
+) -> int | None:
+    now = datetime.now()
+
+    max_id_subq = (
+        select(func.coalesce(func.max(Record.id), 0) + 1)
+        .where(Record.user_id == record.user_id)
+        .where(Record.publ_id == record.publ_id)
+        .scalar_subquery()
+    )
+
+    data = record.model_dump()
+
+    stmt = (
+        pg_insert(Record)
+        .values(
+            id=max_id_subq,
+            **data,
+            created_at=now,
+            updated_at=now,
+            ip=ip,
+        )
+        .returning(Record.id)
+    )
+    result = await session.execute(stmt)
+    new_id = result.scalar_one()
     await session.commit()
+
+    return new_id
 
 
 async def get_user_records(session: AsyncSession, user_id: int) -> Sequence[Record]:

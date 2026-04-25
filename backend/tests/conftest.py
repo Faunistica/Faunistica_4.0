@@ -98,25 +98,35 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
             items="[]",
         )
         session.add(user)
+
+        from core.model import Publ
+        publ = Publ(id=1, name="Test Publ")
+        session.add(publ)
         await session.flush()
 
         records = [
             Record(
+                id=1,
                 user_id=user_data["id"],
+                publ_id=1,
                 type="test_type",
                 genus="Testus",
                 latitude=55.5,
                 longitude=37.5,
             ),
             Record(
+                id=2,
                 user_id=user_data["id"],
+                publ_id=1,
                 type="test_type",
                 genus="Testus",
                 latitude=55.6,
                 longitude=37.6,
             ),
             Record(
+                id=3,
                 user_id=user_data["id"],
+                publ_id=1,
                 type="no_coords",
             ),
         ]

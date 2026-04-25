@@ -76,12 +76,12 @@ class Action(Base):
 class Record(Base):
     __tablename__ = "records"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int | None] = mapped_column(Integer, primary_key=True)
     publ_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("publs.id", ondelete="CASCADE")
+        Integer, ForeignKey("publs.id", ondelete="CASCADE"), primary_key=True
     )
     user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.id", ondelete="CASCADE")
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
     created_at: Mapped[datetime | None] = mapped_column(
         "datetime", TIMESTAMP(precision=6)

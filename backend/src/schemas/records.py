@@ -6,12 +6,8 @@ from schemas.common import UNSET, Unset
 
 
 class RecordBase(BaseModel):
-    id: int | None = None
-    publ_id: int | None = None
-    user_id: int | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-    ip: str | None = None
+    publ_id: int
+    user_id: int
 
 
 class RecordFull(RecordBase):
