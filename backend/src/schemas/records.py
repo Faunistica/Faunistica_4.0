@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from schemas.common import UNSET, Unset
 
@@ -15,6 +15,8 @@ class RecordBase(BaseModel):
 
 
 class RecordFull(RecordBase):
+    model_config = ConfigDict(from_attributes=True)
+
     errors: str | None = None
     type: str | None = None
     country: str | None = None

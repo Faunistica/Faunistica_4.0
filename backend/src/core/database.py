@@ -19,7 +19,8 @@ _engine = create_async_engine(str(settings.DB_URL), echo=settings.DB_ECHO)
 _async_session_local = async_sessionmaker(
     bind=_engine,
     class_=AsyncSession,
-    autoflush=False,
+    # TODO: add later
+    # autoflush=False,
     expire_on_commit=False,
 )
 

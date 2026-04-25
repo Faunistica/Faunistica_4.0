@@ -1,11 +1,11 @@
 import logging
 from collections.abc import Sequence
 
-from sqlalchemy import and_, insert, select
+from sqlalchemy import and_, delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import Record
-from schemas.records import RecordBase
+from schemas.records import RecordBase, RecordUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -23,15 +23,14 @@ async def get_user_records(session: AsyncSession, user_id: int) -> Sequence[Reco
 
 
 async def delete_record(session: AsyncSession, record_id: int, user_id: int) -> bool:
-    stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
+    stmt = (
+        delete(Record)
+        .where(and_(Record.id == record_id, Record.user_id == user_id))
+        .returning(Record.id)
+    )
     result = await session.execute(stmt)
-    record = result.scalar_one_or_none()
 
-    if record is not None:
-        await session.delete(record)
-        await session.commit()
-        return True
-    return False
+    return result.scalar_one_or_none() is not None
 
 
 async def get_record(
@@ -44,18 +43,16 @@ async def get_record(
 
 # FIXME: wtf
 async def update_record(
-    session: AsyncSession, record_id: int, user_id: int, new_data: dict
-) -> bool:
-    stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
-    result = await session.execute(stmt)
-    record = result.scalar_one_or_none()
+    session: AsyncSession,
+    record_id: int,
+    user_id: int,
+    data: RecordUpdate,
+) -> None:
+    stmt = (
+        update(Record)
+        .where(and_(Record.id == record_id, Record.user_id == user_id))
+        .values(data.model_dump(exclude_unset=True))
+    )
 
-    if record is None:
-        return False
-
-    for key, value in new_data.items():
-        if key != "hash":
-            setattr(record, key, value)
-
+    await session.execute(stmt)
     await session.commit()
-    return True

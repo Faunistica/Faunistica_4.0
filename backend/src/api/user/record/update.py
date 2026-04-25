@@ -7,7 +7,7 @@ from core.dependencies import DBSession
 from core.rate_limiter import limiter
 from repository import record
 from schemas.common import Message
-from schemas.records import EditRecordRequest
+from schemas.records import RecordUpdate
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -18,7 +18,7 @@ router = APIRouter()
 async def update_record(
     request: Request,
     record_id: int,
-    data: EditRecordRequest,
+    data: RecordUpdate,
     user_id: int,
     session: DBSession,
 ) -> Message:
