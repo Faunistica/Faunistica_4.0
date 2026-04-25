@@ -96,7 +96,7 @@ async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
     )
 
     species_stmt = select(
-        func.count(func.distinct(func.concat(Record.tax_gen, "_", Record.tax_sp)))
+        func.count(func.distinct(func.concat(Record.genus, "_", Record.species)))
     ).where(Record.type == "rec_ok", Record.user_id == user_id)
     result = await session.execute(species_stmt)
     stats["species_count"] = result.scalar()

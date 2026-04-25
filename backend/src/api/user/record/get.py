@@ -37,7 +37,7 @@ async def get_record(
         )
 
     return GetRecordResponse(
-        id=record_id,
+        id=record_data.id,
         type=record_data.type,
         countrycode=record_data.country,
         stateprovince=record_data.region,

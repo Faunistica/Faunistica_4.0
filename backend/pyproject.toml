@@ -10,7 +10,6 @@ dependencies = [
     "geopy",
     "pygbif",
     "sqlalchemy",
-    "dotenv",
     "asyncpg",
     "aiogram",
     "cryptography",
