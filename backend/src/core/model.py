@@ -1,17 +1,16 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    TIMESTAMP,
     BigInteger,
     Boolean,
     Double,
-    Float,
     ForeignKey,
     Integer,
     Numeric,
     String,
     Text,
 )
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -88,7 +87,7 @@ class Record(Base):
         BigInteger, ForeignKey("users.id", ondelete="CASCADE")
     )
     # DEPRECATED
-    datetime: Mapped[datetime | None] = mapped_column(TIMESTAMP)
+    datetime: Mapped[datetime | None] = mapped_column(TIMESTAMP(precision=6))
     ip: Mapped[str | None] = mapped_column(Text)
     # DEPRECATED
     errors: Mapped[str | None] = mapped_column(Text)
@@ -110,6 +109,8 @@ class Record(Base):
     tax_sp_def: Mapped[bool | None] = mapped_column("tax_sp.def", Boolean)
     # DEPRECATED
     abu: Mapped[float | None] = mapped_column("abu", Double)
+
+    verbatimcoordinates: Mapped[str | None] = mapped_column("verbatimcoordinates", Text)
     coordinate_uncertainty: Mapped[float | None] = mapped_column(
         "coordinateuncertaintyinmeters", Numeric
     )
@@ -149,7 +150,7 @@ class Record(Base):
     genus: Mapped[str | None] = mapped_column(Text)
     species: Mapped[str | None] = mapped_column("specificepithet", Text)
     tax_verbatim: Mapped[bool | None] = mapped_column(Boolean)
-    taxon_rank: Mapped[bool | None] = mapped_column("taxonrank", Boolean)
+    taxon_rank: Mapped[str | None] = mapped_column("taxonrank", Text)
     # DEPRECATED
     is_new_species: Mapped[bool | None] = mapped_column("tax_nsp", Boolean)
     type_status: Mapped[str | None] = mapped_column(Text)
