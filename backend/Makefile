@@ -1,4 +1,4 @@
-.PHONY: format lint isort install sync
+.PHONY: format lint isort install sync migrate
 
 run: install
 	uv run fastapi dev src/app.py
@@ -18,3 +18,6 @@ isort:
 lint:
 	uv run ruff check src/ alembic/
 	uv run ty check src/ alembic/
+
+migrate:
+	uv run alembic upgrade head
