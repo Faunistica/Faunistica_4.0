@@ -10,7 +10,7 @@ class UserMinimal(BaseModel):
     username: str
 
 
-class UpdateUser(BaseModel):
+class UserUpdate(BaseModel):
     publ_id: int | None | Unset = UNSET
     tlg_name: str | None | Unset = UNSET
     tlg_username: str | None | Unset = UNSET

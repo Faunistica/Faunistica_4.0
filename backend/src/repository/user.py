@@ -7,7 +7,7 @@ from sqlalchemy.future import select
 
 from core.model import Publ, User
 from core.security import check_password_hash
-from schemas.user import UpdateUser
+from schemas.user import UserUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> Non
     await session.commit()
 
 
-async def update_user(session: AsyncSession, user_id: int, data: UpdateUser) -> None:
+async def update_user(session: AsyncSession, user_id: int, data: UserUpdate) -> None:
     stmt = (
         update(User)
         .where(User.id == user_id)

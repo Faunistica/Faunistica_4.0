@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]",
-    "slowapi",
     "geopy",
     "pygbif",
     "sqlalchemy",
@@ -22,6 +21,7 @@ dependencies = [
     "greenlet>=3.3.2",
     "alembic>=1.18.4",
     "pydantic-settings[yaml]>=2.13.1",
+    "slowapi>=0.1.9",
 ]
 
 [tool.setuptools.packages.find]
@@ -60,6 +60,9 @@ ignore = [
     "PLR0912"  # ignore too many branches
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "ANN001", "ANN201", "E501", "PLC0415", "S105", "PLW0603", "ANN202"]
+
 [tool.ruff.lint.isort]
 combine-as-imports = true
 force-single-line = false
@@ -74,4 +77,26 @@ dev = [
     "ty>=0.0.32",
     "types-openpyxl>=3.1.5.20260408",
     "vulture>=2.16",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+    "testcontainers>=4.0.0",
 ]
+test = [
+    "pytest>=8.3.0",
+    "httpx>=0.28.0",
+    "pytest-asyncio>=0.25.0",
+    "testcontainers>=4.1.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+pythonpath = ["src"]
+addopts = "-W ignore::DeprecationWarning"
+
+[project.scripts]
