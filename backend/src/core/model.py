@@ -101,14 +101,14 @@ class Record(Base):
     latitude: Mapped[float | None] = mapped_column("decimallatitude", Double)
     longitude: Mapped[float | None] = mapped_column("decimallongitude", Double)
     # DEPRECATED
-    decimallongitude_raw: Mapped[float | None] = mapped_column(
-        "decimallongitude_raw", Double
-    )
+    decimallongitude_raw: Mapped[float | None] = mapped_column("geo_ee_raw", Double)
     # DEPRECATED
-    decimallatitude_raw: Mapped[float | None] = mapped_column(
-        "decimallatitude_raw", Double
-    )
-    uncertainty: Mapped[float | None] = mapped_column(
+    decimallatitude_raw: Mapped[float | None] = mapped_column("geo_nn_raw", Double)
+    # DEPRECATED
+    tax_sp_def: Mapped[bool | None] = mapped_column("tax_sp.def", Boolean)
+    # DEPRECATED
+    abu: Mapped[float | None] = mapped_column("abu", Double)
+    coordinate_uncertainty: Mapped[float | None] = mapped_column(
         "coordinateuncertaintyinmeters", Double
     )
 
@@ -124,8 +124,6 @@ class Record(Base):
     month: Mapped[int | None] = mapped_column("eve_MM", Integer)
     # DEPRECATED
     day: Mapped[int | None] = mapped_column("eve_DD", Integer)
-    # DEPRECATED
-    day_defined: Mapped[bool | None] = mapped_column("day_defined", Boolean)
     # DEPRECATED
     year_end: Mapped[int | None] = mapped_column("eve_YY_end", Integer)
     # DEPRECATED

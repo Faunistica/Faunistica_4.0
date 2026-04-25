@@ -39,7 +39,8 @@ def upgrade() -> None:
     # Leave eve_** as is
     op.add_column("records", sa.Column("verbatimeventdate", sa.Text(), nullable=True))
 
-    op.alter_column("records", "eve_day.def", new_column_name="dttm_precision")
+    # eve_day.def is a boolean, dttm_precision is expected to be TEXT
+    op.add_column("records", sa.Column("dttm_precision", sa.Text(), nullable=True))
     op.add_column("records", sa.Column("dttm_interval", sa.Boolean(), nullable=True))
     op.alter_column("records", "eve_habitat", new_column_name="habitat")
     op.add_column("records", sa.Column("samplingprotocol", sa.Text(), nullable=True))
@@ -103,7 +104,7 @@ def downgrade() -> None:
     op.drop_column("records", "samplingprotocol")
     op.alter_column("records", "habitat", new_column_name="eve_habitat")
     op.drop_column("records", "dttm_interval")
-    op.alter_column("records", "dttm_precision", new_column_name="eve_day.def")
+    op.drop_column("records", "dttm_precision")
     op.drop_column("records", "verbatimeventdate")
 
     op.alter_column("records", "locationremarks", new_column_name="geo_REM")

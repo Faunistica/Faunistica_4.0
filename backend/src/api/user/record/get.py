@@ -67,7 +67,7 @@ async def get_record(
         organismquantity=record_data.quantity,
         abu_details=record_data.abu_details,
         occurrenceremarks=record_data.occurrence_remarks,
-        coordinateuncertaintyinmeters=record_data.uncertainty,
+        coordinateuncertaintyinmeters=record_data.coordinate_uncertainty,
         eve_YY_end=record_data.year_end,
         eve_MM_end=record_data.month_end,
         eve_DD_end=record_data.day_end,
