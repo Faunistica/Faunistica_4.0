@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from core.model import EventRecord, Publ
+from core.model import EventRecord, Publ, User
 
 logger = logging.getLogger(__name__)
 
@@ -44,3 +44,18 @@ async def user_filled_publication(
         return False
 
     return record_type == "rec_ok"
+
+
+async def get_publications_by_ids(
+    session: AsyncSession,
+    ids: list[int],
+) -> Sequence[Publ]:
+    stmt = select(Publ).where(Publ.id.in_(ids))
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
+async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:
+    stmt = select(User).where(User.user_id == user_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
