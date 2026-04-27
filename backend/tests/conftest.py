@@ -1,6 +1,7 @@
 import os
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime, timedelta
+from uuid import uuid4
 
 import jwt as pyjwt
 import pytest
@@ -46,13 +47,14 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
     """Seed test user and records once per session."""
     from sqlalchemy import text
 
-    from core.model import Base, Record, User
+    from core.model import Base, EventRecord, User
     from core.security import get_password_hash
 
     engine = db_engine
     maker = db_session_maker
 
     async with engine.connect() as conn:
+        await conn.execute(text("DROP TABLE IF EXISTS event_records CASCADE"))
         await conn.execute(text("DROP TABLE IF EXISTS records CASCADE"))
         await conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
         await conn.execute(text("DROP TABLE IF EXISTS actions CASCADE"))
@@ -81,9 +83,10 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
         session.add(publ)
         await session.flush()
 
+        record_ids = []
         records = [
-            Record(
-                id=1,
+            EventRecord(
+                id=uuid4(),
                 user_id=user_data["id"],
                 publ_id=1,
                 type="test_type",
@@ -91,8 +94,8 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
                 latitude=55.5,
                 longitude=37.5,
             ),
-            Record(
-                id=2,
+            EventRecord(
+                id=uuid4(),
                 user_id=user_data["id"],
                 publ_id=1,
                 type="test_type",
@@ -100,8 +103,8 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
                 latitude=55.6,
                 longitude=37.6,
             ),
-            Record(
-                id=3,
+            EventRecord(
+                id=uuid4(),
                 user_id=user_data["id"],
                 publ_id=1,
                 type="no_coords",
@@ -109,12 +112,13 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
         ]
         for record in records:
             session.add(record)
+            record_ids.append(str(record.id))
 
         await session.commit()
-
-    yield
+        yield {"record_ids": record_ids}
 
     async with db_session_maker() as session:
+        await session.execute(text("DROP TABLE IF EXISTS event_records CASCADE"))
         await session.execute(text("DROP TABLE IF EXISTS records CASCADE"))
         await session.execute(text("DROP TABLE IF EXISTS users CASCADE"))
         await session.execute(text("DROP TABLE IF EXISTS actions CASCADE"))

@@ -99,4 +99,3 @@ python_functions = ["test_*"]
 pythonpath = ["src"]
 addopts = "-W ignore::DeprecationWarning"
 
-[project.scripts]

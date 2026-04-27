@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request
 
@@ -16,7 +17,7 @@ router = APIRouter()
 async def get_record(
     request: Request,
     user_id: int,
-    record_id: int,
+    record_id: UUID,
     session: DBSession,
 ) -> RecordFull:
     """

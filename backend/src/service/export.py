@@ -6,7 +6,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 
-from core.model import Record
+from core.model import EventRecord
 
 logger = logging.getLogger(__name__)
 
@@ -19,14 +19,11 @@ COLUMN_MAPPING = {
     "verbatimlocality": "Место сбора",
     "decimallatitude": "Широта (десятич.)",
     "decimallongitude": "Долгота (десятич.)",
-    "verbatimlatitude": "Широта (изнач.)",
-    "verbatimlongitude": "Долгота (изнач.)",
+    "verbatimcoordinates": "Координаты (изнач.)",
     "georeferencedby": "Происхождение координат",
     "locationremarks": "Примечания к расположению",
-    "eve_YY": "Год",
-    "eve_MM": "Месяц",
-    "eve_DD": "День",
-    "day_defined": "Определён ли день",
+    "verbatimeventdate": "Дата (текст)",
+    "dttm_precision": "Точность даты",
     "habitat": "Биотоп",
     "samplingeffort": "Выборочное усиление",
     "recordedby": "Коллектор",
@@ -34,21 +31,18 @@ COLUMN_MAPPING = {
     "family": "Семейство",
     "genus": "Род",
     "specificepithet": "Вид",
-    "taxonrank": "Определён ли вид",
-    "tax_nsp": "Описан ли как новый вид",
+    "taxonrank": "Таксон. ранг",
     "type_status": "Типовой статус",
     "taxonremarks": "Таксономические примечания",
     "organismquantity": "Общее кол-во особей",
-    "abu_details": "Кол-во особей каждого пола/зрелости",
+    "organismquantitytype": "Тип кол-ва",
+    "lifestage": "Стадия",
     "occurrenceremarks": "Комментарий к особям",
     "coordinateuncertaintyinmeters": "Радиус неточности координат, м",
-    "eve_YY_end": "Конечный год",
-    "eve_MM_end": "Конечный месяц",
-    "eve_DD_end": "Конечный день",
 }
 
 
-def records_to_excel(records: Sequence[Record]) -> Generator[bytes]:
+def records_to_excel(records: Sequence[EventRecord]) -> Generator[bytes]:
     output = io.BytesIO()
     wb = Workbook()
     ws = wb.active

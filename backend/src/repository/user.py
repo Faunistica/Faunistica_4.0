@@ -21,7 +21,7 @@ async def find_user_by_username(session: AsyncSession, username: str) -> User | 
 async def is_password_correct(
     session: AsyncSession, user_id: int, user_pass: str
 ) -> bool:
-    stmt = select(User.hash).where(User.id == user_id)
+    stmt = select(User.hash).where(User.user_id == user_id)
     result = await session.execute(stmt)
     user_hash = result.scalar_one_or_none()
 
@@ -38,7 +38,7 @@ async def get_user_unsafe(session: AsyncSession, user_id: int) -> User:
     ONLY USE IN TELEGRAM BOT
     """
 
-    stmt = select(User).where(User.id == user_id)
+    stmt = select(User).where(User.user_id == user_id)
     result = await session.execute(stmt)
 
     # NOTE: i'm not sure if this is better then before
@@ -47,14 +47,16 @@ async def get_user_unsafe(session: AsyncSession, user_id: int) -> User:
 
 
 async def get_user(session: AsyncSession, user_id: int) -> User | None:
-    stmt = select(User).where(User.id == user_id)
+    stmt = select(User).where(User.user_id == user_id)
     result = await session.execute(stmt)
 
     return result.scalar_one_or_none()
 
 
 async def get_current_publication(session: AsyncSession, user_id: int) -> Publ | None:
-    stmt = select(Publ).join(User, User.publ_id == Publ.id).where(User.id == user_id)
+    stmt = (
+        select(Publ).join(User, User.publ_id == Publ.id).where(User.user_id == user_id)
+    )
     result = await session.execute(stmt)
 
     return result.scalar_one_or_none()
@@ -70,7 +72,7 @@ async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> Non
 async def update_user(session: AsyncSession, user_id: int, data: UserUpdate) -> None:
     stmt = (
         update(User)
-        .where(User.id == user_id)
+        .where(User.user_id == user_id)
         .values(**data.model_dump(exclude_unset=True))
     )
     await session.execute(stmt)

@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
@@ -11,8 +12,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-class RecordCreated(BaseModel):
-    id: int
+class EventRecordCreated(BaseModel):
+    id: UUID
 
 
 @router.post("/", status_code=201)
@@ -22,15 +23,15 @@ async def create_record(
     data: record.RecordBase,
     ip: ClientIP,
     session: DBSession,
-) -> RecordCreated:
+) -> EventRecordCreated:
     """
     Создание новой записи наблюдения вида.
 
     Создает новую запись с данными таксономии, географии и экземпляров.
     """
     try:
-        new_id = await record.create_record(session, data, ip)
-        return RecordCreated(id=new_id)
+        new_record = await record.create_record(session, data, ip)
+        return EventRecordCreated(id=new_record.id)
     except Exception as e:
         logger.error(f"Server database error: {e}", exc_info=True)
         raise HTTPException(

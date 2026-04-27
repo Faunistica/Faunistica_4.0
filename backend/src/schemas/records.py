@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -13,8 +14,14 @@ class RecordBase(BaseModel):
 class RecordFull(RecordBase):
     model_config = ConfigDict(from_attributes=True)
 
+    id: UUID
+
     errors: str | None = None
     type: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    ip: str | None = None
+
     country: str | None = None
     region: str | None = None
     district: str | None = None
@@ -26,15 +33,11 @@ class RecordFull(RecordBase):
     coordinate_uncertainty: float | None = None
     georef_source: str | None = None
     location_remarks: str | None = None
-    year: int | None = None
-    month: int | None = None
-    day: int | None = None
-    year_end: int | None = None
-    month_end: int | None = None
-    day_end: int | None = None
+
     verbatim_date: str | None = None
     date_precision: str | None = None
     is_interval: bool | None = None
+
     habitat: str | None = None
     sampling_protocol: str | None = None
     sampling_effort: str | None = None
@@ -45,6 +48,7 @@ class RecordFull(RecordBase):
     catalog_number: str | None = None
     collection_code: str | None = None
     recorded_by: str | None = None
+
     family: str | None = None
     genus: str | None = None
     species: str | None = None
@@ -53,6 +57,7 @@ class RecordFull(RecordBase):
     type_status: str | None = None
     accepted_name: str | None = None
     taxon_remarks: str | None = None
+
     quantity: float | None = None
     quantity_type: str | None = None
     sex: str | None = None
@@ -60,18 +65,9 @@ class RecordFull(RecordBase):
     occurrence_remarks: str | None = None
     identification_remarks: str | None = None
 
-    # DEPRECATED
-    longitude_raw: str | None = None
-    latitude_raw: str | None = None
-    tax_sp_def: bool | None = None
-    abu: float | None = None
-    is_new_species: bool | None = None
-    abu_details: str | None = None
-    abu_ind_rem: str | None = None
-
 
 class RecordUpdate(BaseModel):
-    id: int | None | Unset = UNSET
+    id: UUID | None | Unset = UNSET
     publ_id: int | None | Unset = UNSET
     user_id: int | None | Unset = UNSET
     created_at: datetime | None | Unset = UNSET
@@ -91,15 +87,11 @@ class RecordUpdate(BaseModel):
     coordinate_uncertainty: float | None | Unset = UNSET
     georef_source: str | None | Unset = UNSET
     location_remarks: str | None | Unset = UNSET
-    year: int | None | Unset = UNSET
-    month: int | None | Unset = UNSET
-    day: int | None | Unset = UNSET
-    year_end: int | None | Unset = UNSET
-    month_end: int | None | Unset = UNSET
-    day_end: int | None | Unset = UNSET
+
     verbatim_date: str | None | Unset = UNSET
     date_precision: str | None | Unset = UNSET
     is_interval: bool | None | Unset = UNSET
+
     habitat: str | None | Unset = UNSET
     sampling_protocol: str | None | Unset = UNSET
     sampling_effort: str | None | Unset = UNSET
@@ -110,6 +102,7 @@ class RecordUpdate(BaseModel):
     catalog_number: str | None | Unset = UNSET
     collection_code: str | None | Unset = UNSET
     recorded_by: str | None | Unset = UNSET
+
     family: str | None | Unset = UNSET
     genus: str | None | Unset = UNSET
     species: str | None | Unset = UNSET
@@ -118,18 +111,10 @@ class RecordUpdate(BaseModel):
     type_status: str | None | Unset = UNSET
     accepted_name: str | None | Unset = UNSET
     taxon_remarks: str | None | Unset = UNSET
+
     quantity: float | None | Unset = UNSET
     quantity_type: str | None | Unset = UNSET
     sex: str | None | Unset = UNSET
     life_stage: str | None | Unset = UNSET
     occurrence_remarks: str | None | Unset = UNSET
-    identification_remarks: None | Unset = UNSET
-
-    # DEPRECATED
-    longitude_raw: str | None | Unset = UNSET
-    latitude_raw: str | None | Unset = UNSET
-    tax_sp_def: bool | None | Unset = UNSET
-    abu: float | None | Unset = UNSET
-    is_new_species: bool | None | Unset = UNSET
-    abu_details: str | None | Unset = UNSET
-    abu_ind_rem: str | None | Unset = UNSET
+    identification_remarks: str | None | Unset = UNSET

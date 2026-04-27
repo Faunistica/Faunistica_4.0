@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request
 
@@ -16,7 +17,7 @@ router = APIRouter()
 @limiter.limit("20/minute")
 async def update_record(
     request: Request,
-    record_id: int,
+    record_id: UUID,
     data: RecordUpdate,
     user_id: int,
     session: DBSession,

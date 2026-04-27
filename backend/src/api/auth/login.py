@@ -32,11 +32,11 @@ async def login(
         logger.warning("User not found for this username")
         raise HTTPException(status_code=404, detail="User not found for this username")
 
-    if not await is_password_correct(session, user.id, data.password):
+    if not await is_password_correct(session, user.user_id, data.password):
         logger.warning("Wrong password")
         raise HTTPException(status_code=401, detail="Wrong password")
 
-    token_payload = TokenPayload(sub=str(user.id), username=data.username)
+    token_payload = TokenPayload(sub=str(user.user_id), username=data.username)
     set_response_token_cookies(response, token_payload)
 
     return Message(message="ok")

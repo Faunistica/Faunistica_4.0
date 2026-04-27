@@ -6,7 +6,7 @@ from sqlalchemy import func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from core.model import Publ, Record, User
+from core.model import EventRecord, Publ, User
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ async def get_general_stats(session: AsyncSession) -> dict:
         }
     )
 
-    result = await session.execute(select(Record.type))
+    result = await session.execute(select(EventRecord.type))
     records = result.scalars().all()
     rec_ok = records.count("rec_ok")
 
@@ -52,10 +52,12 @@ async def get_general_stats(session: AsyncSession) -> dict:
     )
 
     species_stmt = select(
-        func.count(func.distinct(func.concat(Record.genus, "_", Record.species)))
-    ).where(Record.type == "rec_ok")
-    families_stmt = select(func.count(func.distinct(Record.family))).where(
-        Record.type == "rec_ok"
+        func.count(
+            func.distinct(func.concat(EventRecord.genus, "_", EventRecord.species))
+        )
+    ).where(EventRecord.type == "rec_ok")
+    families_stmt = select(func.count(func.distinct(EventRecord.family))).where(
+        EventRecord.type == "rec_ok"
     )
 
     species_result = await session.execute(species_stmt)
@@ -72,7 +74,7 @@ async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
 
     publ_ids = set()
     publs = []
-    recs_stmt = select(Record.publ_id).where(Record.user_id == user_id)
+    recs_stmt = select(EventRecord.publ_id).where(EventRecord.user_id == user_id)
 
     result = await session.execute(recs_stmt)
     for publ_id in result.scalars().all():
@@ -82,7 +84,9 @@ async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
     stats["processed_publs"] = max(len(publ_ids), 0)
     total_records = len(publs)
 
-    result = await session.execute(select(Record.type).where(Record.user_id == user_id))
+    result = await session.execute(
+        select(EventRecord.type).where(EventRecord.user_id == user_id)
+    )
     records = result.scalars().all()
 
     rec_ok = records.count("rec_ok")
@@ -96,8 +100,10 @@ async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
     )
 
     species_stmt = select(
-        func.count(func.distinct(func.concat(Record.genus, "_", Record.species)))
-    ).where(Record.type == "rec_ok", Record.user_id == user_id)
+        func.count(
+            func.distinct(func.concat(EventRecord.genus, "_", EventRecord.species))
+        )
+    ).where(EventRecord.type == "rec_ok", EventRecord.user_id == user_id)
     result = await session.execute(species_stmt)
     stats["species_count"] = result.scalar()
 

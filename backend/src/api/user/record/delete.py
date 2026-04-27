@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request, status
 
@@ -14,7 +15,7 @@ router = APIRouter()
 @limiter.limit("20/minute")
 async def delete_record(
     request: Request,
-    record_id: int,
+    record_id: UUID,
     user_id: int,
     session: DBSession,
 ) -> None:

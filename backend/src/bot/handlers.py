@@ -232,7 +232,7 @@ class Handlers:
 
                     if publ is None:
                         logger.warning(
-                            "user %d requested his publ while it's none", user.id
+                            "user %d requested his publ while it's none", user.user_id
                         )
                         raise Exception
 
@@ -325,7 +325,7 @@ class Handlers:
                     publ = await get_publication(session, user.publ_id)
                     if publ is None:
                         logger.warning(
-                            "user %d requested his publ while it's none", user.id
+                            "user %d requested his publ while it's none", user.user_id
                         )
                         raise Exception
 

@@ -35,7 +35,7 @@ async def submit_support(  # noqa: PLR0913
                 detail=f"user not found. username: {data.user_name}",
             )
 
-        await telegram.support_message(client, data, user.id)
+        await telegram.support_message(client, data, user.user_id)
         return Message(message="ok")
     except Exception as e:
         logger.error(f"Failed to process support request: {e}", exc_info=True)

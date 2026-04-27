@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from core.model import Publ, Record
+from core.model import EventRecord, Publ
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +31,9 @@ async def user_filled_publication(
     session: AsyncSession, user_id: int, publ_id: int
 ) -> bool:
     stmt = (
-        select(Record.type)
-        .where(Record.user_id == user_id, Record.publ_id == publ_id)
-        .order_by(Record.datetime.desc())
+        select(EventRecord.type)
+        .where(EventRecord.user_id == user_id, EventRecord.publ_id == publ_id)
+        .order_by(EventRecord.created_at.desc())
         .limit(1)
     )
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import (
     BigInteger,
@@ -10,7 +11,7 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import TIMESTAMP
+from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -21,9 +22,9 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     publ_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("publs.id", ondelete="CASCADE")
+        Integer, ForeignKey("publs.publ_id", ondelete="CASCADE")
     )
     tlg_name: Mapped[str | None] = mapped_column(String(255))
     tlg_username: Mapped[str | None] = mapped_column(String(255))
@@ -66,26 +67,24 @@ class Action(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.id", ondelete="CASCADE")
+        BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
     )
     action: Mapped[str | None] = mapped_column(Text)
     object: Mapped[str | None] = mapped_column(Text)
     datetime: Mapped[datetime | None] = mapped_column(TIMESTAMP)
 
 
-class Record(Base):
-    __tablename__ = "records"
+class EventRecord(Base):
+    __tablename__ = "event_records"
 
-    id: Mapped[int | None] = mapped_column(Integer, primary_key=True)
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     publ_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("publs.id", ondelete="CASCADE"), primary_key=True
+        Integer, ForeignKey("publs.publ_id", ondelete="CASCADE")
     )
     user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+        BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
     )
-    created_at: Mapped[datetime | None] = mapped_column(
-        "datetime", TIMESTAMP(precision=6)
-    )
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(precision=6))
     updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(precision=6))
     ip: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)
@@ -98,14 +97,6 @@ class Record(Base):
     is_manual_location: Mapped[bool | None] = mapped_column("adm_verbatim", Boolean)
     latitude: Mapped[float | None] = mapped_column("decimallatitude", Double)
     longitude: Mapped[float | None] = mapped_column("decimallongitude", Double)
-    # DEPRECATED
-    longitude_raw: Mapped[str | None] = mapped_column("geo_ee_raw", Text)
-    # DEPRECATED
-    latitude_raw: Mapped[str | None] = mapped_column("geo_nn_raw", Text)
-    # DEPRECATED
-    tax_sp_def: Mapped[bool | None] = mapped_column("tax_sp.def", Boolean)
-    # DEPRECATED
-    abu: Mapped[float | None] = mapped_column("abu", Double)
 
     verbatimcoordinates: Mapped[str | None] = mapped_column("verbatimcoordinates", Text)
     coordinate_uncertainty: Mapped[float | None] = mapped_column(
@@ -114,19 +105,6 @@ class Record(Base):
 
     georef_source: Mapped[str | None] = mapped_column("georeferencedby", Text)
     location_remarks: Mapped[str | None] = mapped_column("locationremarks", Text)
-
-    # DEPRECATED
-    year: Mapped[int | None] = mapped_column("eve_YY", Numeric)
-    # DEPRECATED
-    month: Mapped[int | None] = mapped_column("eve_MM", Numeric)
-    # DEPRECATED
-    day: Mapped[int | None] = mapped_column("eve_DD", Numeric)
-    # DEPRECATED
-    year_end: Mapped[int | None] = mapped_column("eve_YY_end", Numeric)
-    # DEPRECATED
-    month_end: Mapped[int | None] = mapped_column("eve_MM_end", Numeric)
-    # DEPRECATED
-    day_end: Mapped[int | None] = mapped_column("eve_DD_end", Numeric)
 
     verbatim_date: Mapped[str | None] = mapped_column("verbatimeventdate", Text)
     date_precision: Mapped[str | None] = mapped_column("dttm_precision", Text)
@@ -148,8 +126,6 @@ class Record(Base):
     species: Mapped[str | None] = mapped_column("specificepithet", Text)
     tax_verbatim: Mapped[bool | None] = mapped_column(Boolean)
     taxon_rank: Mapped[str | None] = mapped_column("taxonrank", Text)
-    # DEPRECATED
-    is_new_species: Mapped[bool | None] = mapped_column("tax_nsp", Boolean)
     type_status: Mapped[str | None] = mapped_column(Text)
     accepted_name: Mapped[str | None] = mapped_column("acceptednameusage", Text)
     taxon_remarks: Mapped[str | None] = mapped_column("taxonremarks", Text)
@@ -162,8 +138,3 @@ class Record(Base):
     identification_remarks: Mapped[str | None] = mapped_column(
         "identificationremarks", Text
     )
-
-    # DEPRECATED
-    abu_details: Mapped[str | None] = mapped_column(Text)
-    # DEPRECATED
-    abu_ind_rem: Mapped[str | None] = mapped_column(Text)
