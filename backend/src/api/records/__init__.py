@@ -112,11 +112,17 @@ async def get_record_endpoint(
             detail="Invalid record ID",
         ) from exc
 
-    record = await get_record(session, uuid, user_id)
+    record = await get_record(session, uuid)
     if not record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Record not found",
+        )
+
+    if record.user_id != token.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
         )
 
     return RecordFull.model_validate(record)
@@ -129,12 +135,6 @@ async def update_record_endpoint(
     token: TokenUser,
     session: DBSession,
 ) -> RecordFull:
-    if record.user_id != token.user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied",
-        )
-
     try:
         uuid = UUID(record_id)
     except ValueError as exc:
@@ -150,17 +150,23 @@ async def update_record_endpoint(
             detail="Record not found",
         )
 
+    if existing.user_id != token.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+        )
+
     errors = mock_validate_record(record)
     record_type = mock_determine_type(errors)
 
     await update_record(session, uuid, record, type=record_type, errors=errors)
 
-    updated = await get_record(session, uuid, record.user_id)
+    updated = await get_record(session, uuid)
     return RecordFull.model_validate(updated)
 
 
 @router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_record_endpoint(  # noqa: PLR0913,FAST002
+async def delete_record_endpoint(
     record_id: str,
     session: DBSession,
     token: TokenUser,

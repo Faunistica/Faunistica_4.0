@@ -66,7 +66,7 @@ async def update_record(
     data: RecordUpdate,
     *,
     type: RecordType,
-    errors: str,
+    errors: str | None,
 ) -> bool:
     stmt = (
         update(EventRecord)

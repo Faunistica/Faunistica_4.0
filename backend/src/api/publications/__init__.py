@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from core.dependencies import DBSession, TokenUser
@@ -12,11 +14,13 @@ router = APIRouter(prefix="/publications", tags=["publications"])
 
 
 @router.get("")
-async def list_publications(  # noqa: PLR0913,FAST002
+async def list_publications(
     session: DBSession,
     token: TokenUser,
-    user_id: int = Query(..., description="User ID"),
-    current: bool | None = Query(None, description="Return only current publication"),
+    user_id: Annotated[int, Query(..., description="User ID")],
+    current: Annotated[
+        bool | None, Query(None, description="Return only current publication")
+    ],
 ) -> list[Publication]:
     if user_id != token.user_id:
         raise HTTPException(
