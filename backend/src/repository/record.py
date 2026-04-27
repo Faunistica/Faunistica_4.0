@@ -1,33 +1,24 @@
 import logging
 from collections.abc import Sequence
-from datetime import datetime
-from uuid import UUID, uuid4
+from typing import Literal
+from uuid import UUID
 
 from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import EventRecord
-from schema.records import RecordBase, RecordType, RecordUpdate
+from schema.records import RecordData, RecordMetadata
 
 logger = logging.getLogger(__name__)
 
 
 async def create_record(
-    session: AsyncSession, record: RecordBase, ip: str
+    session: AsyncSession,
+    metadata: RecordMetadata,
 ) -> EventRecord:
-    now = datetime.now()
-    new_id = uuid4()
-
-    data = record.model_dump()
-    del data["id"]
-
     stmt = pg_insert(EventRecord).values(
-        id=new_id,
-        **data,
-        created_at=now,
-        updated_at=now,
-        ip=ip,
+        **metadata.model_dump(),
     )
     result = await session.execute(stmt)
     await session.commit()
@@ -40,6 +31,7 @@ async def get_user_records(
 ) -> Sequence[EventRecord]:
     stmt = select(EventRecord).where(EventRecord.user_id == user_id)
     result = await session.execute(stmt)
+
     return result.scalars().all()
 
 
@@ -56,29 +48,37 @@ async def delete_record(session: AsyncSession, record_id: UUID, user_id: int) ->
 
 async def get_record(session: AsyncSession, record_id: UUID) -> EventRecord | None:
     stmt = select(EventRecord).where(and_(EventRecord.id == record_id))
+
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
 
+# FIXME: throw Permission error, don't silently fail
 async def update_record(
     session: AsyncSession,
     record_id: UUID,
-    data: RecordUpdate,
-    *,
-    type: RecordType,
-    errors: str | None,
-) -> bool:
+    data: RecordData,
+    metadata: RecordMetadata,
+) -> EventRecord | None:
     stmt = (
         update(EventRecord)
-        .where(EventRecord.id == record_id)
-        .values(type=type, errors=errors, **data.model_dump(exclude_unset=True))
-        .returning(EventRecord.id)
+        .where(
+            and_(
+                EventRecord.id == record_id,
+                EventRecord.user_id == metadata.user_id,
+                EventRecord.updated_at == metadata.updated_at,
+            )
+        )
+        .values(
+            **metadata.dump_for_update(),
+            **data.model_dump(),
+        )
     )
 
     result = await session.execute(stmt)
     await session.commit()
 
-    return result.scalar_one_or_none() is not None
+    return result.scalar_one_or_none()
 
 
 async def get_records_paginated(
@@ -87,12 +87,9 @@ async def get_records_paginated(
     publ_id: int,
     page: int = 1,
     page_size: int = 20,
-    sort: str = "created_at",
+    sort: Literal["created_at", "updated_at"] = "created_at",
 ) -> tuple[Sequence[EventRecord], int]:
     offset = (page - 1) * page_size
-
-    if sort not in ("created_at", "updated_at"):
-        sort = "created_at"
 
     order_col = getattr(EventRecord, sort, EventRecord.created_at)
 

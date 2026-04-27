@@ -1,7 +1,12 @@
-from schema.records import RecordType, RecordUpdate
+from datetime import datetime
+from typing import Literal
+from uuid import uuid4
+
+from schema.records import RecordBelonging, RecordData, RecordMetadata, RecordType
 
 
-def mock_validate_record(data: RecordUpdate) -> str | None:
+# FIXME: core!!!
+def _mock_validate_record(data: RecordData) -> str | None:
     errors: list[str] = []
 
     if not data.family:
@@ -24,5 +29,35 @@ def mock_validate_record(data: RecordUpdate) -> str | None:
     return None
 
 
-def mock_determine_type(errors: str | None) -> RecordType:
-    return "valid" if errors is None else "invalid"
+def _determine_type(
+    errors: str | None,
+    submission_type: Literal["submit", "autosave"],
+) -> RecordType:
+    if errors is None:
+        return "rec_ok" if submission_type == "submit" else "check_ok"
+
+    return "rec_fail" if submission_type == "submit" else "check_fail"
+
+
+def create_record_metadata(
+    record: RecordData | None,
+    belongs_to: RecordBelonging,
+    submission_type: Literal["submit", "autosave"],
+    ip: str | None,
+) -> RecordMetadata:
+    errors = _mock_validate_record(record) if record else "Пустая запись"
+    type = _determine_type(errors, submission_type) if record else "check_fail"
+
+    # NOTE: maybe include TZ info from config?
+    now = datetime.now()
+
+    return RecordMetadata(
+        publ_id=belongs_to.publ_id,
+        user_id=belongs_to.user_id,
+        id=uuid4(),
+        errors=errors,
+        type=type,
+        created_at=now,
+        updated_at=now,
+        ip=ip,
+    )
