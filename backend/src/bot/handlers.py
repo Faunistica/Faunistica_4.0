@@ -33,7 +33,7 @@ from repository.user import (
     get_user_unsafe,
     update_user,
 )
-from schemas.user import UserUpdate
+from schema.user import UserUpdate
 
 YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
 NO_WORDS = ["no", "nope", "нет", "не", "refuse"]

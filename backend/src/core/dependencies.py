@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_session
 from core.security import get_jwt_user
-from schemas.geo import RegionData
-from schemas.user import UserMinimal
+from schema.geo import RegionData
+from schema.user import UserMinimal
 
 
 def get_http_session(request: Request) -> aiohttp.ClientSession:

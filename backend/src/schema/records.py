@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from schemas.common import UNSET, Unset
+from schema.common import UNSET, Unset
 
 RecordType = Literal["valid", "invalid"]
 

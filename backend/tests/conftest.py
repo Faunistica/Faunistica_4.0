@@ -12,7 +12,7 @@ from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
 
 from core.config import settings
-from schemas.jwt import TokenPayload
+from schema.jwt import TokenPayload
 
 
 @pytest.fixture(scope="session")

@@ -28,7 +28,7 @@ dependencies = [
 where = ["src"]
 
 [tool.vulture]
-exclude = ["src/models"]
+exclude = ["src/schema", "src/core/model.py"]
 ignore_decorators = ["@router.*"]
 ignore_names = ["cls", "settings_customise_sources", "model_config"]
 

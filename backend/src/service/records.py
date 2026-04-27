@@ -1,4 +1,4 @@
-from schemas.records import RecordType, RecordUpdate
+from schema.records import RecordType, RecordUpdate
 
 
 def mock_validate_record(data: RecordUpdate) -> str | None:

@@ -3,8 +3,8 @@ import logging
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from core.security import set_response_token_cookies, verify_token
-from schemas.common import Message
-from schemas.jwt import TokenPayload
+from schema.common import Message
+from schema.jwt import TokenPayload
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

@@ -15,7 +15,7 @@ from bot import bot
 from core.config import settings
 from core.database import init_db, ping_db
 from core.rate_limiter import limiter, rate_limit_handler
-from schemas.geo import RegionData
+from schema.geo import RegionData
 
 log_format = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 

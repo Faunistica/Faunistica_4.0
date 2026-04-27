@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Response
 
 from core.rate_limiter import limiter
-from schemas.common import Message
+from schema.common import Message
 
 router = APIRouter()
 

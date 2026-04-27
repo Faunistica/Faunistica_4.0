@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import EventRecord
-from schemas.records import RecordBase, RecordType, RecordUpdate
+from schema.records import RecordBase, RecordType, RecordUpdate
 
 logger = logging.getLogger(__name__)
 

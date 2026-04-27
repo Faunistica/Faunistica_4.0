@@ -6,7 +6,7 @@ from starlette.status import HTTP_404_NOT_FOUND
 from core.dependencies import DBSession, HTTPClient
 from core.rate_limiter import limiter
 from repository.user import find_user_by_username
-from schemas.common import Message, SupportRequest
+from schema.common import Message, SupportRequest
 from service import telegram
 
 logger = logging.getLogger(__name__)

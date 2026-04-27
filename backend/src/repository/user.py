@@ -7,7 +7,7 @@ from sqlalchemy.future import select
 
 from core.model import Publ, User
 from core.security import check_password_hash
-from schemas.user import UserUpdate
+from schema.user import UserUpdate
 
 logger = logging.getLogger(__name__)
 

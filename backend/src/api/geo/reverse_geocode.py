@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Request
 
 from core.rate_limiter import limiter
-from schemas.geo import GetLocationRequest, GetLocationResponse
+from schema.geo import GetLocationRequest, GetLocationResponse
 from service import geo
 
 logger = logging.getLogger(__name__)

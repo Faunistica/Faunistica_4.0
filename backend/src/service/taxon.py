@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 
 from core.config import settings
-from schemas.taxonomy import AutofillTaxonResponse, TaxonomyField, TaxonomyFilters
+from schema.taxonomy import AutofillTaxonResponse, TaxonomyField, TaxonomyFilters
 
 logger = logging.getLogger(__name__)
 

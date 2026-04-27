@@ -4,7 +4,7 @@ import logging
 import aiohttp
 
 from core.config import settings
-from schemas.common import SupportRequest
+from schema.common import SupportRequest
 
 logger = logging.getLogger(__name__)
 

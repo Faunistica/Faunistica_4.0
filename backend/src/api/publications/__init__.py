@@ -8,7 +8,7 @@ from repository.publication import (
     get_publications_by_ids,
     get_user_by_id,
 )
-from schemas.common import Publication
+from schema.common import Publication
 
 router = APIRouter(prefix="/publications", tags=["publications"])
 

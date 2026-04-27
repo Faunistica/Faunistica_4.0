@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Request
 
 from core.rate_limiter import limiter
-from schemas.taxonomy import SuggestTaxonRequest, SuggestTaxonResponse
+from schema.taxonomy import SuggestTaxonRequest, SuggestTaxonResponse
 from service import taxon
 
 logger = logging.getLogger(__name__)

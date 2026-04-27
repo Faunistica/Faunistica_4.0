@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import app
-from schemas.geo import RegionData, ReverseGeoCodeLocation
+from schema.geo import RegionData, ReverseGeoCodeLocation
 
 
 @pytest.fixture

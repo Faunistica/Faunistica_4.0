@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from schemas.common import UNSET, Unset
+from schema.common import UNSET, Unset
 
 
 class UserMinimal(BaseModel):

@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Request
 
 from core.rate_limiter import limiter
-from schemas.taxonomy import AutofillTaxonRequest, AutofillTaxonResponse
+from schema.taxonomy import AutofillTaxonRequest, AutofillTaxonResponse
 from service import taxon
 
 router = APIRouter()

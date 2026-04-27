@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 
 from core.dependencies import LocationData
 from core.rate_limiter import limiter
-from schemas.geo import GeoSearchRequest, GeoSearchResponse
+from schema.geo import GeoSearchRequest, GeoSearchResponse
 from service import geo
 
 logger = logging.getLogger(__name__)

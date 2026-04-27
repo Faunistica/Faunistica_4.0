@@ -1,53 +1,12 @@
 import logging
-import re
 
 from fastapi import HTTPException
 from geopy.exc import GeocoderTimedOut
 from geopy.geocoders import Nominatim
 
-from schemas.geo import GeoFilters, RegionData, ReverseGeoCodeLocation
+from schema.geo import GeoFilters, RegionData, ReverseGeoCodeLocation
 
 logger = logging.getLogger(__name__)
-
-
-def _parse_coordinate(coord: str) -> float:
-    coord = coord.strip()
-
-    # 1. Degree: 59°
-    if re.match(r"^(-?\d+(?:\.\d+)?)°(?!\S)$", coord):
-        return round(float(coord), 6)
-
-    # 2. Degree + minutes: 59°29'
-    match_deg_min = re.match(r"^(\d{1,3})°\s*(\d{1,2})\'$", coord)
-    if match_deg_min:
-        degrees = int(match_deg_min.group(1))
-        minutes = int(match_deg_min.group(2))
-        decimal = degrees + minutes / 60
-        return round(decimal, 6)
-
-    # 3. Degree + minutes + seconds: 56°51'10"
-    match_deg_min_sec = re.match(
-        r'^(\d{1,3})°\s*(\d{1,2})\'\s*(\d{1,2})(?:["″])$', coord
-    )
-    if match_deg_min_sec:
-        degrees = int(match_deg_min_sec.group(1))
-        minutes = int(match_deg_min_sec.group(2))
-        seconds = int(match_deg_min_sec.group(3))
-        decimal = degrees + (minutes / 60) + (seconds / 3600)
-        return round(decimal, 6)
-
-    logger.warning(f"Invalid coordinate format: {coord}")
-    raise ValueError(f"Invalid coordinate format: {coord}")
-
-
-def parse_coordinate(coord: str | None) -> float | None:
-    if not coord:
-        return None
-    try:
-        return _parse_coordinate(coord)
-    except ValueError as e:
-        logger.error(f"Value error: {e}", exc_info=True)
-        return None
 
 
 async def get_location_suggestions(

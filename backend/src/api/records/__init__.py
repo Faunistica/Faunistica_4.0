@@ -13,8 +13,8 @@ from repository.record import (
     get_records_paginated,
     update_record,
 )
-from schemas.common import PaginatedResponse
-from schemas.records import RecordCreate, RecordFull, RecordUpdate
+from schema.common import PaginatedResponse
+from schema.records import RecordCreate, RecordFull, RecordUpdate
 from service.records import mock_determine_type, mock_validate_record
 
 router = APIRouter(prefix="/records", tags=["records"])

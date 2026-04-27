@@ -10,8 +10,8 @@ from jwt import DecodeError
 from pydantic import ValidationError
 
 from core.config import settings
-from schemas.jwt import Token, TokenPayload
-from schemas.user import UserMinimal
+from schema.jwt import Token, TokenPayload
+from schema.user import UserMinimal
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ from httpx import ASGITransport, AsyncClient
 
 from app import app
 from core.config import settings
-from schemas.jwt import TokenPayload
+from schema.jwt import TokenPayload
 
 
 def create_test_token(user_id: int, username: str) -> str:

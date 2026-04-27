@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request
 
 from core.dependencies import TokenUser
 from core.rate_limiter import limiter
-from schemas.user import UserMinimal
+from schema.user import UserMinimal
 
 router = APIRouter()
 
