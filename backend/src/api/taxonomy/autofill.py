@@ -1,7 +1,7 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Query, Request
 
 from core.rate_limiter import limiter
 from schemas.taxonomy import AutofillTaxonRequest, AutofillTaxonResponse
@@ -22,8 +22,4 @@ def autofill(
 
     Автоматически заполняет семейство и род по частичному вводу.
     """
-    try:
-        return taxon.autofill(data.field, data.text)
-    except ValueError as e:
-        logger.error(f"Value error: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    return taxon.autofill(data.field, data.text)

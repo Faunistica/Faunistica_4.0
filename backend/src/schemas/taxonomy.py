@@ -2,6 +2,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+type TaxonomyField = Literal["family", "genus", "species"]
+
 
 class SpecimenCount(BaseModel):
     gender: Literal["male", "female", "undefined"]
@@ -19,16 +21,13 @@ class TaxonomyFilters(BaseModel):
 
 
 class SuggestTaxonRequest(BaseModel):
-    field: str
+    field: TaxonomyField
     text: str
     filters: TaxonomyFilters | None = None
 
 
 class SuggestTaxonResponse(BaseModel):
     suggestions: list[str] | None = None
-
-
-type TaxonomyField = Literal["family", "genus", "species"]
 
 
 class AutofillTaxonRequest(BaseModel):

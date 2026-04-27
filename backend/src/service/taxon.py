@@ -11,13 +11,9 @@ csv_path = settings.SPECIES_CSV_PATH
 df = pd.read_csv(csv_path, usecols=["family", "genus", "species"])
 
 
-def suggest(field: str, text: str, filters: TaxonomyFilters | None) -> list[str]:
-    if field not in ["species", "genus", "family"]:
-        logger.warning("Invalid field. Must be 'species', 'genus', or 'family'")
-        raise ValueError("Invalid field. Must be 'species', 'genus', or 'family'.")
-
-    print(filters)
-
+def suggest(
+    field: TaxonomyField, text: str, filters: TaxonomyFilters | None
+) -> list[str]:
     query_df = df.copy()
 
     if filters is not None and filters.family is not None:
