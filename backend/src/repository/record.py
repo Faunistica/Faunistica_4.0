@@ -17,8 +17,12 @@ async def create_record(
     session: AsyncSession,
     metadata: RecordMetadata,
 ) -> EventRecord:
-    stmt = pg_insert(EventRecord).values(
-        **metadata.model_dump(),
+    stmt = (
+        pg_insert(EventRecord)
+        .values(
+            **metadata.model_dump(),
+        )
+        .returning(EventRecord)
     )
     result = await session.execute(stmt)
     await session.commit()
@@ -60,6 +64,9 @@ async def update_record(
     data: RecordData,
     metadata: RecordMetadata,
 ) -> EventRecord | None:
+    # Merge data and metadata, with data taking precedence for overlapping fields
+    update_data = {**metadata.dump_for_update(), **data.model_dump(exclude_unset=True)}
+
     stmt = (
         update(EventRecord)
         .where(
@@ -69,10 +76,8 @@ async def update_record(
                 EventRecord.updated_at == metadata.updated_at,
             )
         )
-        .values(
-            **metadata.dump_for_update(),
-            **data.model_dump(),
-        )
+        .values(update_data)
+        .returning(EventRecord)
     )
 
     result = await session.execute(stmt)

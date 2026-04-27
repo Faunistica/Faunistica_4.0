@@ -33,6 +33,7 @@ class Message(BaseModel):
 
 
 class Publication(BaseModel):
+    id: int
     author: str | None = None
     year: str | None = None
     name: str | None = None

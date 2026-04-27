@@ -68,12 +68,13 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
 
     async with maker() as session:
         user = User(
-            id=user_data["id"],
+            user_id=user_data["user_id"],
             name=user_data["username"],
             tlg_name=user_data["username"],
             tlg_username=user_data["username"],
             hash=get_password_hash(user_data["password"]),
-            items="[]",
+            items="1",
+            publ_id=1,
         )
         session.add(user)
 
@@ -83,31 +84,40 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
         session.add(publ)
         await session.flush()
 
+        from datetime import datetime
+        now = datetime.now(UTC).replace(tzinfo=None)
+
         record_ids = []
         records = [
             EventRecord(
                 id=uuid4(),
-                user_id=user_data["id"],
+                user_id=user_data["user_id"],
                 publ_id=1,
-                type="test_type",
+                type="rec_ok",
                 genus="Testus",
                 latitude=55.5,
                 longitude=37.5,
+                created_at=now,
+                updated_at=now,
             ),
             EventRecord(
                 id=uuid4(),
-                user_id=user_data["id"],
+                user_id=user_data["user_id"],
                 publ_id=1,
-                type="test_type",
+                type="rec_ok",
                 genus="Testus",
                 latitude=55.6,
                 longitude=37.6,
+                created_at=now,
+                updated_at=now,
             ),
             EventRecord(
                 id=uuid4(),
-                user_id=user_data["id"],
+                user_id=user_data["user_id"],
                 publ_id=1,
-                type="no_coords",
+                type="rec_fail",
+                created_at=now,
+                updated_at=now,
             ),
         ]
         for record in records:
@@ -160,7 +170,7 @@ async def async_client(db_session_maker):
 @pytest.fixture(scope="session")
 def test_users():
     return [
-        {"id": 1, "username": "testuser1", "password": "password1"},
+        {"user_id": 1, "username": "testuser1", "password": "password1"},
     ]
 
 

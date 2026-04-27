@@ -23,7 +23,9 @@ class RecordMetadata(RecordBelonging):
     ip: str | None = None
 
     def dump_for_update(self) -> dict[str, Any]:
-        return self.model_dump(exclude={"id", "created_at", "ip"})
+        return self.model_dump(
+            exclude={"id", "created_at", "ip", "publ_id"}, exclude_unset=True
+        )
 
 
 class RecordData(BaseModel):

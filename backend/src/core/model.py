@@ -24,7 +24,7 @@ class User(Base):
 
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     publ_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("publs.publ_id", ondelete="CASCADE")
+        Integer, ForeignKey("publs.id", ondelete="CASCADE")
     )
     tlg_name: Mapped[str | None] = mapped_column(String(255))
     tlg_username: Mapped[str | None] = mapped_column(String(255))
@@ -79,7 +79,7 @@ class EventRecord(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     publ_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("publs.publ_id", ondelete="CASCADE")
+        Integer, ForeignKey("publs.id", ondelete="CASCADE")
     )
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
