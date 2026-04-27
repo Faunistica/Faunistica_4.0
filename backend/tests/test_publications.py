@@ -5,7 +5,7 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test_list_publications(
-    async_client: AsyncClient, auth_token: dict, seed_test_data
+    async_client: AsyncClient, auth_token: dict, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.get("/api/publications?user_id=1")
@@ -15,7 +15,7 @@ async def test_list_publications(
 
 @pytest.mark.asyncio
 async def test_current_publication(
-    async_client: AsyncClient, auth_token: dict, seed_test_data
+    async_client: AsyncClient, auth_token: dict, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.get("/api/publications?user_id=1&current=true")
@@ -33,7 +33,7 @@ async def test_publications_no_token(async_client):
 
 
 @pytest.mark.asyncio
-async def test_publications_wrong_user(async_client, auth_token, seed_test_data):
+async def test_publications_wrong_user(async_client, auth_token, seed_data):
     other_token = create_test_token(2, "other_user", "access")
     async_client.cookies.set("access_token", other_token)
     response = await async_client.get("/api/publications?user_id=2")

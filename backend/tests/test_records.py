@@ -6,7 +6,7 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test_create_record(
-    async_client: AsyncClient, auth_token: dict, test_users, seed_test_data
+    async_client: AsyncClient, auth_token: dict, test_users, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.post(
@@ -19,17 +19,17 @@ async def test_create_record(
 
 @pytest.mark.asyncio
 async def test_get_record(
-    async_client: AsyncClient, auth_token: dict, seed_test_data
+    async_client: AsyncClient, auth_token: dict, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
-    record_id = seed_test_data["record_ids"][0]
+    record_id = seed_data["record_ids"][0]
     response = await async_client.get(f"/api/records/{record_id}?user_id=1")
     assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_list_records(
-    async_client: AsyncClient, auth_token: dict, seed_test_data
+    async_client: AsyncClient, auth_token: dict, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.get(
@@ -46,10 +46,10 @@ async def test_list_records(
 
 @pytest.mark.asyncio
 async def test_update_record_set_coords(
-    async_client: AsyncClient, auth_token: dict, seed_test_data
+    async_client: AsyncClient, auth_token: dict, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
-    record_id = seed_test_data["record_ids"][2]
+    record_id = seed_data["record_ids"][2]
     response = await async_client.put(
         f"/api/records/{record_id}?user_id=1",
         json={"publ_id": 1, "latitude": 55.7, "longitude": 37.7},
@@ -59,10 +59,10 @@ async def test_update_record_set_coords(
 
 @pytest.mark.asyncio
 async def test_update_record_clear_coords(
-    async_client: AsyncClient, auth_token: dict, seed_test_data
+    async_client: AsyncClient, auth_token: dict, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
-    record_id = seed_test_data["record_ids"][0]
+    record_id = seed_data["record_ids"][0]
     response = await async_client.put(
         f"/api/records/{record_id}?user_id=1",
         json={"publ_id": 1, "latitude": None, "longitude": None},
@@ -72,10 +72,10 @@ async def test_update_record_clear_coords(
 
 @pytest.mark.asyncio
 async def test_update_record_set_genus(
-    async_client: AsyncClient, auth_token: dict, seed_test_data
+    async_client: AsyncClient, auth_token: dict, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
-    record_id = seed_test_data["record_ids"][2]
+    record_id = seed_data["record_ids"][2]
     response = await async_client.put(
         f"/api/records/{record_id}?user_id=1",
         json={"publ_id": 1, "genus": "UpdatedGenus"},
@@ -85,10 +85,10 @@ async def test_update_record_set_genus(
 
 @pytest.mark.asyncio
 async def test_update_record_clear_genus(
-    async_client: AsyncClient, auth_token: dict, seed_test_data
+    async_client: AsyncClient, auth_token: dict, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
-    record_id = seed_test_data["record_ids"][0]
+    record_id = seed_data["record_ids"][0]
     response = await async_client.put(
         f"/api/records/{record_id}?user_id=1",
         json={"publ_id": 1, "genus": None},
@@ -98,10 +98,10 @@ async def test_update_record_clear_genus(
 
 @pytest.mark.asyncio
 async def test_delete_record(
-    async_client: AsyncClient, auth_token: dict, seed_test_data
+    async_client: AsyncClient, auth_token: dict, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_token["access_token"])
-    record_id = seed_test_data["record_ids"][2]
+    record_id = seed_data["record_ids"][2]
     response = await async_client.delete(f"/api/records/{record_id}?user_id=1")
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -113,38 +113,38 @@ async def test_list_records_no_token(async_client):
 
 
 @pytest.mark.asyncio
-async def test_get_record_wrong_user(async_client, auth_token, seed_test_data):
+async def test_get_record_wrong_user(async_client, auth_token, seed_data):
     # Create token for user 2, try to access user 1's record
     other_token = create_test_token(2, "other_user", "access")
     async_client.cookies.set("access_token", other_token)
-    record_id = seed_test_data["record_ids"][0]
+    record_id = seed_data["record_ids"][0]
     response = await async_client.get(f"/api/records/{record_id}?user_id=2")
     assert response.status_code == 403
 
 
 @pytest.mark.asyncio
-async def test_list_records_missing_publ_id(async_client, auth_token, seed_test_data):
+async def test_list_records_missing_publ_id(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.get("/api/records?user_id=1")
     assert response.status_code == 422  # FastAPI validation error
 
 
 @pytest.mark.asyncio
-async def test_list_records_invalid_sort(async_client, auth_token, seed_test_data):
+async def test_list_records_invalid_sort(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.get("/api/records?user_id=1&publ_id=1&sort=invalid")
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_list_records_page_size_exceeds_max(async_client, auth_token, seed_test_data):
+async def test_list_records_page_size_exceeds_max(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.get("/api/records?user_id=1&publ_id=1&page_size=200")
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_list_records_pagination_second_page(async_client, auth_token, seed_test_data):
+async def test_list_records_pagination_second_page(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.get("/api/records?user_id=1&publ_id=1&page=2&page_size=1")
     assert response.status_code == 200
@@ -153,14 +153,14 @@ async def test_list_records_pagination_second_page(async_client, auth_token, see
 
 
 @pytest.mark.asyncio
-async def test_list_records_sort_updated_at(async_client, auth_token, seed_test_data):
+async def test_list_records_sort_updated_at(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.get("/api/records?user_id=1&publ_id=1&sort=updated_at")
     assert response.status_code == 200
 
 
 @pytest.mark.asyncio
-async def test_get_record_not_found(async_client, auth_token, seed_test_data):
+async def test_get_record_not_found(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
     fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await async_client.get(f"/api/records/{fake_uuid}?user_id=1")
@@ -168,7 +168,7 @@ async def test_get_record_not_found(async_client, auth_token, seed_test_data):
 
 
 @pytest.mark.asyncio
-async def test_update_record_not_found(async_client, auth_token, seed_test_data):
+async def test_update_record_not_found(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
     fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await async_client.put(
@@ -179,7 +179,7 @@ async def test_update_record_not_found(async_client, auth_token, seed_test_data)
 
 
 @pytest.mark.asyncio
-async def test_get_record_invalid_uuid(async_client, auth_token, seed_test_data):
+async def test_get_record_invalid_uuid(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
     response = await async_client.get("/api/records/not-a-uuid?user_id=1")
     assert response.status_code == 422

@@ -7,6 +7,7 @@ import jwt as pyjwt
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient, Cookies
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
@@ -42,29 +43,39 @@ def db_session_maker(db_engine):
     )
 
 
-@pytest_asyncio.fixture(scope="function")
-async def seed_test_data(db_engine, db_session_maker, test_users):
-    """Seed test user and records once per session."""
-    from sqlalchemy import text
+@pytest_asyncio.fixture(scope="session")
+async def db_schema(db_engine):
+    """Create all tables once per session."""
+    from core.model import Base
 
-    from core.model import Base, EventRecord, User
+    engine = db_engine
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+
+    yield
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest_asyncio.fixture(scope="session")
+async def seed_data(db_engine, db_schema, db_session_maker, test_users):
+    """Truncate and seed test data for each test."""
+    from core.model import EventRecord, Publ, User
     from core.security import get_password_hash
 
     engine = db_engine
     maker = db_session_maker
-
-    async with engine.connect() as conn:
-        await conn.execute(text("DROP TABLE IF EXISTS event_records CASCADE"))
-        await conn.execute(text("DROP TABLE IF EXISTS records CASCADE"))
-        await conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
-        await conn.execute(text("DROP TABLE IF EXISTS actions CASCADE"))
-        await conn.execute(text("DROP TABLE IF EXISTS publs CASCADE"))
-        await conn.commit()
+    user_data = test_users[0]
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    user_data = test_users[0]
+        await conn.execute(
+            text(
+                "TRUNCATE TABLE users, publs, event_records, actions RESTART IDENTITY CASCADE"
+            )
+        )
 
     async with maker() as session:
         user = User(
@@ -78,13 +89,10 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
         )
         session.add(user)
 
-        from core.model import Publ
-
         publ = Publ(id=1, name="Test Publ")
         session.add(publ)
         await session.flush()
 
-        from datetime import datetime
         now = datetime.now(UTC).replace(tzinfo=None)
 
         record_ids = []
@@ -126,14 +134,6 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
 
         await session.commit()
         yield {"record_ids": record_ids}
-
-    async with db_session_maker() as session:
-        await session.execute(text("DROP TABLE IF EXISTS event_records CASCADE"))
-        await session.execute(text("DROP TABLE IF EXISTS records CASCADE"))
-        await session.execute(text("DROP TABLE IF EXISTS users CASCADE"))
-        await session.execute(text("DROP TABLE IF EXISTS actions CASCADE"))
-        await session.execute(text("DROP TABLE IF EXISTS publs CASCADE"))
-        await session.commit()
 
 
 @pytest_asyncio.fixture

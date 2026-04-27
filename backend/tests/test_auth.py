@@ -5,7 +5,7 @@ from httpx import AsyncClient
 @pytest.mark.asyncio
 async def test_login_valid_credentials(
     async_client: AsyncClient,
-    seed_test_data,
+    seed_data,
 ) -> None:
     response = await async_client.post(
         "/api/auth/login",
@@ -17,7 +17,7 @@ async def test_login_valid_credentials(
 @pytest.mark.asyncio
 async def test_login_wrong_password(
     async_client: AsyncClient,
-    seed_test_data,
+    seed_data,
 ) -> None:
     response = await async_client.post(
         "/api/auth/login",
@@ -29,7 +29,7 @@ async def test_login_wrong_password(
 @pytest.mark.asyncio
 async def test_login_nonexistent_user(
     async_client: AsyncClient,
-    seed_test_data,
+    seed_data,
 ) -> None:
     response = await async_client.post(
         "/api/auth/login",
