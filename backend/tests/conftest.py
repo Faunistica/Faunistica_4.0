@@ -1,4 +1,4 @@
-import asyncio
+import os
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime, timedelta
 
@@ -11,51 +11,27 @@ from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
 
 from core.config import settings
-from core.model import Base
 from schemas.jwt import TokenPayload
-
-_postgres_container = None
-_db_engine = None
-
-
-def get_postgres():
-    global _postgres_container
-    if _postgres_container is None:
-        _postgres_container = PostgresContainer("postgres:16")
-        _postgres_container.start()
-    return _postgres_container
-
-
-def get_db_engine():
-    global _db_engine
-    if _db_engine is None:
-        from sqlalchemy import URL
-
-        pg = get_postgres()
-        url = URL.create(
-            drivername="postgresql+asyncpg",
-            username=pg.username,
-            password=pg.password,
-            host=pg.get_container_host_ip(),
-            port=pg.port,
-            database=pg.dbname,
-        )
-        _db_engine = create_async_engine(
-            url, echo=False, pool_pre_ping=True, poolclass=NullPool
-        )
-
-        async def init() -> None:
-            async with _db_engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-
-        asyncio.run(init())
-
-    return _db_engine
 
 
 @pytest.fixture(scope="session")
-def db_engine():
-    return get_db_engine()
+async def db_engine():
+    if os.getenv("TEST_DB"):
+        pg = PostgresContainer("postgres:15-alpine")
+        pg.start()
+
+        url = pg.get_connection_url().replace(
+            "postgresql+psycopg2", "postgresql+asyncpg"
+        )
+    else:
+        url = str(settings.DB_URL)
+
+    engine = create_async_engine(
+        url, echo=False, pool_pre_ping=True, poolclass=NullPool
+    )
+
+    yield engine
+    await engine.dispose()
 
 
 @pytest.fixture(scope="session")
@@ -65,7 +41,7 @@ def db_session_maker(db_engine):
     )
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def seed_test_data(db_engine, db_session_maker, test_users):
     """Seed test user and records once per session."""
     from sqlalchemy import text
@@ -100,6 +76,7 @@ async def seed_test_data(db_engine, db_session_maker, test_users):
         session.add(user)
 
         from core.model import Publ
+
         publ = Publ(id=1, name="Test Publ")
         session.add(publ)
         await session.flush()
