@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 
 from core.config import settings
-from schemas.taxonomy import AutofillTaxonResponse, TaxonomyFilters
+from schemas.taxonomy import AutofillTaxonResponse, TaxonomyField, TaxonomyFilters
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +42,9 @@ def suggest(field: str, text: str, filters: TaxonomyFilters | None) -> list[str]
     return filtered.tolist()
 
 
-def autofill(field: str, text: str) -> AutofillTaxonResponse:
+def autofill(field: TaxonomyField, text: str) -> AutofillTaxonResponse:
     if field == "family":
         return AutofillTaxonResponse(family=text, genus=None)
-    if field not in ["genus", "species"]:
-        logger.warning("Invalid field. Must be 'genus' or 'species'.")
-        raise ValueError("Invalid field. Must be 'genus' or 'species'.")
 
     query_df = df.copy()
     match_df = query_df[query_df[field].str.lower() == text.lower()]

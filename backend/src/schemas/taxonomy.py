@@ -28,8 +28,11 @@ class SuggestTaxonResponse(BaseModel):
     suggestions: list[str] | None = None
 
 
+type TaxonomyField = Literal["family", "genus", "species"]
+
+
 class AutofillTaxonRequest(BaseModel):
-    field: str
+    field: TaxonomyField
     text: str
 
 
