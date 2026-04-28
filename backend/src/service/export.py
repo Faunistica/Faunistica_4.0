@@ -10,39 +10,8 @@ from core.model import EventRecord
 
 logger = logging.getLogger(__name__)
 
-# Ключи — атрибуты модели Record
-COLUMN_MAPPING = {
-    "datetime": "Дата добавления записи",
-    "countrycode": "Страна",
-    "stateprovince": "Регион",
-    "county": "Район",
-    "verbatimlocality": "Место сбора",
-    "decimallatitude": "Широта (десятич.)",
-    "decimallongitude": "Долгота (десятич.)",
-    "verbatimcoordinates": "Координаты (изнач.)",
-    "georeferencedby": "Происхождение координат",
-    "locationremarks": "Примечания к расположению",
-    "verbatimeventdate": "Дата (текст)",
-    "dttm_precision": "Точность даты",
-    "habitat": "Биотоп",
-    "samplingeffort": "Выборочное усиление",
-    "recordedby": "Коллектор",
-    "eventremarks": "Примечания к сбору материала",
-    "family": "Семейство",
-    "genus": "Род",
-    "specificepithet": "Вид",
-    "taxonrank": "Таксон. ранг",
-    "type_status": "Типовой статус",
-    "taxonremarks": "Таксономические примечания",
-    "organismquantity": "Общее кол-во особей",
-    "organismquantitytype": "Тип кол-ва",
-    "lifestage": "Стадия",
-    "occurrenceremarks": "Комментарий к особям",
-    "coordinateuncertaintyinmeters": "Радиус неточности координат, м",
-}
 
-
-def records_to_excel(records: Sequence[EventRecord]) -> Generator[bytes]:
+def records_to_csv(records: Sequence[EventRecord]) -> Generator[bytes]:
     output = io.BytesIO()
     wb = Workbook()
     ws = wb.active
