@@ -72,7 +72,7 @@ class Action(Base):
     user_ip: Mapped[str | None] = mapped_column(Text)
     action: Mapped[str] = mapped_column(Text, nullable=False)
     object: Mapped[str | None] = mapped_column(Text)
-    datetime: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=False)
+    datetime: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
 
 
 class EventRecord(Base):

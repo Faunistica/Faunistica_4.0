@@ -1,5 +1,5 @@
 import os
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -8,11 +8,16 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient, Cookies
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
 
 from core.config import settings
+from core.model import Base
 from schema.jwt import TokenPayload
 
 
@@ -32,57 +37,53 @@ async def db_engine():
         url, echo=False, pool_pre_ping=True, poolclass=NullPool
     )
 
-    yield engine
-    await engine.dispose()
-
-
-@pytest_asyncio.fixture(scope="session")
-async def db_schema(db_engine):
-    """Create all tables once per session."""
-    from core.model import Base
-
-    engine = db_engine
-
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-    yield
+    yield engine
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
+    await engine.dispose()
 
-@pytest.fixture(scope="session")
-def db_session_maker(db_engine, db_schema):
-    return async_sessionmaker(
+
+@pytest.fixture(scope="function")
+async def db_session_maker(db_engine) -> AsyncGenerator[Callable[[], AsyncSession]]:
+    maker = async_sessionmaker(
         bind=db_engine, class_=AsyncSession, expire_on_commit=False
     )
 
+    yield maker
 
-@pytest_asyncio.fixture(scope="session")
-async def seed_data(db_engine, db_session_maker, test_users):
-    """Truncate and seed test data for each test."""
-    from core.model import EventRecord, Publ, User
-    from core.security import get_password_hash
-
-    engine = db_engine
-    maker = db_session_maker
-    user_data = test_users[0]
-
-    async with engine.begin() as conn:
-        await conn.execute(
+    async with maker() as session:
+        await session.execute(
             text(
                 "TRUNCATE TABLE users, publs, event_records, actions RESTART IDENTITY CASCADE"
             )
         )
+        await session.commit()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def seed_data(
+    db_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    test_users,
+):
+    """Truncate and seed test data for each test."""
+    from core.model import EventRecord, Publ, User
+    from core.security import get_password_hash
+
+    maker = db_session_maker
+    user_data = test_users[0]
 
     async with maker() as session:
         user = User(
             user_id=user_data["user_id"],
-            name=user_data["name"],
-            tlg_name=user_data["name"],
-            tlg_username=user_data["name"],
+            name=user_data["username"],
+            tlg_name=user_data["username"],
+            tlg_username=user_data["username"],
             hash=get_password_hash(user_data["password"]),
             items="1",
             publ_id=1,
@@ -170,7 +171,7 @@ async def async_client(db_session_maker):
 @pytest.fixture(scope="session")
 def test_users():
     return [
-        {"user_id": 1, "name": "testuser1", "password": "password1"},
+        {"user_id": 1, "username": "testuser1", "password": "password1"},
     ]
 
 

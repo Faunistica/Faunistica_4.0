@@ -1,5 +1,6 @@
 import hashlib
 import logging
+from collections.abc import Callable
 from datetime import datetime, timedelta
 
 import pytest
@@ -25,31 +26,35 @@ def md5_hash(md5_password: str) -> str:
     return make_md5_hash(md5_password)
 
 
+@pytest.fixture
 async def create_test_user_with_hash(
-    session: AsyncSession,
-    user_id: int,
-    username: str,
-    md5_hash: str,
-    hash_date: datetime | None = None,
-) -> None:
+    db_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+):
     """Create a test user with MD5 password hash."""
     from core.model import User
 
-    if hash_date is None:
-        hash_date = datetime.now()
+    async def create(
+        user_id: int,
+        username: str,
+        md5_hash: str,
+        hash_date: datetime | None = None,
+    ) -> None:
+        if hash_date is None:
+            hash_date = datetime.now()
 
-    # Clean up existing user with this ID to avoid duplicate key errors
-    await session.execute(delete(User).where(User.user_id == user_id))
+        user = User(
+            user_id=user_id,
+            name=username,
+            hash=md5_hash,
+            hash_date=hash_date,
+            items="",
+        )
 
-    user = User(
-        user_id=user_id,
-        name=username,
-        hash=md5_hash,
-        hash_date=hash_date,
-        items="",
-    )
-    session.add(user)
-    await session.commit()
+        async with db_session_maker() as session:
+            session.add(user)
+            await session.commit()
+
+    yield create
 
 
 @pytest.mark.asyncio
@@ -58,16 +63,14 @@ async def test_login_valid_md5_password(
     test_users,
     md5_password: str,
     md5_hash: str,
-    db_session_maker,
+    create_test_user_with_hash,
 ) -> None:
     """Test login with valid MD5 password returns 200, sets cookies, logs fau_login."""
-    async with db_session_maker() as session:
-        await create_test_user_with_hash(
-            session,
-            test_users[0]["user_id"],
-            test_users[0]["username"],
-            md5_hash,
-        )
+    await create_test_user_with_hash(
+        test_users[0]["user_id"],
+        test_users[0]["username"],
+        md5_hash,
+    )
 
     response = await async_client.post(
         "/api/auth/login",
@@ -84,16 +87,17 @@ async def test_login_valid_md5_password(
 
 @pytest.mark.asyncio
 async def test_login_invalid_password(
-    async_client: AsyncClient, test_users, md5_hash: str, db_session_maker
+    async_client: AsyncClient,
+    test_users,
+    md5_hash: str,
+    create_test_user_with_hash,
 ) -> None:
     """Test login with invalid password returns 401."""
-    async with db_session_maker() as session:
-        await create_test_user_with_hash(
-            session,
-            test_users[0]["user_id"],
-            test_users[0]["username"],
-            md5_hash,
-        )
+    await create_test_user_with_hash(
+        test_users[0]["user_id"],
+        test_users[0]["username"],
+        md5_hash,
+    )
 
     response = await async_client.post(
         "/api/auth/login",
@@ -109,18 +113,16 @@ async def test_login_expired_hash_date(
     test_users,
     md5_password: str,
     md5_hash: str,
-    db_session_maker,
+    create_test_user_with_hash,
 ) -> None:
     """Test login with expired hash_date (>3000 minutes) returns 401."""
     expired_date = datetime.now() - timedelta(minutes=3001)
-    async with db_session_maker() as session:
-        await create_test_user_with_hash(
-            session,
-            test_users[0]["user_id"],
-            test_users[0]["username"],
-            md5_hash,
-            hash_date=expired_date,
-        )
+    await create_test_user_with_hash(
+        test_users[0]["user_id"],
+        test_users[0]["username"],
+        md5_hash,
+        hash_date=expired_date,
+    )
 
     response = await async_client.post(
         "/api/auth/login",
@@ -136,16 +138,14 @@ async def test_logout_clears_cookies(
     test_users,
     md5_password: str,
     md5_hash: str,
-    db_session_maker,
+    create_test_user_with_hash,
 ) -> None:
     """Test logout returns 200, clears cookies."""
-    async with db_session_maker() as session:
-        await create_test_user_with_hash(
-            session,
-            test_users[0]["user_id"],
-            test_users[0]["username"],
-            md5_hash,
-        )
+    await create_test_user_with_hash(
+        test_users[0]["user_id"],
+        test_users[0]["username"],
+        md5_hash,
+    )
 
     login_response = await async_client.post(
         "/api/auth/login",
@@ -153,18 +153,12 @@ async def test_logout_clears_cookies(
     )
     assert login_response.status_code == status.HTTP_200_OK
 
-    # Pass cookies manually since ASGITransport doesn't persist them
-    cookies = login_response.cookies
-    logout_response = await async_client.post(
-        "/api/auth/logout",
-        cookies=dict(cookies),
-    )
+    logout_response = await async_client.post("/api/auth/logout")
     assert logout_response.status_code == status.HTTP_200_OK
 
-    # After logout, cookies should be cleared (empty value)
-    cleared = logout_response.cookies
-    assert cleared.get("access_token", "") == ""
-    assert cleared.get("refresh_token", "") == ""
+    cookies = logout_response.cookies
+    assert cookies.get("access_token") is None
+    assert cookies.get("refresh_token") is None
 
 
 @pytest.mark.asyncio
@@ -173,16 +167,14 @@ async def test_check_valid_cookie(
     test_users,
     md5_password: str,
     md5_hash: str,
-    db_session_maker,
+    create_test_user_with_hash,
 ) -> None:
     """Test check with valid cookie returns 200 + user info."""
-    async with db_session_maker() as session:
-        await create_test_user_with_hash(
-            session,
-            test_users[0]["user_id"],
-            test_users[0]["username"],
-            md5_hash,
-        )
+    await create_test_user_with_hash(
+        test_users[0]["user_id"],
+        test_users[0]["username"],
+        md5_hash,
+    )
 
     login_response = await async_client.post(
         "/api/auth/login",
@@ -190,11 +182,11 @@ async def test_check_valid_cookie(
     )
     assert login_response.status_code == status.HTTP_200_OK
 
-    # Pass cookies manually since ASGITransport doesn't persist them
-    cookies = login_response.cookies
+    token = login_response.cookies.get("access_token")
+    assert token is not None
+
     check_response = await async_client.post(
-        "/api/auth/check",
-        cookies=dict(cookies),
+        "/api/auth/check", cookies=[("access_token", token)]
     )
     assert check_response.status_code == status.HTTP_200_OK
     data = check_response.json()
@@ -215,16 +207,14 @@ async def test_refresh_token_flow(
     test_users,
     md5_password: str,
     md5_hash: str,
-    db_session_maker,
+    create_test_user_with_hash,
 ) -> None:
     """Test refresh token flow."""
-    async with db_session_maker() as session:
-        await create_test_user_with_hash(
-            session,
-            test_users[0]["user_id"],
-            test_users[0]["username"],
-            md5_hash,
-        )
+    await create_test_user_with_hash(
+        test_users[0]["user_id"],
+        test_users[0]["username"],
+        md5_hash,
+    )
 
     login_response = await async_client.post(
         "/api/auth/login",
@@ -232,11 +222,11 @@ async def test_refresh_token_flow(
     )
     assert login_response.status_code == status.HTTP_200_OK
 
-    # Pass cookies manually since ASGITransport doesn't persist them
-    cookies = login_response.cookies
+    token = login_response.cookies.get("refresh_token")
+    assert token is not None
+
     refresh_response = await async_client.post(
-        "/api/auth/refresh",
-        cookies=dict(cookies),
+        "/api/auth/refresh", cookies=[("refresh_token", token)]
     )
     assert refresh_response.status_code == status.HTTP_200_OK
     assert "access_token" in refresh_response.cookies

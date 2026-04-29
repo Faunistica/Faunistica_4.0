@@ -76,6 +76,7 @@ async def update_user(
         update(User)
         .where(User.user_id == user_id)
         .values(**data.model_dump(exclude_unset=True))
+        .returning(User)
     )
     result = await session.execute(stmt)
     await session.commit()

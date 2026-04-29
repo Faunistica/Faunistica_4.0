@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 from sqlalchemy import select
 
@@ -28,18 +30,24 @@ async def test_save_action(db_session_maker, test_users, seed_data) -> None:
 async def test_get_winner_info(db_session_maker, test_users, seed_data) -> None:
     user_id = test_users[0]["user_id"]
     async with db_session_maker() as session:
+        date = datetime.strptime("Jun 1 2005", "%b %d %Y")
+
         action = Action(
             user_id=user_id,
             action="fau_win",
             object="trophy.png|You won!",
-            datetime=None,
+            datetime=date,
         )
         session.add(action)
         await session.commit()
 
         service = ActionService(session)
         info = await service.get_winner_info(user_id)
-        assert info == {"picfile": "trophy.png", "message": "You won!"}
+        assert info == {
+            "picfile": "trophy.png",
+            "message": "You won!",
+            "datetime": date,
+        }
         await session.close()
 
 
@@ -62,7 +70,7 @@ async def test_get_winner_info_no_object(
             user_id=user_id,
             action="fau_win",
             object=None,
-            datetime=None,
+            datetime=datetime.strptime("Jun 1 2005", "%b %d %Y"),
         )
         session.add(action)
         await session.commit()

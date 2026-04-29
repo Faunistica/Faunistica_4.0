@@ -36,7 +36,7 @@ async def update_current_user(
     user = await repo.update_user(session, token.user_id, update_data)
 
     if user is None:
-        logger.error("User not found during update: %d", token.user_id)
+        logger.warning("User not found during update: %d", token.user_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",

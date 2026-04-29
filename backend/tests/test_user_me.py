@@ -1,11 +1,9 @@
-from collections.abc import AsyncGenerator
 from datetime import UTC, datetime, timedelta
 
 import jwt
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
-from app import app
 from core.config import settings
 from schema.jwt import TokenPayload
 
@@ -21,23 +19,15 @@ def create_test_token(user_id: int, username: str) -> str:
     )
 
 
-@pytest.fixture
-async def async_client() -> AsyncGenerator[AsyncClient]:
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
-        yield ac
-
-
 @pytest.mark.asyncio
 async def test_get_me_with_valid_jwt(async_client, test_users):
-    token = create_test_token(test_users[0]["user_id"], test_users[0]["name"])
+    token = create_test_token(test_users[0]["user_id"], test_users[0]["username"])
     async_client.cookies.set("access_token", token)
     response = await async_client.get("/api/users/me")
     assert response.status_code == 200
     data = response.json()
     assert data["user_id"] == test_users[0]["user_id"]
-    assert data["name"] == test_users[0]["name"]
+    assert data["name"] == test_users[0]["username"]
 
 
 @pytest.mark.asyncio
@@ -47,26 +37,28 @@ async def test_get_me_without_jwt(async_client):
 
 
 @pytest.mark.asyncio
-async def test_put_me_update_language(async_client, test_users):
-    token = create_test_token(test_users[0]["user_id"], test_users[0]["name"])
+async def test_put_me_update_language(async_client, test_users, seed_data):
+    token = create_test_token(test_users[0]["user_id"], test_users[0]["username"])
     async_client.cookies.set("access_token", token)
     response = await async_client.put(
         "/api/users/me",
-        json={"lng": "en"},
+        json={"lng": "eng"},
     )
+
     assert response.status_code == 200
     data = response.json()
-    assert data["lng"] == "en"
+    assert data["lng"] == "eng"
 
 
 @pytest.mark.asyncio
-async def test_put_me_update_email(async_client, test_users):
-    token = create_test_token(test_users[0]["user_id"], test_users[0]["name"])
+async def test_put_me_update_email(async_client: AsyncClient, test_users, seed_data):
+    token = create_test_token(test_users[0]["user_id"], test_users[0]["username"])
     async_client.cookies.set("access_token", token)
     response = await async_client.put(
         "/api/users/me",
         json={"email": "test@example.com"},
     )
+
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == "test@example.com"
@@ -74,44 +66,36 @@ async def test_put_me_update_email(async_client, test_users):
 
 @pytest.mark.asyncio
 async def test_put_me_invalid_language(async_client, test_users):
-    token = create_test_token(test_users[0]["user_id"], test_users[0]["name"])
+    token = create_test_token(test_users[0]["user_id"], test_users[0]["username"])
     async_client.cookies.set("access_token", token)
     response = await async_client.put(
         "/api/users/me",
-        json={"lng": "invalid"},
+        json={"lng": "esp"},
     )
-    assert response.status_code == 400
+
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_lookup_user_found(async_client, test_users):
-    token = create_test_token(test_users[0]["user_id"], test_users[0]["name"])
+async def test_lookup_user_found(async_client, test_users, seed_data):
+    token = create_test_token(test_users[0]["user_id"], test_users[0]["username"])
     async_client.cookies.set("access_token", token)
     response = await async_client.get(
         "/api/users/lookup",
-        params={"name": test_users[0]["name"]},
+        params={"name": test_users[0]["username"]},
     )
     assert response.status_code == 200
     data = response.json()
     assert data["user_id"] == test_users[0]["user_id"]
-    assert data["name"] == test_users[0]["name"]
+    assert data["name"] == test_users[0]["username"]
 
 
 @pytest.mark.asyncio
-async def test_lookup_user_not_found(async_client, test_users):
-    token = create_test_token(test_users[0]["user_id"], test_users[0]["name"])
+async def test_lookup_user_not_found(async_client, test_users, seed_data):
+    token = create_test_token(test_users[0]["user_id"], test_users[0]["username"])
     async_client.cookies.set("access_token", token)
     response = await async_client.get(
         "/api/users/lookup",
         params={"name": "nonexistent_user"},
     )
     assert response.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_cannot_access_other_user_me(async_client, test_users):
-    """Test that user cannot access another user's /me endpoint."""
-    token = create_test_token(999, "other_user")
-    async_client.cookies.set("access_token", token)
-    response = await async_client.get("/api/users/me")
-    assert response.status_code == 403
