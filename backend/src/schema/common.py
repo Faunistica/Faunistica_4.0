@@ -37,7 +37,6 @@ class UserInfo(BaseModel):
 class UserLoginResponse(BaseModel):
     user_id: int
     username: str
-    name: str
 
 
 class Publication(BaseModel):

@@ -1,13 +1,13 @@
 import hashlib
 import logging
-from collections.abc import Callable
 from datetime import datetime, timedelta
 
 import pytest
 from fastapi import status
 from httpx import AsyncClient
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from schema.common import LoginRequest
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def md5_hash(md5_password: str) -> str:
 
 @pytest.fixture
 async def create_test_user_with_hash(
-    db_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    session: AsyncSession,
 ):
     """Create a test user with MD5 password hash."""
     from core.model import User
@@ -50,9 +50,8 @@ async def create_test_user_with_hash(
             items="",
         )
 
-        async with db_session_maker() as session:
-            session.add(user)
-            await session.commit()
+        session.add(user)
+        await session.commit()
 
     yield create
 
@@ -76,6 +75,10 @@ async def test_login_valid_md5_password(
         "/api/auth/login",
         json={"username": test_users[0]["username"], "password": md5_password},
     )
+    LoginRequest.model_validate(
+        {"username": test_users[0]["username"], "password": md5_password},
+    )
+    print(response.json())
 
     assert response.status_code == status.HTTP_200_OK
     assert "access_token" in response.cookies
