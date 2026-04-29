@@ -1,5 +1,4 @@
 import pytest
-from conftest import create_test_token
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 

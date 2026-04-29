@@ -6,7 +6,6 @@ from uuid import uuid4
 import jwt as pyjwt
 import pytest
 import pytest_asyncio
-from geopy.units import m
 from httpx import ASGITransport, AsyncClient, Cookies
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
@@ -51,7 +50,7 @@ async def db_engine():
     await engine.dispose()
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def session_maker(
     db_engine: AsyncEngine,
 ) -> AsyncGenerator[Callable[[], AsyncSession]]:
@@ -70,11 +69,13 @@ async def session_maker(
         await session.commit()
 
 
-@pytest.fixture(scope="function")
-def session(
+@pytest_asyncio.fixture(scope="function")
+async def session(
     session_maker: Callable[[], AsyncSession],
-) -> AsyncSession:
-    return session_maker()
+) -> AsyncGenerator[AsyncSession]:
+    session = session_maker()
+    yield session
+    await session.close()
 
 
 @pytest_asyncio.fixture(scope="function")

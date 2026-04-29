@@ -1,12 +1,10 @@
 import logging
 from typing import Annotated
 
-import watchfiles
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from core.dependencies import DBSession, TokenUser
 from core.exceptions import UserNotFoundError
-from core.security import validate_user_id_query
 from repository.publication import (
     get_publications_by_ids,
     get_user_publication,
