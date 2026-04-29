@@ -151,16 +151,27 @@ async def seed_data(
 
 @pytest_asyncio.fixture
 async def async_client(session_maker: Callable[[], AsyncSession]):
+    from aiohttp import ClientSession
+
     from app import app
     from core.database import get_session
+    from core.dependencies import get_http_session
 
-    original = app.dependency_overrides.get(get_session, None)
+    original_overrides = app.dependency_overrides.copy()
 
     async def _maker():
         async with session_maker() as session:
             yield session
 
     app.dependency_overrides[get_session] = _maker
+
+    http_session = ClientSession()
+
+    def get_test_http_session():
+        return http_session
+
+    app.dependency_overrides[get_http_session] = get_test_http_session
+
     try:
         async with AsyncClient(
             transport=ASGITransport(app=app),
@@ -170,10 +181,8 @@ async def async_client(session_maker: Callable[[], AsyncSession]):
         ) as client:
             yield client
     finally:
-        if original:
-            app.dependency_overrides[get_session] = original
-        else:
-            del app.dependency_overrides[get_session]
+        await http_session.close()
+        app.dependency_overrides = original_overrides
 
 
 @pytest.fixture(scope="session")
