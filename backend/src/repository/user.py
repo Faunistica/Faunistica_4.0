@@ -69,14 +69,18 @@ async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> Non
     await session.commit()
 
 
-async def update_user(session: AsyncSession, user_id: int, data: UserUpdate) -> None:
+async def update_user(
+    session: AsyncSession, user_id: int, data: UserUpdate
+) -> User | None:
     stmt = (
         update(User)
         .where(User.user_id == user_id)
         .values(**data.model_dump(exclude_unset=True))
     )
-    await session.execute(stmt)
+    result = await session.execute(stmt)
     await session.commit()
+
+    return result.scalar_one_or_none()
 
 
 async def count_users_with_name(session: AsyncSession, name: str) -> int:

@@ -33,7 +33,7 @@ from repository.user import (
     get_user_unsafe,
     update_user,
 )
-from schema.user import UserUpdate
+from schema.user import UserLanguage, UserUpdate
 
 YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
 NO_WORDS = ["no", "nope", "нет", "не", "refuse"]
@@ -766,7 +766,7 @@ class Handlers:
             await message.answer(Messages.ask_language())
             return
 
-        lang_map = {"1": "all", "2": "eng", "3": "rus"}
+        lang_map: dict[str, UserLanguage] = {"1": "all", "2": "eng", "3": "rus"}
         lang_value = lang_map[lang_msg]
 
         async for session in self.db_session_factory():
@@ -934,7 +934,7 @@ class Handlers:
             await message.answer(Messages.selection_not_recognized())
             return
 
-        lang_map = {"1": "all", "2": "eng", "3": "rus"}
+        lang_map: dict[str, UserLanguage] = {"1": "all", "2": "eng", "3": "rus"}
         lang_value = lang_map[lang_msg]
 
         async for session in self.db_session_factory():

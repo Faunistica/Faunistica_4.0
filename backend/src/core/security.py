@@ -1,3 +1,4 @@
+import hashlib
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
@@ -29,6 +30,11 @@ def check_password_hash(user_pass: str, db_hash: str) -> bool:
     except VerifyMismatchError:
         return False
     return True
+
+
+def check_md5_password(user_pass: str, db_hash: str) -> bool:
+    """Check if password matches MD5 hash (for Telegram bot passwords)."""
+    return hashlib.md5(user_pass.encode()).hexdigest() == db_hash  # noqa: S324
 
 
 def set_response_token_cookies(response: Response, payload: TokenPayload) -> None:
@@ -106,12 +112,12 @@ def verify_token(token: str) -> Token:
             status_code=status.HTTP_403_FORBIDDEN, detail="Token expired"
         ) from e
     except DecodeError as e:
-        logger.warning("Invalid token %e", e)
+        logger.warning("Invalid token: %s", e)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
         ) from e
     except ValidationError as e:
-        logger.warning("Invalid token %e", e)
+        logger.warning("Invalid token: %s", e)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
         ) from e
@@ -135,7 +141,7 @@ def get_jwt_user(
         )
 
     try:
-        return UserMinimal(user_id=int(payload.sub), username=payload.username)
+        return UserMinimal(user_id=int(payload.sub), name=payload.username)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"

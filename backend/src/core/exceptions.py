@@ -1,9 +1,36 @@
+import logging
+
+from fastapi import Request, Response
+from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
+
+
+class DBException(Exception):
+    pass
+
+
+def db_exception_handler(request: Request, exc: Exception) -> Response:
+    if isinstance(exc, DBException):
+        logger.error("SQLAlchemyError", exc_info=True)
+    raise exc
+
+
 class APIException(Exception):
     def __init__(self, error_code: str, message: str, status_code: int = 400) -> None:
         self.error_code = error_code
         self.message = message
         self.status_code = status_code
         super().__init__(message)
+
+
+def api_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    if isinstance(exc, APIException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": exc.error_code, "message": exc.message},
+        )
+    raise exc
 
 
 class PublicationNotFoundError(APIException):
@@ -19,8 +46,8 @@ class RecordForbiddenError(APIException):
 
 
 class UserNotFoundError(APIException):
-    def __init__(self, identifier: str | int) -> None:
-        super().__init__("USER_NOT_FOUND", f"User {identifier} not found", 404)
+    def __init__(self, id: str | int) -> None:
+        super().__init__("USER_NOT_FOUND", f"User {id} not found", 404)
 
 
 class RecordNotFoundError(APIException):

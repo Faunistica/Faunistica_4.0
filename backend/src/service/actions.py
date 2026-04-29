@@ -27,7 +27,7 @@ class ActionService:
                 user_id=user_id,
                 action=action_type,
                 object=object,
-                datetime=datetime.utcnow(),
+                datetime=datetime.now(),
             )
             self.session.add(action)
             await self.session.commit()
@@ -85,5 +85,5 @@ class ActionService:
 
             return (milestone, action.object or "")
         except Exception as e:
-            logger.error(f"Failed to get last milestone: {e}", exc_info=True)
+            logger.error("Failed to get last milestone: %s", e, exc_info=True)
             return None

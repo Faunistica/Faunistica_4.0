@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from core.config import settings
+from core.exceptions import DBException
 from core.model import Base
 
 logger = logging.getLogger(__name__)
@@ -25,21 +26,15 @@ _async_session_local = async_sessionmaker(
 )
 
 
-class DBException(Exception):
-    pass
-
-
 async def get_session() -> AsyncGenerator[AsyncSession]:
     async with _async_session_local() as session:
         try:
             yield session
         except IntegrityError as e:
             await session.rollback()
-            logger.error("IntegrityError", exc_info=True)
             raise DBException from e
         except SQLAlchemyError as e:
             await session.rollback()
-            logger.error("SQLAlchemyError", exc_info=True)
             raise DBException from e
 
 

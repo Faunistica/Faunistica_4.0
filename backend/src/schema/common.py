@@ -29,6 +29,17 @@ class Message(BaseModel):
     message: str
 
 
+class UserInfo(BaseModel):
+    user_id: int
+    username: str
+
+
+class UserLoginResponse(BaseModel):
+    user_id: int
+    username: str
+    name: str
+
+
 class Publication(BaseModel):
     id: int
     author: str | None = None

@@ -36,13 +36,6 @@ async def db_engine():
     await engine.dispose()
 
 
-@pytest.fixture(scope="session")
-def db_session_maker(db_engine):
-    return async_sessionmaker(
-        bind=db_engine, class_=AsyncSession, expire_on_commit=False
-    )
-
-
 @pytest_asyncio.fixture(scope="session")
 async def db_schema(db_engine):
     """Create all tables once per session."""
@@ -60,8 +53,15 @@ async def db_schema(db_engine):
         await conn.run_sync(Base.metadata.drop_all)
 
 
+@pytest.fixture(scope="session")
+def db_session_maker(db_engine, db_schema):
+    return async_sessionmaker(
+        bind=db_engine, class_=AsyncSession, expire_on_commit=False
+    )
+
+
 @pytest_asyncio.fixture(scope="session")
-async def seed_data(db_engine, db_schema, db_session_maker, test_users):
+async def seed_data(db_engine, db_session_maker, test_users):
     """Truncate and seed test data for each test."""
     from core.model import EventRecord, Publ, User
     from core.security import get_password_hash
@@ -80,9 +80,9 @@ async def seed_data(db_engine, db_schema, db_session_maker, test_users):
     async with maker() as session:
         user = User(
             user_id=user_data["user_id"],
-            name=user_data["username"],
-            tlg_name=user_data["username"],
-            tlg_username=user_data["username"],
+            name=user_data["name"],
+            tlg_name=user_data["name"],
+            tlg_username=user_data["name"],
             hash=get_password_hash(user_data["password"]),
             items="1",
             publ_id=1,
@@ -170,7 +170,7 @@ async def async_client(db_session_maker):
 @pytest.fixture(scope="session")
 def test_users():
     return [
-        {"user_id": 1, "username": "testuser1", "password": "password1"},
+        {"user_id": 1, "name": "testuser1", "password": "password1"},
     ]
 
 

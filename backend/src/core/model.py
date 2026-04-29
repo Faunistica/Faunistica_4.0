@@ -69,9 +69,10 @@ class Action(Base):
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
     )
-    action: Mapped[str | None] = mapped_column(Text)
+    user_ip: Mapped[str | None] = mapped_column(Text)
+    action: Mapped[str] = mapped_column(Text, nullable=False)
     object: Mapped[str | None] = mapped_column(Text)
-    datetime: Mapped[datetime | None] = mapped_column(TIMESTAMP)
+    datetime: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=False)
 
 
 class EventRecord(Base):
