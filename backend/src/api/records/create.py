@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, HTTPException, status
 
 from core.dependencies import ClientIP, DBSession, TokenUser

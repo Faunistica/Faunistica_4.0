@@ -6,8 +6,9 @@ from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
 
 import aiohttp
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
@@ -15,6 +16,7 @@ from api import api_router
 from bot import bot
 from core.config import settings
 from core.database import init_db, ping_db
+from core.exceptions import APIException
 from core.rate_limiter import limiter, rate_limit_handler
 from schema.geo import RegionData
 
@@ -148,6 +150,15 @@ app.add_middleware(
     expose_headers=["set-cookie", "Content-Disposition"],
 )
 
+
+def api_exception_handler(request: Request, exc: APIException) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": exc.error_code, "message": exc.message},
+    )
+
+
+app.add_exception_handler(APIException, api_exception_handler)
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
 app.include_router(api_router)

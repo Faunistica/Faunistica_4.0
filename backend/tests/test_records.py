@@ -146,7 +146,9 @@ async def test_list_records_page_size_exceeds_max(async_client, auth_token, seed
 @pytest.mark.asyncio
 async def test_list_records_pagination_second_page(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
-    response = await async_client.get("/api/records?user_id=1&publ_id=1&page=2&page_size=1")
+    response = await async_client.get(
+        "/api/records?user_id=1&publ_id=1&page=2&page_size=1"
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["page"] == 2
@@ -155,7 +157,9 @@ async def test_list_records_pagination_second_page(async_client, auth_token, see
 @pytest.mark.asyncio
 async def test_list_records_sort_updated_at(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
-    response = await async_client.get("/api/records?user_id=1&publ_id=1&sort=updated_at")
+    response = await async_client.get(
+        "/api/records?user_id=1&publ_id=1&sort=updated_at"
+    )
     assert response.status_code == 200
 
 
@@ -172,8 +176,7 @@ async def test_update_record_not_found(async_client, auth_token, seed_data):
     async_client.cookies.set("access_token", auth_token["access_token"])
     fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await async_client.put(
-        f"/api/records/{fake_uuid}?user_id=1",
-        json={"publ_id": 1, "latitude": 55.5}
+        f"/api/records/{fake_uuid}?user_id=1", json={"publ_id": 1, "latitude": 55.5}
     )
     assert response.status_code == 404
 
