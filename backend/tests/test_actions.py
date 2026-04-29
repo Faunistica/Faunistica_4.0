@@ -18,7 +18,9 @@ async def test_save_action(session_maker, test_users, seed_data) -> None:
             ip="127.0.0.1",
         )
 
-        result = await service_session.execute(select(Action).where(Action.action == "fau_win"))
+        result = await service_session.execute(
+            select(Action).where(Action.action == "fau_win")
+        )
         action = result.scalar_one_or_none()
         assert action is not None
         assert action.user_id == test_users[0]["user_id"]
@@ -34,9 +36,7 @@ async def test_get_winner_info_no_action(session_maker, test_users) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_winner_info_no_object(
-    session_maker, test_users, seed_data
-) -> None:
+async def test_get_winner_info_no_object(session_maker, test_users, seed_data) -> None:
     user_id = test_users[0]["user_id"]
 
     async with session_maker() as service_session:
@@ -75,9 +75,7 @@ async def test_get_last_milestone(session_maker, test_users, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_last_milestone_none(
-    session_maker, test_users, seed_data
-) -> None:
+async def test_get_last_milestone_none(session_maker, test_users, seed_data) -> None:
     async with session_maker() as service_session:
         service = ActionService(service_session)
         result = await service.get_last_milestone(test_users[0]["user_id"])

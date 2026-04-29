@@ -65,3 +65,14 @@ async def get_user_publication(
     stmt = select(Publication).join(User).where(User.user_id == user_id)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
+
+
+async def update_user_items(
+    session: AsyncSession, user_id: int, items_str: str
+) -> None:
+    stmt = select(User).where(User.user_id == user_id)
+    result = await session.execute(stmt)
+    user = result.scalar_one_or_none()
+    if user:
+        user.items = items_str
+        await session.commit()

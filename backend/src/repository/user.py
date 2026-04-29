@@ -5,6 +5,7 @@ from sqlalchemy import func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from core.exceptions import UserNotFoundError
 from core.model import Publication, User
 from core.security import check_password_hash
 from schema.user import UserUpdate
@@ -41,9 +42,11 @@ async def get_user_unsafe(session: AsyncSession, user_id: int) -> User:
     stmt = select(User).where(User.user_id == user_id)
     result = await session.execute(stmt)
 
-    # NOTE: i'm not sure if this is better then before
-    # maybe some more robust error handling is required here and in similar places
-    return result.scalar_one()
+    user = result.scalar_one_or_none()
+    if user is not None:
+        return user
+
+    raise UserNotFoundError(id=user_id)
 
 
 async def get_user(session: AsyncSession, user_id: int) -> User | None:
