@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter, status
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from core.dependencies import ClientIP, DBSession, TokenUser
 from core.exceptions import PublicationNotFoundError
