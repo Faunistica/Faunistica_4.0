@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
 
@@ -79,7 +80,7 @@ for lib_name, level in third_party_libs.items():
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):  # noqa: ANN201
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger = logging.getLogger(__name__)
 
     await init_db()

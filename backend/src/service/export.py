@@ -10,6 +10,8 @@ from core.model import EventRecord
 
 logger = logging.getLogger(__name__)
 
+COLUMN_MAPPING = {}
+
 
 def records_to_csv(records: Sequence[EventRecord]) -> Generator[bytes]:
     output = io.BytesIO()
