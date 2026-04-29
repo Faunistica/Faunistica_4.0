@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -22,7 +22,7 @@ class RecordMetadata(RecordBelonging):
     updated_at: datetime | None = None
     ip: str | None = None
 
-    def dump_for_update(self) -> dict[str, Any]:
+    def dump_for_update(self) -> dict[str, object]:
         return self.model_dump(
             exclude={"id", "created_at", "ip", "publ_id"}, exclude_unset=True
         )

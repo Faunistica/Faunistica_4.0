@@ -5,7 +5,7 @@ from sqlalchemy import func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from core.model import Publ, User
+from core.model import Publication, User
 from core.security import check_password_hash
 from schema.user import UserUpdate
 
@@ -53,9 +53,13 @@ async def get_user(session: AsyncSession, user_id: int) -> User | None:
     return result.scalar_one_or_none()
 
 
-async def get_current_publication(session: AsyncSession, user_id: int) -> Publ | None:
+async def get_current_publication(
+    session: AsyncSession, user_id: int
+) -> Publication | None:
     stmt = (
-        select(Publ).join(User, User.publ_id == Publ.id).where(User.user_id == user_id)
+        select(Publication)
+        .join(User, User.publ_id == Publication.id)
+        .where(User.user_id == user_id)
     )
     result = await session.execute(stmt)
 

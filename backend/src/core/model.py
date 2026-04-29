@@ -44,7 +44,7 @@ class User(Base):
     region: Mapped[str | None] = mapped_column(Text)
 
 
-class Publ(Base):
+class Publication(Base):
     __tablename__ = "publs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

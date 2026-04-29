@@ -4,13 +4,13 @@ from collections.abc import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from core.model import EventRecord, Publ, User
+from core.model import EventRecord, Publication, User
 
 logger = logging.getLogger(__name__)
 
 
-async def get_publication(session: AsyncSession, publ_id: int) -> Publ | None:
-    stmt = select(Publ).where(Publ.id == publ_id)
+async def get_publication(session: AsyncSession, publ_id: int) -> Publication | None:
+    stmt = select(Publication).where(Publication.id == publ_id)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -18,11 +18,15 @@ async def get_publication(session: AsyncSession, publ_id: int) -> Publ | None:
 async def get_publications_for_language(
     session: AsyncSession, language: str
 ) -> Sequence[int]:
-    filters = [Publ.ural.is_(True), Publ.coords.is_(True), Publ.year > 1950]
+    filters = [
+        Publication.ural.is_(True),
+        Publication.coords.is_(True),
+        Publication.year > 1950,
+    ]
     if language != "all":
-        filters.append(Publ.language.ilike(f"%{language}%"))
+        filters.append(Publication.language.ilike(f"%{language}%"))
 
-    stmt = select(Publ.id).where(*filters)
+    stmt = select(Publication.id).where(*filters)
     result = await session.execute(stmt)
     return result.scalars().all()
 
@@ -49,28 +53,15 @@ async def user_filled_publication(
 async def get_publications_by_ids(
     session: AsyncSession,
     ids: list[int],
-) -> Sequence[Publ]:
-    stmt = select(Publ).where(Publ.id.in_(ids))
+) -> Sequence[Publication]:
+    stmt = select(Publication).where(Publication.id.in_(ids))
     result = await session.execute(stmt)
     return result.scalars().all()
 
 
-async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:
-    stmt = select(User).where(User.user_id == user_id)
+async def get_user_publication(
+    session: AsyncSession, user_id: int
+) -> Publication | None:
+    stmt = select(Publication).join(User).where(User.user_id == user_id)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
-
-
-async def get_user_with_queue(session: AsyncSession, user_id: int) -> User | None:
-    stmt = select(User).where(User.user_id == user_id)
-    result = await session.execute(stmt)
-    return result.scalar_one_or_none()
-
-
-async def update_user_items(session: AsyncSession, user_id: int, items: str) -> None:
-    stmt = select(User).where(User.user_id == user_id).with_for_update(nowait=True)
-    result = await session.execute(stmt)
-    user = result.scalar_one_or_none()
-    if user:
-        user.items = items
-        await session.flush()

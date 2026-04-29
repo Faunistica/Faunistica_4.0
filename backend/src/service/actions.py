@@ -1,12 +1,12 @@
 import logging
 from datetime import datetime
-from typing import Any
 
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exceptions import ActionLoggingError
 from core.model import Action
+from schema.common import MilestoneInfo, WinnerInfo
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class ActionService:
             logger.error("Failed to save action: %s", e, exc_info=True)
             raise ActionLoggingError(str(e)) from e
 
-    async def get_winner_info(self, user_id: int) -> dict[str, Any] | None:
+    async def get_winner_info(self, user_id: int) -> WinnerInfo | None:
         try:
             stmt = (
                 select(Action)
@@ -54,12 +54,12 @@ class ActionService:
             pic = parts[0] if len(parts) > 0 else ""
             msg = parts[1] if len(parts) > 1 else ""
 
-            return {"picfile": pic, "message": msg, "datetime": action.datetime}
+            return WinnerInfo(picfile=pic, message=msg, datetime=action.datetime)
         except Exception as e:
             logger.error("Failed to get winner info: %s", e, exc_info=True)
             return None
 
-    async def get_last_milestone(self, user_id: int) -> tuple[int, str] | None:
+    async def get_last_milestone(self, user_id: int) -> MilestoneInfo | None:
         try:
             stmt = (
                 select(Action)
@@ -83,7 +83,7 @@ class ActionService:
                 logger.warning("Invalid milestone format: %s", action.action)
                 return None
 
-            return (milestone, action.object or "")
+            return MilestoneInfo(milestone=milestone, action_str=action.object)
         except Exception as e:
             logger.error("Failed to get last milestone: %s", e, exc_info=True)
             return None

@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
@@ -42,9 +43,11 @@ class UserLoginResponse(BaseModel):
 class Publication(BaseModel):
     id: int
     author: str | None = None
-    year: str | None = None
+    year: int | None = None
     name: str | None = None
     pdf_file: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SupportRequest(BaseModel):
@@ -61,3 +64,14 @@ class EventDate(BaseModel):
     yy_end: int | None = None
     mm_end: int | None = None
     dd_end: int | None = None
+
+
+class WinnerInfo(BaseModel):
+    picfile: str
+    message: str
+    datetime: datetime
+
+
+class MilestoneInfo(BaseModel):
+    milestone: int
+    action_str: str | None

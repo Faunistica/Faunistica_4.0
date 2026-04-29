@@ -1,4 +1,4 @@
-from core.model import Publ
+from core.model import Publication
 
 
 class Messages:
@@ -130,7 +130,7 @@ class Messages:
         )
 
     @staticmethod
-    def current_publication(publ_info: Publ) -> str:
+    def current_publication(publ_info: Publication) -> str:
         return (
             f"<b>Ваша текущая публикация</b>\n\n"
             f"Статья: {publ_info.name}\n"

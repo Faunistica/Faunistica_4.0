@@ -1,57 +1,72 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter
+import watchfiles
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from core.dependencies import DBSession, TokenUser
 from core.exceptions import UserNotFoundError
-from repository.publication import get_publication, get_user_with_queue
+from core.security import validate_user_id_query
+from repository.publication import (
+    get_publications_by_ids,
+    get_user_publication,
+)
+from repository.user import get_user
+from schema.common import Publication
+from service.publications import pipe_to_array
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/current", tags=["publications"])
+router = APIRouter(prefix="/publications")
 
 
-def pipe_to_array(pipe_str: str) -> list[int]:
-    """Convert '123|456|789' to [123, 456, 789]"""
-    if not pipe_str:
-        return []
-    return [int(x) for x in pipe_str.split("|") if x.strip()]
-
-
-def array_to_pipe(arr: list[int]) -> str:
-    """Convert [123, 456, 789] to '123|456|789'"""
-    return "|".join(str(x) for x in arr)
-
-
-@router.get("")
-async def get_current_publication(
+@router.get("/current")
+async def list_publications(
     session: DBSession,
     token: TokenUser,
-) -> dict:
-    logger.debug("get_current_publication called for user %s", token.user_id)
-    user = await get_user_with_queue(session, token.user_id)
-    if not user:
-        logger.error("User not found: %s", token.user_id)
-        raise UserNotFoundError(token.user_id)
+    list: Annotated[
+        bool, Query(description="Return all assigned publications")
+    ] = False,
+) -> list[Publication]:
+    user_id = token.user_id
 
-    logger.debug("User items: %s", user.items)
-    queue = pipe_to_array(user.items)
-    if not queue:
-        logger.debug("Queue is empty")
-        return {"publ_id": None, "queue_remaining": 0}
+    if user_id != token.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+        )
 
-    publ_id = queue[0]
-    logger.debug("Getting publication: %s", publ_id)
-    publ = await get_publication(session, publ_id)
-    if not publ:
-        logger.error("Publication not found: %s", publ_id)
-        return {"publ_id": None, "queue_remaining": 0}
+    if not list:
+        publ = await get_user_publication(session, token.user_id)
+        if not publ:
+            return []
 
-    return {
-        "publ_id": publ.id,
-        "author": publ.author,
-        "year": publ.year,
-        "name": publ.name,
-        "pdf_url": publ.pdf_file,
-        "queue_remaining": len(queue) - 1,
-    }
+        return [Publication.model_validate(publ)]
+
+    user = await get_user(session, user_id)
+    if user is None:
+        logger.error(
+            "Token exists for user, but not found in database: id - %d", user_id
+        )
+        raise UserNotFoundError(id=user_id)
+    if not user.items:
+        return []
+
+    try:
+        publ_ids = pipe_to_array(user.items) if user.items else None
+    except ValueError as exc:
+        logger.error(
+            "Invalid item format in database: user %d, items %s",
+            user.user_id,
+            user.items,
+            exc_info=exc,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ) from exc
+
+    if not publ_ids:
+        return []
+
+    publications = await get_publications_by_ids(session, publ_ids)
+    return [Publication.model_validate(p) for p in publications]

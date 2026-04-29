@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
-from api.publications import current, list
+from api.publications import current
 
-router = APIRouter(prefix="/publications", tags=["publications"])
+router = APIRouter(tags=["publications"])
 router.include_router(current.router)
-router.include_router(list.router)

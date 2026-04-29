@@ -38,6 +38,11 @@ class PublicationNotFoundError(APIException):
         super().__init__("PUBL_NOT_FOUND", f"Publication {publ_id} not found", 404)
 
 
+class NoPublicationsAssignedError(APIException):
+    def __init__(self, user_id: str | int) -> None:
+        super().__init__("NO_PUBL", f"User {user_id} has no assigned publications", 404)
+
+
 class RecordForbiddenError(APIException):
     def __init__(self) -> None:
         super().__init__(

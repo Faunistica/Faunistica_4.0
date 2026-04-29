@@ -6,6 +6,7 @@ from uuid import uuid4
 import jwt as pyjwt
 import pytest
 import pytest_asyncio
+from geopy.units import m
 from httpx import ASGITransport, AsyncClient, Cookies
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
@@ -82,23 +83,25 @@ async def seed_data(
     test_users,
 ):
     """Truncate and seed test data for each test."""
-    from core.model import EventRecord, Publ, User
+    from core.model import EventRecord, Publication, User
     from core.security import get_password_hash
 
-    user_data = test_users[0]
+    def from_test(d: dict) -> User:
+        return User(
+            user_id=d["user_id"],
+            name=d["username"],
+            tlg_name=d["username"],
+            tlg_username=d["username"],
+            hash=get_password_hash(d["password"]),
+            items=d.get("items", ""),
+            publ_id=d.get("publ_id"),
+        )
 
-    user = User(
-        user_id=user_data["user_id"],
-        name=user_data["username"],
-        tlg_name=user_data["username"],
-        tlg_username=user_data["username"],
-        hash=get_password_hash(user_data["password"]),
-        items="1",
-        publ_id=1,
-    )
-    session.add(user)
+    users = [from_test(u) for u in test_users]
+    for user in users:
+        session.add(user)
 
-    publ = Publ(id=1, name="Test Publ")
+    publ = Publication(id=1, name="Test Publ")
     session.add(publ)
     await session.flush()
 
@@ -108,7 +111,7 @@ async def seed_data(
     records = [
         EventRecord(
             id=uuid4(),
-            user_id=user_data["user_id"],
+            user_id=users[0].user_id,
             publ_id=1,
             type="rec_ok",
             genus="Testus",
@@ -119,7 +122,7 @@ async def seed_data(
         ),
         EventRecord(
             id=uuid4(),
-            user_id=user_data["user_id"],
+            user_id=users[0].user_id,
             publ_id=1,
             type="rec_ok",
             genus="Testus",
@@ -130,7 +133,7 @@ async def seed_data(
         ),
         EventRecord(
             id=uuid4(),
-            user_id=user_data["user_id"],
+            user_id=users[0].user_id,
             publ_id=1,
             type="rec_fail",
             created_at=now,
@@ -175,7 +178,14 @@ async def async_client(session_maker: Callable[[], AsyncSession]):
 @pytest.fixture(scope="session")
 def test_users():
     return [
-        {"user_id": 1, "username": "testuser1", "password": "password1"},
+        {
+            "user_id": 1,
+            "username": "testuser1",
+            "password": "password1",
+            "publ_id": 1,
+            "items": "1",
+        },
+        {"user_id": 2, "username": "testuser2", "password": "password2"},
     ]
 
 
@@ -194,8 +204,14 @@ def create_test_token(user_id: int, username: str, token_type: str) -> str:
 
 
 @pytest.fixture(scope="session")
-def auth_token():
-    return {
-        "access_token": create_test_token(1, "testuser1", "access"),
-        "refresh_token": create_test_token(1, "testuser1", "refresh"),
-    }
+def auth_tokens():
+    return [
+        {
+            "access_token": create_test_token(1, "testuser1", "access"),
+            "refresh_token": create_test_token(1, "testuser1", "refresh"),
+        },
+        {
+            "access_token": create_test_token(2, "testuser2", "access"),
+            "refresh_token": create_test_token(2, "testuser2", "refresh"),
+        },
+    ]

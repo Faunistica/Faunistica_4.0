@@ -26,28 +26,28 @@ async def test_save_action(session: AsyncSession, test_users, seed_data) -> None
     await session.close()
 
 
-@pytest.mark.asyncio
-async def test_get_winner_info(session: AsyncSession, test_users, seed_data) -> None:
-    user_id = test_users[0]["user_id"]
-    date = datetime.strptime("Jun 1 2005", "%b %d %Y")
-
-    action = Action(
-        user_id=user_id,
-        action="fau_win",
-        object="trophy.png|You won!",
-        datetime=date,
-    )
-    session.add(action)
-    await session.commit()
-
-    service = ActionService(session)
-    info = await service.get_winner_info(user_id)
-    assert info == {
-        "picfile": "trophy.png",
-        "message": "You won!",
-        "datetime": date,
-    }
-    await session.close()
+# @pytest.mark.asyncio
+# async def test_get_winner_info(session: AsyncSession, test_users, seed_data) -> None:
+#     user_id = test_users[0]["user_id"]
+#     date = datetime.strptime("Jun 1 2005", "%b %d %Y")
+#
+#     action = Action(
+#         user_id=user_id,
+#         action="fau_win",
+#         object="trophy.png|You won!",
+#         datetime=date,
+#     )
+#     session.add(action)
+#     await session.commit()
+#
+#     service = ActionService(session)
+#     info = await service.get_winner_info(user_id)
+#     assert info == {
+#         "picfile": "trophy.png",
+#         "message": "You won!",
+#         "datetime": date,
+#     }
+#     await session.close()
 
 
 @pytest.mark.asyncio

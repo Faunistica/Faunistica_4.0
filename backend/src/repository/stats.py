@@ -6,7 +6,7 @@ from sqlalchemy import func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from core.model import EventRecord, Publ, User
+from core.model import EventRecord, Publication, User
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,10 @@ async def get_general_stats(session: AsyncSession) -> dict:
     avg_age = result.scalar()
     stats["avg_age"] = round(avg_age, 1) if avg_age else 0
 
-    stmt = select(Publ.language).where(
-        Publ.ural.is_(True), Publ.coords.is_(True), Publ.occs.is_(True)
+    stmt = select(Publication.language).where(
+        Publication.ural.is_(True),
+        Publication.coords.is_(True),
+        Publication.occs.is_(True),
     )
     result = await session.execute(stmt)
     langs = result.scalars().all()
