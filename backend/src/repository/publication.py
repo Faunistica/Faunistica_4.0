@@ -59,3 +59,18 @@ async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:
     stmt = select(User).where(User.user_id == user_id)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
+
+
+async def get_user_with_queue(session: AsyncSession, user_id: int) -> User | None:
+    stmt = select(User).where(User.user_id == user_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def update_user_items(session: AsyncSession, user_id: int, items: str) -> None:
+    stmt = select(User).where(User.user_id == user_id).with_for_update(nowait=True)
+    result = await session.execute(stmt)
+    user = result.scalar_one_or_none()
+    if user:
+        user.items = items
+        await session.flush()

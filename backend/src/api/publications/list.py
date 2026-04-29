@@ -11,10 +11,10 @@ from repository.publication import (
 )
 from schema.common import Publication
 
-router = APIRouter(prefix="/publications")
+router = APIRouter()
 
 
-@router.get("")
+@router.get("/")
 async def list_publications(
     session: DBSession,
     token: TokenUser,
