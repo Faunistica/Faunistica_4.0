@@ -5,7 +5,7 @@ from sqlalchemy import func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from core.exceptions import UserNotFoundError
+from core.exceptions import ExpectationError
 from core.model import Publication, User
 from core.security import check_password_hash
 from schema.user import UserUpdate
@@ -33,12 +33,7 @@ async def is_password_correct(
     return check_password_hash(user_pass, user_hash)
 
 
-async def get_user_unsafe(session: AsyncSession, user_id: int) -> User:
-    """
-    THIS METHOD WILL THROW IN USER DOESN'T EXIST
-    ONLY USE IN TELEGRAM BOT
-    """
-
+async def get_user_expect(session: AsyncSession, user_id: int) -> User:
     stmt = select(User).where(User.user_id == user_id)
     result = await session.execute(stmt)
 
@@ -46,7 +41,7 @@ async def get_user_unsafe(session: AsyncSession, user_id: int) -> User:
     if user is not None:
         return user
 
-    raise UserNotFoundError(id=user_id)
+    raise ExpectationError(message=f"Expected to find user: {user_id}")
 
 
 async def get_user(session: AsyncSession, user_id: int) -> User | None:

@@ -9,8 +9,10 @@ from argon2.exceptions import VerifyMismatchError
 from fastapi import Depends, HTTPException, Query, Request, Response, status
 from jwt import DecodeError
 from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
+from core.exceptions import AdminOnlyError
 from schema.jwt import Token, TokenPayload
 from schema.user import UserMinimal
 
@@ -146,6 +148,13 @@ def get_jwt_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
         ) from e
+
+
+def check_admin(
+    session: AsyncSession,
+    user_id: int,
+) -> bool:
+    raise AdminOnlyError
 
 
 def validate_user_id(user_id: int, token_id: int) -> int:

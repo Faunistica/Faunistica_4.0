@@ -30,7 +30,7 @@ from repository.stats import (
 from repository.user import (
     count_users_with_name,
     create_user,
-    get_user_unsafe,
+    get_user_expect,
     update_user,
 )
 from schema.user import UserLanguage, UserUpdate
@@ -154,7 +154,7 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_unsafe(session, message.from_user.id)
+            user = await get_user_expect(session, message.from_user.id)
 
             if not user:
                 await create_user(session, user_id=message.from_user.id, reg_stat=2)
@@ -195,7 +195,7 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_unsafe(session, message.from_user.id)
+            user = await get_user_expect(session, message.from_user.id)
 
             if not user:
                 await message.answer(Messages.not_registered())
@@ -277,7 +277,7 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_unsafe(session, message.from_user.id)
+            user = await get_user_expect(session, message.from_user.id)
 
             if not user:
                 await message.answer(Messages.not_registered())
@@ -354,7 +354,7 @@ class Handlers:
             project_stats = await get_project_statistics(session)
             user_stats = None
 
-            user = await get_user_unsafe(session, message.from_user.id)
+            user = await get_user_expect(session, message.from_user.id)
             if user is not None:
                 user_stats = await get_user_statistics(session, message.from_user.id)
 
@@ -376,7 +376,7 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_unsafe(session, message.from_user.id)
+            user = await get_user_expect(session, message.from_user.id)
 
             if not user:
                 await message.answer(Messages.not_registered())
@@ -403,7 +403,7 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_unsafe(session, message.from_user.id)
+            user = await get_user_expect(session, message.from_user.id)
 
             if not user:
                 await message.answer(Messages.not_registered())
@@ -434,7 +434,7 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_unsafe(session, message.from_user.id)
+            user = await get_user_expect(session, message.from_user.id)
 
             if message.chat.id < 0:
                 return
@@ -492,7 +492,7 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_unsafe(session, message.from_user.id)
+            user = await get_user_expect(session, message.from_user.id)
 
             if not user:
                 await message.answer(Messages.not_registered())
@@ -853,7 +853,7 @@ class Handlers:
         async for session in self.db_session_factory():
             other_users = await count_users_with_name(session, name_msg)
 
-            if name_msg == (await get_user_unsafe(session, message.from_user.id)).name:
+            if name_msg == (await get_user_expect(session, message.from_user.id)).name:
                 await message.answer(Messages.same_name(name_msg))
             elif other_users > 0:
                 await message.answer(Messages.name_already_exists())
@@ -864,7 +864,7 @@ class Handlers:
             elif not re.fullmatch(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$", name_msg):
                 await message.answer(Messages.invalid_characters())
             else:
-                old_name = (await get_user_unsafe(session, message.from_user.id)).name
+                old_name = (await get_user_expect(session, message.from_user.id)).name
 
                 await log_action(
                     session,

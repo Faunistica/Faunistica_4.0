@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -34,9 +35,25 @@ def api_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     raise exc
 
 
+class AdminOnlyError(APIException):
+    def __init__(self) -> None:
+        super().__init__(
+            "ADMIN_ONLY", "This action is only availible for project admins", 403
+        )
+
+
 class PublicationNotFoundError(APIException):
     def __init__(self, publ_id: int) -> None:
         super().__init__("PUBL_NOT_FOUND", f"Publication {publ_id} not found", 404)
+
+
+class PublicationForbiddernError(APIException):
+    def __init__(self, publ_id: int) -> None:
+        super().__init__(
+            "PUBL_FORBIDDEN",
+            f"Publication {publ_id} cannot be accessed in this way",
+            403,
+        )
 
 
 class NoPublicationsAssignedError(APIException):
@@ -46,9 +63,7 @@ class NoPublicationsAssignedError(APIException):
 
 class RecordForbiddenError(APIException):
     def __init__(self) -> None:
-        super().__init__(
-            "RECORD_FORBIDDEN", "Cannot modify record from previous publication", 403
-        )
+        super().__init__("RECORD_FORBIDDEN", "Cannot modify record", 403)
 
 
 class UserNotFoundError(APIException):
@@ -56,8 +71,13 @@ class UserNotFoundError(APIException):
         super().__init__("USER_NOT_FOUND", f"User {id} not found", 404)
 
 
+class ExpectationError(APIException):
+    def __init__(self, message: str) -> None:
+        super().__init__("EXPECT_FAIL", f"User {id} not found", 500)
+
+
 class RecordNotFoundError(APIException):
-    def __init__(self, record_id: str) -> None:
+    def __init__(self, record_id: str | UUID) -> None:
         super().__init__("RECORD_NOT_FOUND", f"Record {record_id} not found", 404)
 
 
@@ -71,6 +91,11 @@ class ActionLoggingError(APIException):
         super().__init__(
             "ACTION_LOGGING_ERROR", f"Failed to log action: {details}", 500
         )
+
+
+class InternalError(APIException):
+    def __init__(self, details: str) -> None:
+        super().__init__("INTERNAL_ERROR", details, 500)
 
 
 class PublicationCompletedError(APIException):

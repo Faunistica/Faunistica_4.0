@@ -5,11 +5,11 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from core.dependencies import ClientIP, DBSession, TokenUser
-from core.exceptions import PublicationNotFoundError
-from repository import publication as repo
-from repository.user import get_user
+from core.exceptions import PublicationForbiddernError
+from repository.user import get_user_expect, update_user
+from schema.user import UserUpdate
 from service.actions import ActionService
-from service.publications import pipe_to_array
+from service.publications import array_to_pipe, pipe_to_array
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/publications")
@@ -34,14 +34,15 @@ async def complete_publication(
     token: TokenUser,
     ip: ClientIP,
 ) -> None:
-    user = await get_user(session, token.user_id)
-    if not user:
-        raise PublicationNotFoundError(publ_id)
+    """
+    Will only work for submitting current publication
+    """
+
+    user = await get_user_expect(session, token.user_id)
+    if user.publ_id != publ_id:
+        raise PublicationForbiddernError(publ_id)
 
     queue = pipe_to_array(user.items)
-
-    if not queue or queue[0] != publ_id:
-        raise PublicationNotFoundError(publ_id)
 
     action_map = {
         ProcessingLevel.FULL: "publ_end_full",
@@ -54,6 +55,13 @@ async def complete_publication(
     action_service = ActionService(session)
     await action_service.save_action(token.user_id, action_type, str(publ_id), ip)
 
-    queue.pop(0)
-    new_items = "|".join(str(x) for x in queue)
-    await repo.update_user_items(session, token.user_id, new_items)
+    next = queue.pop(0) if len(queue) > 0 else None
+    new_items = array_to_pipe(queue)
+    await update_user(
+        session,
+        token.user_id,
+        UserUpdate(
+            publ_id=next,
+            items=new_items,
+        ),
+    )

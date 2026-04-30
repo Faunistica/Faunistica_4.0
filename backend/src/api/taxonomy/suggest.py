@@ -3,7 +3,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, Request
 
-from core.rate_limiter import limiter
 from schema.taxonomy import SuggestTaxonRequest, SuggestTaxonResponse
 from service import taxon
 

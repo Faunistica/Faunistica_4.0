@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from core.dependencies import ClientIP, DBSession, TokenUser
 from core.exceptions import PublicationCompletedError, PublicationNotFoundError
-from repository.user import get_user
+from repository.user import get_user_expect
 from service.actions import ActionService
 from service.publications import pipe_to_array
 
@@ -27,9 +27,7 @@ async def set_publication_metadata(
     token: TokenUser,
     ip: ClientIP,
 ) -> None:
-    user = await get_user(session, token.user_id)
-    if not user:
-        raise PublicationNotFoundError(publ_id)
+    user = await get_user_expect(session, token.user_id)
 
     action_service = ActionService(session)
     if await action_service.is_publication_completed(token.user_id, publ_id):

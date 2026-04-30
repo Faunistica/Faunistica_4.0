@@ -39,11 +39,9 @@ async def get_user_records(
     return result.scalars().all()
 
 
-async def delete_record(session: AsyncSession, record_id: UUID, user_id: int) -> bool:
+async def delete_record(session: AsyncSession, record_id: UUID) -> bool:
     stmt = (
-        delete(EventRecord)
-        .where(and_(EventRecord.id == record_id, EventRecord.user_id == user_id))
-        .returning(EventRecord.id)
+        delete(EventRecord).where(EventRecord.id == record_id).returning(EventRecord.id)
     )
     result = await session.execute(stmt)
 
