@@ -1,156 +1,148 @@
-import asyncio
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.model import Action, EventRecord
-from service.milestone import detect_milestones
+from core.model import Action, EventRecord, User
+from core.security import get_password_hash
+from service.milestone import check_and_log_fau50
+
+
+async def _create_user(session: AsyncSession, user_id: int, username: str) -> User:
+    user = User(
+        user_id=user_id,
+        name=username,
+        tlg_name=username,
+        tlg_username=username,
+        hash=get_password_hash("password"),
+        items="1",
+    )
+    session.add(user)
+    await session.flush()
+    return user
 
 
 async def _seed_records(
     session: AsyncSession,
     user_id: int,
     count: int,
-    publ_id: int = 1,
-    base_time: datetime | None = None,
 ) -> None:
-    if base_time is None:
-        base_time = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=1)
-
-    for i in range(count):
+    for _ in range(count):
         record = EventRecord(
             id=uuid4(),
             user_id=user_id,
-            publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
             latitude=55.5,
             longitude=37.5,
-            created_at=base_time + timedelta(hours=i),
-            updated_at=base_time + timedelta(hours=i),
         )
         session.add(record)
-
     await session.commit()
 
 
-async def _seed_milestone_action(
-    session: AsyncSession,
-    user_id: int,
-    milestone: int,
-    action_time: datetime | None = None,
+@pytest.mark.asyncio
+async def test_fau50_detected(
+    session_maker: Callable[[], AsyncSession],
 ) -> None:
-    if action_time is None:
-        action_time = datetime.now(UTC).replace(tzinfo=None)
+    async with session_maker() as session:
+        user = await _create_user(session, 1, "testuser")
+        await session.commit()
 
-    action = Action(
-        user_id=user_id,
-        action=f"fau_{milestone}",
-        object=str(milestone),
-        datetime=action_time,
-    )
-    session.add(action)
-    await session.commit()
+        await _seed_records(session, user.user_id, 49)
 
+        fiftieth = EventRecord(
+            id=uuid4(),
+            user_id=user.user_id,
+            type="rec_ok",
+            genus="Testus",
+            latitude=55.5,
+            longitude=37.5,
+        )
+        session.add(fiftieth)
+        await session.commit()
 
-async def _count_fau_actions(session: AsyncSession, user_id: int):
-    stmt = text(
-        "SELECT COUNT(*) FROM actions WHERE user_id = :uid AND action LIKE 'fau_%0'"
-    )
-    result = await session.execute(stmt, {"uid": user_id})
-    return result.scalar_one()
+        result = await check_and_log_fau50(session, user.user_id, fiftieth)
+
+        assert result is not None
+        assert result["user_id"] == user.user_id
+        assert result["milestone"] == 50
+
+        stmt = select(Action).where(
+            Action.user_id == user.user_id,
+            Action.action == "fau_50",
+        )
+        action = await session.execute(stmt)
+        assert action.scalar_one_or_none() is not None
 
 
 @pytest.mark.asyncio
-async def test_detect_milestone_100(
+async def test_fau50_not_duplicated(
     session_maker: Callable[[], AsyncSession],
-    test_users,
-    seed_data,
 ) -> None:
-    user_id = test_users[0]["user_id"]
-
     async with session_maker() as session:
-        await _seed_records(session, user_id, 127)
+        user = await _create_user(session, 1, "testuser")
+        await session.commit()
 
-        new_milestones = await detect_milestones(session)
-
-        assert len(new_milestones) == 1
-        assert new_milestones[0]["user_id"] == user_id
-        assert new_milestones[0]["milestone"] == 100
-        await asyncio.sleep(1000)
-
-        count = await _count_fau_actions(session, user_id)
-        assert count == 1
-
-        stmt = text(
-            "SELECT object FROM actions WHERE user_id = :uid AND action = 'fau_100'"
+        existing_action = Action(
+            user_id=user.user_id,
+            action="fau_50",
+            object="50",
+            datetime=datetime.now(),
         )
-        result = await session.execute(stmt, {"uid": user_id})
-        assert result.scalar_one() == "100"
+        session.add(existing_action)
+        await session.commit()
+
+        new_record = EventRecord(
+            id=uuid4(),
+            user_id=user.user_id,
+            type="rec_ok",
+            genus="Testus",
+            latitude=55.5,
+            longitude=37.5,
+        )
+        session.add(new_record)
+        await session.commit()
+
+        result = await check_and_log_fau50(session, user.user_id, new_record)
+
+        assert result is None
 
 
 @pytest.mark.asyncio
-async def test_detect_milestone_50(
+async def test_fau50_only_at_50(
     session_maker: Callable[[], AsyncSession],
-    test_users,
-    seed_data,
 ) -> None:
-    user_id = test_users[0]["user_id"]
-
     async with session_maker() as session:
-        await _seed_records(session, user_id, 60)
+        user = await _create_user(session, 1, "testuser")
+        await session.commit()
 
-        new_milestones = await detect_milestones(session)
-        print(new_milestones)
-        # await asyncio.sleep(1000)
+        await _seed_records(session, user.user_id, 49)
 
-        assert len(new_milestones) == 1
-        assert new_milestones[0]["user_id"] == user_id
-        assert new_milestones[0]["milestone"] == 50
-
-        stmt = text(
-            "SELECT object FROM actions WHERE user_id = :uid AND action = 'fau_50'"
+        fiftieth = EventRecord(
+            id=uuid4(),
+            user_id=user.user_id,
+            type="rec_ok",
+            genus="Testus",
+            latitude=55.5,
+            longitude=37.5,
         )
-        result = await session.execute(stmt, {"uid": user_id})
-        assert result.scalar_one() == "50"
+        session.add(fiftieth)
+        await session.commit()
 
-        await _seed_records(session, user_id, 60)
+        result = await check_and_log_fau50(session, user.user_id, fiftieth)
 
-        new_milestones = await detect_milestones(session)
-        print(new_milestones)
+        assert result is not None
 
-        assert len(new_milestones) == 1
-        assert new_milestones[0]["user_id"] == user_id
-        assert new_milestones[0]["milestone"] == 100
-
-        stmt = text(
-            "SELECT object FROM actions WHERE user_id = :uid AND action = 'fau_50'"
+        stmt = (
+            select(func.count())
+            .select_from(Action)
+            .where(
+                Action.user_id == user.user_id,
+                Action.action == "fau_50",
+            )
         )
-        result = await session.execute(stmt, {"uid": user_id})
-        assert result.scalar_one() == "50"
-
-        await asyncio.sleep(1000)
-
-
-@pytest.mark.asyncio
-async def test_no_new_milestone(
-    session_maker: Callable[[], AsyncSession],
-    test_users,
-    seed_data,
-) -> None:
-    user_id = test_users[0]["user_id"]
-    base_time = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=2)
-
-    async with session_maker() as session:
-        await _seed_milestone_action(session, user_id, 50, base_time)
-
-        new_milestones = await detect_milestones(session)
-
-        assert len(new_milestones) == 0
-
-        count = await _count_fau_actions(session, user_id)
-        assert count == 1
+        count = await session.execute(stmt)
+        assert count.scalar_one() == 1

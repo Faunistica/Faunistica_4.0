@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, status
 from core.dependencies import ClientIP, DBSession, TokenUser
 from repository import record as repo
 from schema.records import RecordBelonging, RecordFull
+from service.milestone import check_and_log_fau50
 from service.records import create_record_metadata
 
 router = APIRouter(
@@ -28,5 +29,9 @@ async def create_record(
 
     metadata = create_record_metadata(None, belonging, "autosave", ip)
     db_record = await repo.create_record(session, metadata)
+
+    if db_record.type == "rec_ok":
+        # TODO: run in a background task
+        await check_and_log_fau50(session, token.user_id, db_record)
 
     return RecordFull.model_validate(db_record.__dict__)

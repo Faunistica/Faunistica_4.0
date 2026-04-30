@@ -21,7 +21,6 @@ dependencies = [
     "alembic>=1.18.4",
     "pydantic-settings[yaml]>=2.13.1",
     "slowapi>=0.1.9",
-    "apscheduler>=3.10.0",
 ]
 
 [tool.setuptools.packages.find]

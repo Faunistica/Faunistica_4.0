@@ -69,10 +69,6 @@ class DataSettings(CamelCaseSettings):
     LOCATIONS_JSON_PATH: Path = Path("data/locations.json")
 
 
-class SchedulerSettings(CamelCaseSettings):
-    MILESTONE_CRON: str = "0 0 * * *"
-
-
 class Settings(
     DatabaseSettings,
     SecuritySettings,
@@ -80,7 +76,6 @@ class Settings(
     LoggingSettings,
     AppSettings,
     DataSettings,
-    SchedulerSettings,
 ):
     model_config = SettingsConfigDict(
         yaml_file=Path("config.yaml"),

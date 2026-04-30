@@ -2,5 +2,4 @@ DevMode: true
 AllowedOrigins:
   - "http://localhost:5173"
   - "http://localhost:8000"
-MilestoneCron: "0 3 * * *"
 
