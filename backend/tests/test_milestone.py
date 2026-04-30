@@ -106,6 +106,7 @@ async def test_detect_milestone_50(
 
         new_milestones = await detect_milestones(session)
         print(new_milestones)
+        # await asyncio.sleep(1000)
 
         assert len(new_milestones) == 1
         assert new_milestones[0]["user_id"] == user_id

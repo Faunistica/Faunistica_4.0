@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, cast, func, select
+from sqlalchemy import Integer, and_, func, literal_column, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import Action, EventRecord
@@ -9,16 +9,35 @@ logger = __import__("logging").getLogger(__name__)
 
 
 async def detect_milestones(session: AsyncSession) -> list[dict[str, int | datetime]]:
+    # NOTE: I know I can / 50 right here, but I think it'll hurt readability
+    record_count = func.count(literal_column("event_records.*")).label("record_count")
+    last_milestone = func.coalesce(func.max(Action.object.cast(Integer)), 0).label(
+        "last_milestone"
+    )
+
     stmt = (
         select(
             EventRecord.user_id,
-            func.count().label("reached"),
+            record_count,
+            last_milestone,
+        )
+        .select_from(EventRecord)
+        .outerjoin(
+            Action,
+            and_(
+                EventRecord.user_id == Action.user_id,
+                # NOTE: is looks like fau_100 milestones are deprecated
+                Action.action == "fau_50",
+            ),
         )
         .where(EventRecord.type == "rec_ok")
         .group_by(EventRecord.user_id)
+        .having((record_count / 50) > (last_milestone / 50))
     )
+
     result = await session.execute(stmt)
     record_count = result.all()
+    print(record_count)
 
     if not record_count:
         return []
@@ -91,3 +110,5 @@ async def detect_milestones(session: AsyncSession) -> list[dict[str, int | datet
         )
 
     return new_milestones
+
+    return []
