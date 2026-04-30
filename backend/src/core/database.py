@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 _engine = create_async_engine(str(settings.DB_URL), echo=settings.DB_ECHO)
-_async_session_local = async_sessionmaker(
+async_session_factory = async_sessionmaker(
     bind=_engine,
     class_=AsyncSession,
     # TODO: add later
@@ -27,7 +27,7 @@ _async_session_local = async_sessionmaker(
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:
-    async with _async_session_local() as session:
+    async with async_session_factory() as session:
         try:
             yield session
         except IntegrityError as e:

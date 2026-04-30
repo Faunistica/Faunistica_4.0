@@ -21,6 +21,7 @@ dependencies = [
     "alembic>=1.18.4",
     "pydantic-settings[yaml]>=2.13.1",
     "slowapi>=0.1.9",
+    "apscheduler>=3.10.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -57,7 +58,8 @@ select = [
 ignore = [
     "PLR2004", # ignore magick variables for now
     "PLR0913", # max 5 arguments
-    "PLR0912"  # ignore too many branches
+    "PLR0912", # ignore too many branches
+    "PLR0915", # ignore too many statements
 ]
 
 [tool.ruff.lint.per-file-ignores]

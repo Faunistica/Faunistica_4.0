@@ -73,9 +73,9 @@ async def session_maker(
 async def session(
     session_maker: Callable[[], AsyncSession],
 ) -> AsyncGenerator[AsyncSession]:
-    session = session_maker()
-    yield session
-    await session.close()
+    async with session_maker() as session:
+        yield session
+        await session.close()
 
 
 @pytest_asyncio.fixture(scope="function")

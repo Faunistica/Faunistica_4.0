@@ -6,6 +6,8 @@ from contextlib import asynccontextmanager
 from logging.handlers import TimedRotatingFileHandler
 
 import aiohttp
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -14,7 +16,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from api import api_router
 from bot import bot
 from core.config import settings
-from core.database import init_db, ping_db
+from core.database import async_session_factory, init_db, ping_db
 from core.exceptions import (
     APIException,
     DBException,
@@ -23,6 +25,7 @@ from core.exceptions import (
 )
 from core.rate_limiter import limiter, rate_limit_handler
 from schema.geo import RegionData
+from service.milestone import detect_milestones
 
 log_format = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 
@@ -126,9 +129,28 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     logger.info("Database connection verified")
 
+    scheduler = AsyncIOScheduler()
+
+    async def run_milestone_detection() -> None:
+        async with async_session_factory() as session:
+            milestones = await detect_milestones(session)
+            if milestones:
+                logger.info("Detected milestones: %s", milestones)
+            else:
+                logger.info("No new milestones detected")
+
+    scheduler.add_job(
+        run_milestone_detection,
+        CronTrigger.from_crontab(settings.MILESTONE_CRON),
+        id="milestone_detection",
+    )
+    scheduler.start()
+    logger.info(f"Milestone scheduler started with cron: {settings.MILESTONE_CRON}")
+
     try:
         yield
     finally:
+        scheduler.shutdown()
         logger.info("Closing HTTP session...")
         await app.state.http_session.close()
         logger.info("Shutting down bot...")

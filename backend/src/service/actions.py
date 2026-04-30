@@ -25,6 +25,7 @@ class ActionService:
         try:
             action = Action(
                 user_id=user_id,
+                user_ip=ip,
                 action=action_type,
                 object=object,
                 datetime=datetime.now(),
