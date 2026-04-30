@@ -40,7 +40,7 @@ async def complete_publication(
 
     user = await get_user_expect(session, token.user_id)
     if user.publ_id != publ_id:
-        raise PublicationForbiddernError(publ_id)
+        raise PublicationForbiddernError(publ_id, token.user_id)
 
     queue = pipe_to_array(user.items)
 

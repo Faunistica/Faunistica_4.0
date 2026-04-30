@@ -237,7 +237,6 @@ def test_users():
             "username": "testuser1",
             "password": "password1",
             "publ_id": 1,
-            "items": "1",
         },
         {"user_id": 2, "username": "testuser2", "password": "password2"},
     ]

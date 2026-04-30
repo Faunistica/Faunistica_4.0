@@ -1,5 +1,3 @@
-from unittest.mock import AsyncMock, patch
-
 import pytest
 from conftest import create_test_token
 from fastapi import status
@@ -47,24 +45,16 @@ async def test_metadata_401(async_client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_comments_success(async_client: AsyncClient, auth_cookies) -> None:
-    with (
-        patch(
-            "api.publications.comments.get_user", new_callable=AsyncMock
-        ) as mock_get_user,
-        patch("service.actions.ActionService.save_action", new_callable=AsyncMock),
-    ):
-        mock_user = AsyncMock()
-        mock_user.items = "123|456"
-        mock_get_user.return_value = mock_user
+async def test_comments_success(
+    async_client: AsyncClient, auth_cookies, seed_data
+) -> None:
+    response = await async_client.post(
+        "/api/publications/1/comments",
+        json={"comment": "This is a test comment"},
+        cookies=auth_cookies,
+    )
 
-        response = await async_client.post(
-            "/api/publications/123/comments",
-            json={"comment": "This is a test comment"},
-            cookies=auth_cookies,
-        )
-
-        assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 @pytest.mark.asyncio
@@ -82,19 +72,14 @@ async def test_comments_422_short_comment(
 
 
 @pytest.mark.asyncio
-async def test_comments_404(async_client: AsyncClient, auth_cookies) -> None:
-    with patch(
-        "api.publications.comments.get_user", new_callable=AsyncMock
-    ) as mock_get_user:
-        mock_get_user.return_value = None
+async def test_comments_404(async_client: AsyncClient, auth_cookies, seed_data) -> None:
+    response = await async_client.post(
+        "/api/publications/999/comments",
+        json={"comment": "This is a test comment"},
+        cookies=auth_cookies,
+    )
 
-        response = await async_client.post(
-            "/api/publications/999/comments",
-            json={"comment": "This is a test comment"},
-            cookies=auth_cookies,
-        )
-
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.asyncio

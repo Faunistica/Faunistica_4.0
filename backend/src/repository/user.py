@@ -41,6 +41,7 @@ async def get_user_expect(session: AsyncSession, user_id: int) -> User:
     if user is not None:
         return user
 
+    logger.error("Expected tp find user in DB: %d", user_id)
     raise ExpectationError(message=f"Expected to find user: {user_id}")
 
 

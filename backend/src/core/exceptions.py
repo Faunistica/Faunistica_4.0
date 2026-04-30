@@ -48,10 +48,10 @@ class PublicationNotFoundError(APIException):
 
 
 class PublicationForbiddernError(APIException):
-    def __init__(self, publ_id: int) -> None:
+    def __init__(self, user_id: int, publ_id: int) -> None:
         super().__init__(
             "PUBL_FORBIDDEN",
-            f"Publication {publ_id} cannot be accessed in this way",
+            f"Publication {publ_id} cannot be accessed in this way by user {user_id}",
             403,
         )
 

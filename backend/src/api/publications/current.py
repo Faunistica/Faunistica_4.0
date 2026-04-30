@@ -9,7 +9,7 @@ from repository.publication import (
     get_publications_by_ids,
     get_user_publication,
 )
-from repository.user import get_user
+from repository.user import get_user, get_user_expect
 from schema.common import Publication
 from service.publications import pipe_to_array
 
@@ -41,17 +41,13 @@ async def list_publications(
 
         return [Publication.model_validate(publ)]
 
-    user = await get_user(session, user_id)
-    if user is None:
-        logger.error(
-            "Token exists for user, but not found in database: id - %d", user_id
-        )
-        raise UserNotFoundError(id=user_id)
+    user = await get_user_expect(session, user_id)
+
     if not user.items:
         return []
 
     try:
-        publ_ids = pipe_to_array(user.items) if user.items else None
+        queue = pipe_to_array(user.items) if user.items else None
     except ValueError as exc:
         logger.error(
             "Invalid item format in database: user %d, items %s",
@@ -63,7 +59,12 @@ async def list_publications(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         ) from exc
 
-    if not publ_ids:
+    publ_ids = [user.publ_id] if user.publ_id is not None else []
+
+    if queue:
+        publ_ids.extend(queue)
+
+    if len(publ_ids) == 0:
         return []
 
     publications = await get_publications_by_ids(session, publ_ids)

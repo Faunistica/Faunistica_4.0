@@ -4,10 +4,13 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel, Field
 
 from core.dependencies import ClientIP, DBSession, TokenUser
-from core.exceptions import PublicationCompletedError, PublicationNotFoundError
-from repository.user import get_user
+from core.exceptions import (
+    PublicationForbiddernError,
+    PublicationNotFoundError,
+)
+from repository.publication import get_publication
+from repository.user import get_user_expect
 from service.actions import ActionService
-from service.publications import pipe_to_array
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/publications")
@@ -25,19 +28,17 @@ async def add_publication_comment(
     token: TokenUser,
     ip: ClientIP,
 ) -> None:
-    user = await get_user(session, token.user_id)
-    if not user:
+    publication = await get_publication(session, publ_id)
+    if not publication:
         raise PublicationNotFoundError(publ_id)
+
+    user = await get_user_expect(session, token.user_id)
+
+    print(user.publ_id)
+    if user.publ_id != publ_id:
+        raise PublicationForbiddernError(publ_id, token.user_id)
 
     action_service = ActionService(session)
-    if await action_service.is_publication_completed(token.user_id, publ_id):
-        raise PublicationCompletedError(publ_id)
-
-    queue = pipe_to_array(user.items)
-
-    if not queue or publ_id not in queue:
-        raise PublicationNotFoundError(publ_id)
-
     await action_service.save_action(
         token.user_id, "publ_rem", f"{publ_id}_comm:{data.comment}", ip
     )

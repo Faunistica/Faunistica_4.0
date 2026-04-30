@@ -5,10 +5,13 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from core.dependencies import ClientIP, DBSession, TokenUser
-from core.exceptions import PublicationCompletedError, PublicationNotFoundError
+from core.exceptions import (
+    PublicationForbiddernError,
+    PublicationNotFoundError,
+)
+from repository.publication import get_publication
 from repository.user import get_user_expect
 from service.actions import ActionService
-from service.publications import pipe_to_array
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/publications")
@@ -27,16 +30,13 @@ async def set_publication_metadata(
     token: TokenUser,
     ip: ClientIP,
 ) -> None:
-    user = await get_user_expect(session, token.user_id)
-
-    action_service = ActionService(session)
-    if await action_service.is_publication_completed(token.user_id, publ_id):
-        raise PublicationCompletedError(publ_id)
-
-    queue = pipe_to_array(user.items)
-
-    if not queue or publ_id not in queue:
+    publication = await get_publication(session, publ_id)
+    if not publication:
         raise PublicationNotFoundError(publ_id)
+
+    user = await get_user_expect(session, token.user_id)
+    if user.publ_id != publ_id:
+        raise PublicationForbiddernError(publ_id, token.user_id)
 
     metadata = {}
     if data.urals_scope is not None:
@@ -44,6 +44,7 @@ async def set_publication_metadata(
     if data.material_status is not None:
         metadata["mat"] = data.material_status
 
+    action_service = ActionService(session)
     if metadata:
         metadata["publ_id"] = str(publ_id)
         await action_service.save_action(

@@ -44,7 +44,7 @@ async def test_complete_full_logs_action(
 
 @pytest.mark.asyncio
 async def test_complete_wrong_publ_id(
-    async_client: AsyncClient, auth_tokens, test_users, session_maker, seed_data
+    async_client: AsyncClient, auth_tokens, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
     response = await async_client.post(
@@ -111,13 +111,14 @@ async def test_complete_queue_advancement(
 
 @pytest.mark.asyncio
 async def test_complete_ural_logs_publ_end_ural(
-    async_client: AsyncClient, auth_tokens, test_users, session_maker, seed_data
+    async_client: AsyncClient, auth_tokens, session_maker, seed_data
 ) -> None:
     async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
     response = await async_client.post(
         "/api/publications/1/complete",
         json={"processing_level": "ural"},
     )
+
     assert response.status_code == 204
     async with session_maker() as session:
         from sqlalchemy import select
