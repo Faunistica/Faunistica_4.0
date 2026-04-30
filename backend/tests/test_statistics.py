@@ -70,6 +70,7 @@ async def test_get_user_statistics_by_id(async_client: AsyncClient, session_make
     async with session_maker() as session:
         # Check if publication 1 exists, if not create it
         from core.model import Publication
+
         publ = await session.get(Publication, 1)
         if publ is None:
             publ = Publication(id=1, author="Test Author", name="Test Publ")

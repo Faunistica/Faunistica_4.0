@@ -16,7 +16,9 @@ from core.model import Base
 logger = logging.getLogger(__name__)
 
 
-_engine = create_async_engine(str(settings.DB_URL), echo=settings.DB_ECHO)
+_engine = create_async_engine(
+    str(settings.DB_URL), echo=settings.DB_ECHO, pool_pre_ping=True
+)
 async_session_factory = async_sessionmaker(
     bind=_engine,
     class_=AsyncSession,

@@ -1,3 +1,4 @@
+import hashlib
 import os
 from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime, timedelta
@@ -19,7 +20,50 @@ from testcontainers.postgres import PostgresContainer
 
 from core.config import settings
 from core.model import Base
+from core.rate_limiter import limiter
 from schema.jwt import Token
+
+
+def make_md5_hash(password: str) -> str:
+    return hashlib.md5(password.encode()).hexdigest()  # noqa: S324 - testing legacy MD5
+
+
+@pytest.fixture
+def md5_password() -> str:
+    return "test_password_123"
+
+
+@pytest.fixture
+def md5_hash(md5_password: str) -> str:
+    return make_md5_hash(md5_password)
+
+
+@pytest.fixture
+async def create_test_user_with_hash(session: AsyncSession):
+    """Create a test user with MD5 password hash."""
+    from core.model import User
+
+    async def create(
+        user_id: int,
+        username: str,
+        md5_hash: str,
+        hash_date: datetime | None = None,
+    ) -> None:
+        if hash_date is None:
+            hash_date = datetime.now()
+
+        user = User(
+            user_id=user_id,
+            name=username,
+            hash=md5_hash,
+            hash_date=hash_date,
+            items="",
+        )
+
+        session.add(user)
+        await session.commit()
+
+    yield create
 
 
 @pytest.fixture(scope="session")
@@ -225,3 +269,16 @@ def auth_tokens():
             "refresh_token": create_test_token(2, "testuser2", "refresh"),
         },
     ]
+
+
+@pytest.fixture()
+def enable_rate_limiting(async_client: AsyncClient):
+    """Temporarily enable rate limiting for tests."""
+    from app import app
+
+    app.state.limiter.enabled = True
+    limiter.enabled = True
+    limiter._storage.reset()
+    yield
+    app.state.limiter.enabled = False
+    limiter.enabled = False

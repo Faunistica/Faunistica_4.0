@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.post("/login")
-@limiter.limit("15/minute")
+@limiter.limit("5/minute")
 async def login(
     request: Request,
     response: Response,

@@ -1,59 +1,13 @@
-import hashlib
 import logging
 from datetime import datetime, timedelta
 
 import pytest
 from fastapi import status
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from schema.common import LoginRequest
 
 logger = logging.getLogger(__name__)
-
-
-def make_md5_hash(password: str) -> str:
-    return hashlib.md5(password.encode()).hexdigest()  # noqa: S324 - testing legacy MD5
-
-
-@pytest.fixture
-def md5_password() -> str:
-    return "test_password_123"
-
-
-@pytest.fixture
-def md5_hash(md5_password: str) -> str:
-    return make_md5_hash(md5_password)
-
-
-@pytest.fixture
-async def create_test_user_with_hash(
-    session: AsyncSession,
-):
-    """Create a test user with MD5 password hash."""
-    from core.model import User
-
-    async def create(
-        user_id: int,
-        username: str,
-        md5_hash: str,
-        hash_date: datetime | None = None,
-    ) -> None:
-        if hash_date is None:
-            hash_date = datetime.now()
-
-        user = User(
-            user_id=user_id,
-            name=username,
-            hash=md5_hash,
-            hash_date=hash_date,
-            items="",
-        )
-
-        session.add(user)
-        await session.commit()
-
-    yield create
 
 
 @pytest.mark.asyncio

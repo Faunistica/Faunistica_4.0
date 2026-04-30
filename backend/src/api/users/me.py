@@ -3,7 +3,6 @@ import logging
 from fastapi import APIRouter, HTTPException, Request, status
 
 from core.dependencies import DBSession, TokenUser
-from core.rate_limiter import limiter
 from repository import user as repo
 from schema.user import UserFull, UserMinimal, UserUpdate, UserUpdateMe
 
@@ -13,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/me")
-@limiter.limit("10/second")
 async def get_current_user(
     request: Request,
     token: TokenUser,

@@ -14,7 +14,6 @@ router = APIRouter()
 
 
 @router.get("/suggest")
-@limiter.limit("10/second")
 def suggest_taxon(
     request: Request,
     data: Annotated[SuggestTaxonRequest, Query()],

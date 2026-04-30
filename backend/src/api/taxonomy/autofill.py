@@ -3,7 +3,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, Request
 
-from core.rate_limiter import limiter
 from schema.taxonomy import AutofillTaxonRequest, AutofillTaxonResponse
 from service import taxon
 
@@ -14,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/autofill")
-@limiter.limit("10/second")
 def autofill(
     request: Request,
     data: Annotated[AutofillTaxonRequest, Query()],

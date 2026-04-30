@@ -9,7 +9,7 @@ import aiohttp
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
+from slowapi.middleware import SlowAPIASGIMiddleware
 
 from api import api_router
 from bot import bot
@@ -143,7 +143,7 @@ logger.info(f"Running in {'DEVELOPMENT' if settings.DEV_MODE else 'PRODUCTION'} 
 logger.info(f"Allowed origins: {settings.ALLOWED_ORIGINS}")
 
 app.state.limiter = limiter
-app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(SlowAPIASGIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
