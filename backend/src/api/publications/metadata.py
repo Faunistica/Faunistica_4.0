@@ -5,7 +5,7 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from core.dependencies import ClientIP, DBSession, TokenUser
-from core.exceptions import PublicationNotFoundError
+from core.exceptions import PublicationCompletedError, PublicationNotFoundError
 from repository.user import get_user
 from service.actions import ActionService
 from service.publications import pipe_to_array
@@ -31,12 +31,15 @@ async def set_publication_metadata(
     if not user:
         raise PublicationNotFoundError(publ_id)
 
+    action_service = ActionService(session)
+    if await action_service.is_publication_completed(token.user_id, publ_id):
+        raise PublicationCompletedError(publ_id)
+
     queue = pipe_to_array(user.items)
 
     if not queue or publ_id not in queue:
         raise PublicationNotFoundError(publ_id)
 
-    action_service = ActionService(session)
     metadata = {}
     if data.urals_scope is not None:
         metadata["reg"] = data.urals_scope

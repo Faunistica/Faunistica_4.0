@@ -71,3 +71,10 @@ class ActionLoggingError(APIException):
         super().__init__(
             "ACTION_LOGGING_ERROR", f"Failed to log action: {details}", 500
         )
+
+
+class PublicationCompletedError(APIException):
+    def __init__(self, publ_id: int) -> None:
+        super().__init__(
+            "PUBL_COMPLETED", f"Publication {publ_id} already completed", 403
+        )

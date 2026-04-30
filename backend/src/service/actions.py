@@ -60,6 +60,21 @@ class ActionService:
             logger.error("Failed to get winner info: %s", e, exc_info=True)
             return None
 
+    async def is_publication_completed(self, user_id: int, publ_id: int) -> bool:
+        stmt = (
+            select(Action)
+            .where(
+                Action.user_id == user_id,
+                Action.action.in_(
+                    ["publ_end_full", "publ_end_ural", "publ_end_part", "publ_end_skip"]
+                ),
+                Action.object == str(publ_id),
+            )
+            .limit(1)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none() is not None
+
     async def get_last_milestone(self, user_id: int) -> MilestoneInfo | None:
         stmt = (
             select(Action)
