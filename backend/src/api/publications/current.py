@@ -4,12 +4,11 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, status
 
 from core.dependencies import DBSession, TokenUser
-from core.exceptions import UserNotFoundError
 from repository.publication import (
     get_publications_by_ids,
     get_user_publication,
 )
-from repository.user import get_user, get_user_expect
+from repository.user import get_user_expect
 from schema.common import Publication
 from service.publications import pipe_to_array
 
