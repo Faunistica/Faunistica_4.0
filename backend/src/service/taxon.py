@@ -7,6 +7,7 @@ from schema.taxonomy import AutofillTaxonResponse, TaxonomyField, TaxonomyFilter
 
 logger = logging.getLogger(__name__)
 
+# TODO: Replace local CSV with GBIF API integration for live taxonomy data
 csv_path = settings.SPECIES_CSV_PATH
 df = pd.read_csv(csv_path, usecols=["family", "genus", "species"])
 

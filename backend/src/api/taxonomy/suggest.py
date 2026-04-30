@@ -10,6 +10,8 @@ from service import taxon
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# TODO: Update to use GBIF API instead of local CSV file for taxonomy suggestions
+
 
 @router.get("/suggest")
 @limiter.limit("10/second")
