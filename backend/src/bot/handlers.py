@@ -23,8 +23,8 @@ from repository.publication import (
     user_filled_publication,
 )
 from repository.stats import (
-    get_general_stats,
-    get_user_stats,
+    get_project_statistics,
+    get_user_statistics,
     get_volunteers_achievements,
 )
 from repository.user import (
@@ -351,15 +351,15 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            general_stats = await get_general_stats(session)
+            project_stats = await get_project_statistics(session)
             user_stats = None
 
             user = await get_user_unsafe(session, message.from_user.id)
             if user is not None:
-                user_stats = await get_user_stats(session, message.from_user.id)
+                user_stats = await get_user_statistics(session, message.from_user.id)
 
             await message.answer(
-                Messages.statistics(general_stats, user_stats),
+                Messages.statistics(project_stats, user_stats),
                 parse_mode="HTML",
                 reply_markup=Keyboards.remove(),
             )

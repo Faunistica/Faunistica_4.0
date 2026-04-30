@@ -5,6 +5,7 @@ from api import (
     geo,
     publications,
     records,
+    statistics,
     support,
     taxonomy,
     users,
@@ -19,3 +20,4 @@ api_router.include_router(geo.router)
 api_router.include_router(support.router)
 api_router.include_router(records.router)
 api_router.include_router(publications.router)
+api_router.include_router(statistics.router)

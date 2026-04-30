@@ -1,22 +1,21 @@
 from pydantic import BaseModel
 
 
-class SpeciesStats(BaseModel):
-    species: str
-    count: int
+class ProjectStatisticsResponse(BaseModel):
+    total_volunteers: int
+    total_records: int
+    species_count: int
+    processed_publications_count: int
+    most_common_family: str | None
+    most_common_genus: str | None
+    most_common_species: str | None
 
 
-class LatestRecord(BaseModel):
-    datetime: str
-    species: str
-    location: str
-    username: str
-
-
-class StatisticsResponse(BaseModel):
-    total_publications: int
-    processed_publications: int
-    total_species: int
-    unique_species: int
-    top_species: list[SpeciesStats]
-    latest_records: list[LatestRecord]
+class UserStatisticsResponse(BaseModel):
+    user_id: int
+    name: str
+    records_entered: int
+    publications_processed: int
+    most_common_family: str | None
+    most_common_genus: str | None
+    most_common_species: str | None
