@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PaginatedResponse[T](BaseModel):
@@ -53,7 +53,7 @@ class Publication(BaseModel):
 class SupportRequest(BaseModel):
     link: str
     user_name: str
-    text: str
+    text: str = Field(min_length=10)
     issue_type: str
 
 
