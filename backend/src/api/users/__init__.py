@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from core.security import validate_user_id_path
 
-from . import lookup, me, photo
+from . import lookup, me, photo, winner
 
 user_id_router = APIRouter(
     prefix="/{user_id}", dependencies=[Depends(validate_user_id_path)]
@@ -15,3 +15,4 @@ router = APIRouter(prefix="/users", tags=["users"])
 router.include_router(user_id_router)
 router.include_router(me.router)
 router.include_router(lookup.router)
+router.include_router(winner.router)
