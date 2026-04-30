@@ -1,18 +1,17 @@
-from datetime import datetime
-
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import Action, EventRecord
+from schema.common import MilestoneInfo
 
 logger = __import__("logging").getLogger(__name__)
 
 
-async def check_and_log_fau50(
+async def check_and_log_milestone(
     session: AsyncSession,
     user_id: int,
     new_record: EventRecord,
-) -> dict[str, int | datetime] | None:
+) -> MilestoneInfo | None:
     """
     Check if user just reached 50 rec_ok records.
     Returns milestone info if fau_50 should be logged, None otherwise.
@@ -28,29 +27,30 @@ async def check_and_log_fau50(
     result = await session.execute(count_stmt)
     count = result.scalar_one()
 
-    if count != 50:
+    if count % 50 != 0:
         return None
 
     existing_stmt = select(Action).where(
         Action.user_id == user_id,
         Action.action == "fau_50",
+        Action.object == f"{count}",
     )
     existing = await session.execute(existing_stmt)
     if existing.scalar_one_or_none() is not None:
         return None
 
-    milestone_datetime = new_record.created_at or datetime.now()
+    milestone_datetime = new_record.created_at
 
-    milestone_info: dict[str, int | datetime] = {
-        "user_id": user_id,
-        "milestone": 50,
-        "datetime": milestone_datetime,
-    }
+    milestone_info = MilestoneInfo(
+        user_id=user_id,
+        milestone=count,
+        datetime=milestone_datetime,
+    )
 
     action = Action(
         user_id=user_id,
         action="fau_50",
-        object="50",
+        object=f"{count}",
         datetime=milestone_datetime,
     )
     session.add(action)

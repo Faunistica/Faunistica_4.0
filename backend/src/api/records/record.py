@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from core.dependencies import DBSession
+from core.dependencies import ClientIP, DBSession
 from core.security import validate_user_id_query
 from repository import record as repo
 from schema.records import RecordBelonging, RecordData, RecordFull
@@ -40,6 +40,7 @@ async def update_record(
     data: RecordData,
     user_id: Annotated[int, Depends(validate_user_id_query)],
     session: DBSession,
+    ip: ClientIP,
 ) -> RecordFull:
     # Get the current record to check ownership and get updated_at
     current_record = await repo.get_record(session, record_id)
@@ -59,10 +60,10 @@ async def update_record(
         None,
         RecordBelonging(publ_id=data.publ_id, user_id=user_id),
         "autosave",
-        ip=None,
+        ip=ip,
+        # Use the current record's updated_at for optimistic locking
+        updated_at=current_record.updated_at,
     )
-    # Use the current record's updated_at for optimistic locking
-    metadata.updated_at = current_record.updated_at
 
     record = await repo.update_record(session, record_id, data, metadata)
     if not record:

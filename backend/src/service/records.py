@@ -43,7 +43,8 @@ def create_record_metadata(
     record: RecordData | None,
     belongs_to: RecordBelonging,
     submission_type: Literal["submit", "autosave"],
-    ip: str | None,
+    ip: str | None = None,
+    updated_at: datetime | None = None,
 ) -> RecordMetadata:
     errors = _mock_validate_record(record) if record else "Пустая запись"
     type = _determine_type(errors, submission_type) if record else "check_fail"
@@ -58,6 +59,6 @@ def create_record_metadata(
         errors=errors,
         type=type,
         created_at=now,
-        updated_at=now,
+        updated_at=updated_at if updated_at else now,
         ip=ip,
     )

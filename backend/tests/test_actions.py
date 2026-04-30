@@ -59,8 +59,8 @@ async def test_get_last_milestone(session_maker, test_users, seed_data) -> None:
     async with session_maker() as session:
         action = Action(
             user_id=user_id,
-            action="fau_100",
-            object=None,
+            action="fau_50",
+            object="100",
             datetime=datetime.now(),
         )
         session.add(action)

@@ -74,4 +74,5 @@ class WinnerInfo(BaseModel):
 
 class MilestoneInfo(BaseModel):
     milestone: int
-    action_str: str | None
+    user_id: int
+    datetime: datetime

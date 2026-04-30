@@ -85,7 +85,7 @@ class EventRecord(Base):
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
     )
-    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(precision=6))
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(precision=6))
     updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(precision=6))
     ip: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)

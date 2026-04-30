@@ -3,12 +3,12 @@ from datetime import datetime
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import Action, EventRecord, User
 from core.security import get_password_hash
-from service.milestone import check_and_log_fau50
+from service.milestone import check_and_log_milestone
 
 
 async def _create_user(session: AsyncSession, user_id: int, username: str) -> User:
@@ -38,6 +38,7 @@ async def _seed_records(
             genus="Testus",
             latitude=55.5,
             longitude=37.5,
+            created_at=datetime.now(),
         )
         session.add(record)
     await session.commit()
@@ -60,15 +61,16 @@ async def test_fau50_detected(
             genus="Testus",
             latitude=55.5,
             longitude=37.5,
+            created_at=datetime.now(),
         )
         session.add(fiftieth)
         await session.commit()
 
-        result = await check_and_log_fau50(session, user.user_id, fiftieth)
+        result = await check_and_log_milestone(session, user.user_id, fiftieth)
 
         assert result is not None
-        assert result["user_id"] == user.user_id
-        assert result["milestone"] == 50
+        assert result.user_id == user.user_id
+        assert result.milestone == 50
 
         stmt = select(Action).where(
             Action.user_id == user.user_id,
@@ -76,6 +78,40 @@ async def test_fau50_detected(
         )
         action = await session.execute(stmt)
         assert action.scalar_one_or_none() is not None
+
+        await _seed_records(session, user.user_id, 49)
+
+        hundredth = EventRecord(
+            id=uuid4(),
+            user_id=user.user_id,
+            type="rec_ok",
+            genus="Testus",
+            latitude=55.5,
+            longitude=37.5,
+            created_at=datetime.now(),
+        )
+        session.add(hundredth)
+        await session.commit()
+
+        result = await check_and_log_milestone(session, user.user_id, hundredth)
+
+        assert result is not None
+        assert result.user_id == user.user_id
+        assert result.milestone == 100
+
+        stmt = (
+            select(Action)
+            .where(
+                Action.user_id == user.user_id,
+                Action.action == "fau_50",
+            )
+            .order_by(desc(Action.datetime))
+            .limit(1)
+        )
+        action = await session.execute(stmt)
+        result = action.scalar_one_or_none()
+        assert result is not None
+        assert result.object == "100"
 
 
 @pytest.mark.asyncio
@@ -102,11 +138,12 @@ async def test_fau50_not_duplicated(
             genus="Testus",
             latitude=55.5,
             longitude=37.5,
+            created_at=datetime.now(),
         )
         session.add(new_record)
         await session.commit()
 
-        result = await check_and_log_fau50(session, user.user_id, new_record)
+        result = await check_and_log_milestone(session, user.user_id, new_record)
 
         assert result is None
 
@@ -128,11 +165,12 @@ async def test_fau50_only_at_50(
             genus="Testus",
             latitude=55.5,
             longitude=37.5,
+            created_at=datetime.now(),
         )
         session.add(fiftieth)
         await session.commit()
 
-        result = await check_and_log_fau50(session, user.user_id, fiftieth)
+        result = await check_and_log_milestone(session, user.user_id, fiftieth)
 
         assert result is not None
 

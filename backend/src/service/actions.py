@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.exceptions import ActionLoggingError
+from core.exceptions import ActionLoggingError, DBException
 from core.model import Action
 from schema.common import MilestoneInfo, WinnerInfo
 
@@ -61,30 +61,31 @@ class ActionService:
             return None
 
     async def get_last_milestone(self, user_id: int) -> MilestoneInfo | None:
-        try:
-            stmt = (
-                select(Action)
-                .where(
-                    Action.user_id == user_id,
-                    Action.action.like("fau_%0"),
-                )
-                .order_by(desc(Action.datetime))
-                .limit(1)
+        stmt = (
+            select(Action)
+            .where(
+                Action.user_id == user_id,
+                Action.action == "fau_50",
             )
-            result = await self.session.execute(stmt)
-            action = result.scalar_one_or_none()
+            .order_by(desc(Action.datetime))
+            .limit(1)
+        )
+        result = await self.session.execute(stmt)
+        action = result.scalar_one_or_none()
 
-            if action is None or action.action is None:
-                return None
-
-            milestone_str = action.action.replace("fau_", "")
-            try:
-                milestone = int(milestone_str)
-            except ValueError:
-                logger.warning("Invalid milestone format: %s", action.action)
-                return None
-
-            return MilestoneInfo(milestone=milestone, action_str=action.object)
-        except Exception as e:
-            logger.error("Failed to get last milestone: %s", e, exc_info=True)
+        if action is None:
             return None
+
+        if action.object is None:
+            logger.warning("Milestone action object is none")
+            raise DBException
+
+        try:
+            milestone = int(action.object)
+        except ValueError:
+            logger.warning("Invalid milestone action object format: %s", action.object)
+            raise
+
+        return MilestoneInfo(
+            user_id=user_id, milestone=milestone, datetime=action.datetime
+        )
