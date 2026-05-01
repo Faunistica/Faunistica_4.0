@@ -9,6 +9,7 @@ from core.security import get_jwt_user
 from schema.geo import RegionData
 from schema.user import UserMinimal
 from service.actions import ActionService
+from service.publications import PublicationService
 
 
 def get_http_session(request: Request) -> aiohttp.ClientSession:
@@ -36,3 +37,10 @@ type ClientIP = Annotated[str | None, Depends(get_client_ip)]
 
 def get_action_service(session: DBSession) -> ActionService:
     return ActionService(session)
+
+
+def get_pub_service(session: DBSession) -> PublicationService:
+    return PublicationService(session)
+
+
+type PublicationServiceDep = Annotated[PublicationService, Depends(get_pub_service)]

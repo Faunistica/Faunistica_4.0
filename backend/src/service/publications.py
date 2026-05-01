@@ -1,3 +1,18 @@
+from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.dependencies import TokenUser
+from core.exceptions import PublicationForbiddernError
+from core.model import User
+from repository.publication import (
+    get_publication,
+    get_publications_by_ids,
+)
+from repository.user import get_user_expect
+from schema.common import ProcessingLevel, Publication
+from service.actions import ActionService
+
+
 def pipe_to_array(pipe_str: str) -> list[int]:
     """Convert '123|456|789' to [123, 456, 789]"""
     if not pipe_str:
@@ -8,3 +23,91 @@ def pipe_to_array(pipe_str: str) -> list[int]:
 def array_to_pipe(arr: list[int]) -> str:
     """Convert [123, 456, 789] to '123|456|789'"""
     return "|".join(str(x) for x in arr)
+
+
+class PublicationService:
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+        self.actions = ActionService(session)
+
+    async def validate_access(self, user_id: int, publ_id: int) -> None:
+        """Raises PublicationForbiddernError if user.publ_id != publ_id."""
+        user = await get_user_expect(self.session, user_id)
+        if user.publ_id != publ_id:
+            raise PublicationForbiddernError(publ_id, user_id)
+
+    async def complete(
+        self,
+        token_user: TokenUser,
+        publ_id: int,
+        level: ProcessingLevel,
+        ip: str | None,
+    ) -> None:
+        """
+        Single transaction: validate access, log action, advance queue,
+        update user.publ_id and user.items, commit.
+        """
+        user_id = token_user.user_id
+        await self.validate_access(user_id, publ_id)
+
+        # Log action (no commit - part of same transaction)
+        await self.actions.log_publ_complete(user_id, level, publ_id, ip)
+
+        # Advance queue
+        user = await get_user_expect(self.session, user_id)
+        queue = self._pipe_to_array(user.items) if user.items else []
+
+        # Remove publ_id from queue if it's at the front
+        if queue and queue[0] == publ_id:
+            queue.pop(0)
+
+        next_publ = queue[0] if queue else None
+        new_items = self._array_to_pipe(queue)
+
+        # Update user directly (no commit - part of same transaction)
+        stmt = (
+            update(User)
+            .where(User.user_id == user_id)
+            .values(publ_id=next_publ, items=new_items)
+        )
+        await self.session.execute(stmt)
+
+        # Single commit for entire transaction
+        await self.session.commit()
+
+    async def get_current(
+        self,
+        token_user: TokenUser,
+        list_all: bool = False,
+    ) -> list[Publication]:
+        """Parse queue, resolve publ_ids, return publications."""
+        user_id = token_user.user_id
+        user = await get_user_expect(self.session, user_id)
+
+        if not list_all:
+            # Return only current publication
+            if user.publ_id is None:
+                return []
+            publ = await get_publication(self.session, user.publ_id)
+            return [Publication.model_validate(publ)] if publ else []
+
+        # Return all: current + queue
+        publ_ids: list[int] = [user.publ_id] if user.publ_id else []
+        queue = self._pipe_to_array(user.items) if user.items else []
+        publ_ids.extend(queue)
+
+        if not publ_ids:
+            return []
+
+        publications = await get_publications_by_ids(self.session, publ_ids)
+        return [Publication.model_validate(p) for p in publications]
+
+    def _pipe_to_array(self, pipe_str: str) -> list[int]:
+        """Convert '123|456|789' to [123, 456, 789]"""
+        if not pipe_str:
+            return []
+        return [int(x) for x in pipe_str.split("|") if x.strip()]
+
+    def _array_to_pipe(self, arr: list[int]) -> str:
+        """Convert [123, 456, 789] to '123|456|789'"""
+        return "|".join(str(x) for x in arr)
