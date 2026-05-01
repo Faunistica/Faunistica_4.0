@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -76,3 +76,10 @@ class MilestoneInfo(BaseModel):
     milestone: int
     user_id: int
     datetime: datetime
+
+
+class ProcessingLevel(StrEnum):
+    FULL = "full"
+    URAL = "ural"
+    PART = "part"
+    SKIP = "skip"

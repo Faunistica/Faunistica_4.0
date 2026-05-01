@@ -4,25 +4,183 @@ import pytest
 from sqlalchemy import select
 
 from core.model import Action
+from schema.common import ProcessingLevel
 from service.actions import ActionService
 
 
 @pytest.mark.asyncio
-async def test_save_action(session_maker, test_users, seed_data) -> None:
+async def test_log_win(session_maker, test_users, seed_data) -> None:
     async with session_maker() as session:
         service = ActionService(session)
-        await service.save_action(
+        await service.log_win(
             user_id=test_users[0]["user_id"],
-            action_type="fau_win",
-            object="pic.png|winner!",
+            picfile="pic.png",
+            message="winner!",
             ip="127.0.0.1",
         )
+        await session.commit()
 
         result = await session.execute(select(Action).where(Action.action == "fau_win"))
         action = result.scalar_one_or_none()
         assert action is not None
         assert action.user_id == test_users[0]["user_id"]
         assert action.object == "pic.png|winner!"
+
+
+@pytest.mark.asyncio
+async def test_log_publ_complete(session_maker, test_users, seed_data) -> None:
+    async with session_maker() as session:
+        service = ActionService(session)
+        await service.log_publ_complete(
+            user_id=test_users[0]["user_id"],
+            level=ProcessingLevel.FULL,
+            publ_id=123,
+            ip="127.0.0.1",
+        )
+        await session.commit()
+
+        result = await session.execute(
+            select(Action).where(Action.action == "publ_end_full")
+        )
+        action = result.scalar_one_or_none()
+        assert action is not None
+        assert action.user_id == test_users[0]["user_id"]
+        assert action.object == "123"
+
+
+@pytest.mark.asyncio
+async def test_log_publ_metadata(session_maker, test_users, seed_data) -> None:
+    async with session_maker() as session:
+        service = ActionService(session)
+        await service.log_publ_metadata(
+            user_id=test_users[0]["user_id"],
+            publ_id=123,
+            urals_scope="ural",
+            material_status="complete",
+            ip="127.0.0.1",
+        )
+        await session.commit()
+
+        result = await session.execute(
+            select(Action).where(Action.action == "publ_metadata")
+        )
+        action = result.scalar_one_or_none()
+        assert action is not None
+        assert action.user_id == test_users[0]["user_id"]
+        assert "publ_id" in action.object
+        assert "urals_scope" in action.object
+
+
+@pytest.mark.asyncio
+async def test_log_publ_comment(session_maker, test_users, seed_data) -> None:
+    async with session_maker() as session:
+        service = ActionService(session)
+        await service.log_publ_comment(
+            user_id=test_users[0]["user_id"],
+            publ_id=123,
+            comment="Great work!",
+            ip="127.0.0.1",
+        )
+        await session.commit()
+
+        result = await session.execute(
+            select(Action).where(Action.action == "publ_comment")
+        )
+        action = result.scalar_one_or_none()
+        assert action is not None
+        assert action.object == "123_comm:Great work!"
+
+
+@pytest.mark.asyncio
+async def test_log_login(session_maker, test_users, seed_data) -> None:
+    async with session_maker() as session:
+        service = ActionService(session)
+        await service.log_login(
+            user_id=test_users[0]["user_id"],
+            ip="127.0.0.1",
+        )
+        await session.commit()
+
+        result = await session.execute(
+            select(Action).where(Action.action == "fau_login")
+        )
+        action = result.scalar_one_or_none()
+        assert action is not None
+        assert action.user_id == test_users[0]["user_id"]
+
+
+@pytest.mark.asyncio
+async def test_log_logout(session_maker, test_users, seed_data) -> None:
+    async with session_maker() as session:
+        service = ActionService(session)
+        await service.log_logout(
+            user_id=test_users[0]["user_id"],
+            ip="127.0.0.1",
+        )
+        await session.commit()
+
+        result = await session.execute(
+            select(Action).where(Action.action == "fau_logout")
+        )
+        action = result.scalar_one_or_none()
+        assert action is not None
+        assert action.user_id == test_users[0]["user_id"]
+
+
+@pytest.mark.asyncio
+async def test_log_bot_auth(session_maker, test_users, seed_data) -> None:
+    async with session_maker() as session:
+        service = ActionService(session)
+        await service.log_bot_auth(
+            user_id=test_users[0]["user_id"],
+            status="success",
+            ip="127.0.0.1",
+        )
+        await session.commit()
+
+        result = await session.execute(
+            select(Action).where(Action.action == "bot_auth")
+        )
+        action = result.scalar_one_or_none()
+        assert action is not None
+        assert action.object == "success"
+
+
+@pytest.mark.asyncio
+async def test_log_bot_rename(session_maker, test_users, seed_data) -> None:
+    async with session_maker() as session:
+        service = ActionService(session)
+        await service.log_bot_rename(
+            user_id=test_users[0]["user_id"],
+            old="oldname",
+            new="newname",
+            ip="127.0.0.1",
+        )
+        await session.commit()
+
+        result = await session.execute(
+            select(Action).where(Action.action == "bot_rename")
+        )
+        action = result.scalar_one_or_none()
+        assert action is not None
+        assert action.object == "oldname -> newname"
+
+
+@pytest.mark.asyncio
+async def test_log_milestone(session_maker, test_users, seed_data) -> None:
+    async with session_maker() as session:
+        service = ActionService(session)
+        await service.log_milestone(
+            user_id=test_users[0]["user_id"],
+            milestone=100,
+            ip="127.0.0.1",
+        )
+        await session.commit()
+
+        result = await session.execute(select(Action).where(Action.action == "fau_50"))
+        action = result.scalar_one_or_none()
+        assert action is not None
+        assert action.object == "100"
 
 
 @pytest.mark.asyncio

@@ -8,6 +8,7 @@ from core.database import get_session
 from core.security import get_jwt_user
 from schema.geo import RegionData
 from schema.user import UserMinimal
+from service.actions import ActionService
 
 
 def get_http_session(request: Request) -> aiohttp.ClientSession:
@@ -31,3 +32,7 @@ type DBSession = Annotated[AsyncSession, Depends(get_session)]
 type HTTPClient = Annotated[aiohttp.ClientSession, Depends(get_http_session)]
 type LocationData = Annotated[list[RegionData], Depends(get_location_data)]
 type ClientIP = Annotated[str | None, Depends(get_client_ip)]
+
+
+def get_action_service(session: DBSession) -> ActionService:
+    return ActionService(session)
