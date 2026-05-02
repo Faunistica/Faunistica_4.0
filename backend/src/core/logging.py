@@ -11,7 +11,7 @@ def setup_logging() -> None:
 
     handler = logging.StreamHandler()
 
-    handler.setLevel(logging.DEBUG)
+    handler.setLevel(logging.getLevelName(settings.LOG_LEVEL))
     handler.setFormatter(logging.Formatter(log_format))
 
     handlers.append(handler)
@@ -48,6 +48,7 @@ def setup_logging() -> None:
         level=logging.getLevelName(settings.LOG_LEVEL),
         handlers=handlers,
         format=log_format,
+        datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
     )
 
