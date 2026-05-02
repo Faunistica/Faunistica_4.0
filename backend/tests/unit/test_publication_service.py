@@ -354,6 +354,21 @@ class TestComplete:
 
 
 class TestGetCurrent:
+    @pytest.fixture(autouse=True, scope="function")
+    def setup_mocks(self):
+        with (
+            patch(
+                "service.publications.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
+            patch(
+                "service.publications.get_publication", new_callable=AsyncMock
+            ) as self.mock_get_pub,
+            patch(
+                "service.publications.get_publications_by_ids", new_callable=AsyncMock
+            ) as self.mock_get_pubs,
+        ):
+            yield
+
     @pytest.mark.asyncio
     async def test_get_current_single(
         self,
@@ -363,22 +378,14 @@ class TestGetCurrent:
         """Test get_current with list_all=False returns only current publication."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch(
-                "service.publications.get_publication", new_callable=AsyncMock
-            ) as mock_get_pub,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            mock_pub = Publication(
-                id=123, author="Test Author", name="Test Publication"
-            )
+        mock_pub = Publication(
+            id=123, author="Test Author", name="Test Publication"
+        )
 
-            mock_get_pub.return_value = mock_pub
-            result = await publication_service.get_current(token_user, list_all=False)
+        self.mock_get_pub.return_value = mock_pub
+        result = await publication_service.get_current(token_user, list_all=False)
 
         assert len(result) == 1
         assert result[0].id == 123
@@ -392,22 +399,14 @@ class TestGetCurrent:
         """Test get_current with list_all=True returns all publications in queue."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch(
-                "service.publications.get_publications_by_ids", new_callable=AsyncMock
-            ) as mock_get_pubs,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            mock_get_pubs.return_value = [
-                Publication(id=123, author="Author 1", name="Publication 1"),
-                Publication(id=456, author="Author 2", name="Publication 2"),
-                Publication(id=789, author="Author 3", name="Publication 3"),
-            ]
-            result = await publication_service.get_current(token_user, list_all=True)
+        self.mock_get_pubs.return_value = [
+            Publication(id=123, author="Author 1", name="Publication 1"),
+            Publication(id=456, author="Author 2", name="Publication 2"),
+            Publication(id=789, author="Author 3", name="Publication 3"),
+        ]
+        result = await publication_service.get_current(token_user, list_all=True)
 
         assert len(result) == 3
 
@@ -420,12 +419,9 @@ class TestGetCurrent:
         """Test get_current with list_all=False when user.publ_id is None."""
         mock_user = User(user_id=1, publ_id=None, items="123|456|789")
 
-        with patch(
-            "service.publications.get_user_expect", new_callable=AsyncMock
-        ) as mock_get_user:
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            result = await publication_service.get_current(token_user, list_all=False)
+        result = await publication_service.get_current(token_user, list_all=False)
 
         # Should return empty list when publ_id is None
         assert result == []
@@ -440,18 +436,10 @@ class TestGetCurrent:
         """Test get_current when publication doesn't exist in DB."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch(
-                "service.publications.get_publication", new_callable=AsyncMock
-            ) as mock_get_pub,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            mock_get_pub.return_value = None
-            result = await publication_service.get_current(token_user, list_all=False)
+        self.mock_get_pub.return_value = None
+        result = await publication_service.get_current(token_user, list_all=False)
 
         # Should return empty list when publication not found
         assert result == []
@@ -465,21 +453,13 @@ class TestGetCurrent:
         """Test get_current with list_all=True when publ_id is None but queue has items."""
         mock_user = User(user_id=1, publ_id=None, items="456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch(
-                "service.publications.get_publications_by_ids", new_callable=AsyncMock
-            ) as mock_get_pubs,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            mock_get_pubs.return_value = [
-                Publication(id=456, author="Author 2", name="Publication 2"),
-                Publication(id=789, author="Author 3", name="Publication 3"),
-            ]
-            result = await publication_service.get_current(token_user, list_all=True)
+        self.mock_get_pubs.return_value = [
+            Publication(id=456, author="Author 2", name="Publication 2"),
+            Publication(id=789, author="Author 3", name="Publication 3"),
+        ]
+        result = await publication_service.get_current(token_user, list_all=True)
 
         assert len(result) == 2
 
@@ -492,20 +472,12 @@ class TestGetCurrent:
         """Test get_current with list_all=True when publ_id exists but queue is empty."""
         mock_user = User(user_id=1, publ_id=123, items=None)
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch(
-                "service.publications.get_publications_by_ids", new_callable=AsyncMock
-            ) as mock_get_pubs,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            mock_get_pubs.return_value = [
-                Publication(id=123, author="Author 1", name="Publication 1"),
-            ]
-            result = await publication_service.get_current(token_user, list_all=True)
+        self.mock_get_pubs.return_value = [
+            Publication(id=123, author="Author 1", name="Publication 1"),
+        ]
+        result = await publication_service.get_current(token_user, list_all=True)
 
         assert len(result) == 1
         assert result[0].id == 123
@@ -519,12 +491,9 @@ class TestGetCurrent:
         """Test get_current with list_all=True when both publ_id and items are empty."""
         mock_user = User(user_id=1, publ_id=None, items=None)
 
-        with patch(
-            "service.publications.get_user_expect", new_callable=AsyncMock
-        ) as mock_get_user:
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            result = await publication_service.get_current(token_user, list_all=True)
+        result = await publication_service.get_current(token_user, list_all=True)
 
         assert result == []
 
@@ -537,22 +506,14 @@ class TestGetCurrent:
         """Test that get_current returns publications in correct order: current first, then queue."""
         mock_user = User(user_id=1, publ_id=123, items="456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch(
-                "service.publications.get_publications_by_ids", new_callable=AsyncMock
-            ) as mock_get_pubs,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            mock_get_pubs.return_value = [
-                Publication(id=123, author="Author 1", name="Publication 1"),
-                Publication(id=456, author="Author 2", name="Publication 2"),
-                Publication(id=789, author="Author 3", name="Publication 3"),
-            ]
-            result = await publication_service.get_current(token_user, list_all=True)
+        self.mock_get_pubs.return_value = [
+            Publication(id=123, author="Author 1", name="Publication 1"),
+            Publication(id=456, author="Author 2", name="Publication 2"),
+            Publication(id=789, author="Author 3", name="Publication 3"),
+        ]
+        result = await publication_service.get_current(token_user, list_all=True)
 
         assert len(result) == 3
         # First should be current publication (123)
@@ -571,20 +532,12 @@ class TestGetCurrent:
         """Test that get_current fetches user data."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch(
-                "service.publications.get_publication", new_callable=AsyncMock
-            ) as mock_get_pub,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            mock_get_pub.return_value = Publication(id=123)
-            await publication_service.get_current(token_user, list_all=False)
+        self.mock_get_pub.return_value = Publication(id=123)
+        await publication_service.get_current(token_user, list_all=False)
 
-            mock_get_user.assert_called_once_with(mock_session, 1)
+        self.mock_get_user.assert_called_once_with(mock_session, 1)
 
     @pytest.mark.asyncio
     async def test_get_current_single_calls_get_publication(
@@ -596,17 +549,9 @@ class TestGetCurrent:
         """Test that get_current with list_all=False calls get_publication with publ_id."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch(
-                "service.publications.get_publication", new_callable=AsyncMock
-            ) as mock_get_pub,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            mock_get_pub.return_value = Publication(id=123)
-            await publication_service.get_current(token_user, list_all=False)
+        self.mock_get_pub.return_value = Publication(id=123)
+        await publication_service.get_current(token_user, list_all=False)
 
-            mock_get_pub.assert_called_once_with(mock_session, 123)
+        self.mock_get_pub.assert_called_once_with(mock_session, 123)
