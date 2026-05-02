@@ -5,7 +5,7 @@ from fastapi import Depends
 from sqlalchemy import update
 
 from core.dependencies import DBSession, TokenUser
-from core.exceptions import PublicationForbiddernError, PublicationNotFoundError
+from core.exceptions import PublicationForbiddenError, PublicationNotFoundError
 from core.model import User
 from repository.publication import (
     get_publication,
@@ -50,7 +50,7 @@ class PublicationService:
             raise PublicationNotFoundError(publ_id)
         user = await get_user_expect(self.session, user_id)
         if user.publ_id != publ_id:
-            raise PublicationForbiddernError(publ_id, user_id)
+            raise PublicationForbiddenError(publ_id, user_id)
 
     async def complete(
         self,

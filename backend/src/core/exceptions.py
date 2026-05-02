@@ -47,7 +47,7 @@ class PublicationNotFoundError(APIException):
         super().__init__("PUBL_NOT_FOUND", f"Publication {publ_id} not found", 404)
 
 
-class PublicationForbiddernError(APIException):
+class PublicationForbiddenError(APIException):
     def __init__(self, user_id: int, publ_id: int) -> None:
         super().__init__(
             "PUBL_FORBIDDEN",
