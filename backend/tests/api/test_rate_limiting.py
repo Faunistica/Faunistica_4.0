@@ -7,36 +7,22 @@ from fastapi import status
 from httpx import AsyncClient
 
 from core.config import settings
+from schema.jwt import Token
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def auth_tokens_for_rate_limit(
-    test_users,
-    enable_rate_limiting,
-):
-    """Create auth tokens for rate limit testing."""
-    from schema.jwt import Token
-
-    def make_token(user_id: int, username: str) -> str:
-        expires = datetime.now() + timedelta(minutes=30)
-        payload = Token(sub=str(user_id), username=username, type="access", exp=expires)
-
-        return jwt.encode(
-            payload.model_dump(),
-            settings.JWT_SECRET.get_secret_value(),
-            algorithm="HS256",
-        )
-
-    return [make_token(u["user_id"], u["username"]) for u in test_users]
+def make_rate_limit_token(auth_tokens: list[dict]):
+    """Factory to get auth tokens for rate limit testing."""
+    return auth_tokens
 
 
 @pytest.mark.asyncio
 async def test_login_rate_limit_exceeded(
     async_client: AsyncClient,
-    test_users,
-    md5_hash,
+    test_users: list[dict],
+    md5_hash: str,
     create_test_user_with_hash,
     enable_rate_limiting,
 ) -> None:
@@ -66,9 +52,9 @@ async def test_login_rate_limit_exceeded(
 @pytest.mark.asyncio
 async def test_login_within_rate_limit(
     async_client: AsyncClient,
-    test_users,
-    md5_password,
-    md5_hash,
+    test_users: list[dict],
+    md5_password: str,
+    md5_hash: str,
     create_test_user_with_hash,
     enable_rate_limiting,
 ) -> None:

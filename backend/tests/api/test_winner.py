@@ -1,22 +1,17 @@
 from datetime import datetime
 
 import pytest
-from conftest import create_test_token
 from fastapi import status
 from httpx import AsyncClient
 
 from core.model import Action
 
 
-@pytest.fixture(scope="module")
-def auth_cookies():
-    token = create_test_token(1, "testuser1", "access")
-    return {"access_token": token}
-
-
 @pytest.mark.asyncio
 async def test_winner_info_found(
-    async_client: AsyncClient, auth_cookies, session, seed_data
+    authenticated_client: AsyncClient,
+    session,
+    seed_data: dict,
 ) -> None:
     action = Action(
         user_id=1,
@@ -27,7 +22,7 @@ async def test_winner_info_found(
     session.add(action)
     await session.commit()
 
-    response = await async_client.get("/api/users/me/winner", cookies=auth_cookies)
+    response = await authenticated_client.get("/api/users/me/winner")
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -38,16 +33,19 @@ async def test_winner_info_found(
 
 @pytest.mark.asyncio
 async def test_winner_info_not_found(
-    async_client: AsyncClient, auth_cookies, seed_data
+    authenticated_client: AsyncClient,
+    seed_data: dict,
 ) -> None:
-    response = await async_client.get("/api/users/me/winner", cookies=auth_cookies)
+    response = await authenticated_client.get("/api/users/me/winner")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_winner_info_no_object(
-    async_client: AsyncClient, auth_cookies, session, seed_data
+    authenticated_client: AsyncClient,
+    session,
+    seed_data: dict,
 ) -> None:
     action = Action(
         user_id=1,
@@ -58,6 +56,6 @@ async def test_winner_info_no_object(
     session.add(action)
     await session.commit()
 
-    response = await async_client.get("/api/users/me/winner", cookies=auth_cookies)
+    response = await authenticated_client.get("/api/users/me/winner")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND

@@ -125,8 +125,8 @@ async def session(
 @pytest_asyncio.fixture(scope="function")
 async def seed_data(
     session: AsyncSession,
-    test_users,
-):
+    test_users: list[dict],
+) -> dict:
     """Truncate and seed test data for each test."""
     from core.model import EventRecord, Publication, User
     from core.security import get_password_hash
@@ -146,10 +146,10 @@ async def seed_data(
     for user in users:
         session.add(user)
 
-    publ = Publication(id=1, name="Test Publ")
-    session.add(publ)
-    publ = Publication(id=2, name="Test Publ 2")
-    session.add(publ)
+    publ1 = Publication(id=1, name="Test Publ")
+    session.add(publ1)
+    publ2 = Publication(id=2, name="Test Publ 2")
+    session.add(publ2)
     await session.flush()
 
     now = datetime.now(UTC).replace(tzinfo=None)
@@ -192,7 +192,12 @@ async def seed_data(
         record_ids.append(str(record.id))
 
     await session.commit()
-    yield {"record_ids": record_ids}
+    yield {
+        "users": users,
+        "publs": [publ1, publ2],
+        "records": records,
+        "record_ids": record_ids,
+    }
 
 
 @pytest_asyncio.fixture
@@ -229,6 +234,26 @@ async def async_client(session_maker: Callable[[], AsyncSession]):
     finally:
         await http_session.close()
         app.dependency_overrides = original_overrides
+
+
+@pytest.fixture
+def authenticated_client(
+    async_client: AsyncClient,
+    auth_tokens: list[dict],
+) -> AsyncClient:
+    """Return async_client with testuser1's access token (user_id=1, has publ_id=1)."""
+    async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
+    return async_client
+
+
+@pytest.fixture
+def authenticated_client_user2(
+    async_client: AsyncClient,
+    auth_tokens: list[dict],
+) -> AsyncClient:
+    """Return async_client with testuser2's access token (user_id=2, no publ_id)."""
+    async_client.cookies.set("access_token", auth_tokens[1]["access_token"])
+    return async_client
 
 
 @pytest.fixture(scope="session")
