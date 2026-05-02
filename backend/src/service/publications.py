@@ -41,7 +41,7 @@ class PublicationService:
         self.actions = action_service
 
     async def validate_access(self, user_id: int, publ_id: int) -> None:
-        """Raises PublicationForbiddernError if user.publ_id != publ_id."""
+        """Raises PublicationForbiddenError if user.publ_id != publ_id."""
         # Check if publication exists
         if await get_publication(self.session, publ_id) is None:
             logger.warning(

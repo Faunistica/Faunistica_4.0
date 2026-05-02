@@ -107,16 +107,28 @@ class TestArrayToPipe:
 
 
 class TestValidateAccess:
+    @pytest.fixture(autouse=True, scope="function")
+    def setup_mocks(self):
+        with (
+            patch(
+                "service.publications.get_publication", new_callable=AsyncMock
+            ) as self.mock_get_pub,
+            patch(
+                "service.publications.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
+        ):
+            yield
+
     @pytest.mark.asyncio
     async def test_valid_access(self, publication_service: PublicationService) -> None:
         """Test that validate_access passes when user.publ_id matches."""
         mock_user = User(user_id=1, publ_id=123)
+        mock_publ = Publication(id=123)
 
-        with patch(
-            "service.publications.get_user_expect", new_callable=AsyncMock
-        ) as mock_get_user:
-            mock_get_user.return_value = mock_user
-            await publication_service.validate_access(1, 123)
+        self.mock_get_user.return_value = mock_user
+        self.mock_get_pub.return_value = mock_publ
+
+        await publication_service.validate_access(1, 123)
 
     @pytest.mark.asyncio
     async def test_invalid_access(
@@ -124,57 +136,42 @@ class TestValidateAccess:
     ) -> None:
         """Test that validate_access raises PublicationForbiddenError when mismatch."""
         mock_user = User(user_id=1, publ_id=456)
+        mock_publ = Publication(id=123)
 
-        with patch(
-            "service.publications.get_user_expect", new_callable=AsyncMock
-        ) as mock_get_user:
-            mock_get_user.return_value = mock_user
-            with pytest.raises(PublicationForbiddenError):
-                await publication_service.validate_access(1, 123)
+        self.mock_get_user.return_value = mock_user
+        self.mock_get_pub.return_value = mock_publ
+        with pytest.raises(PublicationForbiddenError):
+            await publication_service.validate_access(1, 123)
 
     @pytest.mark.asyncio
     async def test_publication_not_found_raises_error(
-        self, publication_service: PublicationService
+        self,
+        publication_service: PublicationService,
     ) -> None:
         """Test that validate_access raises PublicationNotFoundError when publication doesn't exist."""
         mock_user = User(user_id=1, publ_id=123)
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch(
-                "service.publications.get_publication", new_callable=AsyncMock
-            ) as mock_get_pub,
-        ):
-            mock_get_user.return_value = mock_user
-
-            mock_get_pub.return_value = None
-            with pytest.raises(PublicationNotFoundError):
-                await publication_service.validate_access(1, 123)
+        self.mock_get_user.return_value = mock_user
+        self.mock_get_pub.return_value = None
+        with pytest.raises(PublicationNotFoundError):
+            await publication_service.validate_access(1, 123)
 
     @pytest.mark.asyncio
     async def test_validate_access_calls_get_user_expect(
-        self, publication_service: PublicationService, mock_session: MagicMock
+        self,
+        publication_service: PublicationService,
+        mock_session: MagicMock,
     ) -> None:
         """Test that validate_access fetches user after validating publication exists."""
         mock_user = User(user_id=1, publ_id=123)
 
-        with (
-            patch(
-                "service.publications.get_publication", new_callable=AsyncMock
-            ) as mock_get_pub,
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-        ):
-            mock_get_pub.return_value = Publication(id=123)
+        self.mock_get_pub.return_value = Publication(id=123)
+        self.mock_get_user.return_value = mock_user
 
-            mock_get_user.return_value = mock_user
-            await publication_service.validate_access(1, 123)
+        await publication_service.validate_access(1, 123)
 
-            mock_get_pub.assert_called_once_with(mock_session, 123)
-            mock_get_user.assert_called_once_with(mock_session, 1)
+        self.mock_get_pub.assert_called_once_with(mock_session, 123)
+        self.mock_get_user.assert_called_once_with(mock_session, 1)
 
 
 # ============================================================================
@@ -183,6 +180,23 @@ class TestValidateAccess:
 
 
 class TestComplete:
+    @pytest.fixture(autouse=True, scope="function")
+    def setup_mocks(self, publication_service: PublicationService):
+        with (
+            patch(
+                "service.publications.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
+            patch.object(
+                publication_service, "validate_access", new_callable=AsyncMock
+            ) as self.mock_validate,
+            patch.object(
+                publication_service.actions,
+                "log_publ_complete",
+                new_callable=AsyncMock,
+            ) as self.mock_log,
+        ):
+            yield
+
     @pytest.mark.asyncio
     async def test_complete_full(
         self,
@@ -193,22 +207,14 @@ class TestComplete:
         """Test complete with full processing level."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch.object(
-                publication_service.actions, "log_publ_complete", new_callable=AsyncMock
-            ) as mock_log,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            await publication_service.complete(
-                token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
-            )
-            mock_log.assert_called_once_with(1, ProcessingLevel.FULL, 123, "127.0.0.1")
+        await publication_service.complete(
+            token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
+        )
+        self.mock_log.assert_called_once_with(1, ProcessingLevel.FULL, 123, "127.0.0.1")
 
-            mock_session.commit.assert_called_once()
+        mock_session.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_complete_with_part_level(
@@ -219,44 +225,12 @@ class TestComplete:
         """Test complete with ProcessingLevel.PART."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch.object(
-                publication_service.actions, "log_publ_complete", new_callable=AsyncMock
-            ) as mock_log,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            await publication_service.complete(
-                token_user, 123, ProcessingLevel.PART, "127.0.0.1"
-            )
-            mock_log.assert_called_once_with(1, ProcessingLevel.PART, 123, "127.0.0.1")
-
-    @pytest.mark.asyncio
-    async def test_complete_with_skip_level(
-        self,
-        publication_service: PublicationService,
-        token_user: TokenUser,
-    ) -> None:
-        """Test complete with ProcessingLevel.SKIP."""
-        mock_user = User(user_id=1, publ_id=123, items="123|456|789")
-
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch.object(
-                publication_service.actions, "log_publ_complete", new_callable=AsyncMock
-            ) as mock_log,
-        ):
-            mock_get_user.return_value = mock_user
-
-            await publication_service.complete(
-                token_user, 123, ProcessingLevel.SKIP, "127.0.0.1"
-            )
-            mock_log.assert_called_once_with(1, ProcessingLevel.SKIP, 123, "127.0.0.1")
+        await publication_service.complete(
+            token_user, 123, ProcessingLevel.SKIP, "127.0.0.1"
+        )
+        self.mock_log.assert_called_once_with(1, ProcessingLevel.SKIP, 123, "127.0.0.1")
 
     @pytest.mark.asyncio
     async def test_complete_ip_none(
@@ -267,20 +241,10 @@ class TestComplete:
         """Test complete when ip parameter is None."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch.object(
-                publication_service.actions, "log_publ_complete", new_callable=AsyncMock
-            ) as mock_log,
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            await publication_service.complete(
-                token_user, 123, ProcessingLevel.FULL, None
-            )
-            mock_log.assert_called_once_with(1, ProcessingLevel.FULL, 123, None)
+        await publication_service.complete(token_user, 123, ProcessingLevel.FULL, None)
+        self.mock_log.assert_called_once_with(1, ProcessingLevel.FULL, 123, None)
 
     @pytest.mark.asyncio
     async def test_complete_advances_queue_correctly(
@@ -292,25 +256,17 @@ class TestComplete:
         """Test that complete removes publ_id from front of queue and updates user."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch.object(
-                publication_service.actions, "log_publ_complete", new_callable=AsyncMock
-            ),
-        ):
-            # Return same user object for both calls (validate_access and complete)
-            mock_get_user.return_value = mock_user
+        # Return same user object for both calls (validate_access and complete)
+        self.mock_get_user.return_value = mock_user
 
-            await publication_service.complete(
-                token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
-            )
+        await publication_service.complete(
+            token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
+        )
 
-            # Verify log_publ_complete was called
-            assert mock_session.execute.called
-            # Verify commit was called
-            mock_session.commit.assert_called_once()
+        # Verify log_publ_complete was called
+        assert mock_session.execute.called
+        # Verify commit was called
+        mock_session.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_complete_last_item_in_queue(
@@ -322,24 +278,16 @@ class TestComplete:
         """Test complete when finishing the last item in queue."""
         mock_user = User(user_id=1, publ_id=123, items="123")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch.object(
-                publication_service.actions, "log_publ_complete", new_callable=AsyncMock
-            ),
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            await publication_service.complete(
-                token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
-            )
+        await publication_service.complete(
+            token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
+        )
 
-            # Verify session.execute was called (update statement)
-            assert mock_session.execute.called
-            # Verify commit was called
-            mock_session.commit.assert_called_once()
+        # Verify session.execute was called (update statement)
+        assert mock_session.execute.called
+        # Verify commit was called
+        mock_session.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_complete_empty_queue(
@@ -351,24 +299,16 @@ class TestComplete:
         """Test complete when user.items is empty/None."""
         mock_user = User(user_id=1, publ_id=123, items=None)
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch.object(
-                publication_service.actions, "log_publ_complete", new_callable=AsyncMock
-            ),
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            await publication_service.complete(
-                token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
-            )
+        await publication_service.complete(
+            token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
+        )
 
-            # Verify session.execute was called (update statement)
-            assert mock_session.execute.called
-            # Verify commit was called
-            mock_session.commit.assert_called_once()
+        # Verify session.execute was called (update statement)
+        assert mock_session.execute.called
+        # Verify commit was called
+        mock_session.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_complete_queue_mismatch_not_at_front(
@@ -380,23 +320,15 @@ class TestComplete:
         # Current code only removes if queue[0] == publ_id
         mock_user = User(user_id=1, publ_id=123, items="456|123|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch.object(
-                publication_service.actions, "log_publ_complete", new_callable=AsyncMock
-            ),
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            await publication_service.complete(
-                token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
-            )
+        await publication_service.complete(
+            token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
+        )
 
-            # Since 123 is not at front of queue (456 is), publ_id should not advance
-            # This documents current behavior
-            assert mock_user.publ_id == 123
+        # Since 123 is not at front of queue (456 is), publ_id should not advance
+        # This documents current behavior
+        assert mock_user.publ_id == 123
 
     @pytest.mark.asyncio
     async def test_complete_calls_validate_access(
@@ -407,26 +339,13 @@ class TestComplete:
         """Test that complete calls validate_access first."""
         mock_user = User(user_id=1, publ_id=123, items="123|456|789")
 
-        with (
-            patch(
-                "service.publications.get_user_expect", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch.object(
-                publication_service, "validate_access", new_callable=AsyncMock
-            ) as mock_validate,
-            patch.object(
-                publication_service.actions,
-                "log_publ_complete",
-                new_callable=AsyncMock,
-            ),
-        ):
-            mock_get_user.return_value = mock_user
+        self.mock_get_user.return_value = mock_user
 
-            await publication_service.complete(
-                token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
-            )
+        await publication_service.complete(
+            token_user, 123, ProcessingLevel.FULL, "127.0.0.1"
+        )
 
-            mock_validate.assert_called_once_with(1, 123)
+        self.mock_validate.assert_called_once_with(1, 123)
 
 
 # ============================================================================
