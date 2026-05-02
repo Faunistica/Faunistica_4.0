@@ -16,7 +16,6 @@ from core.config import settings
 from core.database import get_session
 from core.model import User
 from core.security import get_password_hash
-from repository.log import log_action
 from repository.publication import (
     get_publication,
     get_publications_for_language,
@@ -34,6 +33,7 @@ from repository.user import (
     update_user,
 )
 from schema.user import UserLanguage, UserUpdate
+from service.actions import ActionService
 
 YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
 NO_WORDS = ["no", "nope", "нет", "не", "refuse"]
@@ -196,24 +196,19 @@ class Handlers:
 
         async for session in self.db_session_factory():
             user = await get_user_expect(session, message.from_user.id)
+            action_service = ActionService(session)
 
             if not user:
                 await message.answer(Messages.not_registered())
-                await log_action(
-                    session,
-                    user_id=message.from_user.id,
-                    action="bot_auth",
-                    object="not_reg_start",
+                await action_service.log_bot_auth(
+                    message.from_user.id, status="not_reg_start", ip=None
                 )
             elif user.reg_stat is None:
                 await message.answer(Messages.register_for_old())
             elif 1 < user.reg_stat <= 6:
                 await message.answer(Messages.registration_not_finished())
-                await log_action(
-                    session,
-                    user_id=message.from_user.id,
-                    action="bot_auth",
-                    object="not_reg_end",
+                await action_service.log_bot_auth(
+                    message.from_user.id, status="not_reg_end", ip=None
                 )
             elif user.reg_stat == 7:
                 await message.answer(Messages.support_call_not_finished())
@@ -262,11 +257,8 @@ class Handlers:
                     )
 
                 await update_user(session, message.from_user.id, UserUpdate(reg_stat=1))
-                await log_action(
-                    session,
-                    user_id=message.from_user.id,
-                    action="bot_auth",
-                    object="success",
+                await action_service.log_bot_auth(
+                    message.from_user.id, status="success", ip=None
                 )
 
     async def next_publ_command(self, message: Message) -> None:
@@ -278,24 +270,19 @@ class Handlers:
 
         async for session in self.db_session_factory():
             user = await get_user_expect(session, message.from_user.id)
+            action_service = ActionService(session)
 
             if not user:
                 await message.answer(Messages.not_registered())
-                await log_action(
-                    session,
-                    user_id=message.from_user.id,
-                    action="bot_auth",
-                    object="not_reg_start",
+                await action_service.log_bot_auth(
+                    message.from_user.id, status="not_reg_start", ip=None
                 )
             elif user.reg_stat is None:
                 await message.answer(Messages.register_for_old())
             elif 1 < user.reg_stat <= 6:
                 await message.answer(Messages.registration_not_finished())
-                await log_action(
-                    session,
-                    user_id=message.from_user.id,
-                    action="bot_auth",
-                    object="not_reg_end",
+                await action_service.log_bot_auth(
+                    message.from_user.id, status="not_reg_end", ip=None
                 )
             elif user.reg_stat == 7:
                 await message.answer(Messages.support_call_not_finished())
@@ -851,6 +838,7 @@ class Handlers:
         # FIXME: isn't it just better to set username as UNIQUE in db
         # and handle errors if they appear?
         async for session in self.db_session_factory():
+            action_service = ActionService(session)
             other_users = await count_users_with_name(session, name_msg)
 
             if name_msg == (await get_user_expect(session, message.from_user.id)).name:
@@ -866,11 +854,8 @@ class Handlers:
             else:
                 old_name = (await get_user_expect(session, message.from_user.id)).name
 
-                await log_action(
-                    session,
-                    user_id=message.from_user.id,
-                    action="bot_rename",
-                    object=f"{old_name}>{name_msg}",
+                await action_service.log_bot_rename(
+                    message.from_user.id, old=old_name, new=name_msg, ip=None
                 )
 
                 await update_user(
@@ -1088,11 +1073,9 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            await log_action(
-                session,
-                user_id=message.from_user.id,
-                action="bot_fun.other",
-                object=message.content_type,
+            action_service = ActionService(session)
+            await action_service.log_bot_other(
+                message.from_user.id, content_type=message.content_type, ip=None
             )
         await message.answer(
             Messages.unknown_content(), reply_markup=Keyboards.remove()

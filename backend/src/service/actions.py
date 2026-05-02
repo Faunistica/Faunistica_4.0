@@ -127,6 +127,18 @@ class ActionService:
         )
         await self.session.execute(stmt)
 
+    async def log_bot_other(
+        self, user_id: int, content_type: str, ip: str | None = None
+    ) -> None:
+        stmt = insert(Action).values(
+            user_id=user_id,
+            user_ip=ip,
+            action="bot_fun.other",
+            object=content_type,
+            datetime=datetime.now(),
+        )
+        await self.session.execute(stmt)
+
     async def log_milestone(self, user_id: int, milestone: int, ip: str | None) -> None:
         stmt = insert(Action).values(
             user_id=user_id,
