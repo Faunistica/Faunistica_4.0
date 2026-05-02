@@ -2,11 +2,13 @@ import hashlib
 import os
 from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 import jwt as pyjwt
 import pytest
 import pytest_asyncio
+from aiohttp import ClientSession
 from httpx import ASGITransport, AsyncClient, Cookies
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
@@ -18,30 +20,22 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
 
+from app import app
 from core.config import settings
-from core.model import Base
+from core.database import get_session
+from core.dependencies import get_http_session
+from core.model import Base, EventRecord, Publication, User
 from core.rate_limiter import limiter
 from schema.jwt import Token
 
 
-def make_md5_hash(password: str) -> str:
+def md5_hash(password: str) -> str:
     return hashlib.md5(password.encode()).hexdigest()  # noqa: S324 - testing legacy MD5
-
-
-@pytest.fixture
-def md5_password() -> str:
-    return "test_password_123"
-
-
-@pytest.fixture
-def md5_hash(md5_password: str) -> str:
-    return make_md5_hash(md5_password)
 
 
 @pytest.fixture
 async def create_test_user_with_hash(session: AsyncSession):
     """Create a test user with MD5 password hash."""
-    from core.model import User
 
     async def create(
         user_id: int,
@@ -125,11 +119,8 @@ async def session(
 @pytest_asyncio.fixture(scope="function")
 async def seed_data(
     session: AsyncSession,
-    test_users: list[dict],
-) -> dict:
+) -> AsyncGenerator[dict[str, Any]]:
     """Truncate and seed test data for each test."""
-    from core.model import EventRecord, Publication, User
-    from core.security import get_password_hash
 
     def from_test(d: dict) -> User:
         return User(
@@ -137,12 +128,12 @@ async def seed_data(
             name=d["username"],
             tlg_name=d["username"],
             tlg_username=d["username"],
-            hash=get_password_hash(d["password"]),
+            hash=md5_hash(d["password"]),
             items=d.get("items", ""),
             publ_id=d.get("publ_id"),
         )
 
-    users = [from_test(u) for u in test_users]
+    users = [from_test(u) for u in test_users()]
     for user in users:
         session.add(user)
 
@@ -194,6 +185,7 @@ async def seed_data(
     await session.commit()
     yield {
         "users": users,
+        "passwords": [user["password"] for user in test_users()],
         "publs": [publ1, publ2],
         "records": records,
         "record_ids": record_ids,
@@ -202,12 +194,6 @@ async def seed_data(
 
 @pytest_asyncio.fixture
 async def async_client(session_maker: Callable[[], AsyncSession]):
-    from aiohttp import ClientSession
-
-    from app import app
-    from core.database import get_session
-    from core.dependencies import get_http_session
-
     original_overrides = app.dependency_overrides.copy()
 
     async def _maker():
@@ -240,6 +226,7 @@ async def async_client(session_maker: Callable[[], AsyncSession]):
 def authenticated_client(
     async_client: AsyncClient,
     auth_tokens: list[dict],
+    seed_data,
 ) -> AsyncClient:
     """Return async_client with testuser1's access token (user_id=1, has publ_id=1)."""
     async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
@@ -250,13 +237,13 @@ def authenticated_client(
 def authenticated_client_user2(
     async_client: AsyncClient,
     auth_tokens: list[dict],
+    seed_data,
 ) -> AsyncClient:
     """Return async_client with testuser2's access token (user_id=2, no publ_id)."""
     async_client.cookies.set("access_token", auth_tokens[1]["access_token"])
     return async_client
 
 
-@pytest.fixture(scope="session")
 def test_users():
     return [
         {
@@ -300,8 +287,6 @@ def auth_tokens():
 @pytest.fixture()
 def enable_rate_limiting(async_client: AsyncClient):
     """Temporarily enable rate limiting for tests."""
-    from app import app
-
     app.state.limiter.enabled = True
     limiter.enabled = True
     limiter._storage.reset()

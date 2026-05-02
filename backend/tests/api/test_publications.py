@@ -1,8 +1,8 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 
-from core.model import Publication
-
+from core.model import Action, Publication, User
 
 # ========== Current Publication Tests ==========
 
@@ -11,12 +11,13 @@ from core.model import Publication
 async def test_get_current_publication_with_queue(
     authenticated_client: AsyncClient,
     seed_data: dict,
-    test_users: list[dict],
 ) -> None:
+    user = seed_data["users"][0]
+
     response = await authenticated_client.get("/api/publications/current")
     assert response.status_code == 200
     data = response.json()
-    assert data[0]["id"] == test_users[0]["publ_id"]
+    assert data[0]["id"] == user.publ_id
 
 
 @pytest.mark.asyncio
@@ -37,35 +38,26 @@ async def test_get_current_publication_empty_queue(
 async def test_complete_full_logs_action(
     authenticated_client: AsyncClient,
     auth_tokens: list[dict],
-    test_users: list[dict],
     session_maker,
     seed_data: dict,
 ) -> None:
+    user = seed_data["users"][0]
+
     async with session_maker() as session:
-        from sqlalchemy import select
-
-        from core.model import User
-
-        stmt = select(User).where(User.user_id == test_users[0]["user_id"])
+        stmt = select(User).where(User.user_id == user.user_id)
         result = await session.execute(stmt)
         user = result.scalar_one_or_none()
         if user:
             user.items = "1|2"
             await session.commit()
 
-    authenticated_client.cookies.set(
-        "access_token", auth_tokens[0]["access_token"]
-    )
+    authenticated_client.cookies.set("access_token", auth_tokens[0]["access_token"])
     response = await authenticated_client.post(
         "/api/publications/1/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
     async with session_maker() as session:
-        from sqlalchemy import select
-
-        from core.model import Action
-
         stmt = select(Action).where(Action.action == "publ_end_full")
         result = await session.execute(stmt)
         action = result.scalar_one_or_none()
@@ -89,29 +81,24 @@ async def test_complete_wrong_publ_id(
 async def test_complete_queue_advancement(
     authenticated_client: AsyncClient,
     auth_tokens: list[dict],
-    test_users: list[dict],
     session_maker,
     seed_data: dict,
 ) -> None:
+    user = seed_data["users"][0]
+
     async with session_maker() as session:
-        from sqlalchemy import select
-
-        from core.model import User
-
         publ = Publication(id=3, name="third")
         session.add(publ)
         await session.commit()
 
-        stmt = select(User).where(User.user_id == test_users[0]["user_id"])
+        stmt = select(User).where(User.user_id == user.user_id)
         result = await session.execute(stmt)
         user = result.scalar_one()
 
         user.items = "2|3"
         await session.commit()
 
-    authenticated_client.cookies.set(
-        "access_token", auth_tokens[0]["access_token"]
-    )
+    authenticated_client.cookies.set("access_token", auth_tokens[0]["access_token"])
     response = await authenticated_client.post(
         "/api/publications/1/complete",
         json={"processing_level": "full"},
@@ -152,10 +139,6 @@ async def test_complete_ural_logs_publ_end_ural(
 
     assert response.status_code == 204
     async with session_maker() as session:
-        from sqlalchemy import select
-
-        from core.model import Action
-
         stmt = select(Action).where(Action.action == "publ_end_ural")
         result = await session.execute(stmt)
         action = result.scalar_one_or_none()

@@ -1,4 +1,3 @@
-import pytest
 
 from core.exceptions import (
     ActionLoggingError,

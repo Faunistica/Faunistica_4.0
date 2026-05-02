@@ -5,13 +5,15 @@ from httpx import AsyncClient
 @pytest.mark.asyncio
 async def test_get_me_with_valid_jwt(
     authenticated_client: AsyncClient,
-    test_users: list[dict],
+    seed_data,
 ) -> None:
+    user = seed_data["users"][0]
+
     response = await authenticated_client.get("/api/users/me")
     assert response.status_code == 200
     data = response.json()
-    assert data["user_id"] == test_users[0]["user_id"]
-    assert data["name"] == test_users[0]["username"]
+    assert data["user_id"] == user.user_id
+    assert data["name"] == user.name
 
 
 @pytest.mark.asyncio
@@ -53,7 +55,6 @@ async def test_put_me_update_email(
 @pytest.mark.asyncio
 async def test_put_me_invalid_language(
     authenticated_client: AsyncClient,
-    test_users: list[dict],
 ) -> None:
     response = await authenticated_client.put(
         "/api/users/me",
@@ -66,17 +67,18 @@ async def test_put_me_invalid_language(
 @pytest.mark.asyncio
 async def test_lookup_user_found(
     authenticated_client: AsyncClient,
-    test_users: list[dict],
     seed_data: dict,
 ) -> None:
+    user = seed_data["users"][0]
+
     response = await authenticated_client.get(
         "/api/users/lookup",
-        params={"name": test_users[0]["username"]},
+        params={"name": user.name},
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["user_id"] == test_users[0]["user_id"]
-    assert data["name"] == test_users[0]["username"]
+    assert data["user_id"] == user.user_id
+    assert data["name"] == user.name
 
 
 @pytest.mark.asyncio

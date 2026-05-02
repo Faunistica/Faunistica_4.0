@@ -1,64 +1,49 @@
 import logging
+from collections.abc import Callable
 from datetime import datetime, timedelta
 
 import pytest
 from fastapi import status
 from httpx import AsyncClient
+from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from schema.common import LoginRequest
+from core.model import User
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.mark.asyncio
-async def test_login_valid_md5_password(
-    async_client: AsyncClient,
-    test_users,
-    md5_password: str,
-    md5_hash: str,
-    create_test_user_with_hash,
-) -> None:
+async def test_login_valid_md5_password(async_client: AsyncClient, seed_data) -> None:
     """Test login with valid MD5 password returns 200, sets cookies, logs fau_login."""
-    await create_test_user_with_hash(
-        test_users[0]["user_id"],
-        test_users[0]["username"],
-        md5_hash,
-    )
+    user = seed_data["users"][0]
+    password = seed_data["passwords"][0]
 
     response = await async_client.post(
         "/api/auth/login",
-        json={"username": test_users[0]["username"], "password": md5_password},
+        json={"username": user.name, "password": password},
     )
-    LoginRequest.model_validate(
-        {"username": test_users[0]["username"], "password": md5_password},
-    )
-    print(response.json())
 
     assert response.status_code == status.HTTP_200_OK
     assert "access_token" in response.cookies
     assert "refresh_token" in response.cookies
     data = response.json()
-    assert data["username"] == test_users[0]["username"]
-    assert data["user_id"] == test_users[0]["user_id"]
+    assert data["username"] == user.name
+    assert data["user_id"] == user.user_id
 
 
 @pytest.mark.asyncio
 async def test_login_invalid_password(
     async_client: AsyncClient,
-    test_users,
-    md5_hash: str,
-    create_test_user_with_hash,
+    seed_data,
 ) -> None:
     """Test login with invalid password returns 401."""
-    await create_test_user_with_hash(
-        test_users[0]["user_id"],
-        test_users[0]["username"],
-        md5_hash,
-    )
+    user = seed_data["users"][0]
+    password = seed_data["passwords"][0]
 
     response = await async_client.post(
         "/api/auth/login",
-        json={"username": test_users[0]["username"], "password": "wrong_password"},
+        json={"username": user.name, "password": "wrong" + password},
     )
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -67,23 +52,27 @@ async def test_login_invalid_password(
 @pytest.mark.asyncio
 async def test_login_expired_hash_date(
     async_client: AsyncClient,
-    test_users,
-    md5_password: str,
-    md5_hash: str,
-    create_test_user_with_hash,
+    seed_data,
+    session_maker: Callable[[], AsyncSession],
 ) -> None:
     """Test login with expired hash_date (>3000 minutes) returns 401."""
-    expired_date = datetime.now() - timedelta(minutes=3001)
-    await create_test_user_with_hash(
-        test_users[0]["user_id"],
-        test_users[0]["username"],
-        md5_hash,
-        hash_date=expired_date,
-    )
+    user: User = seed_data["users"][0]
+    password = seed_data["passwords"][0]
+
+    async with session_maker() as session:
+        expired_date = datetime.now() - timedelta(minutes=3001)
+
+        await session.execute(
+            update(User)
+            .where(User.user_id == user.user_id)
+            .values(hash_date=expired_date)
+        )
+
+        await session.commit()
 
     response = await async_client.post(
         "/api/auth/login",
-        json={"username": test_users[0]["username"], "password": md5_password},
+        json={"username": user.name, "password": password},
     )
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -92,21 +81,15 @@ async def test_login_expired_hash_date(
 @pytest.mark.asyncio
 async def test_logout_clears_cookies(
     async_client: AsyncClient,
-    test_users,
-    md5_password: str,
-    md5_hash: str,
-    create_test_user_with_hash,
+    seed_data,
 ) -> None:
     """Test logout returns 200, clears cookies."""
-    await create_test_user_with_hash(
-        test_users[0]["user_id"],
-        test_users[0]["username"],
-        md5_hash,
-    )
+    user = seed_data["users"][0]
+    password = seed_data["passwords"][0]
 
     login_response = await async_client.post(
         "/api/auth/login",
-        json={"username": test_users[0]["username"], "password": md5_password},
+        json={"username": user.name, "password": password},
     )
     assert login_response.status_code == status.HTTP_200_OK
 
@@ -121,21 +104,15 @@ async def test_logout_clears_cookies(
 @pytest.mark.asyncio
 async def test_check_valid_cookie(
     async_client: AsyncClient,
-    test_users,
-    md5_password: str,
-    md5_hash: str,
-    create_test_user_with_hash,
+    seed_data,
 ) -> None:
     """Test check with valid cookie returns 200 + user info."""
-    await create_test_user_with_hash(
-        test_users[0]["user_id"],
-        test_users[0]["username"],
-        md5_hash,
-    )
+    user = seed_data["users"][0]
+    password = seed_data["passwords"][0]
 
     login_response = await async_client.post(
         "/api/auth/login",
-        json={"username": test_users[0]["username"], "password": md5_password},
+        json={"username": user.name, "password": password},
     )
     assert login_response.status_code == status.HTTP_200_OK
 
@@ -147,8 +124,8 @@ async def test_check_valid_cookie(
     )
     assert check_response.status_code == status.HTTP_200_OK
     data = check_response.json()
-    assert data["user_id"] == test_users[0]["user_id"]
-    assert data["username"] == test_users[0]["username"]
+    assert data["user_id"] == user.user_id
+    assert data["username"] == user.name
 
 
 @pytest.mark.asyncio
@@ -161,21 +138,15 @@ async def test_check_invalid_cookie(async_client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_refresh_token_flow(
     async_client: AsyncClient,
-    test_users,
-    md5_password: str,
-    md5_hash: str,
-    create_test_user_with_hash,
+    seed_data,
 ) -> None:
     """Test refresh token flow."""
-    await create_test_user_with_hash(
-        test_users[0]["user_id"],
-        test_users[0]["username"],
-        md5_hash,
-    )
+    user = seed_data["users"][0]
+    password = seed_data["passwords"][0]
 
     login_response = await async_client.post(
         "/api/auth/login",
-        json={"username": test_users[0]["username"], "password": md5_password},
+        json={"username": user.name, "password": password},
     )
     assert login_response.status_code == status.HTTP_200_OK
 

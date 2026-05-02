@@ -8,16 +8,17 @@ from httpx import AsyncClient
 @pytest.mark.asyncio
 async def test_support_with_valid_username(
     async_client: AsyncClient,
-    test_users,
     seed_data,
 ) -> None:
     """POST with valid username returns 200, returns Message with ok."""
+    user = seed_data["users"][0]
+
     with patch("service.telegram.support_message", new_callable=AsyncMock):
         response = await async_client.post(
             "/api/support",
             json={
                 "link": "http://example.com",
-                "user_name": test_users[0]["username"],
+                "user_name": user.name,
                 "text": "Test support request",
                 "issue_type": "bug",
             },
@@ -31,7 +32,6 @@ async def test_support_with_valid_username(
 @pytest.mark.asyncio
 async def test_support_with_invalid_username(
     async_client: AsyncClient,
-    test_users,
     seed_data,
 ) -> None:
     """POST with invalid username returns 404."""

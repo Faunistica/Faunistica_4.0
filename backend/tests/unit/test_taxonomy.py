@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import patch
 
-from schema.taxonomy import AutofillTaxonResponse, TaxonomyFilters
-from service.taxon import suggest, autofill
+import pytest
+
+from schema.taxonomy import TaxonomyFilters
+from service.taxon import autofill, suggest
 
 
 @pytest.fixture

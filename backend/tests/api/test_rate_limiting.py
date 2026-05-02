@@ -1,44 +1,25 @@
 import logging
-from datetime import datetime, timedelta
 
-import jwt
 import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-from core.config import settings
-from schema.jwt import Token
-
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture
-def make_rate_limit_token(auth_tokens: list[dict]):
-    """Factory to get auth tokens for rate limit testing."""
-    return auth_tokens
 
 
 @pytest.mark.asyncio
 async def test_login_rate_limit_exceeded(
-    async_client: AsyncClient,
-    test_users: list[dict],
-    md5_hash: str,
-    create_test_user_with_hash,
-    enable_rate_limiting,
+    async_client: AsyncClient, seed_data, enable_rate_limiting
 ) -> None:
     """Exceed login rate limit (5/minute) and verify 429 response."""
-    await create_test_user_with_hash(
-        test_users[0]["user_id"],
-        test_users[0]["username"],
-        md5_hash,
-    )
+    user = seed_data["users"][0]
 
     responses = []
     for _ in range(7):
         response = await async_client.post(
             "/api/auth/login",
             json={
-                "username": test_users[0]["username"],
+                "username": user.name,
                 "password": "wrong_password",
             },
         )
@@ -51,25 +32,17 @@ async def test_login_rate_limit_exceeded(
 
 @pytest.mark.asyncio
 async def test_login_within_rate_limit(
-    async_client: AsyncClient,
-    test_users: list[dict],
-    md5_password: str,
-    md5_hash: str,
-    create_test_user_with_hash,
-    enable_rate_limiting,
+    async_client: AsyncClient, seed_data, enable_rate_limiting
 ) -> None:
     """Normal login request within rate limit should not return 429."""
-    await create_test_user_with_hash(
-        test_users[0]["user_id"],
-        test_users[0]["username"],
-        md5_hash,
-    )
+    user = seed_data["users"][0]
+    password = seed_data["passwords"][0]
 
     response = await async_client.post(
         "/api/auth/login",
         json={
-            "username": test_users[0]["username"],
-            "password": md5_password,
+            "username": user.name,
+            "password": password,
         },
     )
 

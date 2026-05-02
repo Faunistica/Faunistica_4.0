@@ -1,12 +1,12 @@
 import pytest
 from httpx import AsyncClient
 
+from app import app
+from core.exceptions import PublicationNotFoundError
+
 
 @pytest.mark.asyncio
 async def test_exception_handler_returns_json(async_client: AsyncClient) -> None:
-    from app import app
-    from core.exceptions import PublicationNotFoundError
-
     async def raise_exc():
         raise PublicationNotFoundError(publ_id=999)
 
