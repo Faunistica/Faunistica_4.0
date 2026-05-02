@@ -1,20 +1,23 @@
+import random
 from datetime import datetime
 from uuid import uuid4
 
-import random
 import pytest
+from conftest import SeedData
 from httpx import AsyncClient
 
 from core.model import Action, EventRecord, Publication, User
 
 
 @pytest.mark.asyncio
-async def test_get_project_statistics(async_client: AsyncClient, session_maker, seed_data):
+async def test_get_project_statistics(
+    async_client: AsyncClient, session_maker, seed_data: SeedData
+):
     async with session_maker() as session:
         # Add test data
         test_user_id = random.randint(10000, 99999)
         test_publ_id = random.randint(10000, 99999)
-        
+
         user = User(
             user_id=test_user_id,
             name="stats_test_user",
@@ -70,7 +73,9 @@ async def test_get_project_statistics(async_client: AsyncClient, session_maker, 
 
 
 @pytest.mark.asyncio
-async def test_get_user_statistics_by_id(async_client: AsyncClient, session_maker, seed_data):
+async def test_get_user_statistics_by_id(
+    async_client: AsyncClient, session_maker, seed_data
+):
     async with session_maker() as session:
         publ_id = seed_data["publs"][0].id
 
@@ -108,7 +113,9 @@ async def test_get_user_statistics_by_id(async_client: AsyncClient, session_make
 
 
 @pytest.mark.asyncio
-async def test_get_user_statistics_by_name(async_client: AsyncClient, session_maker, seed_data):
+async def test_get_user_statistics_by_name(
+    async_client: AsyncClient, session_maker, seed_data
+):
     async with session_maker() as session:
         user = User(
             user_id=random.randint(10000, 99999),

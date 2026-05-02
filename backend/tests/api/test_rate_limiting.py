@@ -1,6 +1,7 @@
 import logging
 
 import pytest
+from conftest import SeedData
 from fastapi import status
 from httpx import AsyncClient
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.asyncio
 async def test_login_rate_limit_exceeded(
-    async_client: AsyncClient, seed_data, enable_rate_limiting
+    async_client: AsyncClient, seed_data: SeedData, enable_rate_limiting
 ) -> None:
     """Exceed login rate limit (5/minute) and verify 429 response."""
     user = seed_data["users"][0]

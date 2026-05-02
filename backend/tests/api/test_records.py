@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
+from conftest import SeedData
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -13,7 +14,9 @@ from core.model import EventRecord, User
 
 @pytest.mark.asyncio
 @pytest.mark.asyncio
-async def test_create_record(authenticated_client: AsyncClient, seed_data) -> None:
+async def test_create_record(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     user = seed_data["users"][0]
 
     response = await authenticated_client.post(
@@ -25,15 +28,21 @@ async def test_create_record(authenticated_client: AsyncClient, seed_data) -> No
 
 
 @pytest.mark.asyncio
-async def test_get_record(authenticated_client: AsyncClient, seed_data) -> None:
+async def test_get_record(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     user = seed_data["users"][0]
     record_id = seed_data["record_ids"][0]
-    response = await authenticated_client.get(f"/api/records/{record_id}?user_id={user.user_id}")
+    response = await authenticated_client.get(
+        f"/api/records/{record_id}?user_id={user.user_id}"
+    )
     assert response.status_code == 200
 
 
 @pytest.mark.asyncio
-async def test_list_records(authenticated_client: AsyncClient, seed_data) -> None:
+async def test_list_records(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     user = seed_data["users"][0]
     response = await authenticated_client.get(
         f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&page=1&page_size=20"
@@ -100,16 +109,20 @@ async def test_update_record_clear_genus(
 
 
 @pytest.mark.asyncio
-async def test_delete_record(authenticated_client: AsyncClient, seed_data) -> None:
+async def test_delete_record(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     record_id = seed_data["record_ids"][0]
     response = await authenticated_client.delete(f"/api/records/{record_id}")
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 @pytest.mark.asyncio
-async def test_list_records_no_token(async_client: AsyncClient, seed_data):
+async def test_list_records_no_token(async_client: AsyncClient, seed_data: SeedData):
     user = seed_data["users"][0]
-    response = await async_client.get(f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}")
+    response = await async_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}"
+    )
     assert response.status_code == 403
 
 
@@ -118,7 +131,6 @@ async def test_get_record_wrong_user(
     authenticated_client_user2: AsyncClient, seed_data
 ):
     # user2 tries to access user 1's record
-    user1 = seed_data["users"][0]
     user2 = seed_data["users"][1]
     record_id = seed_data["record_ids"][0]
     response = await authenticated_client_user2.get(
@@ -128,14 +140,14 @@ async def test_get_record_wrong_user(
 
 
 @pytest.mark.asyncio
-async def test_list_records_missing_publ_id(authenticated_client, seed_data):
+async def test_list_records_missing_publ_id(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
     response = await authenticated_client.get(f"/api/records?user_id={user.user_id}")
     assert response.status_code == 422  # FastAPI validation error
 
 
 @pytest.mark.asyncio
-async def test_list_records_invalid_sort(authenticated_client, seed_data):
+async def test_list_records_invalid_sort(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
         f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&sort=invalid"
@@ -144,7 +156,9 @@ async def test_list_records_invalid_sort(authenticated_client, seed_data):
 
 
 @pytest.mark.asyncio
-async def test_list_records_page_size_exceeds_max(authenticated_client, seed_data):
+async def test_list_records_page_size_exceeds_max(
+    authenticated_client, seed_data: SeedData
+):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
         f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&page_size=200"
@@ -153,7 +167,9 @@ async def test_list_records_page_size_exceeds_max(authenticated_client, seed_dat
 
 
 @pytest.mark.asyncio
-async def test_list_records_pagination_second_page(authenticated_client, seed_data):
+async def test_list_records_pagination_second_page(
+    authenticated_client, seed_data: SeedData
+):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
         f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&page=2&page_size=1"
@@ -164,7 +180,7 @@ async def test_list_records_pagination_second_page(authenticated_client, seed_da
 
 
 @pytest.mark.asyncio
-async def test_list_records_sort_updated_at(authenticated_client, seed_data):
+async def test_list_records_sort_updated_at(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
         f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&sort=updated_at"
@@ -173,15 +189,17 @@ async def test_list_records_sort_updated_at(authenticated_client, seed_data):
 
 
 @pytest.mark.asyncio
-async def test_get_record_not_found(authenticated_client, seed_data):
+async def test_get_record_not_found(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
     fake_uuid = "00000000-0000-0000-0000-000000000000"
-    response = await authenticated_client.get(f"/api/records/{fake_uuid}?user_id={user.user_id}")
+    response = await authenticated_client.get(
+        f"/api/records/{fake_uuid}?user_id={user.user_id}"
+    )
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_update_record_not_found(authenticated_client, seed_data):
+async def test_update_record_not_found(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
     fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await authenticated_client.put(
@@ -191,9 +209,11 @@ async def test_update_record_not_found(authenticated_client, seed_data):
 
 
 @pytest.mark.asyncio
-async def test_get_record_invalid_uuid(authenticated_client, seed_data):
+async def test_get_record_invalid_uuid(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
-    response = await authenticated_client.get(f"/api/records/not-a-uuid?user_id={user.user_id}")
+    response = await authenticated_client.get(
+        f"/api/records/not-a-uuid?user_id={user.user_id}"
+    )
     assert response.status_code == 422
 
 
@@ -201,7 +221,7 @@ async def test_get_record_invalid_uuid(authenticated_client, seed_data):
 async def test_delete_record_previous_publ_403(
     authenticated_client: AsyncClient,
     session_maker: Callable[[], AsyncSession],
-    seed_data,
+    seed_data: SeedData,
 ) -> None:
     """Test that deleting a record from a previous publication returns 403."""
     user = seed_data["users"][0]
@@ -232,7 +252,9 @@ async def test_export_records_default(
 ) -> None:
     """Test export returns Excel file with user's records."""
     user = seed_data["users"][0]
-    response = await authenticated_client.get(f"/api/records/export?user_id={user.user_id}")
+    response = await authenticated_client.get(
+        f"/api/records/export?user_id={user.user_id}"
+    )
     assert response.status_code == 200
     assert (
         response.headers["content-type"]

@@ -1,11 +1,12 @@
 import pytest
+from conftest import SeedData
 from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
 async def test_get_me_with_valid_jwt(
     authenticated_client: AsyncClient,
-    seed_data,
+    seed_data: SeedData,
 ) -> None:
     user = seed_data["users"][0]
 
@@ -25,7 +26,7 @@ async def test_get_me_without_jwt(async_client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_put_me_update_language(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     response = await authenticated_client.put(
         "/api/users/me",
@@ -40,7 +41,7 @@ async def test_put_me_update_language(
 @pytest.mark.asyncio
 async def test_put_me_update_email(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     response = await authenticated_client.put(
         "/api/users/me",
@@ -67,7 +68,7 @@ async def test_put_me_invalid_language(
 @pytest.mark.asyncio
 async def test_lookup_user_found(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     user = seed_data["users"][0]
 
@@ -84,7 +85,7 @@ async def test_lookup_user_found(
 @pytest.mark.asyncio
 async def test_lookup_user_not_found(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     response = await authenticated_client.get(
         "/api/users/lookup",

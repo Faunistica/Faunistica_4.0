@@ -3,7 +3,8 @@ from datetime import datetime
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import desc, func, select
+from conftest import SeedData
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import Action, EventRecord, User
@@ -52,7 +53,7 @@ async def _seed_records(
 @pytest.mark.asyncio
 async def test_fau50_detected(
     session_maker: Callable[[], AsyncSession],
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     async with session_maker() as session:
         action_service = ActionService(session)
@@ -132,7 +133,7 @@ async def test_fau50_detected(
 @pytest.mark.asyncio
 async def test_fau50_not_duplicated(
     session_maker: Callable[[], AsyncSession],
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     async with session_maker() as session:
         action_service = ActionService(session)

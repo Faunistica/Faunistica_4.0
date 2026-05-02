@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest
+from conftest import SeedData
 from fastapi import status
 from httpx import AsyncClient
 
@@ -11,7 +12,7 @@ from core.model import Action
 async def test_winner_info_found(
     authenticated_client: AsyncClient,
     session,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     user = seed_data["users"][0]
     action = Action(
@@ -35,7 +36,7 @@ async def test_winner_info_found(
 @pytest.mark.asyncio
 async def test_winner_info_not_found(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     response = await authenticated_client.get("/api/users/me/winner")
 

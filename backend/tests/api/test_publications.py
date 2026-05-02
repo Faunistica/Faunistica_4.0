@@ -1,6 +1,7 @@
 import random
 
 import pytest
+from conftest import SeedData
 from httpx import AsyncClient
 from sqlalchemy import select
 
@@ -12,7 +13,7 @@ from core.model import Action, Publication, User
 @pytest.mark.asyncio
 async def test_get_current_publication_with_queue(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     user = seed_data["users"][0]
 
@@ -25,7 +26,7 @@ async def test_get_current_publication_with_queue(
 @pytest.mark.asyncio
 async def test_get_current_publication_empty_queue(
     authenticated_client_user2: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     response = await authenticated_client_user2.get("/api/publications/current")
     assert response.status_code == 200
@@ -40,7 +41,7 @@ async def test_get_current_publication_empty_queue(
 async def test_complete_full_logs_action(
     authenticated_client: AsyncClient,
     session_maker,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     user = seed_data["users"][0]
     publ_id = seed_data["publs"][0].id
@@ -83,7 +84,7 @@ async def test_complete_wrong_publ_id(
 async def test_complete_queue_advancement(
     authenticated_client: AsyncClient,
     session_maker,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     user = seed_data["users"][0]
     publ1_id = seed_data["publs"][0].id
@@ -165,7 +166,7 @@ async def test_complete_invalid_level(
 @pytest.mark.asyncio
 async def test_metadata_success(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     publ_id = seed_data["publs"][0].id
     response = await authenticated_client.post(
@@ -179,7 +180,7 @@ async def test_metadata_success(
 @pytest.mark.asyncio
 async def test_metadata_404(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     response = await authenticated_client.post(
         "/api/publications/999/metadata",
@@ -192,7 +193,7 @@ async def test_metadata_404(
 @pytest.mark.asyncio
 async def test_metadata_after_completion_returns_403(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     publ_id = seed_data["publs"][0].id
     # First complete the publication
@@ -214,7 +215,7 @@ async def test_metadata_after_completion_returns_403(
 @pytest.mark.asyncio
 async def test_metadata_partial_update(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     publ_id = seed_data["publs"][0].id
     response = await authenticated_client.post(
@@ -230,7 +231,7 @@ async def test_metadata_partial_update(
 @pytest.mark.asyncio
 async def test_comment_after_completion_returns_403(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     publ_id = seed_data["publs"][0].id
     # First complete the publication
@@ -252,7 +253,7 @@ async def test_comment_after_completion_returns_403(
 @pytest.mark.asyncio
 async def test_comment_success(
     authenticated_client: AsyncClient,
-    seed_data: dict,
+    seed_data: SeedData,
 ) -> None:
     publ_id = seed_data["publs"][0].id
     response = await authenticated_client.post(

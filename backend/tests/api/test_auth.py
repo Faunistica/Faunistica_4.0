@@ -3,6 +3,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 
 import pytest
+from conftest import SeedData
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy import update
@@ -14,7 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.asyncio
-async def test_login_valid_md5_password(async_client: AsyncClient, seed_data) -> None:
+async def test_login_valid_md5_password(
+    async_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test login with valid MD5 password returns 200, sets cookies, logs fau_login."""
     user = seed_data["users"][0]
     password = seed_data["passwords"][0]
@@ -35,7 +38,7 @@ async def test_login_valid_md5_password(async_client: AsyncClient, seed_data) ->
 @pytest.mark.asyncio
 async def test_login_invalid_password(
     async_client: AsyncClient,
-    seed_data,
+    seed_data: SeedData,
 ) -> None:
     """Test login with invalid password returns 401."""
     user = seed_data["users"][0]
@@ -52,7 +55,7 @@ async def test_login_invalid_password(
 @pytest.mark.asyncio
 async def test_login_expired_hash_date(
     async_client: AsyncClient,
-    seed_data,
+    seed_data: SeedData,
     session_maker: Callable[[], AsyncSession],
 ) -> None:
     """Test login with expired hash_date (>3000 minutes) returns 401."""
@@ -81,7 +84,7 @@ async def test_login_expired_hash_date(
 @pytest.mark.asyncio
 async def test_logout_clears_cookies(
     async_client: AsyncClient,
-    seed_data,
+    seed_data: SeedData,
 ) -> None:
     """Test logout returns 200, clears cookies."""
     user = seed_data["users"][0]
@@ -104,7 +107,7 @@ async def test_logout_clears_cookies(
 @pytest.mark.asyncio
 async def test_check_valid_cookie(
     async_client: AsyncClient,
-    seed_data,
+    seed_data: SeedData,
 ) -> None:
     """Test check with valid cookie returns 200 + user info."""
     user = seed_data["users"][0]
@@ -138,7 +141,7 @@ async def test_check_invalid_cookie(async_client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_refresh_token_flow(
     async_client: AsyncClient,
-    seed_data,
+    seed_data: SeedData,
 ) -> None:
     """Test refresh token flow."""
     user = seed_data["users"][0]

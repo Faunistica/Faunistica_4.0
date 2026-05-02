@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from conftest import SeedData
 from fastapi import status
 from httpx import AsyncClient
 
@@ -8,7 +9,7 @@ from httpx import AsyncClient
 @pytest.mark.asyncio
 async def test_support_with_valid_username(
     async_client: AsyncClient,
-    seed_data,
+    seed_data: SeedData,
 ) -> None:
     """POST with valid username returns 200, returns Message with ok."""
     user = seed_data["users"][0]

@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 import pytest
+from conftest import SeedData
 from sqlalchemy import select
 
 from core.model import Action
@@ -10,7 +11,7 @@ from service.actions import ActionService
 
 
 @pytest.mark.asyncio
-async def test_log_win(session_maker, seed_data) -> None:
+async def test_log_win(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
     async with session_maker() as session:
@@ -31,7 +32,7 @@ async def test_log_win(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_log_publ_complete(session_maker, seed_data) -> None:
+async def test_log_publ_complete(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
     publ_id = seed_data["publs"][0].id
 
@@ -55,7 +56,7 @@ async def test_log_publ_complete(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_log_publ_metadata(session_maker, seed_data) -> None:
+async def test_log_publ_metadata(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
     publ_id = seed_data["publs"][0].id
 
@@ -84,7 +85,7 @@ async def test_log_publ_metadata(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_log_publ_comment(session_maker, seed_data) -> None:
+async def test_log_publ_comment(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
     publ_id = seed_data["publs"][0].id
 
@@ -107,7 +108,7 @@ async def test_log_publ_comment(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_log_login(session_maker, seed_data) -> None:
+async def test_log_login(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
     async with session_maker() as session:
@@ -127,7 +128,7 @@ async def test_log_login(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_log_logout(session_maker, seed_data) -> None:
+async def test_log_logout(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
     async with session_maker() as session:
@@ -147,7 +148,7 @@ async def test_log_logout(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_log_bot_auth(session_maker, seed_data) -> None:
+async def test_log_bot_auth(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
     async with session_maker() as session:
@@ -168,7 +169,7 @@ async def test_log_bot_auth(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_log_bot_rename(session_maker, seed_data) -> None:
+async def test_log_bot_rename(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
     async with session_maker() as session:
@@ -190,7 +191,7 @@ async def test_log_bot_rename(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_log_milestone(session_maker, seed_data) -> None:
+async def test_log_milestone(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
     async with session_maker() as session:
@@ -209,7 +210,7 @@ async def test_log_milestone(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_winner_info_no_action(session_maker, seed_data) -> None:
+async def test_get_winner_info_no_action(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
     async with session_maker() as session:
@@ -219,7 +220,7 @@ async def test_get_winner_info_no_action(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_winner_info_no_object(session_maker, seed_data) -> None:
+async def test_get_winner_info_no_object(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
     async with session_maker() as session:
@@ -238,7 +239,7 @@ async def test_get_winner_info_no_object(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_last_milestone(session_maker, seed_data) -> None:
+async def test_get_last_milestone(session_maker, seed_data: SeedData) -> None:
     user_id = seed_data["users"][0].user_id
 
     async with session_maker() as session:
@@ -258,7 +259,7 @@ async def test_get_last_milestone(session_maker, seed_data) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_last_milestone_none(session_maker, seed_data) -> None:
+async def test_get_last_milestone_none(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
     async with session_maker() as session:

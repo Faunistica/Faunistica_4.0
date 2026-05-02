@@ -3,7 +3,7 @@ import os
 import random
 from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import TypedDict, cast
 from uuid import uuid4
 
 import jwt as pyjwt
@@ -90,10 +90,18 @@ async def session(
         await session.close()
 
 
+class SeedData(TypedDict):
+    users: list[User]
+    passwords: list[str]
+    publs: list[Publication]
+    records: list[EventRecord]
+    record_ids: list[int]
+
+
 @pytest_asyncio.fixture(scope="function")
 async def seed_data(
     session: AsyncSession,
-) -> AsyncGenerator[dict[str, Any]]:
+) -> AsyncGenerator[SeedData]:
     """Truncate and seed test data for each test."""
 
     def from_test(d: dict) -> User:
@@ -194,13 +202,15 @@ async def seed_data(
         record_ids.append(str(record.id))
 
     await session.commit()
-    yield {
-        "users": users,
-        "passwords": [user["password"] for user in test_users],
-        "publs": [publ1, publ2],
-        "records": records,
-        "record_ids": record_ids,
-    }
+    yield SeedData(
+        {
+            "users": users,
+            "passwords": [cast("str", user["password"]) for user in test_users],
+            "publs": [publ1, publ2],
+            "records": records,
+            "record_ids": record_ids,
+        }
+    )
 
 
 @pytest_asyncio.fixture
@@ -236,7 +246,7 @@ async def async_client(session_maker: Callable[[], AsyncSession]):
 @pytest.fixture
 def authenticated_client(
     async_client: AsyncClient,
-    seed_data,
+    seed_data: SeedData,
 ) -> AsyncClient:
     """Return async_client with testuser1's access token (user_id=1, has publ_id=1)."""
     tokens = auth_tokens(seed_data["users"][0])
@@ -248,7 +258,7 @@ def authenticated_client(
 @pytest.fixture
 def authenticated_client_user2(
     async_client: AsyncClient,
-    seed_data,
+    seed_data: SeedData,
 ) -> AsyncClient:
     """Return async_client with testuser2's access token (user_id=2, no publ_id)."""
     tokens = auth_tokens(seed_data["users"][1])
