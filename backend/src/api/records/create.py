@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from core.dependencies import ClientIP, DBSession, TokenUser
 from repository import record as repo
 from schema.records import RecordBelonging, RecordFull
+from service.actions import ActionService
 from service.milestone import check_and_log_milestone
 from service.records import create_record_metadata
 
@@ -20,6 +23,7 @@ async def create_record(
     session: DBSession,
     ip: ClientIP,
     token: TokenUser,
+    action_service: Annotated[ActionService, Depends()],
 ) -> RecordFull:
     if token.user_id != belonging.user_id:
         raise HTTPException(
@@ -32,6 +36,6 @@ async def create_record(
 
     if db_record.type == "rec_ok":
         # TODO: run in a background task
-        await check_and_log_milestone(session, token.user_id, db_record)
+        await check_and_log_milestone(session, token.user_id, db_record, action_service)
 
     return RecordFull.model_validate(db_record.__dict__)

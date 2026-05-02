@@ -12,7 +12,7 @@ async def check_and_log_milestone(
     session: AsyncSession,
     user_id: int,
     new_record: EventRecord,
-    action_service: ActionService | None = None,
+    action_service: ActionService,
 ) -> MilestoneInfo | None:
     """
     Check if user just reached 50 rec_ok records.
@@ -49,9 +49,6 @@ async def check_and_log_milestone(
         datetime=milestone_datetime,
     )
 
-    # Use ActionService if provided, otherwise create one
-    if action_service is None:
-        action_service = ActionService(session)
     await action_service.log_milestone(user_id, count, None)
 
     logger.info(

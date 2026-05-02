@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import Action, EventRecord, User
 from core.security import get_password_hash
+from service.actions import ActionService
 from service.milestone import check_and_log_milestone
 
 
@@ -49,6 +50,8 @@ async def test_fau50_detected(
     session_maker: Callable[[], AsyncSession],
 ) -> None:
     async with session_maker() as session:
+        action_service = ActionService(session)
+
         user = await _create_user(session, 1, "testuser")
         await session.commit()
 
@@ -66,7 +69,9 @@ async def test_fau50_detected(
         session.add(fiftieth)
         await session.commit()
 
-        result = await check_and_log_milestone(session, user.user_id, fiftieth)
+        result = await check_and_log_milestone(
+            session, user.user_id, fiftieth, action_service
+        )
 
         assert result is not None
         assert result.user_id == user.user_id
@@ -93,7 +98,9 @@ async def test_fau50_detected(
         session.add(hundredth)
         await session.commit()
 
-        result = await check_and_log_milestone(session, user.user_id, hundredth)
+        result = await check_and_log_milestone(
+            session, user.user_id, hundredth, action_service
+        )
 
         assert result is not None
         assert result.user_id == user.user_id
@@ -119,6 +126,8 @@ async def test_fau50_not_duplicated(
     session_maker: Callable[[], AsyncSession],
 ) -> None:
     async with session_maker() as session:
+        action_service = ActionService(session)
+
         user = await _create_user(session, 1, "testuser")
         await session.commit()
 
@@ -143,7 +152,9 @@ async def test_fau50_not_duplicated(
         session.add(new_record)
         await session.commit()
 
-        result = await check_and_log_milestone(session, user.user_id, new_record)
+        result = await check_and_log_milestone(
+            session, user.user_id, new_record, action_service
+        )
 
         assert result is None
 
@@ -153,6 +164,8 @@ async def test_fau50_only_at_50(
     session_maker: Callable[[], AsyncSession],
 ) -> None:
     async with session_maker() as session:
+        action_service = ActionService(session)
+
         user = await _create_user(session, 1, "testuser")
         await session.commit()
 
@@ -170,7 +183,9 @@ async def test_fau50_only_at_50(
         session.add(fiftieth)
         await session.commit()
 
-        result = await check_and_log_milestone(session, user.user_id, fiftieth)
+        result = await check_and_log_milestone(
+            session, user.user_id, fiftieth, action_service
+        )
 
         assert result is not None
 
