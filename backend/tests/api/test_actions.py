@@ -33,13 +33,14 @@ async def test_log_win(session_maker, seed_data) -> None:
 @pytest.mark.asyncio
 async def test_log_publ_complete(session_maker, seed_data) -> None:
     user = seed_data["users"][0]
+    publ_id = seed_data["publs"][0].id
 
     async with session_maker() as session:
         service = ActionService(session)
         await service.log_publ_complete(
             user_id=user.user_id,
             level=ProcessingLevel.FULL,
-            publ_id=123,
+            publ_id=publ_id,
             ip="127.0.0.1",
         )
         await session.commit()
@@ -50,18 +51,19 @@ async def test_log_publ_complete(session_maker, seed_data) -> None:
         action = result.scalar_one_or_none()
         assert action is not None
         assert action.user_id == user.user_id
-        assert action.object == "123"
+        assert action.object == str(publ_id)
 
 
 @pytest.mark.asyncio
 async def test_log_publ_metadata(session_maker, seed_data) -> None:
     user = seed_data["users"][0]
+    publ_id = seed_data["publs"][0].id
 
     async with session_maker() as session:
         service = ActionService(session)
         await service.log_publ_metadata(
             user_id=user.user_id,
-            publ_id=123,
+            publ_id=publ_id,
             urals_scope="ural",
             material_status="complete",
             ip="127.0.0.1",
@@ -84,12 +86,13 @@ async def test_log_publ_metadata(session_maker, seed_data) -> None:
 @pytest.mark.asyncio
 async def test_log_publ_comment(session_maker, seed_data) -> None:
     user = seed_data["users"][0]
+    publ_id = seed_data["publs"][0].id
 
     async with session_maker() as session:
         service = ActionService(session)
         await service.log_publ_comment(
             user_id=user.user_id,
-            publ_id=123,
+            publ_id=publ_id,
             comment="Great work!",
             ip="127.0.0.1",
         )
@@ -100,7 +103,7 @@ async def test_log_publ_comment(session_maker, seed_data) -> None:
         )
         action = result.scalar_one_or_none()
         assert action is not None
-        assert action.object == "123_comm:Great work!"
+        assert action.object == f"{publ_id}_comm:Great work!"
 
 
 @pytest.mark.asyncio

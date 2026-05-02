@@ -79,7 +79,7 @@ class EventRecord(Base):
     __tablename__ = "event_records"
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
-    publ_id: Mapped[int | None] = mapped_column(
+    publ_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("publs.id", ondelete="CASCADE")
     )
     user_id: Mapped[int] = mapped_column(

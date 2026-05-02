@@ -1,5 +1,6 @@
 import hashlib
 import os
+import random
 from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -31,33 +32,6 @@ from schema.jwt import Token
 
 def md5_hash(password: str) -> str:
     return hashlib.md5(password.encode()).hexdigest()  # noqa: S324 - testing legacy MD5
-
-
-@pytest.fixture
-async def create_test_user_with_hash(session: AsyncSession):
-    """Create a test user with MD5 password hash."""
-
-    async def create(
-        user_id: int,
-        username: str,
-        md5_hash: str,
-        hash_date: datetime | None = None,
-    ) -> None:
-        if hash_date is None:
-            hash_date = datetime.now()
-
-        user = User(
-            user_id=user_id,
-            name=username,
-            hash=md5_hash,
-            hash_date=hash_date,
-            items="",
-        )
-
-        session.add(user)
-        await session.commit()
-
-    yield create
 
 
 @pytest.fixture(scope="session")
@@ -133,14 +107,48 @@ async def seed_data(
             publ_id=d.get("publ_id"),
         )
 
-    users = [from_test(u) for u in test_users()]
+    user_id_1 = random.randint(1000, 9999)
+    user_id_2 = random.randint(1000, 9999)
+    user_id_3 = random.randint(1000, 9999)
+    while user_id_2 == user_id_1:
+        user_id_2 = random.randint(1000, 9999)
+    while user_id_3 in [user_id_1, user_id_2]:
+        user_id_3 = random.randint(1000, 9999)
+
+    publ_id_1 = random.randint(1000, 9999)
+    publ_id_2 = random.randint(1000, 9999)
+    while publ_id_2 == publ_id_1:
+        publ_id_2 = random.randint(1000, 9999)
+
+    publ1 = Publication(id=publ_id_1, name="Test Publ")
+    session.add(publ1)
+    publ2 = Publication(id=publ_id_2, name="Test Publ 2")
+    session.add(publ2)
+
+    test_users = [
+        {
+            "user_id": user_id_1,
+            "username": "testuser1",
+            "password": "password1",
+            "publ_id": publ_id_1,
+        },
+        {
+            "user_id": user_id_2,
+            "username": "testuser2",
+            "password": "password2",
+            "publ_id": None,
+        },
+        {
+            "user_id": user_id_3,
+            "username": "testuser3",
+            "password": "password3",
+            "publ_id": publ_id_2,
+        },
+    ]
+
+    users = [from_test(u) for u in test_users]
     for user in users:
         session.add(user)
-
-    publ1 = Publication(id=1, name="Test Publ")
-    session.add(publ1)
-    publ2 = Publication(id=2, name="Test Publ 2")
-    session.add(publ2)
     await session.flush()
 
     now = datetime.now(UTC).replace(tzinfo=None)
@@ -150,7 +158,7 @@ async def seed_data(
         EventRecord(
             id=uuid4(),
             user_id=users[0].user_id,
-            publ_id=1,
+            publ_id=publ_id_1,
             type="rec_ok",
             genus="Testus",
             latitude=55.5,
@@ -161,7 +169,7 @@ async def seed_data(
         EventRecord(
             id=uuid4(),
             user_id=users[0].user_id,
-            publ_id=1,
+            publ_id=publ_id_1,
             type="rec_ok",
             genus="Testus",
             latitude=55.6,
@@ -172,7 +180,7 @@ async def seed_data(
         EventRecord(
             id=uuid4(),
             user_id=users[0].user_id,
-            publ_id=1,
+            publ_id=publ_id_1,
             type="rec_fail",
             created_at=now,
             updated_at=now,
@@ -185,7 +193,7 @@ async def seed_data(
     await session.commit()
     yield {
         "users": users,
-        "passwords": [user["password"] for user in test_users()],
+        "passwords": [user["password"] for user in test_users],
         "publs": [publ1, publ2],
         "records": records,
         "record_ids": record_ids,
@@ -225,35 +233,25 @@ async def async_client(session_maker: Callable[[], AsyncSession]):
 @pytest.fixture
 def authenticated_client(
     async_client: AsyncClient,
-    auth_tokens: list[dict],
     seed_data,
 ) -> AsyncClient:
     """Return async_client with testuser1's access token (user_id=1, has publ_id=1)."""
-    async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
+    tokens = auth_tokens(seed_data["users"][0])
+
+    async_client.cookies.set("access_token", tokens["access_token"])
     return async_client
 
 
 @pytest.fixture
 def authenticated_client_user2(
     async_client: AsyncClient,
-    auth_tokens: list[dict],
     seed_data,
 ) -> AsyncClient:
     """Return async_client with testuser2's access token (user_id=2, no publ_id)."""
-    async_client.cookies.set("access_token", auth_tokens[1]["access_token"])
+    tokens = auth_tokens(seed_data["users"][1])
+
+    async_client.cookies.set("access_token", tokens["access_token"])
     return async_client
-
-
-def test_users():
-    return [
-        {
-            "user_id": 1,
-            "username": "testuser1",
-            "password": "password1",
-            "publ_id": 1,
-        },
-        {"user_id": 2, "username": "testuser2", "password": "password2"},
-    ]
 
 
 def create_test_token(user_id: int, username: str, token_type: str) -> str:
@@ -270,18 +268,11 @@ def create_test_token(user_id: int, username: str, token_type: str) -> str:
     )
 
 
-@pytest.fixture(scope="session")
-def auth_tokens():
-    return [
-        {
-            "access_token": create_test_token(1, "testuser1", "access"),
-            "refresh_token": create_test_token(1, "testuser1", "refresh"),
-        },
-        {
-            "access_token": create_test_token(2, "testuser2", "access"),
-            "refresh_token": create_test_token(2, "testuser2", "refresh"),
-        },
-    ]
+def auth_tokens(user: User):
+    return {
+        "access_token": create_test_token(user.user_id, user.name, "access"),
+        "refresh_token": create_test_token(user.user_id, user.name, "refresh"),
+    }
 
 
 @pytest.fixture()

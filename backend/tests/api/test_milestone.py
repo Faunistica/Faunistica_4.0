@@ -12,14 +12,16 @@ from service.actions import ActionService
 from service.milestone import check_and_log_milestone
 
 
-async def _create_user(session: AsyncSession, user_id: int, username: str) -> User:
+async def _create_user(
+    session: AsyncSession, user_id: int, username: str, publ_id: int | None = None
+) -> User:
     user = User(
         user_id=user_id,
         name=username,
         tlg_name=username,
         tlg_username=username,
         hash=get_password_hash("password"),
-        items="1",
+        items=str(publ_id) if publ_id else "",
     )
     session.add(user)
     await session.flush()
@@ -29,12 +31,14 @@ async def _create_user(session: AsyncSession, user_id: int, username: str) -> Us
 async def _seed_records(
     session: AsyncSession,
     user_id: int,
+    publ_id: int,
     count: int,
 ) -> None:
     for _ in range(count):
         record = EventRecord(
             id=uuid4(),
             user_id=user_id,
+            publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
             latitude=55.5,
@@ -48,18 +52,21 @@ async def _seed_records(
 @pytest.mark.asyncio
 async def test_fau50_detected(
     session_maker: Callable[[], AsyncSession],
+    seed_data: dict,
 ) -> None:
     async with session_maker() as session:
         action_service = ActionService(session)
 
-        user = await _create_user(session, 1, "testuser")
-        await session.commit()
+        user = seed_data["users"][2]
+        publ_id = user.publ_id
+        assert publ_id is not None
 
-        await _seed_records(session, user.user_id, 49)
+        await _seed_records(session, user.user_id, publ_id, 49)
 
         fiftieth = EventRecord(
             id=uuid4(),
             user_id=user.user_id,
+            publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
             latitude=55.5,
@@ -84,11 +91,12 @@ async def test_fau50_detected(
         action = await session.execute(stmt)
         assert action.scalar_one_or_none() is not None
 
-        await _seed_records(session, user.user_id, 49)
+        await _seed_records(session, user.user_id, publ_id, 49)
 
         hundredth = EventRecord(
             id=uuid4(),
             user_id=user.user_id,
+            publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
             latitude=55.5,
@@ -124,12 +132,14 @@ async def test_fau50_detected(
 @pytest.mark.asyncio
 async def test_fau50_not_duplicated(
     session_maker: Callable[[], AsyncSession],
+    seed_data: dict,
 ) -> None:
     async with session_maker() as session:
         action_service = ActionService(session)
 
-        user = await _create_user(session, 1, "testuser")
-        await session.commit()
+        user = seed_data["users"][2]
+        publ_id = user.publ_id
+        assert publ_id is not None
 
         existing_action = Action(
             user_id=user.user_id,
@@ -143,6 +153,7 @@ async def test_fau50_not_duplicated(
         new_record = EventRecord(
             id=uuid4(),
             user_id=user.user_id,
+            publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
             latitude=55.5,
@@ -157,45 +168,3 @@ async def test_fau50_not_duplicated(
         )
 
         assert result is None
-
-
-@pytest.mark.asyncio
-async def test_fau50_only_at_50(
-    session_maker: Callable[[], AsyncSession],
-) -> None:
-    async with session_maker() as session:
-        action_service = ActionService(session)
-
-        user = await _create_user(session, 1, "testuser")
-        await session.commit()
-
-        await _seed_records(session, user.user_id, 49)
-
-        fiftieth = EventRecord(
-            id=uuid4(),
-            user_id=user.user_id,
-            type="rec_ok",
-            genus="Testus",
-            latitude=55.5,
-            longitude=37.5,
-            created_at=datetime.now(),
-        )
-        session.add(fiftieth)
-        await session.commit()
-
-        result = await check_and_log_milestone(
-            session, user.user_id, fiftieth, action_service
-        )
-
-        assert result is not None
-
-        stmt = (
-            select(func.count())
-            .select_from(Action)
-            .where(
-                Action.user_id == user.user_id,
-                Action.action == "fau_50",
-            )
-        )
-        count = await session.execute(stmt)
-        assert count.scalar_one() == 1

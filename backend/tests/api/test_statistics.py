@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
+import random
 import pytest
 from httpx import AsyncClient
 
@@ -8,20 +9,23 @@ from core.model import Action, EventRecord, Publication, User
 
 
 @pytest.mark.asyncio
-async def test_get_project_statistics(async_client: AsyncClient, session_maker):
+async def test_get_project_statistics(async_client: AsyncClient, session_maker, seed_data):
     async with session_maker() as session:
         # Add test data
+        test_user_id = random.randint(10000, 99999)
+        test_publ_id = random.randint(10000, 99999)
+        
         user = User(
-            user_id=999,
+            user_id=test_user_id,
             name="stats_test_user",
             reg_stat=7,
-            items="1",
+            items=str(test_publ_id),
         )
         session.add(user)
         await session.flush()  # Flush to get the user in DB before adding action
 
         publ = Publication(
-            id=999,
+            id=test_publ_id,
             author="Test Author",
             name="Test Publication",
         )
@@ -30,8 +34,8 @@ async def test_get_project_statistics(async_client: AsyncClient, session_maker):
 
         record = EventRecord(
             id=uuid4(),
-            publ_id=999,
-            user_id=999,
+            publ_id=test_publ_id,
+            user_id=test_user_id,
             type="rec_ok",
             genus="TestGenus",
             species="test_species",
@@ -41,9 +45,9 @@ async def test_get_project_statistics(async_client: AsyncClient, session_maker):
         session.add(record)
 
         action = Action(
-            user_id=999,
+            user_id=test_user_id,
             action="publ_end_full",
-            object="999",
+            object=str(test_publ_id),
             datetime=datetime.now(),
         )
         session.add(action)
@@ -66,30 +70,23 @@ async def test_get_project_statistics(async_client: AsyncClient, session_maker):
 
 
 @pytest.mark.asyncio
-async def test_get_user_statistics_by_id(async_client: AsyncClient, session_maker):
+async def test_get_user_statistics_by_id(async_client: AsyncClient, session_maker, seed_data):
     async with session_maker() as session:
-        # Check if publication 1 exists, if not create it
-        from core.model import Publication
-
-        publ = await session.get(Publication, 1)
-        if publ is None:
-            publ = Publication(id=1, author="Test Author", name="Test Publ")
-            session.add(publ)
-            await session.flush()
+        publ_id = seed_data["publs"][0].id
 
         user = User(
-            user_id=998,
+            user_id=random.randint(10000, 99999),
             name="stats_user_by_id",
             reg_stat=7,
-            items="1",
+            items=str(publ_id),
         )
         session.add(user)
         await session.flush()
 
         record = EventRecord(
             id=uuid4(),
-            publ_id=1,
-            user_id=998,
+            publ_id=publ_id,
+            user_id=user.user_id,
             type="rec_ok",
             genus="GenusA",
             species="species_a",
@@ -99,7 +96,7 @@ async def test_get_user_statistics_by_id(async_client: AsyncClient, session_make
         session.add(record)
         await session.commit()
 
-    response = await async_client.get("/api/statistics/users?user_id=998")
+    response = await async_client.get(f"/api/statistics/users?user_id={user.user_id}")
     assert response.status_code == 200
     data = response.json()
     assert "records_entered" in data
@@ -111,13 +108,13 @@ async def test_get_user_statistics_by_id(async_client: AsyncClient, session_make
 
 
 @pytest.mark.asyncio
-async def test_get_user_statistics_by_name(async_client: AsyncClient, session_maker):
+async def test_get_user_statistics_by_name(async_client: AsyncClient, session_maker, seed_data):
     async with session_maker() as session:
         user = User(
-            user_id=997,
+            user_id=random.randint(10000, 99999),
             name="stats_user_by_name",
             reg_stat=7,
-            items="1",
+            items=str(seed_data["publs"][0].id),
         )
         session.add(user)
         await session.commit()

@@ -1,3 +1,5 @@
+import random
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -37,23 +39,22 @@ async def test_get_current_publication_empty_queue(
 @pytest.mark.asyncio
 async def test_complete_full_logs_action(
     authenticated_client: AsyncClient,
-    auth_tokens: list[dict],
     session_maker,
     seed_data: dict,
 ) -> None:
     user = seed_data["users"][0]
+    publ_id = seed_data["publs"][0].id
 
     async with session_maker() as session:
         stmt = select(User).where(User.user_id == user.user_id)
         result = await session.execute(stmt)
         user = result.scalar_one_or_none()
         if user:
-            user.items = "1|2"
+            user.items = f"{publ_id}|{seed_data['publs'][1].id}"
             await session.commit()
 
-    authenticated_client.cookies.set("access_token", auth_tokens[0]["access_token"])
     response = await authenticated_client.post(
-        "/api/publications/1/complete",
+        f"/api/publications/{publ_id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
@@ -62,7 +63,7 @@ async def test_complete_full_logs_action(
         result = await session.execute(stmt)
         action = result.scalar_one_or_none()
         assert action is not None
-        assert action.object == "1"
+        assert action.object == str(publ_id)
 
 
 @pytest.mark.asyncio
@@ -70,8 +71,9 @@ async def test_complete_wrong_publ_id(
     authenticated_client: AsyncClient,
     seed_data: dict,
 ) -> None:
+    # Use publ_id that doesn't belong to user (publs[1] is not assigned to user)
     response = await authenticated_client.post(
-        "/api/publications/2/complete",
+        f"/api/publications/{seed_data['publs'][1].id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 403
@@ -80,47 +82,47 @@ async def test_complete_wrong_publ_id(
 @pytest.mark.asyncio
 async def test_complete_queue_advancement(
     authenticated_client: AsyncClient,
-    auth_tokens: list[dict],
     session_maker,
     seed_data: dict,
 ) -> None:
     user = seed_data["users"][0]
+    publ1_id = seed_data["publs"][0].id
+    publ2_id = seed_data["publs"][1].id
 
     async with session_maker() as session:
-        publ = Publication(id=3, name="third")
-        session.add(publ)
-        await session.commit()
+        publ3 = Publication(id=random.randint(10000, 99999), name="third")
+        session.add(publ3)
+        await session.flush()
 
         stmt = select(User).where(User.user_id == user.user_id)
         result = await session.execute(stmt)
         user = result.scalar_one()
 
-        user.items = "2|3"
+        user.items = f"{publ2_id}|{publ3.id}"
         await session.commit()
 
-    authenticated_client.cookies.set("access_token", auth_tokens[0]["access_token"])
     response = await authenticated_client.post(
-        "/api/publications/1/complete",
+        f"/api/publications/{publ1_id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
     # Complete second publication, should get third
     response = await authenticated_client.post(
-        "/api/publications/2/complete",
+        f"/api/publications/{publ2_id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
     # Complete third publication, queue should be empty
     response = await authenticated_client.post(
-        "/api/publications/3/complete",
+        f"/api/publications/{publ3.id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
     response = await authenticated_client.post(
-        "/api/publications/3/complete",
+        f"/api/publications/{publ3.id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 403
@@ -132,8 +134,9 @@ async def test_complete_ural_logs_publ_end_ural(
     session_maker,
     seed_data: dict,
 ) -> None:
+    publ_id = seed_data["publs"][0].id
     response = await authenticated_client.post(
-        "/api/publications/1/complete",
+        f"/api/publications/{publ_id}/complete",
         json={"processing_level": "ural"},
     )
 
@@ -164,8 +167,9 @@ async def test_metadata_success(
     authenticated_client: AsyncClient,
     seed_data: dict,
 ) -> None:
+    publ_id = seed_data["publs"][0].id
     response = await authenticated_client.post(
-        "/api/publications/1/metadata",
+        f"/api/publications/{publ_id}/metadata",
         json={"urals_scope": "test_scope", "material_status": "test_status"},
     )
 
@@ -178,7 +182,7 @@ async def test_metadata_404(
     seed_data: dict,
 ) -> None:
     response = await authenticated_client.post(
-        "/api/publications/999/metadata",
+        "/api/publications/99999/metadata",
         json={"urals_scope": "test"},
     )
 
@@ -190,16 +194,17 @@ async def test_metadata_after_completion_returns_403(
     authenticated_client: AsyncClient,
     seed_data: dict,
 ) -> None:
+    publ_id = seed_data["publs"][0].id
     # First complete the publication
     response = await authenticated_client.post(
-        "/api/publications/1/complete",
+        f"/api/publications/{publ_id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
     # Try to add metadata after completion
     response = await authenticated_client.post(
-        "/api/publications/1/metadata",
+        f"/api/publications/{publ_id}/metadata",
         json={"urals_scope": "ural", "material_status": "complete"},
     )
     assert response.status_code == 403
@@ -211,8 +216,9 @@ async def test_metadata_partial_update(
     authenticated_client: AsyncClient,
     seed_data: dict,
 ) -> None:
+    publ_id = seed_data["publs"][0].id
     response = await authenticated_client.post(
-        "/api/publications/1/metadata",
+        f"/api/publications/{publ_id}/metadata",
         json={"urals_scope": "ural"},
     )
     assert response.status_code == 204
@@ -226,16 +232,17 @@ async def test_comment_after_completion_returns_403(
     authenticated_client: AsyncClient,
     seed_data: dict,
 ) -> None:
+    publ_id = seed_data["publs"][0].id
     # First complete the publication
     response = await authenticated_client.post(
-        "/api/publications/1/complete",
+        f"/api/publications/{publ_id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
     # Try to add comment after completion
     response = await authenticated_client.post(
-        "/api/publications/1/comments",
+        f"/api/publications/{publ_id}/comments",
         json={"comment": "This is a test comment with enough length"},
     )
     assert response.status_code == 403
@@ -247,8 +254,9 @@ async def test_comment_success(
     authenticated_client: AsyncClient,
     seed_data: dict,
 ) -> None:
+    publ_id = seed_data["publs"][0].id
     response = await authenticated_client.post(
-        "/api/publications/1/comments",
+        f"/api/publications/{publ_id}/comments",
         json={"comment": "This is a test comment with enough length"},
     )
     assert response.status_code == 204
@@ -259,8 +267,9 @@ async def test_comment_too_short(
     authenticated_client: AsyncClient,
     seed_data: dict,
 ) -> None:
+    publ_id = seed_data["publs"][0].id
     response = await authenticated_client.post(
-        "/api/publications/1/comments",
+        f"/api/publications/{publ_id}/comments",
         json={"comment": "short"},
     )
     assert response.status_code == 422

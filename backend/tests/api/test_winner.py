@@ -13,8 +13,9 @@ async def test_winner_info_found(
     session,
     seed_data: dict,
 ) -> None:
+    user = seed_data["users"][0]
     action = Action(
-        user_id=1,
+        user_id=user.user_id,
         action="fau_win",
         object="pic.jpg|Congratulations!",
         datetime=datetime.now(),
@@ -47,8 +48,9 @@ async def test_winner_info_no_object(
     session,
     seed_data: dict,
 ) -> None:
+    user = seed_data["users"][0]
     action = Action(
-        user_id=1,
+        user_id=user.user_id,
         action="fau_win",
         object=None,
         datetime=datetime.now(),
