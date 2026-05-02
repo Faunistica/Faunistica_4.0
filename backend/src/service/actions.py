@@ -3,8 +3,8 @@ from datetime import datetime
 from json import dumps
 
 from sqlalchemy import desc, insert, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.dependencies import DBSession
 from core.exceptions import DBException
 from core.model import Action
 from schema.common import MilestoneInfo, ProcessingLevel, WinnerInfo
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class ActionService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: DBSession) -> None:
         self.session = session
 
     # Command methods - use session.execute(insert(Action)...) NOT session.add()
@@ -43,15 +43,15 @@ class ActionService:
         """Formats object as JSON with publ_id included."""
         metadata = dumps(
             {
-                "publ_id": publ_id,
-                "urals_scope": urals_scope,
-                "material_status": material_status,
+                "publ_id": str(publ_id),
+                "reg": urals_scope,
+                "mat": material_status,
             }
         )
         stmt = insert(Action).values(
             user_id=user_id,
             user_ip=ip,
-            action="publ_metadata",
+            action="publ_rem_json",
             object=metadata,
             datetime=datetime.now(),
         )
@@ -64,7 +64,7 @@ class ActionService:
         stmt = insert(Action).values(
             user_id=user_id,
             user_ip=ip,
-            action="publ_comment",
+            action="publ_rem",
             object=f"{publ_id}_comm:{comment}",
             datetime=datetime.now(),
         )

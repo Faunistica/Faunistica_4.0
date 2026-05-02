@@ -62,13 +62,17 @@ async def test_log_publ_metadata(session_maker, test_users, seed_data) -> None:
         await session.commit()
 
         result = await session.execute(
-            select(Action).where(Action.action == "publ_metadata")
+            select(Action).where(Action.action == "publ_rem_json")
         )
         action = result.scalar_one_or_none()
         assert action is not None
         assert action.user_id == test_users[0]["user_id"]
-        assert "publ_id" in action.object
-        assert "urals_scope" in action.object
+        # Check JSON contains expected keys
+        import json
+        obj = json.loads(action.object)
+        assert "publ_id" in obj
+        assert "reg" in obj
+        assert "mat" in obj
 
 
 @pytest.mark.asyncio
@@ -84,7 +88,7 @@ async def test_log_publ_comment(session_maker, test_users, seed_data) -> None:
         await session.commit()
 
         result = await session.execute(
-            select(Action).where(Action.action == "publ_comment")
+            select(Action).where(Action.action == "publ_rem")
         )
         action = result.scalar_one_or_none()
         assert action is not None

@@ -1,7 +1,8 @@
 import logging
 from datetime import datetime
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from core.dependencies import ClientIP, DBSession
 from core.exceptions import ActionLoggingError
@@ -25,6 +26,7 @@ async def login(
     data: LoginRequest,
     session: DBSession,
     ip: ClientIP,
+    action_service: Annotated[ActionService, Depends()],
 ) -> UserLoginResponse:
     """
     Аутентификация пользователя по логину и паролю (MD5).
@@ -56,8 +58,7 @@ async def login(
     set_response_token_cookies(response, token_payload)
 
     try:
-        action_service = ActionService(session)
-        await action_service.save_action(user.user_id, "fau_login", None, ip)
+        await action_service.log_login(user.user_id, ip)
     except ActionLoggingError as e:
         logger.error("Failed to log login action: %s", e)
         raise HTTPException(status_code=500, detail="Failed to log action") from e

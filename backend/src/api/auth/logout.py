@@ -1,6 +1,7 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from core.dependencies import DBSession
 from core.rate_limiter import limiter
@@ -20,6 +21,7 @@ async def logout(
     request: Request,
     response: Response,
     session: DBSession,
+    action_service: Annotated[ActionService, Depends()],
 ) -> Message:
     """
     Выход пользователя.
@@ -34,8 +36,7 @@ async def logout(
         logger.warning("Failed to get user from token: %s", e)
     else:
         try:
-            action_service = ActionService(session)
-            await action_service.save_action(user.user_id, "fau_logout", None, None)
+            await action_service.log_logout(user.user_id, None)
         except Exception as e:
             logger.warning("Failed to log logout action: %s", e)
 

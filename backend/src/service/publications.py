@@ -1,7 +1,9 @@
-from sqlalchemy import update
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
 
-from core.dependencies import TokenUser
+from fastapi import Depends
+from sqlalchemy import update
+
+from core.dependencies import DBSession, TokenUser
 from core.exceptions import PublicationForbiddernError
 from core.model import User
 from repository.publication import (
@@ -26,9 +28,13 @@ def array_to_pipe(arr: list[int]) -> str:
 
 
 class PublicationService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: DBSession,
+        action_service: Annotated[ActionService, Depends()],
+    ) -> None:
         self.session = session
-        self.actions = ActionService(session)
+        self.actions = action_service
 
     async def validate_access(self, user_id: int, publ_id: int) -> None:
         """Raises PublicationForbiddernError if user.publ_id != publ_id."""

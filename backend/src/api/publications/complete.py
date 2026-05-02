@@ -1,8 +1,11 @@
-from fastapi import APIRouter, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
 
-from core.dependencies import ClientIP, PublicationServiceDep, TokenUser
+from core.dependencies import ClientIP, TokenUser
 from schema.common import ProcessingLevel
+from service.publications import PublicationService
 
 router = APIRouter(prefix="/publications")
 
@@ -17,6 +20,6 @@ async def complete_publication(
     data: PublicationComplete,
     token: TokenUser,
     ip: ClientIP,
-    pub_service: PublicationServiceDep,
+    pub_service: Annotated[PublicationService, Depends()],
 ) -> None:
     await pub_service.complete(token, publ_id, data.processing_level, ip)

@@ -8,6 +8,7 @@ from core.exceptions import PublicationForbiddernError
 from core.model import User
 from schema.common import ProcessingLevel, Publication
 from schema.user import UserMinimal
+from service.actions import ActionService
 from service.publications import PublicationService
 
 
@@ -17,8 +18,15 @@ def mock_session() -> MagicMock:
 
 
 @pytest.fixture
-def publication_service(mock_session: MagicMock) -> PublicationService:
-    return PublicationService(mock_session)
+def mock_action_service() -> MagicMock:
+    return MagicMock(spec=ActionService)
+
+
+@pytest.fixture
+def publication_service(
+    mock_session: MagicMock, mock_action_service: MagicMock
+) -> PublicationService:
+    return PublicationService(mock_session, mock_action_service)
 
 
 @pytest.fixture
@@ -101,12 +109,16 @@ class TestGetCurrent:
         ) as mock_get_user:
             mock_get_user.return_value = mock_user
 
-            mock_pub = Publication(id=123, author="Test Author", name="Test Publication")
+            mock_pub = Publication(
+                id=123, author="Test Author", name="Test Publication"
+            )
             with patch(
                 "service.publications.get_publication", new_callable=AsyncMock
             ) as mock_get_pub:
                 mock_get_pub.return_value = mock_pub
-                result = await publication_service.get_current(token_user, list_all=False)
+                result = await publication_service.get_current(
+                    token_user, list_all=False
+                )
 
         assert len(result) == 1
         assert result[0].id == 123
@@ -134,28 +146,30 @@ class TestGetCurrent:
                     Publication(id=456, author="Author 2", name="Publication 2"),
                     Publication(id=789, author="Author 3", name="Publication 3"),
                 ]
-                result = await publication_service.get_current(token_user, list_all=True)
+                result = await publication_service.get_current(
+                    token_user, list_all=True
+                )
 
         assert len(result) == 3
 
 
 class TestPipeConversion:
     def test_pipe_to_array_multiple(self) -> None:
-        service = PublicationService(MagicMock())
+        service = PublicationService(MagicMock(), MagicMock())
         assert service._pipe_to_array("123|456|789") == [123, 456, 789]
 
     def test_pipe_to_array_empty(self) -> None:
-        service = PublicationService(MagicMock())
+        service = PublicationService(MagicMock(), MagicMock())
         assert service._pipe_to_array("") == []
 
     def test_pipe_to_array_single(self) -> None:
-        service = PublicationService(MagicMock())
+        service = PublicationService(MagicMock(), MagicMock())
         assert service._pipe_to_array("123") == [123]
 
     def test_array_to_pipe_multiple(self) -> None:
-        service = PublicationService(MagicMock())
+        service = PublicationService(MagicMock(), MagicMock())
         assert service._array_to_pipe([123, 456, 789]) == "123|456|789"
 
     def test_array_to_pipe_empty(self) -> None:
-        service = PublicationService(MagicMock())
+        service = PublicationService(MagicMock(), MagicMock())
         assert service._array_to_pipe([]) == ""
