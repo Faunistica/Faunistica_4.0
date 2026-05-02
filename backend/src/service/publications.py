@@ -1,10 +1,11 @@
+import logging
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import update
 
 from core.dependencies import DBSession, TokenUser
-from core.exceptions import PublicationForbiddernError
+from core.exceptions import PublicationForbiddernError, PublicationNotFoundError
 from core.model import User
 from repository.publication import (
     get_publication,
@@ -27,6 +28,9 @@ def array_to_pipe(arr: list[int]) -> str:
     return "|".join(str(x) for x in arr)
 
 
+logger = logging.getLogger(__name__)
+
+
 class PublicationService:
     def __init__(
         self,
@@ -38,6 +42,12 @@ class PublicationService:
 
     async def validate_access(self, user_id: int, publ_id: int) -> None:
         """Raises PublicationForbiddernError if user.publ_id != publ_id."""
+        # Check if publication exists
+        if await get_publication(self.session, publ_id) is None:
+            logger.warning(
+                "user %d requested access non-existend publication %d", user_id, publ_id
+            )
+            raise PublicationNotFoundError(publ_id)
         user = await get_user_expect(self.session, user_id)
         if user.publ_id != publ_id:
             raise PublicationForbiddernError(publ_id, user_id)

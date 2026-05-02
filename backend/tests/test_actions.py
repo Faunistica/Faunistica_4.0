@@ -69,6 +69,7 @@ async def test_log_publ_metadata(session_maker, test_users, seed_data) -> None:
         assert action.user_id == test_users[0]["user_id"]
         # Check JSON contains expected keys
         import json
+
         obj = json.loads(action.object)
         assert "publ_id" in obj
         assert "reg" in obj

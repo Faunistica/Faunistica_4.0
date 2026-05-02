@@ -148,6 +148,8 @@ async def seed_data(
 
     publ = Publication(id=1, name="Test Publ")
     session.add(publ)
+    publ = Publication(id=2, name="Test Publ 2")
+    session.add(publ)
     await session.flush()
 
     now = datetime.now(UTC).replace(tzinfo=None)

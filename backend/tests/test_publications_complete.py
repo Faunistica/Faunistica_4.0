@@ -10,7 +10,11 @@ from core.model import Publication
 
 @pytest.mark.asyncio
 async def test_complete_full_logs_action(
-    async_client: AsyncClient, auth_tokens, test_users, session_maker, seed_data
+    async_client: AsyncClient,
+    auth_tokens,
+    test_users,
+    session_maker: Callable[[], AsyncSession],
+    seed_data,
 ) -> None:
     async with session_maker() as session:
         from sqlalchemy import select
@@ -21,7 +25,7 @@ async def test_complete_full_logs_action(
         result = await session.execute(stmt)
         user = result.scalar_one_or_none()
         if user:
-            user.items = "1|2|3"
+            user.items = "1|2"
             await session.commit()
 
     async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
@@ -48,7 +52,7 @@ async def test_complete_wrong_publ_id(
 ) -> None:
     async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
     response = await async_client.post(
-        "/api/publications/999/complete",
+        "/api/publications/2/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 403
@@ -67,9 +71,6 @@ async def test_complete_queue_advancement(
 
         from core.model import User
 
-        publ = Publication(id=2, name="second")
-        session.add(publ)
-        await session.commit()
         publ = Publication(id=3, name="third")
         session.add(publ)
         await session.commit()

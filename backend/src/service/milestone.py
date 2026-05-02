@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import Action, EventRecord
 from schema.common import MilestoneInfo
+from service.actions import ActionService
 
 logger = __import__("logging").getLogger(__name__)
 
@@ -11,6 +12,7 @@ async def check_and_log_milestone(
     session: AsyncSession,
     user_id: int,
     new_record: EventRecord,
+    action_service: ActionService | None = None,
 ) -> MilestoneInfo | None:
     """
     Check if user just reached 50 rec_ok records.
@@ -47,14 +49,10 @@ async def check_and_log_milestone(
         datetime=milestone_datetime,
     )
 
-    action = Action(
-        user_id=user_id,
-        action="fau_50",
-        object=f"{count}",
-        datetime=milestone_datetime,
-    )
-    session.add(action)
-    await session.commit()
+    # Use ActionService if provided, otherwise create one
+    if action_service is None:
+        action_service = ActionService(session)
+    await action_service.log_milestone(user_id, count, None)
 
     logger.info(
         "Milestone detected: user_id=%s, milestone=50, datetime=%s",

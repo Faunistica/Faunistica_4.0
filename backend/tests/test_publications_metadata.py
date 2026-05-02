@@ -3,6 +3,30 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
+async def test_metadata_success(
+    async_client: AsyncClient, auth_tokens, seed_data
+) -> None:
+    async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
+    response = await async_client.post(
+        "/api/publications/1/metadata",
+        json={"urals_scope": "test_scope", "material_status": "test_status"},
+    )
+
+    assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_metadata_404(async_client: AsyncClient, auth_tokens, seed_data) -> None:
+    async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
+    response = await async_client.post(
+        "/api/publications/999/metadata",
+        json={"urals_scope": "test"},
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_metadata_after_completion_returns_403(
     async_client: AsyncClient, auth_tokens, seed_data
 ) -> None:
@@ -22,18 +46,6 @@ async def test_metadata_after_completion_returns_403(
     )
     assert response.status_code == 403
     assert response.json()["error"] == "PUBL_FORBIDDEN"
-
-
-@pytest.mark.asyncio
-async def test_metadata_success(
-    async_client: AsyncClient, auth_tokens, seed_data
-) -> None:
-    async_client.cookies.set("access_token", auth_tokens[0]["access_token"])
-    response = await async_client.post(
-        "/api/publications/1/metadata",
-        json={"urals_scope": "ural", "material_status": "complete"},
-    )
-    assert response.status_code == 204
 
 
 @pytest.mark.asyncio

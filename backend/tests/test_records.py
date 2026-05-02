@@ -7,8 +7,6 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.model import Publication
-
 
 @pytest.mark.asyncio
 async def test_create_record(
@@ -214,7 +212,6 @@ async def test_delete_record_previous_publ_403(
 
     async with session_maker() as session:
         now = datetime.now(UTC).replace(tzinfo=None)
-        publ = Publication(id=2, name="second")
         record = EventRecord(
             id=uuid4(),
             user_id=1,
@@ -223,8 +220,6 @@ async def test_delete_record_previous_publ_403(
             created_at=now,
             updated_at=now,
         )
-        session.add(publ)
-        await session.commit()
         session.add(record)
         await session.commit()
 

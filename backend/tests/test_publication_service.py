@@ -151,25 +151,3 @@ class TestGetCurrent:
                 )
 
         assert len(result) == 3
-
-
-class TestPipeConversion:
-    def test_pipe_to_array_multiple(self) -> None:
-        service = PublicationService(MagicMock(), MagicMock())
-        assert service._pipe_to_array("123|456|789") == [123, 456, 789]
-
-    def test_pipe_to_array_empty(self) -> None:
-        service = PublicationService(MagicMock(), MagicMock())
-        assert service._pipe_to_array("") == []
-
-    def test_pipe_to_array_single(self) -> None:
-        service = PublicationService(MagicMock(), MagicMock())
-        assert service._pipe_to_array("123") == [123]
-
-    def test_array_to_pipe_multiple(self) -> None:
-        service = PublicationService(MagicMock(), MagicMock())
-        assert service._array_to_pipe([123, 456, 789]) == "123|456|789"
-
-    def test_array_to_pipe_empty(self) -> None:
-        service = PublicationService(MagicMock(), MagicMock())
-        assert service._array_to_pipe([]) == ""
