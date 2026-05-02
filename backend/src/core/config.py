@@ -57,6 +57,7 @@ class BotSettings(CamelCaseSettings):
 class LoggingSettings(CamelCaseSettings):
     LOG_LEVEL: str = "INFO"
     LOGS_DIR: Path = Path("logs")
+    LOG_FORMAT: str = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
 
 
 class AppSettings(CamelCaseSettings):
