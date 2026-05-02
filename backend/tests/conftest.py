@@ -107,18 +107,21 @@ async def seed_data(
             publ_id=d.get("publ_id"),
         )
 
-    user_id_1 = random.randint(1000, 9999)
-    user_id_2 = random.randint(1000, 9999)
-    user_id_3 = random.randint(1000, 9999)
-    while user_id_2 == user_id_1:
-        user_id_2 = random.randint(1000, 9999)
-    while user_id_3 in [user_id_1, user_id_2]:
-        user_id_3 = random.randint(1000, 9999)
+    def id() -> int:
+        return random.randint(1000, 999999)
 
-    publ_id_1 = random.randint(1000, 9999)
-    publ_id_2 = random.randint(1000, 9999)
+    user_id_1 = id()
+    user_id_2 = id()
+    user_id_3 = id()
+    while user_id_2 == user_id_1:
+        user_id_2 = id()
+    while user_id_3 in [user_id_1, user_id_2]:
+        user_id_3 = id()
+
+    publ_id_1 = id()
+    publ_id_2 = id()
     while publ_id_2 == publ_id_1:
-        publ_id_2 = random.randint(1000, 9999)
+        publ_id_2 = id()
 
     publ1 = Publication(id=publ_id_1, name="Test Publ")
     session.add(publ1)

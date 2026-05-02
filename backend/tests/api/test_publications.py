@@ -182,7 +182,7 @@ async def test_metadata_404(
     seed_data: dict,
 ) -> None:
     response = await authenticated_client.post(
-        "/api/publications/99999/metadata",
+        "/api/publications/999/metadata",
         json={"urals_scope": "test"},
     )
 
