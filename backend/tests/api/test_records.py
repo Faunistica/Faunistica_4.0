@@ -13,7 +13,6 @@ from core.model import EventRecord, User
 
 
 @pytest.mark.asyncio
-@pytest.mark.asyncio
 async def test_create_record(
     authenticated_client: AsyncClient, seed_data: SeedData
 ) -> None:
@@ -21,7 +20,7 @@ async def test_create_record(
 
     response = await authenticated_client.post(
         "/api/records",
-        json={"user_id": user.user_id, "publ_id": user.publ_id},
+        json={"publ_id": user.publ_id},
     )
     assert response.status_code == 201
     assert "id" in response.json()

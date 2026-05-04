@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import uuid4
 
-from schema.records import RecordBelonging, RecordData, RecordMetadata, RecordType
+from schema.records import RecordData, RecordMetadata, RecordType
 
 
 # FIXME: core!!!
@@ -41,7 +41,9 @@ def _determine_type(
 
 def create_record_metadata(
     record: RecordData | None,
-    belongs_to: RecordBelonging,
+    *,
+    user_id: int,
+    publ_id: int,
     submission_type: Literal["submit", "autosave"],
     ip: str | None = None,
     updated_at: datetime | None = None,
@@ -53,8 +55,8 @@ def create_record_metadata(
     now = datetime.now()
 
     return RecordMetadata(
-        publ_id=belongs_to.publ_id,
-        user_id=belongs_to.user_id,
+        publ_id=publ_id,
+        user_id=user_id,
         id=uuid4(),
         errors=errors,
         type=type,

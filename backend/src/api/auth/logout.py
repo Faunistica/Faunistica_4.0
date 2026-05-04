@@ -20,7 +20,6 @@ router = APIRouter()
 async def logout(
     request: Request,
     response: Response,
-    session: DBSession,
     action_service: Annotated[ActionService, Depends()],
 ) -> Message:
     """

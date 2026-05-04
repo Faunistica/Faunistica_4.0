@@ -8,7 +8,7 @@ from core.exceptions import InternalError, RecordForbiddenError, RecordNotFoundE
 from core.security import validate_user_id_query
 from repository import record as repo
 from repository.user import get_user_expect
-from schema.records import RecordBelonging, RecordData, RecordFull
+from schema.records import RecordData, RecordFull
 from service.records import create_record_metadata
 
 router = APIRouter(prefix="/records/{record_id}")
@@ -50,8 +50,9 @@ async def update_record(
 
     metadata = create_record_metadata(
         None,
-        RecordBelonging(publ_id=data.publ_id, user_id=user_id),
-        "autosave",
+        user_id=user_id,
+        publ_id=data.publ_id,
+        submission_type="autosave",
         ip=ip,
         # Use the current record's updated_at for optimistic locking
         updated_at=current_record.updated_at,

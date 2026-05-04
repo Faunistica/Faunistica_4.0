@@ -1,10 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel
 
 from core.dependencies import ClientIP, DBSession, TokenUser
 from repository import record as repo
-from schema.records import RecordBelonging, RecordFull
+from schema.records import RecordFull
 from service.actions import ActionService
 from service.milestone import check_and_log_milestone
 from service.records import create_record_metadata
@@ -14,24 +15,29 @@ router = APIRouter(
 )
 
 
+# idk, a funny name, made up without ai!
+class CreateRecordRequest(BaseModel):
+    publ_id: int
+
+
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
 )
 async def create_record(
-    belonging: RecordBelonging,
+    data: CreateRecordRequest,
     session: DBSession,
     ip: ClientIP,
     token: TokenUser,
     action_service: Annotated[ActionService, Depends()],
 ) -> RecordFull:
-    if token.user_id != belonging.user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied",
-        )
-
-    metadata = create_record_metadata(None, belonging, "autosave", ip)
+    metadata = create_record_metadata(
+        None,
+        user_id=token.user_id,
+        publ_id=data.publ_id,
+        submission_type="autosave",
+        ip=ip,
+    )
     db_record = await repo.create_record(session, metadata)
 
     if db_record.type == "rec_ok":

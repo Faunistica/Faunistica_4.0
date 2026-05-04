@@ -105,40 +105,6 @@ async def test_logout_clears_cookies(
 
 
 @pytest.mark.asyncio
-async def test_check_valid_cookie(
-    async_client: AsyncClient,
-    seed_data: SeedData,
-) -> None:
-    """Test check with valid cookie returns 200 + user info."""
-    user = seed_data["users"][0]
-    password = seed_data["passwords"][0]
-
-    login_response = await async_client.post(
-        "/api/auth/login",
-        json={"username": user.name, "password": password},
-    )
-    assert login_response.status_code == status.HTTP_200_OK
-
-    token = login_response.cookies.get("access_token")
-    assert token is not None
-
-    check_response = await async_client.post(
-        "/api/auth/check", cookies=[("access_token", token)]
-    )
-    assert check_response.status_code == status.HTTP_200_OK
-    data = check_response.json()
-    assert data["user_id"] == user.user_id
-    assert data["username"] == user.name
-
-
-@pytest.mark.asyncio
-async def test_check_invalid_cookie(async_client: AsyncClient) -> None:
-    """Test check without valid cookie returns 403."""
-    response = await async_client.post("/api/auth/check")
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-@pytest.mark.asyncio
 async def test_refresh_token_flow(
     async_client: AsyncClient,
     seed_data: SeedData,

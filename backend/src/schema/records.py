@@ -7,14 +7,11 @@ from pydantic import BaseModel
 RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail"]
 
 
-# idk, a funny name, made up without ai!
-class RecordBelonging(BaseModel):
+class RecordMetadata(BaseModel):
+    id: UUID
+
     publ_id: int
     user_id: int
-
-
-class RecordMetadata(RecordBelonging):
-    id: UUID
 
     errors: str | None = None
     type: RecordType | None = None
