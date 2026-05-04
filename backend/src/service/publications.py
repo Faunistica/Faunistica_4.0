@@ -15,19 +15,6 @@ from repository.user import get_user_expect
 from schema.common import ProcessingLevel, Publication
 from service.actions import ActionService
 
-
-def pipe_to_array(pipe_str: str) -> list[int]:
-    """Convert '123|456|789' to [123, 456, 789]"""
-    if not pipe_str:
-        return []
-    return [int(x) for x in pipe_str.split("|") if x.strip()]
-
-
-def array_to_pipe(arr: list[int]) -> str:
-    """Convert [123, 456, 789] to '123|456|789'"""
-    return "|".join(str(x) for x in arr)
-
-
 logger = logging.getLogger(__name__)
 
 

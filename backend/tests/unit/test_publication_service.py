@@ -11,8 +11,6 @@ from schema.user import UserMinimal
 from service.actions import ActionService
 from service.publications import (
     PublicationService,
-    array_to_pipe,
-    pipe_to_array,
 )
 
 
@@ -36,69 +34,6 @@ def publication_service(
 @pytest.fixture
 def token_user() -> UserMinimal:
     return UserMinimal(user_id=1, name="testuser")
-
-
-# ============================================================================
-# TESTS FOR MODULE-LEVEL FUNCTIONS
-# ============================================================================
-
-
-class TestPipeToArray:
-    """Tests for the module-level pipe_to_array function."""
-
-    def test_empty_string_returns_empty_list(self) -> None:
-        """Should return empty list for empty string."""
-        result = pipe_to_array("")
-        assert result == []
-
-    def test_single_value(self) -> None:
-        """Should handle single pipe-delimited value."""
-        result = pipe_to_array("123")
-        assert result == [123]
-
-    def test_multiple_values(self) -> None:
-        """Should convert pipe-delimited string to list of ints."""
-        result = pipe_to_array("123|456|789")
-        assert result == [123, 456, 789]
-
-    def test_whitespace_around_values(self) -> None:
-        """Should handle whitespace around pipe delimiters."""
-        result = pipe_to_array(" 123 | 456 | 789 ")
-        assert result == [123, 456, 789]
-
-    def test_empty_segments_filtered_out(self) -> None:
-        """Should filter out empty segments from '|||'."""
-        result = pipe_to_array("123||456||789")
-        assert result == [123, 456, 789]
-
-    def test_trailing_leading_pipes(self) -> None:
-        """Should handle leading and trailing pipes."""
-        result = pipe_to_array("|123|456|")
-        assert result == [123, 456]
-
-    def test_invalid_integer_raises_error(self) -> None:
-        """Should raise ValueError for non-numeric strings."""
-        with pytest.raises(ValueError):
-            pipe_to_array("abc|123")
-
-
-class TestArrayToPipe:
-    """Tests for the module-level array_to_pipe function."""
-
-    def test_empty_list_returns_empty_string(self) -> None:
-        """Should return empty string for empty list."""
-        result = array_to_pipe([])
-        assert result == ""
-
-    def test_single_element(self) -> None:
-        """Should convert single element list to string."""
-        result = array_to_pipe([123])
-        assert result == "123"
-
-    def test_multiple_elements(self) -> None:
-        """Should convert list to pipe-delimited string."""
-        result = array_to_pipe([123, 456, 789])
-        assert result == "123|456|789"
 
 
 # ============================================================================
@@ -380,9 +315,7 @@ class TestGetCurrent:
 
         self.mock_get_user.return_value = mock_user
 
-        mock_pub = Publication(
-            id=123, author="Test Author", name="Test Publication"
-        )
+        mock_pub = Publication(id=123, author="Test Author", name="Test Publication")
 
         self.mock_get_pub.return_value = mock_pub
         result = await publication_service.get_current(token_user, list_all=False)

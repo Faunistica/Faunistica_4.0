@@ -3,7 +3,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from core.dependencies import DBSession
 from core.rate_limiter import limiter
 from core.security import get_jwt_user
 from schema.common import Message
