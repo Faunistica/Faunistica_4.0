@@ -92,6 +92,7 @@ class UserState(IntEnum):
             UserState.SUPPORT: SupportStates.waiting_for_question,
             UserState.RENAME: RenameStates.waiting_for_new_name,
             UserState.SURVEY_AGE: SociologyStates.waiting_for_age,
+            UserState.SURVEY_PREFERENCES: SociologyStates.waiting_for_comments,
             UserState.SURVEY_LANGUAGE: SociologyStates.waiting_for_language,
             UserState.SURVEY_RATING: SociologyStates.waiting_for_rating_agreement,
             UserState.SURVEY_REGION: SociologyStates.waiting_for_region,

@@ -127,6 +127,32 @@ class ActionService:
         )
         await self.session.execute(stmt)
 
+    async def log_action(
+        self,
+        user_id: int,
+        action_type: str,
+        old_value: str | None = None,
+        new_value: str | None = None,
+        ip: str | None = None,
+    ) -> None:
+        """Generic action logging with old/new values."""
+        object_value = None
+        if old_value is not None and new_value is not None:
+            object_value = f"{old_value} -> {new_value}"
+        elif new_value is not None:
+            object_value = new_value
+        elif old_value is not None:
+            object_value = old_value
+
+        stmt = insert(Action).values(
+            user_id=user_id,
+            user_ip=ip,
+            action=action_type,
+            object=object_value,
+            datetime=datetime.now(),
+        )
+        await self.session.execute(stmt)
+
     async def log_bot_other(
         self, user_id: int, content_type: str, ip: str | None = None
     ) -> None:

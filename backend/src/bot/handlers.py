@@ -37,7 +37,7 @@ from schema.common import ProcessingLevel
 from schema.user import UserLanguage, UserUpdate
 from service.actions import ActionService
 from service.publications import PublicationService
-from service.user import UserService
+from service.user import FlowType, UserService
 
 YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
 NO_WORDS = ["no", "nope", "нет", "не", "refuse"]
@@ -385,10 +385,21 @@ class Handlers:
                 await message.answer(Messages.sociology_not_finished())
                 return
 
-            await message.answer(
-                Messages.rename_prompt(), reply_markup=Keyboards.remove()
+            # Start rename flow using UserService
+            result = await user_service.start_flow(
+                message.from_user.id, FlowType.RENAME, state
             )
-            await state.set_state(RenameStates.waiting_for_new_name)
+
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
+
+            if result.message:
+                await message.answer(
+                    result.message, reply_markup=Keyboards.remove()
+                )
+            if result.next_state:
+                await state.set_state(result.next_state.fsm_state())
 
     async def support_command(self, message: Message, state: FSMContext) -> None:
         if message.from_user is None:
@@ -402,21 +413,23 @@ class Handlers:
             action_service = ActionService(session)
             user_service = UserService(session, self.bot, action_service)
 
-            res = await user_service.check_command_allowed(message.from_user.id)
-            if isinstance(res, MsgErr):
-                await message.answer(res.error)
+            # Start support flow using UserService
+            result = await user_service.start_flow(
+                message.from_user.id, FlowType.SUPPORT, state
+            )
+
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
                 return
 
-        async for session in self.db_session_factory():
-            await update_user(
-                session, message.from_user.id, UserUpdate(reg_stat=UserState.SUPPORT)
-            )
-        await message.answer(
-            Messages.support_request(), reply_markup=Keyboards.remove()
-        )
-        await state.set_state(SupportStates.waiting_for_question)
+            if result.message:
+                await message.answer(
+                    result.message, reply_markup=Keyboards.remove()
+                )
+            if result.next_state:
+                await state.set_state(result.next_state.fsm_state())
 
-    async def sociology_command(self, message: Message, state: FSMContext) -> None:  # noqa: PLR0912
+    async def sociology_command(self, message: Message, state: FSMContext) -> None:
         if message.from_user is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
@@ -427,50 +440,25 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_expect(session, message.from_user.id)
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
 
-            res = await UserService(
-                session, self.bot, ActionService(session)
-            ).check_command_allowed(message.from_user.id)
-
+            res = await user_service.check_command_allowed(message.from_user.id)
             if isinstance(res, MsgErr):
                 await message.answer(res.error)
                 return
 
-            if all(
-                getattr(user, field) is not None
-                for field in ["age", "lng", "comm", "sex", "rating"]
-            ):
-                await message.answer(Messages.sociology_completed())
-            else:
-                missing_fields = [
-                    field
-                    for field in ["age", "lng", "comm", "sex", "rating"]
-                    if getattr(user, field) is None
-                ]
+            # Start survey flow using UserService
+            result = await user_service.start_flow(
+                message.from_user.id, FlowType.SURVEY, state
+            )
 
-                await message.answer(
-                    f"{Messages.any_question(missing_fields)}\n{Messages.go_back_to_sociology()}",
-                    parse_mode="HTML",
-                )
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
 
-                next_question = missing_fields[0]
-
-                if next_question == "age":
-                    await message.answer(Messages.ask_age())
-                    await state.set_state(SociologyStates.waiting_for_age)
-                elif next_question == "lng":
-                    await message.answer(Messages.ask_language())
-                    await state.set_state(SociologyStates.waiting_for_language)
-                elif next_question == "comm":
-                    await message.answer(Messages.ask_publication_preferences())
-                    await state.set_state(SociologyStates.waiting_for_comments)
-                elif next_question == "sex":
-                    await message.answer(Messages.sociology_question(1))
-                    await state.set_state(SociologyStates.waiting_for_gender)
-                elif next_question == "rating":
-                    await message.answer(Messages.sociology_question(2))
-                    await state.set_state(SociologyStates.waiting_for_rating_agreement)
+            if result.message:
+                await message.answer(result.message)
 
     async def cancel_command(self, message: Message, state: FSMContext) -> None:
         if message.from_user is None:
@@ -794,7 +782,6 @@ class Handlers:
     ) -> None:
         if (
             message.from_user is None
-            or message.from_user.username is None
             or message.text is None
         ):
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
@@ -810,74 +797,44 @@ class Handlers:
 
             await state.clear()
             return
-        if len(message.text) < 10:
-            await message.answer(Messages.support_request_too_short())
-            return
-        if len(message.text) > 256:
-            await message.answer(Messages.message_too_long())
-            return
 
         async for session in self.db_session_factory():
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(reg_stat=UserState.REG_COMPLETED),
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
+
+            result = await user_service.handle_flow_input(
+                message.from_user.id, message.text, state
             )
 
-        await message.answer(
-            Messages.support_request_received(),
-            reply_markup=Keyboards.remove(),
-            parse_mode="HTML",
-        )
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
 
-        await self.bot.send_message(
-            chat_id=settings.ADMIN_CHAT_ID,
-            text=Messages.request_for_support(
-                message.from_user.username, message.from_user.id, message.text
-            ),
-        )
-
-        await state.clear()
+            if result.completed:
+                await message.answer(
+                    Messages.support_request_received(),
+                    reply_markup=Keyboards.remove(),
+                    parse_mode="HTML",
+                )
 
     async def rename_name_handler(self, message: Message, state: FSMContext) -> None:
         if message.from_user is None or message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        name_msg = message.text
-
-        # FIXME: isn't it just better to set username as UNIQUE in db
-        # and handle errors if they appear?
         async for session in self.db_session_factory():
             action_service = ActionService(session)
-            other_users = await count_users_with_name(session, name_msg)
+            user_service = UserService(session, self.bot, action_service)
 
-            if name_msg == (await get_user_expect(session, message.from_user.id)).name:
-                await message.answer(Messages.same_name(name_msg))
-            elif other_users > 0:
-                await message.answer(Messages.name_already_exists())
-            elif len(name_msg) < 3:
-                await message.answer(Messages.message_too_short())
-            elif len(name_msg) > 40:
-                await message.answer(Messages.message_too_long())
-            elif not re.fullmatch(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$", name_msg):
-                await message.answer(Messages.invalid_characters())
-            else:
-                old_name = (await get_user_expect(session, message.from_user.id)).name
+            result = await user_service.handle_flow_input(
+                message.from_user.id, message.text, state
+            )
 
-                await action_service.log_bot_rename(
-                    message.from_user.id, old=old_name, new=name_msg, ip=None
-                )
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
 
-                await update_user(
-                    session,
-                    message.from_user.id,
-                    UserUpdate(
-                        name=name_msg,
-                        reg_stat=UserState.REG_COMPLETED,
-                    ),
-                )
-
-                await message.answer(Messages.rename_success(name_msg))
+            if result.completed and result.message:
+                await message.answer(result.message)
                 await state.clear()
 
     # Sociology state handlers
@@ -885,66 +842,43 @@ class Handlers:
         if message.from_user is None or message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        age_msg = message.text
+        async for session in self.db_session_factory():
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
 
-        if len(age_msg) > 5:
-            await message.answer(Messages.message_too_long())
-        elif not age_msg.isdigit():
-            await message.answer(Messages.message_no_digits())
-        elif int(age_msg) > 99:
-            await message.answer(
-                Messages.age_too_high(),
-                parse_mode="Markdown",
-                disable_web_page_preview=True,
+            result = await user_service.handle_flow_input(
+                message.from_user.id, message.text, state
             )
-        elif int(age_msg) < 14:
-            await message.answer(Messages.age_too_low())
-        else:
-            async for session in self.db_session_factory():
-                await update_user(
-                    session,
-                    message.from_user.id,
-                    UserUpdate(
-                        age=int(age_msg),
-                        reg_stat=UserState.REG_COMPLETED,
-                    ),
-                )
-            await message.answer(Messages.age_accepted())
 
-            if int(age_msg) < 18:
-                await message.answer(Messages.age_under_18_warning())
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
 
-            await message.answer(Messages.go_back_to_sociology())
-            await state.clear()
+            if result.completed:
+                await message.answer(Messages.sociology_completed())
+            elif result.message:
+                await message.answer(result.message)
 
     async def sociology_lang_handler(self, message: Message, state: FSMContext) -> None:
         if message.from_user is None or message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        lang_msg = (
-            message.text.strip().replace(" ", "").replace(",", "").replace(".", "")
-        )
-
-        if len(lang_msg) > 1 or lang_msg not in ["1", "2", "3"]:
-            await message.answer(Messages.selection_not_recognized())
-            return
-
-        lang_map: dict[str, UserLanguage] = {"1": "all", "2": "eng", "3": "rus"}
-        lang_value = lang_map[lang_msg]
-
         async for session in self.db_session_factory():
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(
-                    lng=lang_value,
-                    reg_stat=UserState.REG_COMPLETED,
-                ),
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
+
+            result = await user_service.handle_flow_input(
+                message.from_user.id, message.text, state
             )
 
-        await message.answer(Messages.language_selection_accepted())
-        await message.answer(Messages.go_back_to_sociology())
-        await state.clear()
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
+
+            if result.completed:
+                await message.answer(Messages.sociology_completed())
+            elif result.message:
+                await message.answer(result.message)
 
     async def sociology_comments_handler(
         self, message: Message, state: FSMContext
@@ -952,16 +886,22 @@ class Handlers:
         if message.from_user is None or message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        comm_msg = message.text.strip()
         async for session in self.db_session_factory():
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(comm=comm_msg, reg_stat=UserState.REG_COMPLETED),
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
+
+            result = await user_service.handle_flow_input(
+                message.from_user.id, message.text, state
             )
-        await message.answer(Messages.publication_preferences_accepted(comm_msg))
-        await message.answer(Messages.go_back_to_sociology())
-        await state.clear()
+
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
+
+            if result.completed:
+                await message.answer(Messages.sociology_completed())
+            elif result.message:
+                await message.answer(result.message)
 
     async def sociology_gender_handler(
         self, message: Message, state: FSMContext
@@ -969,29 +909,22 @@ class Handlers:
         if message.from_user is None or message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        gender_msg = message.text.lower()
-
-        if "жен" in gender_msg or "female" in gender_msg:
-            gender_value = "ff"
-        elif "муж" in gender_msg or "male" in gender_msg:
-            gender_value = "mm"
-        else:
-            await message.answer(Messages.selection_not_recognized())
-            return
-
         async for session in self.db_session_factory():
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(
-                    sex=gender_value,
-                    reg_stat=UserState.REG_COMPLETED,
-                ),
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
+
+            result = await user_service.handle_flow_input(
+                message.from_user.id, message.text, state
             )
 
-        await message.answer(Messages.gratitude())
-        await message.answer(Messages.go_back_to_sociology())
-        await state.clear()
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
+
+            if result.completed:
+                await message.answer(Messages.sociology_completed())
+            elif result.message:
+                await message.answer(result.message)
 
     async def sociology_rating_handler(
         self, message: Message, state: FSMContext
@@ -999,29 +932,22 @@ class Handlers:
         if message.from_user is None or message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        answer = message.text.lower()
-
-        if answer in YES_WORDS:
-            rating_value = 1
-        elif answer in NO_WORDS:
-            rating_value = 0
-        else:
-            await message.answer(Messages.selection_not_recognized())
-            return
-
         async for session in self.db_session_factory():
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(
-                    rating=rating_value,
-                    reg_stat=UserState.REG_COMPLETED,
-                ),
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
+
+            result = await user_service.handle_flow_input(
+                message.from_user.id, message.text, state
             )
 
-        await message.answer(Messages.gratitude())
-        await message.answer(Messages.go_back_to_sociology())
-        await state.clear()
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
+
+            if result.completed:
+                await message.answer(Messages.sociology_completed())
+            elif result.message:
+                await message.answer(result.message)
 
     async def sociology_region_handler(
         self, message: Message, state: FSMContext
@@ -1029,25 +955,22 @@ class Handlers:
         if message.from_user is None or message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        region_msg = message.text.strip()
-
-        if len(region_msg) < 3:
-            await message.answer(Messages.message_too_short())
-            return
-
         async for session in self.db_session_factory():
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(
-                    region=region_msg,
-                    reg_stat=UserState.REG_COMPLETED,
-                ),
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
+
+            result = await user_service.handle_flow_input(
+                message.from_user.id, message.text, state
             )
 
-        await message.answer(Messages.region_accepted())
-        await message.answer(Messages.go_back_to_sociology())
-        await state.clear()
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
+
+            if result.completed:
+                await message.answer(Messages.sociology_completed())
+            elif result.message:
+                await message.answer(result.message)
 
     async def sociology_email_handler(
         self, message: Message, state: FSMContext
@@ -1055,25 +978,22 @@ class Handlers:
         if message.from_user is None or message.text is None:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
-        email_msg = message.text.strip().lower()
-
-        if "@" not in email_msg or "." not in email_msg:
-            await message.answer(Messages.not_email())
-            return
-
         async for session in self.db_session_factory():
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(
-                    email=email_msg,
-                    reg_stat=UserState.REG_COMPLETED,
-                ),
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
+
+            result = await user_service.handle_flow_input(
+                message.from_user.id, message.text, state
             )
 
-        await message.answer(Messages.email_accepted())
-        await message.answer(Messages.sociology_completed())
-        await state.clear()
+            if isinstance(result, MsgErr):
+                await message.answer(result.error)
+                return
+
+            if result.completed:
+                await message.answer(Messages.sociology_completed())
+            elif result.message:
+                await message.answer(result.message)
 
     # ========== OTHER HANDLERS ========== #
 
