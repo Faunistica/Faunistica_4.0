@@ -18,7 +18,6 @@ from core.enums import UserState
 from core.model import User
 from core.security import get_password_hash
 from repository.publication import (
-    get_publication,
     get_publications_for_language,
     user_filled_publication,
 )
@@ -33,8 +32,10 @@ from repository.user import (
     get_user_expect,
     update_user,
 )
+from schema.common import ProcessingLevel
 from schema.user import UserLanguage, UserUpdate
 from service.actions import ActionService
+from service.publications import PublicationService
 
 YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
 NO_WORDS = ["no", "nope", "нет", "не", "refuse"]
@@ -206,20 +207,21 @@ class Handlers:
         async for session in self.db_session_factory():
             user = await get_user_expect(session, message.from_user.id)
             action_service = ActionService(session)
+            pub_service = PublicationService(session, action_service)
 
             if not user:
                 await message.answer(Messages.not_registered())
                 await action_service.log_bot_auth(
                     message.from_user.id, status="not_reg_start", ip=None
                 )
-            elif user.reg_stat is None:
+            elif user.reg_stat == UserState.DATA_CLEARED:
                 await message.answer(Messages.register_for_old())
             elif user.reg_stat.is_in_registration():
                 await message.answer(Messages.registration_not_finished())
                 await action_service.log_bot_auth(
                     message.from_user.id, status="not_reg_end", ip=None
                 )
-            elif user.reg_stat == UserState.SUPPORT:
+            elif user.reg_stat.is_in_support():
                 await message.answer(Messages.support_call_not_finished())
             else:
                 await message.answer(text=Messages.auth_success(), parse_mode="HTML")
@@ -227,12 +229,8 @@ class Handlers:
                 if not user.items:
                     await message.answer(Messages.no_publications_left())
                 else:
-                    if user.publ_id is None:
-                        publ_id = int(user.items.split("|")[0])
-                    else:
-                        publ_id = user.publ_id
-
-                    publ = await get_publication(session, publ_id)
+                    # Use assign_current to get next publication from queue
+                    publ = await pub_service.assign_current(user.user_id)
 
                     if publ is None:
                         logger.warning(
@@ -255,7 +253,7 @@ class Handlers:
                         UserUpdate(
                             hash=hashed_password,
                             hash_date=datetime.now(),
-                            publ_id=publ_id,
+                            publ_id=publ.id,
                         ),
                     )
 
@@ -284,6 +282,7 @@ class Handlers:
         async for session in self.db_session_factory():
             user = await get_user_expect(session, message.from_user.id)
             action_service = ActionService(session)
+            pub_service = PublicationService(session, action_service)
 
             if not user:
                 await message.answer(Messages.not_registered())
@@ -302,35 +301,23 @@ class Handlers:
             elif user.publ_id is None:
                 await message.answer(Messages.not_authorization())
             else:
+                # Check if user filled the current publication
                 if not await user_filled_publication(
-                    session, message.from_user.id, int(user.items.split("|")[0])
+                    session, message.from_user.id, user.publ_id
                 ):
                     await message.answer(Messages.not_finished_publ(user.name))
                     return
 
-                items = user.items.split("|")
-
-                num_publ = (
-                    items.index(str(user.publ_id)) if str(user.publ_id) in items else -1
+                # Use complete() to properly log the action and advance queue
+                next_publ = await pub_service.complete(
+                    user.user_id, user.publ_id, ProcessingLevel.SKIP, None
                 )
 
-                if (num_publ != -1) and (num_publ != len(items) - 1):
-                    await update_user(
-                        session,
-                        message.from_user.id,
-                        UserUpdate(publ_id=int(items[num_publ + 1])),
-                    )
+                if next_publ is not None:
                     await message.answer(Messages.accept_next_publ())
 
-                    publ = await get_publication(session, user.publ_id)
-                    if publ is None:
-                        logger.warning(
-                            "user %d requested his publ while it's none", user.user_id
-                        )
-                        raise Exception
-
                     await message.answer(
-                        text=Messages.current_publication(publ),
+                        text=Messages.current_publication(next_publ),
                         parse_mode="HTML",
                         disable_web_page_preview=True,
                     )

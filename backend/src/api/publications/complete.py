@@ -22,4 +22,4 @@ async def complete_publication(
     ip: ClientIP,
     pub_service: Annotated[PublicationService, Depends()],
 ) -> None:
-    await pub_service.complete(token, publ_id, data.processing_level, ip)
+    await pub_service.complete(token.user_id, publ_id, data.processing_level, ip)

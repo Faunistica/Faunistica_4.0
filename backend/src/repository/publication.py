@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from core.exceptions import ExpectationError
 from core.model import EventRecord, Publication, User
 
 logger = logging.getLogger(__name__)
@@ -13,6 +14,16 @@ async def get_publication(session: AsyncSession, publ_id: int) -> Publication | 
     stmt = select(Publication).where(Publication.id == publ_id)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
+
+
+async def get_publication_expect(session: AsyncSession, publ_id: int) -> Publication:
+    publ = await get_publication(session, publ_id)
+
+    if publ is None:
+        logger.error("Expected tp find publication in DB: %d", publ_id)
+        raise ExpectationError(message=f"Expected to publication to exist: {publ_id}")
+
+    return publ
 
 
 async def get_publications_for_language(

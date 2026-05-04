@@ -35,15 +35,12 @@ async def is_password_correct(
 
 
 async def get_user_expect(session: AsyncSession, user_id: int) -> User:
-    stmt = select(User).where(User.user_id == user_id)
-    result = await session.execute(stmt)
+    user = await get_user(session, user_id)
+    if user is None:
+        logger.error("Expected tp find user in DB: %d", user_id)
+        raise ExpectationError(message=f"Expected to find user: {user_id}")
 
-    user = result.scalar_one_or_none()
-    if user is not None:
-        return user
-
-    logger.error("Expected tp find user in DB: %d", user_id)
-    raise ExpectationError(message=f"Expected to find user: {user_id}")
+    return user
 
 
 async def get_user(session: AsyncSession, user_id: int) -> User | None:

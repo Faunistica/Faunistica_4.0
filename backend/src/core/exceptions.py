@@ -73,7 +73,7 @@ class UserNotFoundError(APIException):
 
 class ExpectationError(APIException):
     def __init__(self, message: str) -> None:
-        super().__init__("EXPECT_FAIL", f"User {id} not found", 500)
+        super().__init__("EXPECT_FAIL", message, 500)
 
 
 class RecordNotFoundError(APIException):

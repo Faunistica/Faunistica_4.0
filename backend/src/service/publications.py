@@ -9,6 +9,7 @@ from core.exceptions import PublicationForbiddenError, PublicationNotFoundError
 from core.model import User
 from repository.publication import (
     get_publication,
+    get_publication_expect,
     get_publications_by_ids,
 )
 from repository.user import get_user_expect
@@ -41,16 +42,16 @@ class PublicationService:
 
     async def complete(
         self,
-        token_user: TokenUser,
+        user_id: int,
         publ_id: int,
         level: ProcessingLevel,
         ip: str | None,
-    ) -> None:
+    ) -> Publication | None:
         """
         Single transaction: validate access, log action, advance queue,
         update user.publ_id and user.items, commit.
+        Returns the next publication after advancing, or None if queue empty.
         """
-        user_id = token_user.user_id
         await self.validate_access(user_id, publ_id)
 
         # Log action (no commit - part of same transaction)
@@ -64,35 +65,65 @@ class PublicationService:
         if queue and queue[0] == publ_id:
             queue.pop(0)
 
-        next_publ = queue[0] if queue else None
+        next_publ_id = queue[0] if queue else None
         new_items = self._array_to_pipe(queue)
 
-        # Update user directly (no commit - part of same transaction)
         stmt = (
             update(User)
             .where(User.user_id == user_id)
-            .values(publ_id=next_publ, items=new_items)
+            .values(publ_id=next_publ_id, items=new_items)
         )
         await self.session.execute(stmt)
-
-        # Single commit for entire transaction
         await self.session.commit()
+
+        if next_publ_id is None:
+            return None
+
+        next_publ = await get_publication_expect(self.session, next_publ_id)
+        return Publication.model_validate(next_publ)
+
+    # FIXME: remove
+    async def assign_current(self, user_id: int) -> Publication | None:
+        """
+        Assign next publication from queue if user.publ_id is None.
+        Returns the assigned publication or None if queue empty.
+        """
+        user = await get_user_expect(self.session, user_id)
+
+        if user.publ_id is not None:
+            publ = await get_publication_expect(self.session, user.publ_id)
+            return Publication.model_validate(publ)
+
+        queue = self._pipe_to_array(user.items) if user.items else []
+        if not queue:
+            return None
+
+        next_publ_id = queue[0]
+
+        # Update user's publ_id
+        stmt = update(User).where(User.user_id == user_id).values(publ_id=next_publ_id)
+        await self.session.execute(stmt)
+        await self.session.commit()
+
+        publ = await get_publication_expect(self.session, next_publ_id)
+        return Publication.model_validate(publ)
 
     async def get_current(
         self,
         token_user: TokenUser,
-        list_all: bool = False,
+        with_queue: bool = False,
     ) -> list[Publication]:
         """Parse queue, resolve publ_ids, return publications."""
         user_id = token_user.user_id
         user = await get_user_expect(self.session, user_id)
 
-        if not list_all:
+        if not with_queue:
             # Return only current publication
             if user.publ_id is None:
                 return []
-            publ = await get_publication(self.session, user.publ_id)
-            return [Publication.model_validate(publ)] if publ else []
+
+            publ = await get_publication_expect(self.session, user.publ_id)
+            return [Publication.model_validate(publ)]
 
         # Return all: current + queue
         publ_ids: list[int] = [user.publ_id] if user.publ_id else []

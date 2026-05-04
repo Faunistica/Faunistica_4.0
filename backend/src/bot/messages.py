@@ -1,4 +1,4 @@
-from core.model import Publication
+from schema.common import Publication
 
 
 class Messages:

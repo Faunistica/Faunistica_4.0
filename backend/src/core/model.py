@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime as datetime_type
 from uuid import UUID
 
 from sqlalchemy import (
@@ -35,13 +35,13 @@ class User(Base):
         UserStateType, default=UserState.DATA_CLEARED
     )
     hash: Mapped[str | None] = mapped_column(String(255))
-    hash_date: Mapped[datetime | None] = mapped_column(TIMESTAMP)
+    hash_date: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
     items: Mapped[str] = mapped_column(Text)
     age: Mapped[int | None] = mapped_column(Integer)
     lng: Mapped[str | None] = mapped_column(String)
     comm: Mapped[str | None] = mapped_column(Text)
-    reg_run: Mapped[datetime | None] = mapped_column(TIMESTAMP)
-    reg_end: Mapped[datetime | None] = mapped_column(TIMESTAMP)
+    reg_run: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
+    reg_end: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
     sex: Mapped[str | None] = mapped_column(String(3))
     rating: Mapped[int | None] = mapped_column(Integer)
     email: Mapped[str | None] = mapped_column(Text)
@@ -76,7 +76,9 @@ class Action(Base):
     user_ip: Mapped[str | None] = mapped_column(Text)
     action: Mapped[str] = mapped_column(Text, nullable=False)
     object: Mapped[str | None] = mapped_column(Text)
-    datetime: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+    datetime: Mapped[datetime_type] = mapped_column(
+        "datetime", TIMESTAMP, nullable=False
+    )
 
 
 class EventRecord(Base):
@@ -89,8 +91,8 @@ class EventRecord(Base):
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
     )
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(precision=6))
-    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(precision=6))
+    created_at: Mapped[datetime_type] = mapped_column(TIMESTAMP(precision=6))
+    updated_at: Mapped[datetime_type | None] = mapped_column(TIMESTAMP(precision=6))
     ip: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)
     type: Mapped[str | None] = mapped_column(Text)
