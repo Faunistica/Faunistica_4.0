@@ -15,6 +15,7 @@ from bot.states import RegistrationStates, RenameStates, SociologyStates, Suppor
 from core.config import settings
 from core.database import get_session
 from core.enums import UserState
+from core.exceptions import MsgErr
 from core.model import User
 from core.security import get_password_hash
 from repository.publication import (
@@ -36,6 +37,7 @@ from schema.common import ProcessingLevel
 from schema.user import UserLanguage, UserUpdate
 from service.actions import ActionService
 from service.publications import PublicationService
+from service.user import UserService
 
 YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
 NO_WORDS = ["no", "nope", "нет", "не", "refuse"]
@@ -205,72 +207,73 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_expect(session, message.from_user.id)
             action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
+
+            res = await user_service.check_command_allowed(message.from_user.id)
+            if isinstance(res, MsgErr):
+                error = res.error
+                await message.answer(error)
+                if error == Messages.registration_not_finished():
+                    await action_service.log_bot_auth(
+                        message.from_user.id, status="not_reg_end", ip=None
+                    )
+                elif error == Messages.not_registered():
+                    await action_service.log_bot_auth(
+                        message.from_user.id, status="not_reg_start", ip=None
+                    )
+                return
+
+            user = await get_user_expect(session, message.from_user.id)
             pub_service = PublicationService(session, action_service)
 
-            if not user:
-                await message.answer(Messages.not_registered())
-                await action_service.log_bot_auth(
-                    message.from_user.id, status="not_reg_start", ip=None
-                )
-            elif user.reg_stat == UserState.DATA_CLEARED:
-                await message.answer(Messages.register_for_old())
-            elif user.reg_stat.is_in_registration():
-                await message.answer(Messages.registration_not_finished())
-                await action_service.log_bot_auth(
-                    message.from_user.id, status="not_reg_end", ip=None
-                )
-            elif user.reg_stat.is_in_support():
-                await message.answer(Messages.support_call_not_finished())
+            await message.answer(text=Messages.auth_success(), parse_mode="HTML")
+
+            if not user.items:
+                await message.answer(Messages.no_publications_left())
             else:
-                await message.answer(text=Messages.auth_success(), parse_mode="HTML")
+                # Use assign_current to get next publication from queue
+                publ = await pub_service.assign_current(user.user_id)
 
-                if not user.items:
-                    await message.answer(Messages.no_publications_left())
-                else:
-                    # Use assign_current to get next publication from queue
-                    publ = await pub_service.assign_current(user.user_id)
-
-                    if publ is None:
-                        logger.warning(
-                            "user %d requested his publ while it's none", user.user_id
-                        )
-                        raise Exception
-
-                    await message.answer(
-                        text=Messages.current_publication(publ),
-                        parse_mode="HTML",
-                        disable_web_page_preview=True,
+                if publ is None:
+                    logger.warning(
+                        "user %d requested his publ while it's none", user.user_id
                     )
+                    raise Exception
 
-                    password = generate_secure_password()
-                    hashed_password = get_password_hash(password)
+                await message.answer(
+                    text=Messages.current_publication(publ),
+                    parse_mode="HTML",
+                    disable_web_page_preview=True,
+                )
 
-                    await update_user(
-                        session,
-                        message.from_user.id,
-                        UserUpdate(
-                            hash=hashed_password,
-                            hash_date=datetime.now(),
-                            publ_id=publ.id,
-                        ),
-                    )
-
-                    await message.answer(
-                        Messages.new_password(password, user.name),
-                        parse_mode="Markdown",
-                        disable_web_page_preview=True,
-                    )
+                password = generate_secure_password()
+                hashed_password = get_password_hash(password)
 
                 await update_user(
                     session,
                     message.from_user.id,
-                    UserUpdate(reg_stat=UserState.REG_COMPLETED),
+                    UserUpdate(
+                        hash=hashed_password,
+                        hash_date=datetime.now(),
+                        publ_id=publ.id,
+                    ),
                 )
-                await action_service.log_bot_auth(
-                    message.from_user.id, status="success", ip=None
+
+                await message.answer(
+                    Messages.new_password(password, user.name),
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True,
                 )
+
+            await update_user(
+                session,
+                message.from_user.id,
+                UserUpdate(reg_stat=UserState.REG_COMPLETED),
+            )
+            await action_service.log_bot_auth(
+                message.from_user.id, status="success", ip=None
+            )
 
     async def next_publ_command(self, message: Message) -> None:
         if message.from_user is None:
@@ -280,49 +283,53 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_expect(session, message.from_user.id)
             action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
+
+            res = await user_service.check_command_allowed(message.from_user.id)
+            if isinstance(res, MsgErr):
+                error = res.error
+                await message.answer(error)
+                if error == Messages.registration_not_finished():
+                    await action_service.log_bot_auth(
+                        message.from_user.id, status="not_reg_end", ip=None
+                    )
+                elif error == Messages.not_registered():
+                    await action_service.log_bot_auth(
+                        message.from_user.id, status="not_reg_start", ip=None
+                    )
+                return
+
+            user = await get_user_expect(session, message.from_user.id)
+
+            if user.publ_id is None:
+                await message.answer(Messages.not_authorization())
+                return
+
             pub_service = PublicationService(session, action_service)
 
-            if not user:
-                await message.answer(Messages.not_registered())
-                await action_service.log_bot_auth(
-                    message.from_user.id, status="not_reg_start", ip=None
+            # Check if user filled the current publication
+            if not await user_filled_publication(
+                session, message.from_user.id, user.publ_id
+            ):
+                await message.answer(Messages.not_finished_publ(user.name))
+                return
+
+            # Use complete() to properly log the action and advance queue
+            next_publ = await pub_service.complete(
+                user.user_id, user.publ_id, ProcessingLevel.SKIP, None
+            )
+
+            if next_publ is not None:
+                await message.answer(Messages.accept_next_publ())
+
+                await message.answer(
+                    text=Messages.current_publication(next_publ),
+                    parse_mode="HTML",
+                    disable_web_page_preview=True,
                 )
-            elif user.reg_stat == UserState.DATA_CLEARED:
-                await message.answer(Messages.register_for_old())
-            elif user.reg_stat.is_in_registration():
-                await message.answer(Messages.registration_not_finished())
-                await action_service.log_bot_auth(
-                    message.from_user.id, status="not_reg_end", ip=None
-                )
-            elif user.reg_stat == UserState.SUPPORT:
-                await message.answer(Messages.support_call_not_finished())
-            elif user.publ_id is None:
-                await message.answer(Messages.not_authorization())
             else:
-                # Check if user filled the current publication
-                if not await user_filled_publication(
-                    session, message.from_user.id, user.publ_id
-                ):
-                    await message.answer(Messages.not_finished_publ(user.name))
-                    return
-
-                # Use complete() to properly log the action and advance queue
-                next_publ = await pub_service.complete(
-                    user.user_id, user.publ_id, ProcessingLevel.SKIP, None
-                )
-
-                if next_publ is not None:
-                    await message.answer(Messages.accept_next_publ())
-
-                    await message.answer(
-                        text=Messages.current_publication(next_publ),
-                        parse_mode="HTML",
-                        disable_web_page_preview=True,
-                    )
-                else:
-                    await message.answer(Messages.no_publications_left())
+                await message.answer(Messages.no_publications_left())
 
     async def menu_command(self, message: Message) -> None:
         if message.chat.id == settings.ADMIN_CHAT_ID:
@@ -363,24 +370,25 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_expect(session, message.from_user.id)
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
 
-            # TODO: maybe refactor as case stmt?
-            if not user:
-                await message.answer(Messages.not_registered())
-            elif user.reg_stat == UserState.DATA_CLEARED:
-                await message.answer(Messages.register_for_old())
-            elif user.reg_stat.is_in_registration():
-                await message.answer(Messages.started_registered())
-            elif user.reg_stat == UserState.SUPPORT:
-                await message.answer(Messages.support_call_not_finished())
-            elif user.reg_stat.is_in_survey():
+            res = await user_service.check_command_allowed(message.from_user.id)
+            if isinstance(res, MsgErr):
+                await message.answer(res.error)
+                return
+
+            # check_command_allowed handles most cases, but rename has special logic
+            # for survey check - need to handle that separately
+            user = await get_user_expect(session, message.from_user.id)
+            if user.reg_stat.is_in_survey():
                 await message.answer(Messages.sociology_not_finished())
-            else:
-                await message.answer(
-                    Messages.rename_prompt(), reply_markup=Keyboards.remove()
-                )
-                await state.set_state(RenameStates.waiting_for_new_name)
+                return
+
+            await message.answer(
+                Messages.rename_prompt(), reply_markup=Keyboards.remove()
+            )
+            await state.set_state(RenameStates.waiting_for_new_name)
 
     async def support_command(self, message: Message, state: FSMContext) -> None:
         if message.from_user is None:
@@ -391,20 +399,12 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_expect(session, message.from_user.id)
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
 
-            if not user:
-                await message.answer(Messages.not_registered())
-                return
-            if user.reg_stat == UserState.DATA_CLEARED:
-                await message.answer(Messages.register_for_old())
-                return
-            if user.reg_stat.is_in_registration():
-                await message.answer(
-                    Messages.unavailable_during_registration(),
-                    parse_mode="Markdown",
-                    disable_web_page_preview=True,
-                )
+            res = await user_service.check_command_allowed(message.from_user.id)
+            if isinstance(res, MsgErr):
+                await message.answer(res.error)
                 return
 
         async for session in self.db_session_factory():
@@ -423,23 +423,21 @@ class Handlers:
         if message.chat.id == settings.ADMIN_CHAT_ID:
             return
 
+        if message.chat.id < 0:
+            return
+
         async for session in self.db_session_factory():
             user = await get_user_expect(session, message.from_user.id)
 
-            if message.chat.id < 0:
+            res = await UserService(
+                session, self.bot, ActionService(session)
+            ).check_command_allowed(message.from_user.id)
+
+            if isinstance(res, MsgErr):
+                await message.answer(res.error)
                 return
-            if not user:
-                await message.answer(Messages.not_registered())
-            elif user.reg_stat == UserState.DATA_CLEARED:
-                await message.answer(Messages.register_for_old())
-            elif user.reg_stat.is_in_registration():
-                await message.answer(Messages.started_registered())
-            elif user.reg_stat == UserState.SUPPORT:
-                await message.answer(Messages.support_call_not_finished())
-                await message.answer(Messages.started_registered())
-            elif not user.reg_stat.is_registered():
-                await message.answer(Messages.started_unidentified_action())
-            elif all(
+
+            if all(
                 getattr(user, field) is not None
                 for field in ["age", "lng", "comm", "sex", "rating"]
             ):
@@ -482,20 +480,12 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            user = await get_user_expect(session, message.from_user.id)
+            action_service = ActionService(session)
+            user_service = UserService(session, self.bot, action_service)
 
-            if not user:
-                await message.answer(Messages.not_registered())
-                return
-            if user.reg_stat == UserState.DATA_CLEARED:
-                await message.answer(Messages.register_for_old())
-                return
-            if user.reg_stat.is_in_registration():
-                await message.answer(
-                    Messages.unavailable_during_registration(),
-                    parse_mode="Markdown",
-                    disable_web_page_preview=True,
-                )
+            res = await user_service.check_command_allowed(message.from_user.id)
+            if isinstance(res, MsgErr):
+                await message.answer(res.error)
                 return
 
             await state.clear()

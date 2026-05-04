@@ -1,10 +1,32 @@
 import logging
+from dataclasses import dataclass
+from typing import Literal
 from uuid import UUID
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class Ok:
+    success: Literal[True] = True
+
+
+@dataclass
+class Err:
+    success: Literal[False] = False
+
+
+@dataclass
+class MsgErr:
+    error: str
+    success: Literal[False] = False
+
+
+class UnknownStateException(Exception):
+    pass
 
 
 class DBException(Exception):

@@ -1,3 +1,4 @@
+import logging
 from enum import IntEnum
 
 from aiogram.fsm.state import State
@@ -10,6 +11,9 @@ from bot.states import (
     SociologyStates,
     SupportStates,
 )
+from core.exceptions import UnknownStateException
+
+logger = logging.getLogger(__name__)
 
 
 class UserStateType(TypeDecorator):
@@ -79,7 +83,7 @@ class UserState(IntEnum):
     def is_in_support(self) -> bool:
         return self == UserState.SUPPORT
 
-    def fsm_state(self) -> State | None:
+    def fsm_state(self) -> State:
         mapping = {
             UserState.REG_AGREEMENT: RegistrationStates.waiting_for_agreement,
             UserState.REG_NAME: RegistrationStates.waiting_for_name,
@@ -95,4 +99,12 @@ class UserState(IntEnum):
             UserState.SURVEY_EMAIL: SociologyStates.waiting_for_email,
             UserState.SURVEY_SEX: SociologyStates.waiting_for_gender,
         }
-        return mapping.get(self)
+
+        state = mapping.get(self)
+
+        # TODO: log to sql here?
+        if state is None:
+            logger.error("unknown user state: %d", self)
+            raise UnknownStateException
+
+        return state

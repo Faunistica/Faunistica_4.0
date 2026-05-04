@@ -27,7 +27,7 @@ VALUES (
 ) ON CONFLICT (id) DO NOTHING;
 
 -- Create sample user
-INSERT INTO users (id, name, hash, hash_date, reg_stat, age, lng, rating, publ_id, items, reg_run, reg_end)
+INSERT INTO users (user_id, name, hash, hash_date, reg_stat, age, lng, rating, publ_id, items, reg_run, reg_end)
 VALUES (
     ${DEV_TG_ID:=1},
     'DEV_USERNAME',
@@ -41,57 +41,7 @@ VALUES (
     '1',
     NOW(),
     NOW()
-) ON CONFLICT (id) DO NOTHING;
-
--- Create sample records with valid, realistic data
-INSERT INTO records (
-    publ_id, user_id, datetime, type,
-    adm_country, adm_region, adm_district, adm_loc,
-    geo_nn, geo_ee, geo_origin,
-    "eve_YY", "eve_MM", "eve_DD", eve_habitat,
-    tax_fam, tax_gen, tax_sp, tax_sp_def,
-    abu, type_status
-)
-VALUES
-    -- Record 1: Adult male in forest litter
-    (1, $DEV_TG_ID, NOW(), 'rec_ok',
-     'Россия', 'Свердловская область', 'Горнозаводской р-н', 'п. Бисерть',
-     56.9825, 59.3421, 'geocoder',
-     2019, 7, 22, 'еловый лес, подстилка',
-     'Linyphiidae', 'Bathyphantes', 'nigrinus', true,
-     3, 'adult'),
-
-    -- Record 2: Juvenile in meadow
-    (1, $DEV_TG_ID, NOW(), 'rec_ok',
-     'Россия', 'Свердловская область', 'г. Екатеринбург', 'УНЦ ЖДВ',
-     56.8389, 60.6057, 'geocoder',
-     2020, 6, 15, 'луг, разнотравье',
-     'Araneidae', 'Araneus', 'diadematus', false,
-     5, 'juvenile'),
-
-    -- Record 3: Female with web in garden
-    (1, $DEV_TG_ID, NOW(), 'rec_ok',
-     'Россия', 'Челябинская область', 'г. Миасс', 'берег р. Миасс',
-     55.0458, 60.1083, 'geocoder',
-     2021, 8, 3, 'прибрежная растительность',
-     'Tetragnathidae', 'Tetragnatha', 'montana', true,
-     2, 'adult'),
-
-    -- Record 4: Male in pine forest
-    (1, $DEV_TG_ID, NOW(), 'rec_ok',
-     'Россия', 'Пермский край', 'Кишертский р-н', 'д. Шумково',
-     57.2341, 57.1234, 'geocoder',
-     2018, 5, 18, 'сосновый лес',
-     'Lycosidae', 'Pardosa', 'lugubris', true,
-     7, 'adult'),
-
-    -- Record 5: Multiple specimens, birch forest
-    (1, $DEV_TG_ID, NOW(), 'rec_ok',
-     'Россия', 'Свердловская область', 'Режевский р-н', '',
-     57.3567, 61.2345, 'geocoder',
-     2022, 9, 10, 'берёзовый лес',
-     'Theridiidae', 'Robertus', 'lividus', true,
-     4, 'adult');
+) ON CONFLICT (user_id) DO NOTHING;
 
 EOSQL
 

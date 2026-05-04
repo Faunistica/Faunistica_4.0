@@ -51,7 +51,11 @@ async def db_engine():
     )
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        # Drop tables with CASCADE to handle foreign key constraints
+        await conn.execute(text("DROP TABLE IF EXISTS event_records CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS actions CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS publs CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
         await conn.run_sync(Base.metadata.create_all)
 
     yield engine
@@ -75,7 +79,7 @@ async def session_maker(
     async with maker() as session:
         await session.execute(
             text(
-                "TRUNCATE TABLE users, publs, event_records, actions RESTART IDENTITY CASCADE"
+                "TRUNCATE TABLE event_records, actions, users, publs RESTART IDENTITY CASCADE"
             )
         )
         await session.commit()
