@@ -58,8 +58,6 @@ select = [
 ignore = [
     "PLR2004", # ignore magick variables for now
     "PLR0913", # max 5 arguments
-    "PLR0912", # ignore too many branches
-    "PLR0915", # ignore too many statements
 ]
 
 [tool.ruff.lint.per-file-ignores]
