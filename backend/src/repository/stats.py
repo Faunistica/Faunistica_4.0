@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.enums import UserState
 from core.model import Action, EventRecord, User
 
 
@@ -12,7 +13,10 @@ async def get_project_statistics(session: AsyncSession) -> dict[str, Any]:
     total_volunteers = await session.scalar(
         select(func.count())
         .select_from(User)
-        .where((User.reg_stat == 1) | (User.reg_stat >= 7))
+        .where(
+            (User.reg_stat == UserState.REG_COMPLETED)
+            | (User.reg_stat >= UserState.SUPPORT)
+        )
     )
 
     total_records = await session.scalar(

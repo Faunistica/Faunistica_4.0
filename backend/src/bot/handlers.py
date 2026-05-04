@@ -14,6 +14,7 @@ from bot.messages import Messages
 from bot.states import RegistrationStates, RenameStates, SociologyStates, SupportStates
 from core.config import settings
 from core.database import get_session
+from core.enums import UserState
 from core.model import User
 from core.security import get_password_hash
 from repository.publication import (
@@ -157,7 +158,11 @@ class Handlers:
             user = await get_user_expect(session, message.from_user.id)
 
             if not user:
-                await create_user(session, user_id=message.from_user.id, reg_stat=2)
+                await create_user(
+                    session,
+                    user_id=message.from_user.id,
+                    reg_stat=UserState.REG_AGREEMENT,
+                )
                 await message.answer(
                     Messages.registration_start(),
                     reply_markup=Keyboards.yes_no(),
@@ -165,8 +170,12 @@ class Handlers:
                     disable_web_page_preview=True,
                 )
                 await state.set_state(RegistrationStates.waiting_for_agreement)
-            elif user.reg_stat is None:
-                await update_user(session, message.from_user.id, UserUpdate(reg_stat=2))
+            elif user.reg_stat == UserState.DATA_CLEARED:
+                await update_user(
+                    session,
+                    message.from_user.id,
+                    UserUpdate(reg_stat=UserState.REG_AGREEMENT),
+                )
 
                 await message.answer(Messages.old_user(user.name))
 
@@ -177,12 +186,12 @@ class Handlers:
                     disable_web_page_preview=True,
                 )
                 await state.set_state(RegistrationStates.waiting_for_agreement)
-            elif user.reg_stat == 1:
+            elif user.reg_stat == UserState.REG_COMPLETED:
                 await message.answer(
                     Messages.already_registered(user.name),
                     reply_markup=Keyboards.remove(),
                 )
-            elif user.reg_stat == 7:
+            elif user.reg_stat == UserState.SUPPORT:
                 await message.answer(Messages.support_call_not_finished())
             else:
                 await self.continue_registration(message, user, state)
@@ -205,12 +214,12 @@ class Handlers:
                 )
             elif user.reg_stat is None:
                 await message.answer(Messages.register_for_old())
-            elif 1 < user.reg_stat <= 6:
+            elif user.reg_stat.is_in_registration():
                 await message.answer(Messages.registration_not_finished())
                 await action_service.log_bot_auth(
                     message.from_user.id, status="not_reg_end", ip=None
                 )
-            elif user.reg_stat == 7:
+            elif user.reg_stat == UserState.SUPPORT:
                 await message.answer(Messages.support_call_not_finished())
             else:
                 await message.answer(text=Messages.auth_success(), parse_mode="HTML")
@@ -256,7 +265,11 @@ class Handlers:
                         disable_web_page_preview=True,
                     )
 
-                await update_user(session, message.from_user.id, UserUpdate(reg_stat=1))
+                await update_user(
+                    session,
+                    message.from_user.id,
+                    UserUpdate(reg_stat=UserState.REG_COMPLETED),
+                )
                 await action_service.log_bot_auth(
                     message.from_user.id, status="success", ip=None
                 )
@@ -277,14 +290,14 @@ class Handlers:
                 await action_service.log_bot_auth(
                     message.from_user.id, status="not_reg_start", ip=None
                 )
-            elif user.reg_stat is None:
+            elif user.reg_stat == UserState.DATA_CLEARED:
                 await message.answer(Messages.register_for_old())
-            elif 1 < user.reg_stat <= 6:
+            elif user.reg_stat.is_in_registration():
                 await message.answer(Messages.registration_not_finished())
                 await action_service.log_bot_auth(
                     message.from_user.id, status="not_reg_end", ip=None
                 )
-            elif user.reg_stat == 7:
+            elif user.reg_stat == UserState.SUPPORT:
                 await message.answer(Messages.support_call_not_finished())
             elif user.publ_id is None:
                 await message.answer(Messages.not_authorization())
@@ -365,15 +378,16 @@ class Handlers:
         async for session in self.db_session_factory():
             user = await get_user_expect(session, message.from_user.id)
 
+            # TODO: maybe refactor as case stmt?
             if not user:
                 await message.answer(Messages.not_registered())
-            elif user.reg_stat is None:
+            elif user.reg_stat == UserState.DATA_CLEARED:
                 await message.answer(Messages.register_for_old())
-            elif 1 < user.reg_stat <= 6:
+            elif user.reg_stat.is_in_registration():
                 await message.answer(Messages.started_registered())
-            elif user.reg_stat == 7:
+            elif user.reg_stat == UserState.SUPPORT:
                 await message.answer(Messages.support_call_not_finished())
-            elif user.reg_stat <= 20 and user.reg_stat != 1:
+            elif user.reg_stat.is_in_survey():
                 await message.answer(Messages.sociology_not_finished())
             else:
                 await message.answer(
@@ -395,10 +409,10 @@ class Handlers:
             if not user:
                 await message.answer(Messages.not_registered())
                 return
-            if user.reg_stat is None:
+            if user.reg_stat == UserState.DATA_CLEARED:
                 await message.answer(Messages.register_for_old())
                 return
-            if 1 < user.reg_stat <= 6:
+            if user.reg_stat.is_in_registration():
                 await message.answer(
                     Messages.unavailable_during_registration(),
                     parse_mode="Markdown",
@@ -407,7 +421,9 @@ class Handlers:
                 return
 
         async for session in self.db_session_factory():
-            await update_user(session, message.from_user.id, UserUpdate(reg_stat=7))
+            await update_user(
+                session, message.from_user.id, UserUpdate(reg_stat=UserState.SUPPORT)
+            )
         await message.answer(
             Messages.support_request(), reply_markup=Keyboards.remove()
         )
@@ -427,14 +443,14 @@ class Handlers:
                 return
             if not user:
                 await message.answer(Messages.not_registered())
-            elif user.reg_stat is None:
+            elif user.reg_stat == UserState.DATA_CLEARED:
                 await message.answer(Messages.register_for_old())
-            elif 1 < user.reg_stat <= 6:
+            elif user.reg_stat.is_in_registration():
                 await message.answer(Messages.started_registered())
-            elif user.reg_stat == 7:
+            elif user.reg_stat == UserState.SUPPORT:
                 await message.answer(Messages.support_call_not_finished())
                 await message.answer(Messages.started_registered())
-            elif user.reg_stat != 1:
+            elif not user.reg_stat.is_registered():
                 await message.answer(Messages.started_unidentified_action())
             elif all(
                 getattr(user, field) is not None
@@ -484,10 +500,10 @@ class Handlers:
             if not user:
                 await message.answer(Messages.not_registered())
                 return
-            if user.reg_stat is None:
+            if user.reg_stat == UserState.DATA_CLEARED:
                 await message.answer(Messages.register_for_old())
                 return
-            if 1 < user.reg_stat <= 6:
+            if user.reg_stat.is_in_registration():
                 await message.answer(
                     Messages.unavailable_during_registration(),
                     parse_mode="Markdown",
@@ -497,7 +513,11 @@ class Handlers:
 
             await state.clear()
 
-            await update_user(session, message.from_user.id, UserUpdate(reg_stat=1))
+            await update_user(
+                session,
+                message.from_user.id,
+                UserUpdate(reg_stat=UserState.REG_COMPLETED),
+            )
 
         await message.answer(
             Messages.rollback_completed(), reply_markup=Keyboards.remove()
@@ -611,9 +631,9 @@ class Handlers:
             return
         reg_stat = user.reg_stat
 
-        if reg_stat == 7:
+        if reg_stat == UserState.SUPPORT:
             await message.answer(Messages.support_call_not_finished())
-        elif reg_stat == 2:
+        elif reg_stat == UserState.REG_AGREEMENT:
             await state.set_state(RegistrationStates.waiting_for_agreement)
             await message.answer(
                 Messages.registration_start(),
@@ -621,20 +641,20 @@ class Handlers:
                 parse_mode="HTML",
                 disable_web_page_preview=True,
             )
-        elif reg_stat == 3:
+        elif reg_stat == UserState.REG_NAME:
             await state.set_state(RegistrationStates.waiting_for_name)
             await message.answer(Messages.ask_name(), reply_markup=Keyboards.remove())
-        elif reg_stat == 4:
+        elif reg_stat == UserState.REG_AGE:
             await state.set_state(RegistrationStates.waiting_for_age)
             await message.answer(Messages.ask_age(), reply_markup=Keyboards.remove())
             if getattr(user, "age", 0) < 18:
                 await message.answer(Messages.age_under_18_warning())
-        elif reg_stat == 5:
+        elif reg_stat == UserState.REG_PREFERENCES:
             await state.set_state(RegistrationStates.waiting_for_preferences)
             await message.answer(
                 Messages.ask_publication_preferences(), reply_markup=Keyboards.remove()
             )
-        elif reg_stat == 6:
+        elif reg_stat == UserState.REG_LANGUAGE:
             await state.set_state(RegistrationStates.waiting_for_language)
             await message.answer(
                 Messages.ask_language(), reply_markup=Keyboards.language_selection()
@@ -650,7 +670,9 @@ class Handlers:
             raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
 
         async for session in self.db_session_factory():
-            await update_user(session, message.from_user.id, UserUpdate(reg_stat=3))
+            await update_user(
+                session, message.from_user.id, UserUpdate(reg_stat=UserState.REG_NAME)
+            )
 
         await message.answer(Messages.consent_taken())
         await message.answer(Messages.ask_name())
@@ -683,7 +705,7 @@ class Handlers:
                     message.from_user.id,
                     UserUpdate(
                         name=name_msg,
-                        reg_stat=4,
+                        reg_stat=UserState.REG_AGE,
                     ),
                 )
                 await message.answer(Messages.greeting(name_msg))
@@ -715,7 +737,7 @@ class Handlers:
                     message.from_user.id,
                     UserUpdate(
                         age=int(age_msg),
-                        reg_stat=5,
+                        reg_stat=UserState.REG_PREFERENCES,
                     ),
                 )
             await message.answer(Messages.age_accepted())
@@ -734,7 +756,9 @@ class Handlers:
 
         async for session in self.db_session_factory():
             await update_user(
-                session, message.from_user.id, UserUpdate(comm=comm_msg, reg_stat=6)
+                session,
+                message.from_user.id,
+                UserUpdate(comm=comm_msg, reg_stat=UserState.REG_LANGUAGE),
             )
         await message.answer(Messages.publication_preferences_accepted(comm_msg))
         await message.answer(Messages.ask_language())
@@ -766,10 +790,11 @@ class Handlers:
                     session,
                     message.from_user.id,
                     UserUpdate(
-                        reg_stat=1,
+                        reg_stat=UserState.REG_COMPLETED,
                         reg_end=datetime.now(),
                     ),
                 )
+                return
 
             await update_user(
                 session,
@@ -777,7 +802,7 @@ class Handlers:
                 UserUpdate(
                     lng=lang_value,
                     items=items_str,
-                    reg_stat=1,
+                    reg_stat=UserState.REG_COMPLETED,
                     reg_end=datetime.now(),
                 ),
             )
@@ -800,7 +825,11 @@ class Handlers:
         if message.text.lower().strip() in ["cancel", "отмена"]:
             await message.answer(Messages.cancellation_support_request())
             async for session in self.db_session_factory():
-                await update_user(session, message.from_user.id, UserUpdate(reg_stat=1))
+                await update_user(
+                    session,
+                    message.from_user.id,
+                    UserUpdate(reg_stat=UserState.REG_COMPLETED),
+                )
 
             await state.clear()
             return
@@ -812,7 +841,11 @@ class Handlers:
             return
 
         async for session in self.db_session_factory():
-            await update_user(session, message.from_user.id, UserUpdate(reg_stat=1))
+            await update_user(
+                session,
+                message.from_user.id,
+                UserUpdate(reg_stat=UserState.REG_COMPLETED),
+            )
 
         await message.answer(
             Messages.support_request_received(),
@@ -863,7 +896,7 @@ class Handlers:
                     message.from_user.id,
                     UserUpdate(
                         name=name_msg,
-                        reg_stat=1,
+                        reg_stat=UserState.REG_COMPLETED,
                     ),
                 )
 
@@ -896,7 +929,7 @@ class Handlers:
                     message.from_user.id,
                     UserUpdate(
                         age=int(age_msg),
-                        reg_stat=1,
+                        reg_stat=UserState.REG_COMPLETED,
                     ),
                 )
             await message.answer(Messages.age_accepted())
@@ -928,7 +961,7 @@ class Handlers:
                 message.from_user.id,
                 UserUpdate(
                     lng=lang_value,
-                    reg_stat=1,
+                    reg_stat=UserState.REG_COMPLETED,
                 ),
             )
 
@@ -945,7 +978,9 @@ class Handlers:
         comm_msg = message.text.strip()
         async for session in self.db_session_factory():
             await update_user(
-                session, message.from_user.id, UserUpdate(comm=comm_msg, reg_stat=1)
+                session,
+                message.from_user.id,
+                UserUpdate(comm=comm_msg, reg_stat=UserState.REG_COMPLETED),
             )
         await message.answer(Messages.publication_preferences_accepted(comm_msg))
         await message.answer(Messages.go_back_to_sociology())
@@ -973,7 +1008,7 @@ class Handlers:
                 message.from_user.id,
                 UserUpdate(
                     sex=gender_value,
-                    reg_stat=1,
+                    reg_stat=UserState.REG_COMPLETED,
                 ),
             )
 
@@ -1003,7 +1038,7 @@ class Handlers:
                 message.from_user.id,
                 UserUpdate(
                     rating=rating_value,
-                    reg_stat=1,
+                    reg_stat=UserState.REG_COMPLETED,
                 ),
             )
 
@@ -1029,7 +1064,7 @@ class Handlers:
                 message.from_user.id,
                 UserUpdate(
                     region=region_msg,
-                    reg_stat=1,
+                    reg_stat=UserState.REG_COMPLETED,
                 ),
             )
 
@@ -1055,7 +1090,7 @@ class Handlers:
                 message.from_user.id,
                 UserUpdate(
                     email=email_msg,
-                    reg_stat=1,
+                    reg_stat=UserState.REG_COMPLETED,
                 ),
             )
 

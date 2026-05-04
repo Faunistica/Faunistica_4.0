@@ -5,6 +5,7 @@ from sqlalchemy import func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from core.enums import UserState
 from core.exceptions import ExpectationError
 from core.model import Publication, User
 from core.security import check_password_hash
@@ -65,7 +66,9 @@ async def get_current_publication(
     return result.scalar_one_or_none()
 
 
-async def create_user(session: AsyncSession, user_id: int, reg_stat: int) -> None:
+async def create_user(
+    session: AsyncSession, user_id: int, reg_stat: UserState = UserState.REG_AGREEMENT
+) -> None:
     user = User(id=user_id, reg_stat=reg_stat, reg_run=datetime.now())
     session.add(user)
 

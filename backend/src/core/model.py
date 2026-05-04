@@ -14,6 +14,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from core.enums import UserState, UserStateType
+
 
 class Base(DeclarativeBase):
     pass
@@ -29,7 +31,9 @@ class User(Base):
     tlg_name: Mapped[str | None] = mapped_column(String(255))
     tlg_username: Mapped[str | None] = mapped_column(String(255))
     name: Mapped[str] = mapped_column(String(255))
-    reg_stat: Mapped[int | None] = mapped_column(Integer)
+    reg_stat: Mapped[UserState] = mapped_column(
+        UserStateType, default=UserState.DATA_CLEARED
+    )
     hash: Mapped[str | None] = mapped_column(String(255))
     hash_date: Mapped[datetime | None] = mapped_column(TIMESTAMP)
     items: Mapped[str] = mapped_column(Text)

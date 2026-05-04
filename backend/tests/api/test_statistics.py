@@ -6,6 +6,7 @@ import pytest
 from conftest import SeedData
 from httpx import AsyncClient
 
+from core.enums import UserState
 from core.model import Action, EventRecord, Publication, User
 
 
@@ -21,7 +22,7 @@ async def test_get_project_statistics(
         user = User(
             user_id=test_user_id,
             name="stats_test_user",
-            reg_stat=7,
+            reg_stat=UserState.SUPPORT,
             items=str(test_publ_id),
         )
         session.add(user)
@@ -82,7 +83,7 @@ async def test_get_user_statistics_by_id(
         user = User(
             user_id=random.randint(10000, 99999),
             name="stats_user_by_id",
-            reg_stat=7,
+            reg_stat=UserState.SUPPORT,
             items=str(publ_id),
         )
         session.add(user)
@@ -120,7 +121,7 @@ async def test_get_user_statistics_by_name(
         user = User(
             user_id=random.randint(10000, 99999),
             name="stats_user_by_name",
-            reg_stat=7,
+            reg_stat=UserState.SUPPORT,
             items=str(seed_data["publs"][0].id),
         )
         session.add(user)

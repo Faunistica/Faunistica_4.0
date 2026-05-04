@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from core.enums import UserState
 from schema.common import UNSET, Unset
 
 type UserLanguage = Literal["eng", "rus", "all"]
@@ -17,7 +18,7 @@ class UserFull(UserMinimal):
     publ_id: int | None = None
     tlg_name: str | None = None
     tlg_username: str | None = None
-    reg_stat: int | None = None
+    reg_stat: UserState | None = None
     hash: str | None = None
     hash_date: datetime | None = None
     items: str
@@ -47,7 +48,7 @@ class UserUpdate(BaseModel):
     tlg_name: str | None | Unset = UNSET
     tlg_username: str | None | Unset = UNSET
     name: str | Unset = UNSET
-    reg_stat: int | None | Unset = UNSET
+    reg_stat: UserState | None | Unset = UNSET
     hash: str | None | Unset = UNSET
     hash_date: datetime | None | Unset = UNSET
     items: str | Unset = UNSET
