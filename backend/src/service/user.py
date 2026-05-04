@@ -114,41 +114,18 @@ class UserService:
         """Handle input during a flow based on current FSM state."""
         current_state = await state.get_state()
 
-        if current_state == UserState.REG_NAME.fsm_state().state:
-            return await self._handle_name_input(user_id, input_text, state)
-        if current_state == UserState.REG_AGE.fsm_state().state:
-            return await self._handle_age_input(user_id, input_text, state)
-        if current_state == UserState.REG_PREFERENCES.fsm_state().state:
-            return await self._handle_preferences_input(user_id, input_text, state)
-        if current_state == UserState.REG_LANGUAGE.fsm_state().state:
-            return await self._handle_language_input(user_id, input_text, state)
-        if current_state == UserState.REG_AGREEMENT.fsm_state().state:
-            return await self._handle_agreement_input(user_id, input_text, state)
+        for user_state, handler in [
+            (UserState.REG_NAME, self._handle_name_input),
+            (UserState.REG_AGE, self._handle_age_input),
+            (UserState.REG_PREFERENCES, self._handle_preferences_input),
+            (UserState.REG_LANGUAGE, self._handle_language_input),
+            (UserState.REG_AGREEMENT, self._handle_agreement_input),
+        ]:
+            fsm = user_state.fsm_state()
+            if fsm is not None and current_state == fsm.state:
+                return await handler(user_id, input_text, state)
+
         return MsgErr(error="Unknown state")
-
-    async def assign_publication(
-        self,
-        user_id: int,
-    ) -> Publication | None:
-        """Assign publication to user if they don't have one."""
-        user = await get_user_expect(self.session, user_id)
-
-        if user.publ_id is not None:
-            publ = await get_publication_expect(self.session, user.publ_id)
-            return Publication.model_validate(publ)
-
-        queue = user.items.split("|") if user.items else []
-        if not queue:
-            return None
-
-        next_publ_id = int(queue[0])
-
-        stmt = update(User).where(User.user_id == user_id).values(publ_id=next_publ_id)
-        await self.session.execute(stmt)
-        await self.session.commit()
-
-        publ = await get_publication_expect(self.session, next_publ_id)
-        return Publication.model_validate(publ)
 
     # ========== Registration Flow ========== #
 

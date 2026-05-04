@@ -11,7 +11,6 @@ from bot.states import (
     SociologyStates,
     SupportStates,
 )
-from core.exceptions import UnknownStateException
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +82,7 @@ class UserState(IntEnum):
     def is_in_support(self) -> bool:
         return self == UserState.SUPPORT
 
-    def fsm_state(self) -> State:
+    def fsm_state(self) -> State | None:
         mapping = {
             UserState.REG_AGREEMENT: RegistrationStates.waiting_for_agreement,
             UserState.REG_NAME: RegistrationStates.waiting_for_name,
@@ -100,11 +99,4 @@ class UserState(IntEnum):
             UserState.SURVEY_SEX: SociologyStates.waiting_for_gender,
         }
 
-        state = mapping.get(self)
-
-        # TODO: log to sql here?
-        if state is None:
-            logger.error("unknown user state: %d", self)
-            raise UnknownStateException
-
-        return state
+        return mapping.get(self)
