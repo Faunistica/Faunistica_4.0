@@ -24,15 +24,6 @@ async def create_record(
     return result.scalar_one()
 
 
-async def get_user_records(
-    session: AsyncSession, user_id: int
-) -> Sequence[EventRecord]:
-    stmt = select(EventRecord).where(EventRecord.user_id == user_id)
-    result = await session.execute(stmt)
-
-    return result.scalars().all()
-
-
 async def get_record(session: AsyncSession, record_id: UUID) -> EventRecord | None:
     stmt = select(EventRecord).where(and_(EventRecord.id == record_id))
 

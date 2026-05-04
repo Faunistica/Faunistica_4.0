@@ -25,10 +25,6 @@ class MsgErr:
     success: Literal[False] = False
 
 
-class UnknownStateException(Exception):
-    pass
-
-
 class DBException(Exception):
     pass
 

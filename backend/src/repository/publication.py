@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from core.exceptions import ExpectationError
-from core.model import EventRecord, Publication, User
+from core.model import EventRecord, Publication
 
 logger = logging.getLogger(__name__)
 
@@ -68,11 +68,3 @@ async def get_publications_by_ids(
     stmt = select(Publication).where(Publication.id.in_(ids))
     result = await session.execute(stmt)
     return result.scalars().all()
-
-
-async def get_user_publication(
-    session: AsyncSession, user_id: int
-) -> Publication | None:
-    stmt = select(Publication).join(User).where(User.user_id == user_id)
-    result = await session.execute(stmt)
-    return result.scalar_one_or_none()

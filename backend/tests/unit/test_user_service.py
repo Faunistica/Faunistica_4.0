@@ -856,7 +856,7 @@ class TestRenameFlow:
         await fsm_context.set_state(UserState.RENAME.fsm_state())
 
         with patch.object(
-            user_service.actions, "log_action", new_callable=AsyncMock
+            user_service.actions, "log_bot_rename", new_callable=AsyncMock
         ) as mock_log:
             result = await user_service.handle_flow_input(
                 user_id=88890,
@@ -866,9 +866,8 @@ class TestRenameFlow:
             self._assert_flow_ok(result)
             mock_log.assert_called_once()
             call_args = mock_log.call_args
-            assert call_args[1]["action_type"] == "bot_rename"
-            assert call_args[1]["old_value"] == "Old Name"
-            assert call_args[1]["new_value"] == "New Name"
+            assert call_args[1]["old"] == "Old Name"
+            assert call_args[1]["new"] == "New Name"
 
 
 class TestBackwardsCompatRegStat:

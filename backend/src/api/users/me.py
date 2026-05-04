@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, status
 
 from core.dependencies import DBSession, TokenUser
 from repository import user as repo
@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 @router.get("/me")
 async def get_current_user(
-    request: Request,
     token: TokenUser,
 ) -> UserMinimal:
     """

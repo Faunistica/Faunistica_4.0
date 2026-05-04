@@ -134,7 +134,7 @@ async def get_volunteers_achievements(
                u.name, u.tlg_name, u.tlg_username
         FROM actions a
         INNER JOIN users u ON a.user_id = u.user_id
-        WHERE a.action = 'fau_100'
+        WHERE a.action = 'fau_50'
         ORDER BY a.datetime DESC
     """)
     result = await session.execute(stmt)

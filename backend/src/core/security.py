@@ -6,7 +6,7 @@ from typing import Annotated
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from fastapi import Depends, HTTPException, Query, Request, Response, status
+from fastapi import Depends, HTTPException, Request, Response, status
 from jwt import DecodeError
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -164,13 +164,6 @@ def validate_user_id(user_id: int, token_id: int) -> int:
         )
 
     return user_id
-
-
-def validate_user_id_query(
-    user_id: Annotated[int, Query(..., description="User ID")],
-    token: Annotated[UserMinimal, Depends(get_jwt_user)],
-) -> int:
-    return validate_user_id(user_id, token.user_id)
 
 
 def validate_user_id_path(

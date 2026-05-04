@@ -129,20 +129,14 @@ class UserService:
             (UserState.SURVEY_REGION, self._handle_survey_region_input),
             (UserState.SURVEY_EMAIL, self._handle_survey_email_input),
             (UserState.SURVEY_SEX, self._handle_survey_sex_input),
+            # Support flow handler
+            (UserState.SUPPORT, self._handle_support_input),
+            # Rename flow handler
+            (UserState.RENAME, self._handle_rename_input),
         ]:
             fsm = user_state.fsm_state()
             if fsm is not None and current_state == fsm.state:
                 return await handler(user_id, input_text, state)
-
-        # Support flow handler
-        fsm = UserState.SUPPORT.fsm_state()
-        if fsm is not None and current_state == fsm.state:
-            return await self._handle_support_input(user_id, input_text, state)
-
-        # Rename flow handler
-        fsm = UserState.RENAME.fsm_state()
-        if fsm is not None and current_state == fsm.state:
-            return await self._handle_rename_input(user_id, input_text, state)
 
         return MsgErr(error="Unknown state")
 
@@ -401,11 +395,10 @@ class UserService:
         user = await get_user_expect(self.session, user_id)
         old_name = user.name
 
-        await self.actions.log_action(
+        await self.actions.log_bot_rename(
             user_id=user_id,
-            action_type="bot_rename",
-            old_value=old_name,
-            new_value=new_name,
+            old=old_name,
+            new=new_name,
         )
 
         await update_user(
