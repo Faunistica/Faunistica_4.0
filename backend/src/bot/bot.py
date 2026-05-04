@@ -7,7 +7,7 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import DeleteWebhook
 
-from bot.handlers import Handlers
+from bot.handlers import main_router
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -22,8 +22,7 @@ async def start() -> None:
     bot_instance = Bot(token=settings.BOT_TOKEN.get_secret_value(), session=session)
     dp_instance = Dispatcher(storage=MemoryStorage())
 
-    handlers = Handlers(bot_instance)
-    dp_instance.include_router(handlers.router)
+    dp_instance.include_router(main_router)
 
     try:
         await bot_instance(DeleteWebhook(drop_pending_updates=True))

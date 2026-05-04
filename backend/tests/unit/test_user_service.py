@@ -50,30 +50,40 @@ def fsm_context() -> FSMContext:
 class TestCheckCommandAllowed:
     @pytest.fixture(autouse=True, scope="function")
     def setup_mocks(self):
-        with patch("service.user.get_user_expect", new_callable=AsyncMock) as self.mock_get_user:
+        with patch(
+            "service.user.get_user_expect", new_callable=AsyncMock
+        ) as self.mock_get_user:
             yield
 
     @pytest.mark.asyncio
     async def test_registered_user(self, user_service: UserService) -> None:
-        self.mock_get_user.return_value = User(user_id=12345, reg_stat=UserState.REG_COMPLETED)
+        self.mock_get_user.return_value = User(
+            user_id=12345, reg_stat=UserState.REG_COMPLETED
+        )
         result = await user_service.check_command_allowed(12345)
         assert isinstance(result, Ok)
 
     @pytest.mark.asyncio
     async def test_unregistered_user(self, user_service: UserService) -> None:
-        self.mock_get_user.return_value = User(user_id=54321, reg_stat=UserState.DATA_CLEARED)
+        self.mock_get_user.return_value = User(
+            user_id=54321, reg_stat=UserState.DATA_CLEARED
+        )
         result = await user_service.check_command_allowed(54321)
         assert isinstance(result, MsgErr)
 
     @pytest.mark.asyncio
     async def test_user_in_registration(self, user_service: UserService) -> None:
-        self.mock_get_user.return_value = User(user_id=99999, reg_stat=UserState.REG_AGREEMENT)
+        self.mock_get_user.return_value = User(
+            user_id=99999, reg_stat=UserState.REG_AGREEMENT
+        )
         result = await user_service.check_command_allowed(99999)
         assert isinstance(result, MsgErr)
 
     @pytest.mark.asyncio
     async def test_user_in_survey(self, user_service: UserService) -> None:
-        self.mock_get_user.return_value = User(user_id=88888, reg_stat=UserState.SURVEY_AGE)
+        self.mock_get_user.return_value = User(
+            user_id=88888, reg_stat=UserState.SURVEY_AGE
+        )
         result = await user_service.check_command_allowed(88888)
         assert isinstance(result, MsgErr)
 
@@ -88,34 +98,50 @@ class TestRegistrationFlow:
     @pytest.fixture(autouse=True, scope="function")
     def setup_mocks(self):
         with (
-            patch("service.user.get_user_expect", new_callable=AsyncMock) as self.mock_get_user,
-            patch("service.user.update_user", new_callable=AsyncMock) as self.mock_update_user,
-            patch("service.user.count_users_with_name", new_callable=AsyncMock) as self.mock_count_users,
-            patch("service.user.get_publications_for_language", new_callable=AsyncMock) as self.mock_get_pubs,
+            patch(
+                "service.user.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
+            patch(
+                "service.user.update_user", new_callable=AsyncMock
+            ) as self.mock_update_user,
+            patch(
+                "service.user.count_users_with_name", new_callable=AsyncMock
+            ) as self.mock_count_users,
+            patch(
+                "service.user.get_publications_for_language", new_callable=AsyncMock
+            ) as self.mock_get_pubs,
         ):
             yield
 
-    def _assert_flow_ok(self, result: FlowResult, next_state: UserState | None = None) -> FlowOk:
+    def _assert_flow_ok(
+        self, result: FlowResult, next_state: UserState | None = None
+    ) -> FlowOk:
         assert isinstance(result, FlowOk)
         if next_state is not None:
             assert result.next_state == next_state
         return result
 
-    def _assert_msg_err(self, result: FlowResult, error_substring: str | None = None) -> MsgErr:
+    def _assert_msg_err(
+        self, result: FlowResult, error_substring: str | None = None
+    ) -> MsgErr:
         assert isinstance(result, MsgErr)
         if error_substring is not None:
             assert error_substring in result.error
         return result
 
     @pytest.mark.asyncio
-    async def test_start_registration(self, user_service: UserService, fsm_context: FSMContext) -> None:
+    async def test_start_registration(
+        self, user_service: UserService, fsm_context: FSMContext
+    ) -> None:
         result = await user_service.start_flow(
             user_id=11111, flow_type=FlowType.REGISTRATION, state=fsm_context
         )
         self._assert_flow_ok(result, UserState.REG_AGREEMENT)
 
     @pytest.mark.asyncio
-    async def test_handle_agreement_accept(self, user_service: UserService, fsm_context: FSMContext) -> None:
+    async def test_handle_agreement_accept(
+        self, user_service: UserService, fsm_context: FSMContext
+    ) -> None:
         await fsm_context.set_state(UserState.REG_AGREEMENT.fsm_state())
         result = await user_service.handle_flow_input(
             user_id=22222, input_text="agree", state=fsm_context
@@ -136,7 +162,9 @@ class TestRegistrationFlow:
         self.mock_update_user.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handle_name_too_short(self, user_service: UserService, fsm_context: FSMContext) -> None:
+    async def test_handle_name_too_short(
+        self, user_service: UserService, fsm_context: FSMContext
+    ) -> None:
         await fsm_context.set_state(UserState.REG_NAME.fsm_state())
         result = await user_service.handle_flow_input(
             user_id=33334, input_text="Jo", state=fsm_context
@@ -145,7 +173,9 @@ class TestRegistrationFlow:
         self.mock_update_user.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_handle_name_invalid_chars(self, user_service: UserService, fsm_context: FSMContext) -> None:
+    async def test_handle_name_invalid_chars(
+        self, user_service: UserService, fsm_context: FSMContext
+    ) -> None:
         await fsm_context.set_state(UserState.REG_NAME.fsm_state())
         result = await user_service.handle_flow_input(
             user_id=33335, input_text="John123", state=fsm_context
@@ -237,18 +267,26 @@ class TestSurveyFlow:
     @pytest.fixture(autouse=True, scope="function")
     def setup_mocks(self):
         with (
-            patch("service.user.get_user_expect", new_callable=AsyncMock) as self.mock_get_user,
-            patch("service.user.update_user", new_callable=AsyncMock) as self.mock_update_user,
+            patch(
+                "service.user.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
+            patch(
+                "service.user.update_user", new_callable=AsyncMock
+            ) as self.mock_update_user,
         ):
             yield
 
-    def _assert_flow_ok(self, result: FlowResult, next_state: UserState | None = None) -> FlowOk:
+    def _assert_flow_ok(
+        self, result: FlowResult, next_state: UserState | None = None
+    ) -> FlowOk:
         assert isinstance(result, FlowOk)
         if next_state is not None:
             assert result.next_state == next_state
         return result
 
-    def _assert_msg_err(self, result: FlowResult, error_substring: str | None = None) -> MsgErr:
+    def _assert_msg_err(
+        self, result: FlowResult, error_substring: str | None = None
+    ) -> MsgErr:
         assert isinstance(result, MsgErr)
         if error_substring is not None:
             assert error_substring in result.error
@@ -470,7 +508,9 @@ class TestSurveyFlow:
             region=None,
         )
         await fsm_context.set_state(UserState.SURVEY_AGE.fsm_state())
-        await fsm_context.update_data(missing_fields=["age", "lng", "comm", "sex", "email", "region"])
+        await fsm_context.update_data(
+            missing_fields=["age", "lng", "comm", "sex", "email", "region"]
+        )
 
         result = await user_service.handle_flow_input(
             user_id=88890, input_text="25", state=fsm_context
@@ -550,20 +590,28 @@ class TestSupportFlow:
     @pytest.fixture(autouse=True, scope="function")
     def setup_mocks(self):
         with (
-            patch("service.user.get_user_expect", new_callable=AsyncMock) as self.mock_get_user,
-            patch("service.user.update_user", new_callable=AsyncMock) as self.mock_update_user,
+            patch(
+                "service.user.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
+            patch(
+                "service.user.update_user", new_callable=AsyncMock
+            ) as self.mock_update_user,
             patch("service.user.settings") as self.mock_settings,
         ):
             self.mock_settings.ADMIN_CHAT_ID = 123456
             yield
 
-    def _assert_flow_ok(self, result: FlowResult, next_state: UserState | None = None) -> FlowOk:
+    def _assert_flow_ok(
+        self, result: FlowResult, next_state: UserState | None = None
+    ) -> FlowOk:
         assert isinstance(result, FlowOk)
         if next_state is not None:
             assert result.next_state == next_state
         return result
 
-    def _assert_msg_err(self, result: FlowResult, error_substring: str | None = None) -> MsgErr:
+    def _assert_msg_err(
+        self, result: FlowResult, error_substring: str | None = None
+    ) -> MsgErr:
         assert isinstance(result, MsgErr)
         if error_substring is not None:
             assert error_substring in result.error
@@ -583,7 +631,10 @@ class TestSupportFlow:
             user_id=77777, flow_type=FlowType.SUPPORT, state=fsm_context
         )
         flow_ok = self._assert_flow_ok(result, UserState.SUPPORT)
-        assert "issue" in flow_ok.message.lower() or "describe" in flow_ok.message.lower()
+        assert flow_ok.message is not None
+        assert (
+            "issue" in flow_ok.message.lower() or "describe" in flow_ok.message.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_support_during_registration_blocked(
@@ -619,7 +670,9 @@ class TestSupportFlow:
         )
         await fsm_context.set_state(UserState.SUPPORT.fsm_state())
 
-        with patch.object(user_service.bot, "send_message", new_callable=AsyncMock) as mock_send:
+        with patch.object(
+            user_service.bot, "send_message", new_callable=AsyncMock
+        ) as mock_send:
             result = await user_service.handle_flow_input(
                 user_id=77779,
                 input_text="This is my support question that is long enough",
@@ -654,7 +707,9 @@ class TestSupportFlow:
         )
         await fsm_context.set_state(UserState.SUPPORT.fsm_state())
 
-        with patch.object(user_service.bot, "send_message", new_callable=AsyncMock) as mock_send:
+        with patch.object(
+            user_service.bot, "send_message", new_callable=AsyncMock
+        ) as mock_send:
             result = await user_service.handle_flow_input(
                 user_id=77781,
                 input_text="This is a valid support question with enough characters",
@@ -671,19 +726,29 @@ class TestRenameFlow:
     @pytest.fixture(autouse=True, scope="function")
     def setup_mocks(self):
         with (
-            patch("service.user.get_user_expect", new_callable=AsyncMock) as self.mock_get_user,
-            patch("service.user.update_user", new_callable=AsyncMock) as self.mock_update_user,
-            patch("service.user.count_users_with_name", new_callable=AsyncMock) as self.mock_count_users,
+            patch(
+                "service.user.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
+            patch(
+                "service.user.update_user", new_callable=AsyncMock
+            ) as self.mock_update_user,
+            patch(
+                "service.user.count_users_with_name", new_callable=AsyncMock
+            ) as self.mock_count_users,
         ):
             yield
 
-    def _assert_flow_ok(self, result: FlowResult, next_state: UserState | None = None) -> FlowOk:
+    def _assert_flow_ok(
+        self, result: FlowResult, next_state: UserState | None = None
+    ) -> FlowOk:
         assert isinstance(result, FlowOk)
         if next_state is not None:
             assert result.next_state == next_state
         return result
 
-    def _assert_msg_err(self, result: FlowResult, error_substring: str | None = None) -> MsgErr:
+    def _assert_msg_err(
+        self, result: FlowResult, error_substring: str | None = None
+    ) -> MsgErr:
         assert isinstance(result, MsgErr)
         if error_substring is not None:
             assert error_substring in result.error
@@ -703,6 +768,7 @@ class TestRenameFlow:
             user_id=88885, flow_type=FlowType.RENAME, state=fsm_context
         )
         flow_ok = self._assert_flow_ok(result, UserState.RENAME)
+        assert flow_ok.message is not None
         assert "new name" in flow_ok.message.lower()
 
     @pytest.mark.asyncio
@@ -789,7 +855,9 @@ class TestRenameFlow:
         )
         await fsm_context.set_state(UserState.RENAME.fsm_state())
 
-        with patch.object(user_service.actions, "log_action", new_callable=AsyncMock) as mock_log:
+        with patch.object(
+            user_service.actions, "log_action", new_callable=AsyncMock
+        ) as mock_log:
             result = await user_service.handle_flow_input(
                 user_id=88890,
                 input_text="New Name",
@@ -809,7 +877,9 @@ class TestBackwardsCompatRegStat:
     @pytest.fixture(autouse=True, scope="function")
     def setup_mocks(self):
         with (
-            patch("service.user.get_user_expect", new_callable=AsyncMock) as self.mock_get_user,
+            patch(
+                "service.user.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
             patch("service.user.update_user", new_callable=AsyncMock),
         ):
             yield
