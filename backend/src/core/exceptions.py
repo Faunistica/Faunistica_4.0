@@ -125,3 +125,10 @@ class PublicationCompletedError(APIException):
         super().__init__(
             "PUBL_COMPLETED", f"Publication {publ_id} already completed", 403
         )
+
+
+class RecordStaleError(APIException):
+    def __init__(self, record_id: str | UUID) -> None:
+        super().__init__(
+            "RECORD_STALE", f"Record {record_id} was modified by another request", 409
+        )

@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/reverse-geocode")
 @limiter.limit("10/second")
-async def reverse_geocode(
+def reverse_geocode(
     request: Request,
     data: Annotated[GetLocationRequest, Query()],
 ) -> GetLocationResponse:

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from core.enums import UserState
 from schema.common import UNSET, Unset
@@ -31,6 +31,8 @@ class UserFull(UserMinimal):
     rating: int | None = None
     email: str | None = None
     region: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserUpdateMe(BaseModel):

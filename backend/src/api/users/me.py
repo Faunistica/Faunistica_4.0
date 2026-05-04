@@ -40,4 +40,4 @@ async def update_current_user(
             detail="User not found",
         )
 
-    return UserFull.model_validate(user.__dict__)
+    return UserFull.model_validate(user)

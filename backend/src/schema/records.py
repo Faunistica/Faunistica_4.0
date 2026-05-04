@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail"]
 
@@ -23,6 +23,8 @@ class RecordMetadata(BaseModel):
         return self.model_dump(
             exclude={"id", "created_at", "ip", "publ_id"}, exclude_unset=True
         )
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RecordData(BaseModel):
@@ -71,6 +73,8 @@ class RecordData(BaseModel):
     life_stage: str | None = None
     occurrence_remarks: str | None = None
     identification_remarks: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RecordFull(RecordData, RecordMetadata): ...

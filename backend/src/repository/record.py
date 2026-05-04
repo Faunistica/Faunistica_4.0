@@ -17,13 +17,7 @@ async def create_record(
     session: AsyncSession,
     metadata: RecordMetadata,
 ) -> EventRecord:
-    stmt = (
-        pg_insert(EventRecord)
-        .values(
-            **metadata.model_dump(),
-        )
-        .returning(EventRecord)
-    )
+    stmt = pg_insert(EventRecord).values(**metadata.model_dump()).returning(EventRecord)
     result = await session.execute(stmt)
     await session.commit()
 
@@ -39,15 +33,6 @@ async def get_user_records(
     return result.scalars().all()
 
 
-async def delete_record(session: AsyncSession, record_id: UUID) -> bool:
-    stmt = (
-        delete(EventRecord).where(EventRecord.id == record_id).returning(EventRecord.id)
-    )
-    result = await session.execute(stmt)
-
-    return result.scalar_one_or_none() is not None
-
-
 async def get_record(session: AsyncSession, record_id: UUID) -> EventRecord | None:
     stmt = select(EventRecord).where(and_(EventRecord.id == record_id))
 
@@ -55,14 +40,16 @@ async def get_record(session: AsyncSession, record_id: UUID) -> EventRecord | No
     return result.scalar_one_or_none()
 
 
-# FIXME: throw Permission error, don't silently fail
 async def update_record(
     session: AsyncSession,
     record_id: UUID,
     data: RecordData,
     metadata: RecordMetadata,
 ) -> EventRecord | None:
-    # Merge data and metadata, with data taking precedence for overlapping fields
+    """
+    Update a record with optimistic locking via updated_at.
+    Returns None if record not found or updated_at doesn't match (stale).
+    """
     update_data = {**metadata.dump_for_update(), **data.model_dump(exclude_unset=True)}
 
     stmt = (
@@ -70,7 +57,6 @@ async def update_record(
         .where(
             and_(
                 EventRecord.id == record_id,
-                EventRecord.user_id == metadata.user_id,
                 EventRecord.updated_at == metadata.updated_at,
             )
         )
@@ -84,10 +70,22 @@ async def update_record(
     return result.scalar_one_or_none()
 
 
+async def delete_record(session: AsyncSession, record_id: UUID) -> EventRecord | None:
+    """Delete a record by ID.
+
+    Returns the deleted record if found, None otherwise.
+    """
+    stmt = delete(EventRecord).where(EventRecord.id == record_id).returning(EventRecord)
+    result = await session.execute(stmt)
+    await session.commit()
+
+    return result.scalar_one_or_none()
+
+
 async def get_records_paginated(
     session: AsyncSession,
     user_id: int,
-    publ_id: int,
+    publ_id: int | None,
     page: int = 1,
     page_size: int = 20,
     sort: Literal["created_at", "updated_at"] = "created_at",
@@ -96,23 +94,21 @@ async def get_records_paginated(
 
     order_col = getattr(EventRecord, sort, EventRecord.created_at)
 
-    count_stmt = select(func.count()).where(
-        and_(
+    if publ_id is None:
+        where_condition = EventRecord.user_id == user_id
+    else:
+        where_condition = and_(
             EventRecord.user_id == user_id,
             EventRecord.publ_id == publ_id,
         )
-    )
+
+    count_stmt = select(func.count()).where(where_condition)
     count_result = await session.execute(count_stmt)
     total = count_result.scalar_one()
 
     stmt = (
         select(EventRecord)
-        .where(
-            and_(
-                EventRecord.user_id == user_id,
-                EventRecord.publ_id == publ_id,
-            )
-        )
+        .where(where_condition)
         .order_by(order_col.desc())
         .offset(offset)
         .limit(page_size)

@@ -38,6 +38,7 @@ async def get_location_suggestions(
     return []
 
 
+# TODO: this uses sync IO, propably should use smth else
 def get_location_names(lat: float, lon: float) -> ReverseGeoCodeLocation:
     geolocator = Nominatim(user_agent="geoapi", timeout=10)
 
