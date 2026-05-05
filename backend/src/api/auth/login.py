@@ -5,10 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from core.dependencies import ClientIP, DBSession
-from core.exceptions import ActionLoggingError
 from core.rate_limiter import limiter
-from core.security import check_md5_password, set_response_token_cookies
-from repository.user import find_user_by_username
+from core.security import check_password, set_response_token_cookies
+from repository.user import UserUpdate, find_user_by_username, update_user
 from schema.common import LoginRequest, UserLoginResponse
 from schema.jwt import TokenPayload
 from service.actions import ActionService
@@ -29,10 +28,9 @@ async def login(
     action_service: Annotated[ActionService, Depends()],
 ) -> UserLoginResponse:
     """
-    Аутентификация пользователя по логину и паролю (MD5).
+    Аутентификация пользователя по логину и паролю.
 
-    Валидирует MD5 пароль из Telegram бота, проверяет hash_date <= 3000 минут,
-    устанавливает JWT токены в HTTP-only куках, логирует fau_login.
+    При успешной проверке устанавливает JWT токены в HTTP-only cookies
     """
     user = await find_user_by_username(session, data.username)
     if user is None:
@@ -43,9 +41,13 @@ async def login(
         logger.warning("User has no password hash: %s", data.username)
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not check_md5_password(data.password, user.hash):
+    result = check_password(data.password, user.hash)
+    if not result.is_valid:
         logger.warning("Wrong password for user: %s", data.username)
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if result.new_hash:
+        await update_user(session, user.user_id, UserUpdate(hash=result.new_hash))
 
     if user.hash_date is not None:
         now = datetime.now()
@@ -57,11 +59,7 @@ async def login(
     token_payload = TokenPayload(sub=str(user.user_id), username=data.username)
     set_response_token_cookies(response, token_payload)
 
-    try:
-        await action_service.log_login(user.user_id, ip)
-    except ActionLoggingError as e:
-        logger.error("Failed to log login action: %s", e)
-        raise HTTPException(status_code=500, detail="Failed to log action") from e
+    await action_service.log_login(user.user_id, ip)
 
     return UserLoginResponse(
         user_id=user.user_id,

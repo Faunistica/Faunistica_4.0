@@ -9,7 +9,6 @@ from sqlalchemy.future import select
 from core.enums import UserState
 from core.exceptions import ExpectationError
 from core.model import Publication, User
-from core.security import check_password_hash
 from schema.user import UserUpdate
 
 logger = logging.getLogger(__name__)
@@ -19,20 +18,6 @@ async def find_user_by_username(session: AsyncSession, username: str) -> User | 
     stmt = select(User).where(User.name == username)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
-
-
-async def is_password_correct(
-    session: AsyncSession, user_id: int, user_pass: str
-) -> bool:
-    stmt = select(User.hash).where(User.user_id == user_id)
-    result = await session.execute(stmt)
-    user_hash = result.scalar_one_or_none()
-
-    if user_hash is None:
-        logger.warning("trying to check password for user without one: id: %d", user_id)
-        return False
-
-    return check_password_hash(user_pass, user_hash)
 
 
 async def get_user_expect(session: AsyncSession, user_id: int) -> User:

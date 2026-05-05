@@ -1,5 +1,7 @@
 import hashlib
+import hmac
 import logging
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
@@ -22,21 +24,35 @@ logger = logging.getLogger(__name__)
 pwd_hasher = PasswordHasher()
 
 
+@dataclass
+class PasswordCheckResult:
+    is_valid: bool
+    new_hash: str | None
+    hash_type: str
+
+
 def get_password_hash(user_pass: str) -> str:
     return pwd_hasher.hash(user_pass)
 
 
-def check_password_hash(user_pass: str, db_hash: str) -> bool:
-    try:
-        pwd_hasher.verify(db_hash, user_pass)
-    except VerifyMismatchError:
-        return False
-    return True
+def check_password(password: str, db_hash: str) -> PasswordCheckResult:
+    if db_hash.startswith("$argon2"):
+        hash_type = "argon2"
+        try:
+            pwd_hasher.verify(db_hash, password)
+            return PasswordCheckResult(True, None, hash_type)
+        except VerifyMismatchError:
+            return PasswordCheckResult(False, None, hash_type)
+    elif len(db_hash) == 32 and db_hash.isalnum():
+        hash_type = "md5"
 
+        md5_hash = hashlib.md5(password.encode()).hexdigest()  # noqa: S324
+        if hmac.compare_digest(md5_hash, db_hash):
+            return PasswordCheckResult(True, pwd_hasher.hash(password), hash_type)
+        return PasswordCheckResult(False, None, hash_type)
 
-def check_md5_password(user_pass: str, db_hash: str) -> bool:
-    """Check if password matches MD5 hash (for Telegram bot passwords)."""
-    return hashlib.md5(user_pass.encode()).hexdigest() == db_hash  # noqa: S324
+    logger.warning("Unrecognized password hash format: %s", db_hash[:10])
+    raise ValueError("Unrecognized password hash format")
 
 
 def set_response_token_cookies(response: Response, payload: TokenPayload) -> None:
