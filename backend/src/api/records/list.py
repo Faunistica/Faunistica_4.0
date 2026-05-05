@@ -1,12 +1,12 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 
 from core.exceptions import AdminOnlyError
 from schema.common import PaginatedResponse
 from schema.records import RecordFull
-from service.export import records_to_excel
+from service.export import records_to_csv, records_to_excel
 from service.records import RecordService
 
 router = APIRouter(
@@ -43,7 +43,7 @@ async def list_records(
     )
 
 
-@router.get("/export")
+@router.get("/export", response_model=None)
 async def export_records(
     service: Annotated[RecordService, Depends()],
     user_id: Annotated[int, Query(..., description="User ID")],
@@ -55,7 +55,8 @@ async def export_records(
         Literal["user", "project"],
         Query(description="Export scope: use 'project' for full dataset"),
     ] = "user",
-) -> StreamingResponse:
+    format: Annotated[str, Query(description="Export format: xlsx or csv")] = "xlsx",
+) -> Response | StreamingResponse:
     if scope == "project":
         raise AdminOnlyError
 
@@ -65,6 +66,14 @@ async def export_records(
         page=1,
         page_size=10000,
     )
+
+    if format == "csv":
+        content = records_to_csv(result["items"])
+        return Response(
+            content=content,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=records.csv"},
+        )
 
     content = records_to_excel(result["items"])
 

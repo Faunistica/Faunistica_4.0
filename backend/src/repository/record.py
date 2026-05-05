@@ -107,3 +107,10 @@ async def get_records_paginated(
 
     result = await session.execute(stmt)
     return result.scalars().all(), total
+
+
+async def count_records_by_publ(session: AsyncSession, publ_id: int) -> int:
+    """Count total records for a publication."""
+    stmt = select(func.count()).where(EventRecord.publ_id == publ_id)
+    result = await session.execute(stmt)
+    return result.scalar_one()

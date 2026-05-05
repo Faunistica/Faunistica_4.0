@@ -4,10 +4,17 @@ from uuid import UUID, uuid4
 
 from fastapi import Depends
 
+from core.config import settings
 from core.dependencies import DBSession
-from core.exceptions import RecordForbiddenError, RecordNotFoundError, RecordStaleError
+from core.exceptions import (
+    RecordForbiddenError,
+    RecordLimitExceededError,
+    RecordNotFoundError,
+    RecordStaleError,
+)
 from core.model import EventRecord
 from repository import record as repo
+from repository.record import count_records_by_publ
 from repository.user import get_user_expect
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
 from service.actions import ActionService
@@ -198,3 +205,9 @@ class RecordService:
             raise RecordForbiddenError
 
         return record
+
+    async def check_import_limit(self, publ_id: int, additional_count: int) -> None:
+        """Raise exception if adding additional_count would exceed limit."""
+        current_count = await count_records_by_publ(self.session, publ_id)
+        if current_count + additional_count > settings.MAX_RECORDS_PER_PUBLICATION:
+            raise RecordLimitExceededError(publ_id, current_count, additional_count)

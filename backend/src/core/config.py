@@ -66,6 +66,8 @@ class LoggingSettings(CamelCaseSettings):
 class AppSettings(CamelCaseSettings):
     DEV_MODE: bool = False
     ALLOWED_ORIGINS: list[str] = []
+    MAX_IMPORT_FILE_BYTES: int = 5 * 1024 * 1024  # 5MB
+    MAX_RECORDS_PER_PUBLICATION: int = 1000
 
 
 class DataSettings(CamelCaseSettings):

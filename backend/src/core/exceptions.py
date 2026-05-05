@@ -133,3 +133,14 @@ class RecordStaleError(APIException):
         super().__init__(
             "RECORD_STALE", f"Record {record_id} was modified by another request", 409
         )
+
+
+class RecordLimitExceededError(Exception):
+    def __init__(self, publ_id: int, current: int, additional: int) -> None:
+        self.publ_id = publ_id
+        self.current = current
+        self.additional = additional
+        super().__init__(
+            f"Publication {publ_id} has {current} records, "
+            f"importing {additional} more would exceed limit"
+        )
