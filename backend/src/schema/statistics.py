@@ -13,7 +13,7 @@ class ProjectStatisticsResponse(BaseModel):
 
 class UserStatisticsResponse(BaseModel):
     user_id: int
-    name: str
+    name: str | None
     records_entered: int
     publications_processed: int
     most_common_family: str | None

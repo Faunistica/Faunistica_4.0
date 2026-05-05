@@ -2,7 +2,8 @@ import logging
 from datetime import datetime
 from json import dumps
 
-from sqlalchemy import desc, insert, select
+from sqlalchemy import desc, select
+from sqlalchemy.dialects.postgresql import insert
 
 from core.dependencies import DBSession
 from core.exceptions import DBException
@@ -116,7 +117,7 @@ class ActionService:
         await self.session.execute(stmt)
 
     async def log_bot_rename(
-        self, user_id: int, old: str, new: str, ip: str | None = None
+        self, user_id: int, old: str | None, new: str, ip: str | None = None
     ) -> None:
         stmt = insert(Action).values(
             user_id=user_id,
@@ -130,12 +131,16 @@ class ActionService:
     async def log_bot_other(
         self, user_id: int, content_type: str, ip: str | None = None
     ) -> None:
-        stmt = insert(Action).values(
-            user_id=user_id,
-            user_ip=ip,
-            action="bot_fun.other",
-            object=content_type,
-            datetime=datetime.now(),
+        stmt = (
+            insert(Action)
+            .on_conflict_do_nothing()
+            .values(
+                user_id=user_id,
+                user_ip=ip,
+                action="bot_fun.other",
+                object=content_type,
+                datetime=datetime.now(),
+            )
         )
         await self.session.execute(stmt)
 

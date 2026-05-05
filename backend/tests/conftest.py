@@ -287,8 +287,8 @@ def create_test_token(user_id: int, username: str, token_type: str) -> str:
 
 def auth_tokens(user: User):
     return {
-        "access_token": create_test_token(user.user_id, user.name, "access"),
-        "refresh_token": create_test_token(user.user_id, user.name, "refresh"),
+        "access_token": create_test_token(user.user_id, user.name or "", "access"),
+        "refresh_token": create_test_token(user.user_id, user.name or "", "refresh"),
     }
 
 

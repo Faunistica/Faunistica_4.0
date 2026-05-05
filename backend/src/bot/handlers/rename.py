@@ -1,29 +1,28 @@
+import re
+
 from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from bot.button_markups import Keyboards
 from bot.messages import Messages
 from bot.states import RenameStates
 from core.config import settings
 from core.dependencies import get_session
-from core.exceptions import MsgErr
-from repository.user import get_user_expect
+from core.enums import UserState
+from core.exceptions import HandlerError, MsgErr
+from repository.user import count_users_with_name, get_user_expect, update_user
+from schema.user import UserUpdate
 from service.actions import ActionService
-from service.user import FlowType, UserService
+from service.user import UserService
 
 router = Router()
 
 
-class HandlerError(Exception):
-    MSG_INCORRECTLY_CONFIGURED = "incorrectly configured handler"
-
-
 @router.message(Command("rename"))
-async def rename_command(message: Message, state: FSMContext, bot: Bot) -> None:
+async def rename_start(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+        raise HandlerError
 
     if message.chat.id == settings.ADMIN_CHAT_ID:
         return
@@ -32,47 +31,53 @@ async def rename_command(message: Message, state: FSMContext, bot: Bot) -> None:
         action_service = ActionService(session)
         user_service = UserService(session, bot, action_service)
 
-        res = await user_service.check_command_allowed(message.from_user.id)
+        res = await user_service.check_commands_allowed(user_id=message.from_user.id)
         if isinstance(res, MsgErr):
             await message.answer(res.error)
             return
 
-        user = await get_user_expect(session, message.from_user.id)
-        if user.reg_stat.is_in_survey():
-            await message.answer(Messages.sociology_not_finished())
-            return
-
-        result = await user_service.start_flow(
-            message.from_user.id, FlowType.RENAME, state
+        await update_user(
+            session, message.from_user.id, UserUpdate(reg_stat=UserState.RENAME)
         )
-
-        if isinstance(result, MsgErr):
-            await message.answer(result.error)
-            return
-
-        if result.message:
-            await message.answer(result.message, reply_markup=Keyboards.remove())
-        if result.next_state:
-            await state.set_state(result.next_state.fsm_state())
+        await state.set_state(RenameStates.waiting_for_new_name)
 
 
 @router.message(RenameStates.waiting_for_new_name)
-async def rename_name_handler(message: Message, state: FSMContext, bot: Bot) -> None:
+async def rename_set_name(message: Message, state: FSMContext) -> None:
     if message.from_user is None or message.text is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+        raise HandlerError
+
+    user_id = message.from_user.id
+    new_name = message.text.strip()
 
     async for session in get_session():
-        action_service = ActionService(session)
-        user_service = UserService(session, bot, action_service)
+        if new_name == (await get_user_expect(session, message.from_user.id)).name:
+            await message.answer(Messages.same_name(new_name))
+        elif len(new_name) < 3:
+            await message.answer(Messages.message_too_short())
+        elif len(new_name) > 40:
+            await message.answer(Messages.message_too_long())
+        elif not re.fullmatch(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$", new_name):
+            await message.answer(Messages.invalid_characters())
 
-        result = await user_service.handle_flow_input(
-            message.from_user.id, message.text, state
+        other_users = await count_users_with_name(session, new_name)
+        if other_users > 0:
+            await message.answer(Messages.name_already_exists())
+
+        user = await get_user_expect(session, user_id)
+        old_name = user.name
+
+        actions = ActionService(session)
+        await actions.log_bot_rename(
+            user_id=user_id,
+            old=old_name,
+            new=new_name,
         )
 
-        if isinstance(result, MsgErr):
-            await message.answer(result.error)
-            return
-
-        if result.completed and result.message:
-            await message.answer(result.message)
-            await state.clear()
+        await update_user(
+            session,
+            user_id,
+            UserUpdate(name=new_name, reg_stat=UserState.REG_COMPLETED),
+        )
+        await state.clear()
+        await message.answer(Messages.rename_success(new_name))

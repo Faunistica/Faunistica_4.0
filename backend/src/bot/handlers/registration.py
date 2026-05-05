@@ -2,34 +2,114 @@ import re
 from datetime import datetime
 
 from aiogram import Router
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from bot import keyboards
+from bot.constants import NO_WORDS, YES_WORDS
 from bot.messages import Messages
 from bot.states import RegistrationStates
+from core.config import settings
 from core.dependencies import get_session
 from core.enums import UserState
-from repository.publication import get_publications_for_language
-from repository.user import count_users_with_name, update_user
+from core.exceptions import HandlerError
+from core.model import User
+from repository.user import (
+    count_users_with_name,
+    create_user_or_update,
+    get_user,
+    update_user,
+)
 from schema.user import UserLanguage, UserUpdate
 
 router = Router()
 
-YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
-NO_WORDS = ["no", "nope", "нет", "не", "refuse"]
+
+@router.message(Command("register"))
+async def registration_start(message: Message, state: FSMContext) -> None:
+    if message.from_user is None:
+        raise HandlerError
+
+    async for session in get_session():
+        user = await get_user(session, message.from_user.id)
+
+        if not user or user.reg_stat == UserState.DATA_CLEARED:
+            if user is not None:
+                await message.answer(Messages.old_user(user.name))
+
+            await create_user_or_update(
+                session,
+                user_id=message.from_user.id,
+                reg_stat=UserState.REG_AGREEMENT,
+            )
+            await message.answer(
+                Messages.registration_start(),
+                reply_markup=keyboards.yes_no(),
+                parse_mode="HTML",
+                disable_web_page_preview=True,
+            )
+            await state.set_state(RegistrationStates.waiting_for_agreement)
+        elif user.reg_stat == UserState.REG_COMPLETED:
+            await message.answer(
+                Messages.already_registered(user.name),
+                reply_markup=keyboards.remove(),
+            )
+        elif user.reg_stat == UserState.SUPPORT:
+            await message.answer(Messages.support_flow_not_finished())
+        else:
+            await continue_registration(message, user, state)
 
 
-class HandlerError(Exception):
-    MSG_INCORRECTLY_CONFIGURED = "incorrectly configured handler"
+async def continue_registration(
+    message: Message, user: User, state: FSMContext
+) -> None:
+    if message.chat.id == settings.ADMIN_CHAT_ID:
+        return
+    reg_stat = user.reg_stat
+
+    if reg_stat == UserState.SUPPORT:
+        await message.answer(Messages.support_flow_not_finished())
+    elif reg_stat == UserState.REG_AGREEMENT:
+        await state.set_state(RegistrationStates.waiting_for_agreement)
+        await message.answer(
+            Messages.registration_start(),
+            reply_markup=keyboards.yes_no(),
+            parse_mode="HTML",
+            disable_web_page_preview=True,
+        )
+    elif reg_stat == UserState.REG_NAME:
+        await state.set_state(RegistrationStates.waiting_for_name)
+        await message.answer(Messages.ask_name(), reply_markup=keyboards.remove())
+    elif reg_stat == UserState.REG_AGE:
+        await state.set_state(RegistrationStates.waiting_for_age)
+        await message.answer(Messages.ask_age(), reply_markup=keyboards.remove())
+        if not user.age or user.age < 18:
+            await message.answer(Messages.age_under_18_warning())
+    elif reg_stat == UserState.REG_PREFERENCES:
+        await state.set_state(RegistrationStates.waiting_for_preferences)
+        await message.answer(
+            Messages.ask_publication_preferences(), reply_markup=keyboards.remove()
+        )
+    elif reg_stat == UserState.REG_LANGUAGE:
+        await state.set_state(RegistrationStates.waiting_for_language)
+        await message.answer(
+            Messages.ask_language(), reply_markup=keyboards.language_selection()
+        )
+    else:
+        await state.clear()
+        await message.answer(
+            Messages.unexpected_error(), reply_markup=keyboards.remove()
+        )
 
 
 @router.message(
     RegistrationStates.waiting_for_agreement,
     lambda msg: msg.text and msg.text.lower() in YES_WORDS,
 )
-async def reg_accept_handler(message: Message, state: FSMContext) -> None:
-    if message.from_user is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+async def reg_accept_agreement(message: Message, state: FSMContext) -> None:
+    if message.from_user is None or message.text is None:
+        raise HandlerError
 
     async for session in get_session():
         await update_user(
@@ -45,15 +125,15 @@ async def reg_accept_handler(message: Message, state: FSMContext) -> None:
     RegistrationStates.waiting_for_agreement,
     lambda msg: msg.text and msg.text.lower() in NO_WORDS,
 )
-async def reg_decline_handler(message: Message, state: FSMContext) -> None:
+async def reg_decline_agreement(message: Message, state: FSMContext) -> None:
     await message.answer(Messages.maybe_later())
     await state.clear()
 
 
 @router.message(RegistrationStates.waiting_for_name)
-async def reg_name_handler(message: Message, state: FSMContext) -> None:
+async def reg_set_name(message: Message, state: FSMContext) -> None:
     if message.from_user is None or message.text is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+        raise HandlerError
 
     name_msg = message.text
 
@@ -83,9 +163,9 @@ async def reg_name_handler(message: Message, state: FSMContext) -> None:
 
 
 @router.message(RegistrationStates.waiting_for_age)
-async def reg_age_handler(message: Message, state: FSMContext) -> None:
+async def reg_set_age(message: Message, state: FSMContext) -> None:
     if message.from_user is None or message.text is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+        raise HandlerError
 
     age_msg = message.text
 
@@ -121,9 +201,9 @@ async def reg_age_handler(message: Message, state: FSMContext) -> None:
 
 
 @router.message(RegistrationStates.waiting_for_preferences)
-async def reg_prefs_handler(message: Message, state: FSMContext) -> None:
+async def reg_set_preferences(message: Message, state: FSMContext) -> None:
     if message.from_user is None or message.text is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+        raise HandlerError
 
     comm_msg = message.text.strip()
 
@@ -133,15 +213,16 @@ async def reg_prefs_handler(message: Message, state: FSMContext) -> None:
             message.from_user.id,
             UserUpdate(comm=comm_msg, reg_stat=UserState.REG_LANGUAGE),
         )
+
     await message.answer(Messages.publication_preferences_accepted(comm_msg))
     await message.answer(Messages.ask_language())
     await state.set_state(RegistrationStates.waiting_for_language)
 
 
 @router.message(RegistrationStates.waiting_for_language)
-async def reg_lang_handler(message: Message, state: FSMContext) -> None:
+async def reg_set_language(message: Message, state: FSMContext) -> None:
     if message.from_user is None or message.text is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+        raise HandlerError
 
     lang_msg = message.text.strip().replace(" ", "").replace(",", "").replace(".", "")
 
@@ -154,27 +235,11 @@ async def reg_lang_handler(message: Message, state: FSMContext) -> None:
     lang_value = lang_map[lang_msg]
 
     async for session in get_session():
-        items = await get_publications_for_language(session, lang_value)
-        items_str = "|".join([str(item) for item in items])
-
-        if not items:
-            await message.answer(Messages.no_publication())
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(
-                    reg_stat=UserState.REG_COMPLETED,
-                    reg_end=datetime.now(),
-                ),
-            )
-            return
-
         await update_user(
             session,
             message.from_user.id,
             UserUpdate(
                 lng=lang_value,
-                items=items_str,
                 reg_stat=UserState.REG_COMPLETED,
                 reg_end=datetime.now(),
             ),

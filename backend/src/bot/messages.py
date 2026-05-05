@@ -33,13 +33,15 @@ class Messages:
         )
 
     @staticmethod
-    def already_registered(first_name: str) -> str:
-        return f"Вы уже зарегистрированы под именем {first_name}!"
+    def already_registered(first_name: str | None) -> str:
+        if first_name is None:
+            f"Вы уже зарегистрированы под именем {first_name}!"
+        return "Вы уже зарегистрированы!"
 
     @staticmethod
-    def old_user(first_name: str) -> str:
-        return (
-            f"Привет, {first_name}!\n"
+    def old_user(first_name: str | None) -> str:
+        first = f"Привет, {first_name}!\n" if first_name else "Привет!"
+        return first + (
             "Странно... Помню ваше имя, но все остальные данные "
             "как-будто кто-то обнулил 😅\n\n"
             "Чтобы я снова вспомнил вас, попрошу пройти регистрацию снова. "
@@ -142,19 +144,30 @@ class Messages:
         )
 
     @staticmethod
-    def new_password(temp: str, username: str) -> str:
+    def new_password(temp: str, username: str | None) -> str:
+        if username:
+            return (
+                "Ваш **новый пароль** для [сервиса](https://faunistica.ru/) 🥳\n\n"
+                f"P.S. ваш никнейм 🤫: {username}\n\n"
+                "Действует бессрочно (пока не забудете):\n"
+                f"```{temp}```"
+            )
+
         return (
             "Ваш **новый пароль** для [сервиса](https://faunistica.ru/) 🥳\n\n"
-            f"P.S. ваш никнейм 🤫: {username}\n\n"
             "Действует бессрочно (пока не забудете):\n"
             f"```{temp}```"
         )
 
     # ========== NEXT PUBLICATION MESSAGE ========== #
     @staticmethod
-    def not_finished_publ(name: str) -> str:
-        return (
+    def not_finished_publ(name: str | None) -> str:
+        first = (
             f"Простите, {name}, боюсь вы ещё не закончили с текущей публикацией ☹️\n"
+            if name
+            else "Простите, боюсь вы ещё не закончили с текущей публикацией ☹️\n"
+        )
+        return first + (
             "Как только закончите с ней, возвращайтесь ко мне!\n\n"
             "Если вы считаете, что произошла ошибка, напишите в поддержку /support, "
             "указав название текущей статьи."
@@ -312,6 +325,21 @@ class Messages:
         )
 
     @staticmethod
+    def ask_region() -> str:
+        return (
+            "В каком регионе вы живёте? Насленный пункт тоже можете указать, "
+            "хоть это и не обязательно. Просто будем рады его учесть🙂"
+        )
+
+    @staticmethod
+    def ask_email() -> str:
+        return (
+            "Пожалуйста, сообщите свой адрес почты (предпочтительно), телефон "
+            "или другие контактные данные, чтобы мы могли связаться с вами "
+            "по дополнительным вопросам, в т.ч. вопросам поощрения 🙂"
+        )
+
+    @staticmethod
     def age_too_high() -> str:
         return (
             "??? Вы не шутите? "
@@ -414,8 +442,6 @@ class Messages:
             "чтобы получить доступ к нашему сервису 🕸\n"
             "<b>/auth</b> — если вы ещё не получили пароль и статью "
             "(или забыли), жмите, но только после регистрации 🔒\n"
-            "<b>/next_publ</b> — если вы очень уверены в том, что оцифровали "
-            "текущую публикацию, дадим новую 😇\n"
             "<b>/sociology</b> — небольшой опросник, "
             "который поможет нам побольше познакомиться 🕷\n"
             "<b>/stats</b> — если хотите посмотреть статистику проекта, "
@@ -439,17 +465,24 @@ class Messages:
     # ========== GENERAL MESSAGE ========== #
 
     @staticmethod
-    def support_call_not_finished() -> str:
+    def support_flow_not_finished() -> str:
         return (
             "Вы начали обращение в поддержку 🙌. "
             "Пожалуйста, завершите его или отмените командой /cancel"
         )
 
     @staticmethod
-    def sociology_not_finished() -> str:
+    def sociology_flow_not_finished() -> str:
         return (
             "Вы не закончили прохождение опроса 🙁. "
             "Пожалуйста, завершите его или отмените командой /cancel"
+        )
+
+    @staticmethod
+    def rename_flow_not_finished() -> str:
+        return (
+            "Вы не ввели свое новое имя. "
+            "Пожалуйста, введите его или отмените командой /cancel"
         )
 
     @staticmethod

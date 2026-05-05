@@ -3,86 +3,98 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from bot.button_markups import Keyboards
+from bot import keyboards
 from bot.messages import Messages
 from bot.states import SupportStates
 from core.config import settings
 from core.dependencies import get_session
 from core.enums import UserState
-from core.exceptions import MsgErr
+from core.exceptions import HandlerError, MsgErr
 from repository.user import update_user
 from schema.user import UserUpdate
 from service.actions import ActionService
-from service.user import FlowType, UserService
+from service.user import UserService
 
 router = Router()
-
-
-class HandlerError(Exception):
-    MSG_INCORRECTLY_CONFIGURED = "incorrectly configured handler"
 
 
 @router.message(Command("support"))
 async def support_command(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+        raise HandlerError
 
     if message.chat.id == settings.ADMIN_CHAT_ID:
         await message.answer(Messages.support_for_admins())
         return
 
+    user_id = message.from_user.id
+
     async for session in get_session():
         action_service = ActionService(session)
         user_service = UserService(session, bot, action_service)
 
-        result = await user_service.start_flow(
-            message.from_user.id, FlowType.SUPPORT, state
-        )
-
+        result = await user_service.check_commands_allowed(user_id=user_id)
         if isinstance(result, MsgErr):
             await message.answer(result.error)
             return
 
-        if result.message:
-            await message.answer(result.message, reply_markup=Keyboards.remove())
-        if result.next_state:
-            await state.set_state(result.next_state.fsm_state())
+        await state.set_state(UserState.SUPPORT.fsm_state())
+        await update_user(session, user_id, UserUpdate(reg_stat=UserState.SUPPORT))
+
+        await message.answer(
+            Messages.support_request(), reply_markup=keyboards.remove()
+        )
 
 
 @router.message(SupportStates.waiting_for_question)
 async def support_question_handler(
     message: Message, state: FSMContext, bot: Bot
 ) -> None:
-    if message.from_user is None or message.text is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+    if (
+        message.from_user is None
+        or message.from_user.username is None
+        or message.text is None
+    ):
+        raise HandlerError
 
-    if message.text.lower().strip() in ["cancel", "отмена"]:
-        await message.answer(Messages.cancellation_support_request())
+    question = message.text.strip()
+    user_id = message.from_user.id
+
+    if question.lower() in ["cancel", "отмена"]:
         async for session in get_session():
             await update_user(
                 session,
-                message.from_user.id,
+                user_id,
                 UserUpdate(reg_stat=UserState.REG_COMPLETED),
             )
 
-        await state.clear()
+            await message.answer(Messages.cancellation_support_request())
+            return
+
+    if len(question) < 10:
+        await message.answer(Messages.support_request_too_short())
+        return
+    if len(message.text) > 256:
+        await message.answer(Messages.message_too_long())
         return
 
     async for session in get_session():
-        action_service = ActionService(session)
-        user_service = UserService(session, bot, action_service)
-
-        result = await user_service.handle_flow_input(
-            message.from_user.id, message.text, state
+        await update_user(
+            session,
+            user_id,
+            UserUpdate(reg_stat=UserState.REG_COMPLETED),
         )
+        await state.clear()
 
-        if isinstance(result, MsgErr):
-            await message.answer(result.error)
-            return
+    await bot.send_message(
+        chat_id=settings.ADMIN_CHAT_ID,
+        text=Messages.request_for_support(
+            message.from_user.username, message.from_user.id, question
+        ),
+    )
 
-        if result.completed:
-            await message.answer(
-                Messages.support_request_received(),
-                reply_markup=Keyboards.remove(),
-                parse_mode="HTML",
-            )
+    await message.answer(
+        Messages.support_request_received(),
+        reply_markup=keyboards.remove(),
+        parse_mode="HTML",
+    )

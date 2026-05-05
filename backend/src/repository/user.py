@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from sqlalchemy import func, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -63,13 +64,18 @@ async def get_current_publication(
     return result.scalar_one_or_none()
 
 
-async def create_user(
+async def create_user_or_update(
     session: AsyncSession, user_id: int, reg_stat: UserState = UserState.REG_AGREEMENT
-) -> None:
-    user = User(id=user_id, reg_stat=reg_stat, reg_run=datetime.now())
-    session.add(user)
-
+) -> User:
+    stmt = insert(User).values(user_id=user_id, reg_stat=reg_stat)
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[User.user_id],
+        set_={User.reg_stat: stmt.excluded.reg_stat, User.reg_run: datetime.now()},
+    ).returning(User)
+    result = await session.execute(stmt)
     await session.commit()
+
+    return result.scalar_one()
 
 
 async def update_user(

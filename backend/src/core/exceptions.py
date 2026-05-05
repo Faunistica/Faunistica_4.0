@@ -25,6 +25,11 @@ class MsgErr:
     success: Literal[False] = False
 
 
+class HandlerError(Exception):
+    def __init__(self) -> None:
+        super("incorrectly configured handler")
+
+
 class DBException(Exception):
     pass
 

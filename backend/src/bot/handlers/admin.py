@@ -7,18 +7,15 @@ from aiogram.types import FSInputFile, Message
 
 from bot.messages import Messages
 from core.config import settings
+from core.exceptions import HandlerError
 
 router = Router()
 
 
-class HandlerError(Exception):
-    MSG_INCORRECTLY_CONFIGURED = "incorrectly configured handler"
-
-
 @router.message(Command("reply"))
-async def reply_to_user_command(message: Message, bot: Bot) -> None:
+async def reply(message: Message, bot: Bot) -> None:
     if message.text is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+        raise HandlerError
 
     if message.chat.id != settings.ADMIN_CHAT_ID:
         await message.answer(Messages.no_access_to_command())
@@ -49,9 +46,9 @@ async def reply_to_user_command(message: Message, bot: Bot) -> None:
 
 
 @router.message(Command("logs"))
-async def send_logs_command(message: Message) -> None:
+async def logs(message: Message) -> None:
     if message.text is None:
-        raise HandlerError(HandlerError.MSG_INCORRECTLY_CONFIGURED)
+        raise HandlerError
 
     if message.chat.id != settings.ADMIN_CHAT_ID:
         await message.answer(Messages.no_access_to_command())

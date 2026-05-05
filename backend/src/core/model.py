@@ -10,6 +10,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    func,
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -30,17 +31,17 @@ class User(Base):
     )
     tlg_name: Mapped[str | None] = mapped_column(String(255))
     tlg_username: Mapped[str | None] = mapped_column(String(255))
-    name: Mapped[str] = mapped_column(String(255))
+    name: Mapped[str | None] = mapped_column(String(255))
     reg_stat: Mapped[UserState] = mapped_column(
         UserStateType, default=UserState.DATA_CLEARED
     )
     hash: Mapped[str | None] = mapped_column(String(255))
     hash_date: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
-    items: Mapped[str] = mapped_column(Text)
+    items: Mapped[str] = mapped_column(Text, default="")
     age: Mapped[int | None] = mapped_column(Integer)
     lng: Mapped[str | None] = mapped_column(String)
     comm: Mapped[str | None] = mapped_column(Text)
-    reg_run: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
+    reg_run: Mapped[datetime_type] = mapped_column(TIMESTAMP, server_default=func.now())
     reg_end: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
     sex: Mapped[str | None] = mapped_column(String(3))
     rating: Mapped[int | None] = mapped_column(Integer)
@@ -77,7 +78,7 @@ class Action(Base):
     action: Mapped[str] = mapped_column(Text, nullable=False)
     object: Mapped[str | None] = mapped_column(Text)
     datetime: Mapped[datetime_type] = mapped_column(
-        "datetime", TIMESTAMP, nullable=False
+        TIMESTAMP, nullable=False, server_default=func.now()
     )
 
 
@@ -91,8 +92,12 @@ class EventRecord(Base):
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
     )
-    created_at: Mapped[datetime_type] = mapped_column(TIMESTAMP(precision=6))
-    updated_at: Mapped[datetime_type | None] = mapped_column(TIMESTAMP(precision=6))
+    created_at: Mapped[datetime_type] = mapped_column(
+        TIMESTAMP(precision=6), server_default=func.now()
+    )
+    updated_at: Mapped[datetime_type | None] = mapped_column(
+        TIMESTAMP(precision=6), server_default=func.now(), server_onupdate=func.now()
+    )
     ip: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)
     type: Mapped[str | None] = mapped_column(Text)
