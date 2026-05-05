@@ -1,9 +1,6 @@
 import logging
-from dataclasses import dataclass
-from typing import Literal
 
 from aiogram import Bot
-from asyncpg.compat import StrEnum
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.messages import Messages
@@ -15,28 +12,7 @@ from repository.user import (
 )
 from service.actions import ActionService
 
-YES_WORDS = ["yes", "да", "принимаю", "ага", "соглашаюсь", "принять", "agree"]
-NO_WORDS = ["no", "nope", "нет", "не", "refuse"]
-
 logger = logging.getLogger(__name__)
-
-
-class FlowType(StrEnum):
-    REGISTRATION = "registration"
-    SURVEY = "survey"
-    SUPPORT = "support"
-    RENAME = "rename"
-
-
-@dataclass
-class FlowOk:
-    next_state: UserState
-    message: str | None = None
-    completed: bool = False
-    success: Literal[True] = True
-
-
-FlowResult = FlowOk | MsgErr
 
 
 class UserService:

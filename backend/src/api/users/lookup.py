@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 
-from core.dependencies import DBSession, TokenUser
+from core.dependencies import DBSession
 from core.exceptions import UserNotFoundError
 from repository import user as repo
 from schema.user import UserLookupResponse
@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 async def lookup_user(
     name: Annotated[str, Query(..., description="Username to lookup")],
     session: DBSession,
-    token: TokenUser,
 ) -> UserLookupResponse:
     user = await repo.find_user_by_username(session, name)
     if user is None:

@@ -11,7 +11,7 @@ async def test_support_with_valid_username(
     async_client: AsyncClient,
     seed_data: SeedData,
 ) -> None:
-    """POST with valid username returns 200, returns Message with ok."""
+    """POST with valid username returns 204"""
     user = seed_data["users"][0]
 
     with patch("service.telegram.support_message", new_callable=AsyncMock):
@@ -25,26 +25,4 @@ async def test_support_with_valid_username(
             },
         )
 
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["message"] == "ok"
-
-
-@pytest.mark.asyncio
-async def test_support_with_invalid_username(
-    async_client: AsyncClient,
-    seed_data,
-) -> None:
-    """POST with invalid username returns 404."""
-    with patch("service.telegram.support_message", new_callable=AsyncMock):
-        response = await async_client.post(
-            "/api/support",
-            json={
-                "link": "http://example.com",
-                "user_name": "nonexistent_user",
-                "text": "Test support request",
-                "issue_type": "bug",
-            },
-        )
-
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_204_NO_CONTENT

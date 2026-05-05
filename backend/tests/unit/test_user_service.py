@@ -8,14 +8,10 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.enums import UserState
-from core.exceptions import ExpectationError, MsgErr, Ok
+from core.exceptions import MsgErr, Ok
 from core.model import User
 from service.actions import ActionService
-from service.user import (
-    FlowOk,
-    FlowResult,
-    UserService,
-)
+from service.user import UserService
 
 
 @pytest.fixture

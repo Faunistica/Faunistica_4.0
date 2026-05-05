@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 
 from core.exceptions import AdminOnlyError
-from core.security import get_jwt_user
 from schema.common import PaginatedResponse
 from schema.records import RecordFull
 from service.export import records_to_excel
@@ -15,7 +14,7 @@ router = APIRouter(
 )
 
 
-@router.get("", dependencies=[Depends(get_jwt_user)])
+@router.get("")
 async def list_records(
     service: Annotated[RecordService, Depends()],
     user_id: Annotated[int, Query(description="User ID")],
@@ -44,7 +43,7 @@ async def list_records(
     )
 
 
-@router.get("/export", dependencies=[Depends(get_jwt_user)])
+@router.get("/export")
 async def export_records(
     service: Annotated[RecordService, Depends()],
     user_id: Annotated[int, Query(..., description="User ID")],

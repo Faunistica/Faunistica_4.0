@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from core.security import validate_user_id_path
+from core.security import get_jwt_user, validate_user_id_path
 
 from . import lookup, me, photo, winner
 
@@ -10,7 +10,9 @@ user_id_router = APIRouter(
 
 user_id_router.include_router(photo.router, tags=["users"])
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(
+    prefix="/users", tags=["users"], dependencies=[Depends(get_jwt_user)]
+)
 
 router.include_router(user_id_router)
 router.include_router(me.router)

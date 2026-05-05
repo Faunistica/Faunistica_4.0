@@ -12,7 +12,7 @@ from core.model import Action, EventRecord, Publication, User
 
 @pytest.mark.asyncio
 async def test_get_project_statistics(
-    async_client: AsyncClient, session_maker, seed_data: SeedData
+    authenticated_client: AsyncClient, session_maker, seed_data: SeedData
 ):
     async with session_maker() as session:
         # Add test data
@@ -58,7 +58,7 @@ async def test_get_project_statistics(
 
         await session.commit()
 
-    response = await async_client.get("/api/statistics/project")
+    response = await authenticated_client.get("/api/statistics/project")
     assert response.status_code == 200
     data = response.json()
     assert "total_volunteers" in data
@@ -75,7 +75,7 @@ async def test_get_project_statistics(
 
 @pytest.mark.asyncio
 async def test_get_user_statistics_by_id(
-    async_client: AsyncClient, session_maker, seed_data
+    authenticated_client: AsyncClient, session_maker, seed_data
 ):
     async with session_maker() as session:
         publ_id = seed_data["publs"][0].id
@@ -102,7 +102,9 @@ async def test_get_user_statistics_by_id(
         session.add(record)
         await session.commit()
 
-    response = await async_client.get(f"/api/statistics/users?user_id={user.user_id}")
+    response = await authenticated_client.get(
+        f"/api/statistics/users?user_id={user.user_id}"
+    )
     assert response.status_code == 200
     data = response.json()
     assert "records_entered" in data
@@ -115,7 +117,7 @@ async def test_get_user_statistics_by_id(
 
 @pytest.mark.asyncio
 async def test_get_user_statistics_by_name(
-    async_client: AsyncClient, session_maker, seed_data
+    authenticated_client: AsyncClient, session_maker, seed_data
 ):
     async with session_maker() as session:
         user = User(
@@ -127,26 +129,30 @@ async def test_get_user_statistics_by_name(
         session.add(user)
         await session.commit()
 
-    response = await async_client.get("/api/statistics/users?name=stats_user_by_name")
+    response = await authenticated_client.get(
+        "/api/statistics/users?name=stats_user_by_name"
+    )
     assert response.status_code == 200
     data = response.json()
     assert "records_entered" in data
 
 
 @pytest.mark.asyncio
-async def test_get_user_statistics_name_not_found(async_client: AsyncClient):
-    response = await async_client.get("/api/statistics/users?name=nonexistent_user_xyz")
+async def test_get_user_statistics_name_not_found(authenticated_client: AsyncClient):
+    response = await authenticated_client.get(
+        "/api/statistics/users?name=nonexistent_user_xyz"
+    )
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_get_user_statistics_id_not_found(async_client: AsyncClient):
-    response = await async_client.get("/api/statistics/users?user_id=99999")
+async def test_get_user_statistics_id_not_found(authenticated_client: AsyncClient):
+    response = await authenticated_client.get("/api/statistics/users?user_id=99999")
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_get_user_statistics_missing_param(async_client: AsyncClient):
-    response = await async_client.get("/api/statistics/users")
+async def test_get_user_statistics_missing_param(authenticated_client: AsyncClient):
+    response = await authenticated_client.get("/api/statistics/users")
     assert response.status_code == 400
     assert "detail" in response.json()

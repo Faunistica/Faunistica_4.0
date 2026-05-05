@@ -38,13 +38,13 @@ async def fetch_photo(
 async def support_message(
     client: aiohttp.ClientSession,
     data: SupportRequest,
-    user_id: int,
+    user_id: int | None,
 ) -> None:
     message = (
         f"📢 Новое сообщение в поддержку из веб-формы 📢\n"
         f"🔗 Ссылка на Telegram: {data.link}\n"
         f"👤 Username в боте: {data.user_name if data.user_name else 'Не указан'}\n"
-        f"🪪 ID: {user_id if user_id != -1 else 'Не найден'}\n"
+        f"🪪 ID: {user_id if user_id is not None else 'Не найден'}\n"
         f"📋 Тип проблемы: {_get_issue_type(data.issue_type)}\n"
         f"\n"
         f"📝 Сообщение:\n"

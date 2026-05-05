@@ -6,7 +6,7 @@ from aiogram.types import Message, User
 
 from bot.handlers.admin import logs, reply
 from bot.handlers.menu import cancel, menu
-from bot.handlers.registration import continue_registration, registration_start
+from bot.handlers.registration import registration_start
 from bot.handlers.start import start_command
 
 
@@ -55,8 +55,14 @@ class TestRegisterCommand:
     async def test_register_new_user(self, mock_message, mock_state):
         with (
             patch("bot.handlers.registration.get_user", return_value=None),
-            patch("bot.handlers.registration.create_user_or_update", new_callable=AsyncMock),
-            patch("bot.handlers.registration.continue_registration", new_callable=AsyncMock),
+            patch(
+                "bot.handlers.registration.create_user_or_update",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "bot.handlers.registration.continue_registration",
+                new_callable=AsyncMock,
+            ),
         ):
             await registration_start(mock_message, mock_state)
             mock_state.set_state.assert_called_once()
@@ -88,7 +94,9 @@ class TestCancelCommand:
     async def test_cancel_command_success(self, mock_message, mock_state, mock_bot):
         with (
             patch("bot.handlers.menu.get_session") as mock_get_session,
-            patch("bot.handlers.menu.get_user", new_callable=AsyncMock) as mock_get_user,
+            patch(
+                "bot.handlers.menu.get_user", new_callable=AsyncMock
+            ) as mock_get_user,
             patch("bot.handlers.menu.update_user", new_callable=AsyncMock),
         ):
             mock_session = AsyncMock()

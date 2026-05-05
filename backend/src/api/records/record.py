@@ -4,14 +4,13 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from core.dependencies import ClientIP, TokenUser
-from core.security import get_jwt_user
 from schema.records import RecordData, RecordFull
 from service.records import RecordService
 
 router = APIRouter(prefix="/records/{record_id}")
 
 
-@router.get("", dependencies=[Depends(get_jwt_user)])
+@router.get("")
 async def get_record(
     record_id: UUID,
     service: Annotated[RecordService, Depends()],

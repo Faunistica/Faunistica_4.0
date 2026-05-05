@@ -8,14 +8,16 @@ from schema.geo import RegionData, ReverseGeoCodeLocation
 
 
 @pytest.mark.asyncio
-async def test_search_returns_200_with_locations(async_client: AsyncClient) -> None:
+async def test_search_returns_200_with_locations(
+    authenticated_client: AsyncClient,
+) -> None:
     location_data = [
         RegionData(region="Москва", districts=["Центральный", "Южный"]),
         RegionData(region="Московская область", districts=["Подольск", "Химки"]),
     ]
     app.state.location_data = location_data
 
-    response = await async_client.get(
+    response = await authenticated_client.get(
         "/api/geo/search",
         params={"field": "region", "text": "Москва"},
     )
@@ -26,7 +28,9 @@ async def test_search_returns_200_with_locations(async_client: AsyncClient) -> N
 
 
 @pytest.mark.asyncio
-async def test_search_works_without_authentication(async_client: AsyncClient) -> None:
+async def test_search_doesnt_work_without_authentication(
+    async_client: AsyncClient,
+) -> None:
     location_data = [
         RegionData(region="Москва", districts=["Центральный", "Южный"]),
     ]
@@ -36,18 +40,18 @@ async def test_search_works_without_authentication(async_client: AsyncClient) ->
         "/api/geo/search",
         params={"field": "region", "text": "Москва"},
     )
-    assert response.status_code == 200
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
-async def test_reverse_geocode_returns_200(async_client: AsyncClient) -> None:
+async def test_reverse_geocode_returns_200(authenticated_client: AsyncClient) -> None:
     mock_result = ReverseGeoCodeLocation(
         country="Россия",
         region="Москва",
         district="Центральный",
     )
     with patch("service.geo.get_location_names", return_value=mock_result):
-        response = await async_client.get(
+        response = await authenticated_client.get(
             "/api/geo/reverse-geocode",
             params={
                 "degrees_n": 55,
@@ -67,7 +71,7 @@ async def test_reverse_geocode_returns_200(async_client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_reverse_geocode_works_without_authentication(
-    async_client: AsyncClient,
+    authenticated_client: AsyncClient,
 ) -> None:
     mock_result = ReverseGeoCodeLocation(
         country="Россия",
@@ -75,7 +79,7 @@ async def test_reverse_geocode_works_without_authentication(
         district="Центральный",
     )
     with patch("service.geo.get_location_names", return_value=mock_result):
-        response = await async_client.get(
+        response = await authenticated_client.get(
             "/api/geo/reverse-geocode",
             params={
                 "degrees_n": 55,
