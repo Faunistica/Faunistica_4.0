@@ -2,12 +2,14 @@ import csv
 import io
 import logging
 from collections.abc import Sequence
+from typing import TypedDict
 
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 
 from core.model import EventRecord
+from schema.records import RecordData
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,97 @@ COLUMN_MAPPING: dict[str, str] = {
     "occurrence_remarks": "Occurrence Remarks",
     "identification_remarks": "Identification Remarks",
 }
+
+
+REVERSE_COLUMN_MAPPING: dict[str, str] = {v: k for k, v in COLUMN_MAPPING.items()}
+
+
+class ImportRecordData(TypedDict):
+    record_data: RecordData
+    errors: str | None
+    record_type: str
+
+
+BOOLEAN_TRUE_VALUES: frozenset[str] = frozenset({"TRUE", "YES", "1", "T", "Y"})
+BOOLEAN_FALSE_VALUES: frozenset[str] = frozenset({"FALSE", "NO", "0", "F", "N"})
+
+FLOAT_FIELDS: frozenset[str] = frozenset({
+    "latitude",
+    "longitude",
+    "coordinate_uncertainty",
+    "sample_size_value",
+    "quantity",
+})
+
+BOOLEAN_FIELDS: frozenset[str] = frozenset({
+    "is_manual_location",
+    "is_interval",
+    "tax_verbatim",
+})
+
+
+def _convert_bool(str_value: str) -> bool | None:
+    upper = str_value.upper()
+    if upper in BOOLEAN_TRUE_VALUES:
+        return True
+    if upper in BOOLEAN_FALSE_VALUES:
+        return False
+    return None
+
+
+def _convert_value(field: str, value: object) -> object:
+    if value is None or value == "":
+        return None
+    str_value = str(value).strip()
+    if field in BOOLEAN_FIELDS:
+        return _convert_bool(str_value)
+    if field in FLOAT_FIELDS:
+        try:
+            return float(str_value)
+        except ValueError:
+            return None
+    return str_value
+
+
+def is_row_empty(row: dict[str, str | None]) -> bool:
+    return all(v is None or str(v).strip() == "" for v in row.values())
+
+
+def row_to_record_data(row: dict[str, str | None], publ_id: int) -> RecordData:
+    data = RecordData(publ_id=publ_id)
+    for display_name, field in REVERSE_COLUMN_MAPPING.items():
+        raw_value = row.get(display_name)
+        converted = _convert_value(field, raw_value)
+        if converted is not None:
+            setattr(data, field, converted)
+    return data
+
+
+async def read_excel(file_content: bytes) -> list[dict[str, str | None]]:
+    wb = load_workbook(filename=io.BytesIO(file_content), read_only=True)
+    ws = wb.active
+    if ws is None:
+        return []
+    rows: list[dict[str, str | None]] = []
+    headers: list[str] = []
+    for i, row in enumerate(ws.iter_rows(values_only=True)):
+        if i == 0:
+            headers = [str(cell) if cell is not None else "" for cell in row]
+        else:
+            row_dict: dict[str, str | None] = {
+                headers[j]: (str(row[j]) if row[j] is not None else None)
+                for j in range(len(headers))
+                if j < len(row)
+            }
+            rows.append(row_dict)
+    wb.close()
+    return rows
+
+
+async def read_csv(file_content: bytes) -> list[dict[str, str | None]]:
+    text = file_content.decode("utf-8-sig")
+    reader = csv.DictReader(io.StringIO(text))
+    return [{k: (v if v else None) for k, v in row.items()} for row in reader]
 
 
 def records_to_excel(records: Sequence[EventRecord]) -> bytes:
