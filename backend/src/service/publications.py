@@ -36,7 +36,10 @@ class PublicationService:
                 "user %d requested access non-existend publication %d", user_id, publ_id
             )
             raise PublicationNotFoundError(publ_id)
-        user = await get_user_expect(self.session, user_id)
+
+        if user.publ_id is None:
+            raise NoPublicationsAssignedError(user_id)
+
         if user.publ_id != publ_id:
             raise PublicationForbiddenError(publ_id, user_id)
 
