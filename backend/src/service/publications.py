@@ -8,9 +8,11 @@ from core.dependencies import DBSession, TokenUser
 from core.exceptions import (
     NoPublicationsAssignedError,
     PublicationForbiddenError,
+    PublicationNotFoundError,
 )
 from core.model import User
 from repository.publication import (
+    get_publication,
     get_publication_expect,
     get_publications_by_ids,
 )
@@ -35,6 +37,12 @@ class PublicationService:
     ) -> None:
         """Raises PublicationForbiddenError if user.publ_id != publ_id."""
         # Check if publication exists
+        if await get_publication(self.session, publ_id) is None:
+            logger.info(
+                "user %d requested access non-existend publication %d", user_id, publ_id
+            )
+            raise PublicationNotFoundError(publ_id)
+
         if user is None:
             if user_id is None:
                 raise ValueError("both user and user_id are None")

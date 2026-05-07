@@ -36,15 +36,15 @@ def md5_hash(password: str) -> str:
 
 @pytest.fixture(scope="session")
 async def db_engine():
-    if os.getenv("TEST_DB"):
+    if os.getenv("USE_REAL_DB_FOR_TESTS"):
+        url = str(settings.DB_URL)
+    else:
         pg = PostgresContainer("postgres:15-alpine")
         pg.start()
 
         url = pg.get_connection_url().replace(
             "postgresql+psycopg2", "postgresql+asyncpg"
         )
-    else:
-        url = str(settings.DB_URL)
 
     engine = create_async_engine(
         url, echo=False, pool_pre_ping=True, poolclass=NullPool
@@ -146,6 +146,7 @@ async def seed_data(
             "username": "testuser1",
             "password": "password1",
             "publ_id": publ_id_1,
+            "items": str(publ_id_2),
         },
         {
             "user_id": user_id_2,

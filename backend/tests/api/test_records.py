@@ -196,7 +196,6 @@ async def test_get_record_not_found(authenticated_client, seed_data: SeedData):
     response = await authenticated_client.get(
         f"/api/records/{fake_uuid}?user_id={user.user_id}"
     )
-    print(response)
     assert response.status_code == 404
 
 
@@ -355,9 +354,7 @@ def _create_test_csv_content() -> bytes:
 
 
 @pytest.mark.asyncio
-async def test_import_from_excel(
-    authenticated_client: AsyncClient, seed_data, session_maker
-) -> None:
+async def test_import_from_excel(authenticated_client: AsyncClient) -> None:
     """Test importing records from Excel file."""
     import io
 
@@ -412,7 +409,7 @@ async def test_import_from_excel(
 
 
 @pytest.mark.asyncio
-async def test_import_from_csv(authenticated_client: AsyncClient, seed_data) -> None:
+async def test_import_from_csv(authenticated_client: AsyncClient) -> None:
     """Test importing records from CSV file."""
     from service.export import COLUMN_MAPPING
 
@@ -459,13 +456,11 @@ async def test_import_invalid_file_type(
         "/api/records/import",
         files={"file": ("test.txt", b"invalid content", "text/plain")},
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["imported"] == 0
+    assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_import_empty_file(authenticated_client: AsyncClient, seed_data) -> None:
+async def test_import_empty_file(authenticated_client: AsyncClient) -> None:
     """Test importing empty Excel file."""
     wb = Workbook()
     ws = wb.active
@@ -497,9 +492,7 @@ async def test_import_empty_file(authenticated_client: AsyncClient, seed_data) -
 
 
 @pytest.mark.asyncio
-async def test_import_boolean_fields(
-    authenticated_client: AsyncClient, seed_data
-) -> None:
+async def test_import_boolean_fields(authenticated_client: AsyncClient) -> None:
     """Test importing records with boolean fields."""
     from openpyxl import Workbook
 
@@ -551,7 +544,7 @@ async def test_import_boolean_fields(
 
 @pytest.mark.asyncio
 async def test_import_user_without_publ(
-    authenticated_client_user2: AsyncClient, seed_data
+    authenticated_client_user2: AsyncClient,
 ) -> None:
     """Test importing with user that has no publication returns error."""
     wb = Workbook()
@@ -577,15 +570,11 @@ async def test_import_user_without_publ(
             )
         },
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["imported"] == 0
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
-async def test_import_file_size_limit(
-    authenticated_client: AsyncClient, seed_data, monkeypatch
-) -> None:
+async def test_import_file_size_limit(authenticated_client: AsyncClient) -> None:
     """Test importing file that exceeds size limit."""
     from core.config import settings
 
@@ -601,15 +590,11 @@ async def test_import_file_size_limit(
             )
         },
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["imported"] == 0
+    assert response.status_code == status.HTTP_413_CONTENT_TOO_LARGE
 
 
 @pytest.mark.asyncio
-async def test_import_limit_enforcement(
-    authenticated_client: AsyncClient, seed_data, session_maker, monkeypatch
-) -> None:
+async def test_import_limit_enforcement(authenticated_client: AsyncClient) -> None:
     """Test that import limit is enforced."""
     from core.config import settings
 
@@ -650,6 +635,4 @@ async def test_import_limit_enforcement(
             )
         },
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["imported"] == 0
+    assert response.status_code == 400

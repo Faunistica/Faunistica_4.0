@@ -187,7 +187,7 @@ class TestComplete:
             token_user.user_id, 123, ProcessingLevel.FULL, "127.0.0.1"
         )
 
-        self.mock_validate.assert_called_once_with(1, 123)
+        self.mock_validate.assert_called_once_with(123, user=mock_user)
 
 
 # ============================================================================

@@ -12,6 +12,7 @@ from core.config import settings
 from core.dependencies import DBSession
 from core.exceptions import (
     NoPublicationsAssignedError,
+    PublicationForbiddenError,
     RecordForbiddenError,
     RecordLimitExceededError,
     RecordNotFoundError,
@@ -224,7 +225,11 @@ class RecordService:
         if record.user_id != user_id:
             raise RecordForbiddenError
 
-        await self.publication_service.validate_access(record.user_id, user=user)
+        try:
+            await self.publication_service.validate_access(record.publ_id, user=user)
+        except PublicationForbiddenError as e:
+            raise RecordForbiddenError from e
+
         if record.publ_id != user.publ_id:
             raise RecordForbiddenError
 

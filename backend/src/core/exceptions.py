@@ -81,7 +81,7 @@ class PublicationForbiddenError(APIException):
 
 class NoPublicationsAssignedError(APIException):
     def __init__(self, user_id: str | int) -> None:
-        super().__init__("NO_PUBL", f"User {user_id} has no assigned publications", 404)
+        super().__init__("NO_PUBL", f"User {user_id} has no assigned publications", 403)
 
 
 class RecordForbiddenError(APIException):
