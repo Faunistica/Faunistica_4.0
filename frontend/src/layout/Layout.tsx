@@ -1,6 +1,6 @@
 import { type FC, useState } from "react";
 import { Outlet } from "react-router";
-import { useRouteHandle } from "@/hooks/useRouteMeta";
+import { useRouteHandle } from "@/hooks/useRouteMeta.ts";
 import Header from "@/layout/Header";
 
 const Layout: FC = () => {

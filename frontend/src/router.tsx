@@ -111,7 +111,7 @@ export const routes: RouteObject[] = [
                         children: [
                             { path: 'dashboard', element: <Dashboard /> },
                             { path: 'onboarding', element: <Onboarding />, handle: { isNavigateEnabled: false } },
-                            { path: 'article/:id', element: <FormFilling />, handle: { isSidebarEnabled: true } },
+                            { path: 'publication/:id', element: <FormFilling />, handle: { isSidebarEnabled: true } },
                             { path: 'instructions', element: <Instructions /> },
                             { path: 'support', element: <Support /> },
                             { path: 'statistics', element: <Statistics /> },

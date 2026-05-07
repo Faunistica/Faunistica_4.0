@@ -11,17 +11,20 @@ import { routes } from './router.tsx'
 import LoadingScreen from './components/LoadingScreen.tsx'
 import NetworkErrorAlert from './components/alerts/NetworkErrorAlert.tsx'
 
+import type * as Types from '@/types/api.dto';
+
 import './index.css'
 
 async function verifyAuthInBackground(setNetworkError: (value: boolean) => void) {
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/check`, {
-            method: 'POST',
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+            method: 'GET',
             credentials: 'include',
         });
 
         if (response.ok) {
-            store.dispatch(login("Imperator"));
+            const user: Types.UserInfo = await response.json();
+            store.dispatch(login(user));
             return;
         }
 

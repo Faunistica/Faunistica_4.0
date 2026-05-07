@@ -8,7 +8,7 @@ export const authAPI = createApi({
     baseQuery: baseQueryWithReauth,
     tagTypes: ['auth'],
     endpoints: (build) => ({
-        login: build.mutation<void, Types.UserRequest>({
+        login: build.mutation<Types.UserLoginResponse, Types.LoginRequest>({
             query: (credentials) => ({
                 url: '/auth/login',
                 method: 'POST',
@@ -17,8 +17,8 @@ export const authAPI = createApi({
             invalidatesTags: ['auth'],
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
-                    await queryFulfilled;
-                    dispatch(login());
+                    const { data } = await queryFulfilled;
+                    dispatch(login({ username: data.username, user_id: data.user_id }));
                 } catch {
                     dispatch(logout());
                 }
@@ -36,15 +36,15 @@ export const authAPI = createApi({
          * The baseQueryWithReauth wrapper will automatically attempt a token
          * refresh if the access token is expired but the refresh token is still valid.
          */
-        checkAuth: build.query<void, void>({
+        checkAuth: build.query<Types.UserInfo, void>({
             query: () => ({
                 url: '/auth/check',
                 method: 'POST',
             }),
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
-                    await queryFulfilled;
-                    dispatch(login());
+                    const { data } = await queryFulfilled;
+                    dispatch(login({ username: data.username, user_id: data.user_id }));
                 } catch {
                     dispatch(logout());
                 }

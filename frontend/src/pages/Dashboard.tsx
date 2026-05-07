@@ -1,99 +1,70 @@
-import { type FC, useEffect, useRef } from "react";
+import { type FC } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { PublicationRow, type Publication } from "@/components/articles/PublicationRow";
-import { useLocation, useNavigate } from "react-router";
-import { toast } from "sonner";
+import { PublicationRow } from "@/components/articles/PublicationRow";
+import { publAPI } from "@/api/publAPI"; // Замените на актуальный путь до вашего API
 
 const Dashboard: FC = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
+    // Получаем текущие (назначенные модератором) публикации
+    const {
+        data: currentPublications = [],
+        isLoading,
+        isError
+    } = publAPI.useGetCurrentPublicationQuery({ list: false });
 
-    const isToastShown = useRef(false);
-
-    useEffect(() => {
-        const state = location.state as { showSuccessAlert?: boolean } | null;
-
-        if (state?.showSuccessAlert && !isToastShown.current) {
-            isToastShown.current = true;
-
-            toast.success("Успех!", {
-                description: "Ваши данные были успешно отправлены.",
-                duration: 3000,
-            });
-            navigate(location.pathname, { replace: true, state: {} });
-        }
-    }, [location, navigate, toast]);
-
-    const MOCK_SUGGESTED: Publication[] = [
+    /* 
+     * TODO: Функционал "В работе" и "Бронирование" будет добавлен в API в будущем.
+     * Моковые данные и компоненты закомментированы, удалять нельзя.
+     *
+    const MOCK_IN_PROGRESS: any[] = [
         {
-            publ_id: 3855, type: "S", author: "Logunov D.V.", year: 2012,
-            name: "A synopsis of the genus Zyuzicosa Logunov, 2010 (Araneae, Lycosidae)",
-            language: "EN", ural: false, pdf_file: "p3855_2012_logunov.pdf"
-        },
-        {
-            publ_id: 3856, type: "A", author: "Esyunin S.L.", year: 2015,
-            name: "Remarks on the Ural spider fauna",
-            language: "RU", ural: true, pdf_file: "p3856_2015_esyunin.pdf"
-        }
-    ];
-
-    const MOCK_IN_PROGRESS: Publication[] = [
-        {
-            publ_id: 3412, type: "M", author: "Ivanov A.V.", year: 2021,
+            id: 3412, type: "M", author: "Ivanov A.V.", year: 2021,
             name: "Fauna of the Southern Urals",
             language: "RU", ural: true, pdf_file: "p3412_2021_ivanov.pdf"
         }
     ];
 
-    const MOCK_AVAILABLE: Publication[] = [
+    const MOCK_AVAILABLE: any[] = [
         {
-            publ_id: 3901, type: "S", author: "Marusik Y.M.", year: 2018,
+            id: 3901, type: "S", author: "Marusik Y.M.", year: 2018,
             name: "New species of spiders from Northern Asia",
             language: "EN", ural: false, pdf_file: "p3901_2018_marusik.pdf",
             bookedBy: 2, processedBy: 5
         },
-        {
-            publ_id: 3902, type: "A", author: "Kovblyuk M.M.", year: 2019,
-            name: "Spiders of the genus Zelotes in Crimea",
-            language: "RU", ural: false, pdf_file: "p3902_2019_kovblyuk.pdf",
-            bookedBy: 0, processedBy: 1
-        },
-        {
-            publ_id: 3905, type: "S", author: "Tuneva T.K.", year: 2020,
-            name: "Gnaphosidae of the Ural mountains",
-            language: "RU", ural: true, pdf_file: "p3905_2020_tuneva.pdf",
-            bookedBy: 1, processedBy: 0
-        }
+        // ... остальные моковые данные
     ];
+    */
+
+    if (isLoading) return <div className="p-4 text-slate-500">Загрузка публикаций...</div>;
+    if (isError) return <div className="p-4 text-red-500">Ошибка при загрузке публикаций.</div>;
 
     return (
         <>
-            {/* Приоритетные задачи (Предложено + В работе) */}
             <div className="grid grid-cols-1 gap-8">
 
-                {/* Блок: Назначено модератором */}
-                {MOCK_SUGGESTED.length > 0 && (
+                {/* Блок: Назначено модератором (Текущие задачи из API) */}
+                {currentPublications.length > 0 && (
                     <section>
                         <div className="mb-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <h2 className="text-sm md:text-base font-bold text-slate-900 uppercase tracking-wide">Назначено модератором</h2>
                                 <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-none px-2 rounded-md font-bold">
-                                    {MOCK_SUGGESTED.length}
+                                    {currentPublications.length}
                                 </Badge>
                             </div>
                         </div>
                         <Card className="border-amber-200 bg-amber-50/30 shadow-sm overflow-hidden rounded-xl">
                             <div className="flex flex-col">
-                                {MOCK_SUGGESTED.map(pub => (
-                                    <PublicationRow key={pub.publ_id} pub={pub} mode="suggested" />
+                                {currentPublications.map(pub => (
+                                    <PublicationRow key={pub.id} pub={pub} mode="suggested" />
                                 ))}
                             </div>
                         </Card>
                     </section>
                 )}
 
-                {/* Блок: В процессе работы */}
+                {/* Блок: В процессе работы (Закомментировано до обновления API) */}
+                {/* 
                 {MOCK_IN_PROGRESS.length > 0 && (
                     <section>
                         <div className="mb-4 flex items-center justify-between">
@@ -102,16 +73,18 @@ const Dashboard: FC = () => {
                         <Card className="border-slate-200 shadow-sm overflow-hidden rounded-xl">
                             <div className="flex flex-col">
                                 {MOCK_IN_PROGRESS.map(pub => (
-                                    <PublicationRow key={pub.publ_id} pub={pub} mode="progress" />
+                                    <PublicationRow key={pub.id} pub={pub} mode="progress" />
                                 ))}
                             </div>
                         </Card>
                     </section>
                 )}
+                */}
 
             </div>
 
-            {/* Общий пул доступных публикаций */}
+            {/* Общий пул доступных публикаций (Закомментировано до обновления API) */}
+            {/*
             <section>
                 <div className="mb-4 border-b border-slate-200 pb-3 mt-8">
                     <h2 className="text-sm md:text-base font-bold text-slate-900 uppercase tracking-wide">Доступные публикации</h2>
@@ -121,11 +94,12 @@ const Dashboard: FC = () => {
                 <Card className="border-slate-200 shadow-sm overflow-hidden rounded-xl">
                     <div className="flex flex-col">
                         {MOCK_AVAILABLE.map(pub => (
-                            <PublicationRow key={pub.publ_id} pub={pub} mode="available" />
+                            <PublicationRow key={pub.id} pub={pub} mode="available" />
                         ))}
                     </div>
                 </Card>
             </section>
+            */}
         </>
     );
 };

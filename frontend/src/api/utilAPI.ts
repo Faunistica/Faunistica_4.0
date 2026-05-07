@@ -1,51 +1,38 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import * as Types from '../types/api.dto.ts';
-import { baseQueryWithReauth } from './baseQuery.ts';
+import * as Types from '../types/api.dto';
+import { baseQueryWithReauth } from './baseQuery';
 
 export const utilAPI = createApi({
     reducerPath: 'utilAPI',
     baseQuery: baseQueryWithReauth,
     tagTypes: ['util'],
     endpoints: (build) => ({
-        suggestTaxon: build.mutation<Types.SuggestTaxonResponse, Types.SuggestTaxonRequest>({
-            query: (payload) => ({
+        suggestTaxon: build.query<Types.SuggestTaxonResponse, Types.SuggestTaxonRequest>({
+            query: ({ field, text, family, genus }) => ({
                 url: '/taxonomy/suggest',
-                method: 'POST',
-                body: payload,
+                method: 'GET',
+                params: { field, text, ...(family ? { family } : {}), ...(genus ? { genus } : {}) },
             }),
         }),
-        autofillTaxon: build.mutation<Types.AutofillTaxonResponse, Types.AutofillTaxonRequest>({
-            query: (payload) => ({
+        autofillTaxon: build.query<Types.AutofillTaxonResponse, Types.AutofillTaxonRequest>({
+            query: ({ field, text }) => ({
                 url: '/taxonomy/autofill',
-                method: 'POST',
-                body: payload,
+                method: 'GET',
+                params: { field, text },
             }),
         }),
-        geoSearch: build.mutation<Types.SuggestTaxonResponse, Types.GeoSearchRequest>({
-            query: (payload) => ({
+        geoSearch: build.query<Types.GeoSearchResponse, Types.GeoSearchRequest>({
+            query: ({ field, text, region }) => ({
                 url: '/geo/search',
-                method: 'POST',
-                body: payload,
+                method: 'GET',
+                params: { field, text, ...(region ? { region } : {}) },
             }),
         }),
-        parseInfoFromText: build.mutation<Types.InfoResponse, Types.InfoRequest>({
-            query: (payload) => ({
-                url: '/get_info',
-                method: 'POST',
-                body: payload,
-            }),
-        }),
-        getLocationByCoords: build.mutation<Types.GetLocationResponse, Types.GetLocationRequest>({
-            query: (payload) => ({
+        getLocationByCoords: build.query<Types.GetLocationResponse, Types.GetLocationRequest>({
+            query: (params) => ({
                 url: '/geo/reverse-geocode',
-                method: 'POST',
-                body: payload,
-            }),
-        }),
-        getUserPhoto: build.query<any, number>({
-            query: (userId) => ({
-                url: '/users/me/photo',
-                params: { user_id: userId }
+                method: 'GET',
+                params,
             }),
         }),
         sendSupportRequest: build.mutation<void, Types.SupportRequest>({
@@ -56,4 +43,12 @@ export const utilAPI = createApi({
             }),
         }),
     }),
-})
+});
+
+export const {
+    useLazySuggestTaxonQuery,
+    useLazyAutofillTaxonQuery,
+    useLazyGeoSearchQuery,
+    useLazyGetLocationByCoordsQuery,
+    useSendSupportRequestMutation,
+} = utilAPI;

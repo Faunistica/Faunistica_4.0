@@ -1,26 +1,28 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import * as Types from '../types/api.dto.ts';
-import { baseQueryWithReauth } from './baseQuery.ts';
+import * as Types from '../types/api.dto';
+import { baseQueryWithReauth } from './baseQuery';
 
 export const recordAPI = createApi({
     reducerPath: 'recordAPI',
     baseQuery: baseQueryWithReauth,
     tagTypes: ['record'],
     endpoints: (build) => ({
-        getRecordsData: build.query<any, void>({
-            query: () => ({
+        getRecordsData: build.query<Types.PaginatedResponse<Types.RecordFull>, Types.RecordListRequest>({
+            query: (params) => ({
                 url: '/records/',
                 method: 'GET',
+                params: params,
             }),
             providesTags: ['record']
         }),
-        getRecordByHash: build.query<Types.GetRecordResponse, Types.RecordHashRequest>({
-            query: (payload) => ({
-                url: `/records/${payload.hash}`,
+        getRecordById: build.query<Types.RecordFull, Types.RecordIdRequest>({
+            query: ({ record_id, user_id }) => ({
+                url: `/records/${record_id}`,
                 method: 'GET',
+                params: { user_id },
             }),
         }),
-        insertRecord: build.mutation<void, Types.InsertRecordsRequest>({
+        createRecord: build.mutation<Types.RecordFull, Types.RecordBelonging>({
             query: (record) => ({
                 url: '/records/',
                 method: 'POST',
@@ -28,20 +30,28 @@ export const recordAPI = createApi({
             }),
             invalidatesTags: ['record']
         }),
-        editRecord: build.mutation<void, Types.EditRecordRequest>({
-            query: (record) => ({
-                url: `/records/${record.hash}`,
+        editRecord: build.mutation<Types.RecordFull, Types.EditRecordRequest>({
+            query: ({ record_id, user_id, ...recordData }) => ({
+                url: `/records/${record_id}`,
                 method: 'PUT',
-                body: record,
+                params: { user_id },
+                body: recordData,
             }),
-            invalidatesTags: ['record']
         }),
-        deleteRecord: build.mutation<void, Types.RecordHashRequest>({
-            query: (payload) => ({
-                url: `/records/${payload.hash}`,
+        deleteRecord: build.mutation<void, Types.RecordIdRequest>({
+            query: ({ record_id, user_id }) => ({
+                url: `/records/${record_id}`,
                 method: 'DELETE',
+                params: { user_id },
             }),
-            invalidatesTags: ['record']
         }),
     }),
-})
+});
+
+export const {
+    useGetRecordsDataQuery,
+    useGetRecordByIdQuery,
+    useCreateRecordMutation,
+    useEditRecordMutation,
+    useDeleteRecordMutation
+} = recordAPI;

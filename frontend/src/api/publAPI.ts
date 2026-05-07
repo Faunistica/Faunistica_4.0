@@ -5,20 +5,16 @@ import { baseQueryWithReauth } from './baseQuery.ts';
 export const publAPI = createApi({
     reducerPath: 'publAPI',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['publ'],
+    tagTypes: ['publications'],
     endpoints: (build) => ({
-        getPublications: build.query<any, void>({
-            query: () => '/users/publication',
+        getCurrentPublication: build.query<Types.Publication[], { list: boolean }>({
+            query: ({ list }) => `/publications/current/?list=${list}`,
         }),
-        getNextPublication: build.query<any, void>({
-            query: () => '/users/publication/next',
-        }),
-        getPublicationFromHash: build.query<any, Types.RecordHashRequest>({
-            query: (payload) => ({
-                url: '/users/from-hash',
-                method: 'POST',
-                body: payload,
-            }),
+        getPublicationById: build.query<Types.Publication, number>({
+            query: (id) => `/publications/${id}`,
+            providesTags: (_result, _error, id) => [{ type: 'publications', id }],
         }),
     }),
-})
+});
+
+export const { useGetCurrentPublicationQuery, useGetPublicationByIdQuery } = publAPI;

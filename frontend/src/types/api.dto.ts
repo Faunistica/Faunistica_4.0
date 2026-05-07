@@ -1,91 +1,98 @@
-export interface UserRequest {
+export interface LoginRequest {
     username: string;
     password: string;
 }
 
-export interface InfoRequest {
-    text: string;
-}
-
-export interface InfoResponse {
-    country?: string | null;
-    region?: string | null;
-    district?: string | null;
-    gathering_place?: string | null;
-    coordinate_north?: Record<string, number | null> | null;
-    coordinate_east?: Record<string, number | null> | null;
-    date?: string | null;
-    family?: string | null;
-    genus?: string | null;
-    species?: string | null;
-    collector?: string | null;
-    count_males?: number | null;
-    count_females?: number | null;
-    count_juv_male?: number | null;
-    count_juv_female?: number | null;
-    count_juv?: number | null;
-}
-
-export interface InsertRecordsRequest {
-    abu_ind_rem?: string | null;
-    adm_verbatim?: boolean | null;
-    begin_day?: number | null;
-    begin_month?: number | null;
-    begin_year?: number | null;
-    biotope?: string | null;
-    collector?: string | null;
-    country?: string | null;
-    district?: string | null;
-    east?: string | null;
-    end_day?: number | null;
-    end_month?: number | null;
-    end_year?: number | null;
-    eve_REM?: string | null;
-    family?: string | null;
-    genus?: string | null;
-    geo_origin?: string | null;
-    geo_REM?: string | null;
-    geo_uncert?: number | null;
-    is_defined_species?: boolean | null;
-    is_in_wsc?: boolean | null;
-    is_new_species?: boolean | null;
-    measurement_units?: string | null;
-    north?: string | null;
-    place?: string | null;
-    place_notes?: string | null;
-    region?: string | null;
-    selective_gain?: string | null;
-    species?: string | null;
-    specimens?: Record<string, number | null> | null;
-    taxonomic_notes?: string | null;
-    type_status?: string | null;
-}
-
-export interface SpeciesStats {
-    species: string;
-    count: number;
-}
-
-export interface LatestRecord {
-    datetime: string;
-    species: string;
-    location: string;
+export interface UserLoginResponse {
+    user_id: number;
     username: string;
 }
 
-export interface StatisticsResponse {
-    total_publications: number;
-    processed_publications: number;
-    total_species: number;
-    unique_species: number;
-    top_species: SpeciesStats[];
-    latest_records: LatestRecord[];
+export interface UserInfo {
+    user_id: number;
+    username: string;
+}
+
+export interface RecordBelonging {
+    publ_id: number;
+    user_id: number;
+}
+
+export interface RecordData {
+    publ_id: number;
+    country?: string | null;
+    region?: string | null;
+    district?: string | null;
+    locality?: string | null;
+    is_manual_location?: boolean | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    verbatimcoordinates?: string | null;
+    coordinate_uncertainty?: number | null;
+    georef_source?: string | null;
+    location_remarks?: string | null;
+    verbatim_date?: string | null;
+    date_precision?: string | null;
+    is_interval?: boolean | null;
+    habitat?: string | null;
+    sampling_protocol?: string | null;
+    sampling_effort?: string | null;
+    sample_size_value?: number | null;
+    sample_size_unit?: string | null;
+    event_remarks?: string | null;
+    field_number?: string | null;
+    catalog_number?: string | null;
+    collection_code?: string | null;
+    recorded_by?: string | null;
+    family?: string | null;
+    genus?: string | null;
+    species?: string | null;
+    tax_verbatim?: boolean | null;
+    taxon_rank?: string | null;
+    type_status?: string | null;
+    accepted_name?: string | null;
+    taxon_remarks?: string | null;
+    quantity?: number | null;
+    quantity_type?: string | null;
+    sex?: string | null;
+    life_stage?: string | null;
+    occurrence_remarks?: string | null;
+    identification_remarks?: string | null;
+}
+
+export interface RecordFull extends RecordData {
+    user_id: number;
+    id: string;
+    errors?: string | null;
+    type?: string | null;
+    created_at: string;
+    updated_at?: string | null;
+    ip?: string | null;
+}
+
+export interface PaginatedResponse<T> {
+    items: T[];
+    total: number;
+    page: number;
+    page_size: number;
+    pages: number;
+}
+
+export interface DraftRecord extends Omit<RecordData, 'quantity' | 'sex' | 'life_stage'> {
+    mmm?: number | null;
+    ssm?: number | null;
+    fff?: number | null;
+    ssf?: number | null;
+    adu?: number | null;
+    juv?: number | null;
+    record_ids?: Record<string, string>;
 }
 
 export interface SuggestTaxonRequest {
-    field: string;
+    field: 'family' | 'genus' | 'species';
     text: string;
-    filters?: Record<string, string | null> | null;
+    family?: string | null;
+    genus?: string | null;
 }
 
 export interface SuggestTaxonResponse {
@@ -93,7 +100,7 @@ export interface SuggestTaxonResponse {
 }
 
 export interface AutofillTaxonRequest {
-    field: string;
+    field: 'family' | 'genus' | 'species';
     text: string;
 }
 
@@ -102,47 +109,22 @@ export interface AutofillTaxonResponse {
     genus?: string | null;
 }
 
-export interface RecordHashRequest {
-    hash: string;
+export interface RecordIdRequest {
+    record_id: string;
+    user_id: number;
 }
 
-export interface GetRecordResponse {
-    hash: string;
-    type?: string | null;
-    adm_country?: string | null;
-    adm_region?: string | null;
-    adm_district?: string | null;
-    adm_loc?: string | null;
-    geo_nn_raw?: string | null;
-    geo_ee_raw?: string | null;
-    geo_origin?: string | null;
-    geo_REM?: string | null;
-    eve_YY?: number | null;
-    eve_MM?: number | null;
-    eve_DD?: number | null;
-    eve_day_def?: boolean | null;
-    eve_habitat?: string | null;
-    eve_effort?: string | null;
-    abu_coll?: string | null;
-    eve_REM?: string | null;
-    tax_fam?: string | null;
-    tax_gen?: string | null;
-    tax_sp?: string | null;
-    tax_sp_def?: boolean | null;
-    tax_nsp?: boolean | null;
-    type_status?: string | null;
-    tax_REM?: string | null;
-    abu?: number | null;
-    abu_details?: string | null;
-    abu_ind_rem?: string | null;
-    geo_uncert?: number | null;
-    eve_YY_end?: number | null;
-    eve_MM_end?: number | null;
-    eve_DD_end?: number | null;
+export interface RecordListRequest {
+    publ_id: number;
+    user_id: number;
+    page?: number;
+    page_size?: number;
+    sort?: string;
 }
 
-export interface EditRecordRequest extends Partial<GetRecordResponse> {
-    hash: string;
+export interface EditRecordRequest extends RecordData {
+    record_id: string;
+    user_id: number;
 }
 
 export interface GetLocationRequest {
@@ -163,12 +145,24 @@ export interface GetLocationResponse {
 export interface GeoSearchRequest {
     field: string;
     text: string;
-    filters?: Record<string, string | null> | null;
+    region?: string | null;
+}
+
+export interface GeoSearchResponse {
+    suggestions: string[] | null;
 }
 
 export interface SupportRequest {
     link: string;
-    user_name?: string | null;
+    user_name: string;
     text: string;
     issue_type: string;
+}
+
+export interface Publication {
+    id: number;
+    author?: string | null;
+    year?: number | null;
+    name?: string | null;
+    pdf_file?: string | null;
 }
