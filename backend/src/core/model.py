@@ -59,12 +59,18 @@ class Publication(Base):
     name: Mapped[str | None] = mapped_column(Text)
     external: Mapped[str | None] = mapped_column(Text)
     language: Mapped[str | None] = mapped_column(Text)
-    resume: Mapped[str | None] = mapped_column(Text)
     ural: Mapped[bool | None] = mapped_column(Boolean)
-    coords: Mapped[bool | None] = mapped_column(Boolean)
-    occs: Mapped[bool | None] = mapped_column(Boolean)
-    spec: Mapped[bool | None] = mapped_column(Boolean)
     pdf_file: Mapped[str | None] = mapped_column(Text)
+    bib_file: Mapped[str | None] = mapped_column(Text)
+    arj_file: Mapped[str | None] = mapped_column(Text)
+    resume: Mapped[str | None] = mapped_column(Text)
+    # TODO: change type to bool in migration
+    coords: Mapped[int | None] = mapped_column(Integer)
+    cover: Mapped[int | None] = mapped_column(Integer, server_default="0")
+    occs: Mapped[int | None] = mapped_column(Integer)
+    spec: Mapped[int | None] = mapped_column(Integer)
+    e_author: Mapped[str | None] = mapped_column(Integer)
+    e_name: Mapped[int | None] = mapped_column(Integer)
 
 
 class Action(Base):

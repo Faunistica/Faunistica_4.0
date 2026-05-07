@@ -42,10 +42,25 @@ class UserLoginResponse(BaseModel):
 
 class Publication(BaseModel):
     id: int
+    type: str
     author: str | None = None
-    year: int | None = None
-    name: str | None = None
+    year: int
+    name: str
     pdf_file: str | None = None
+    bib_file: str | None = None
+    arj_file: str | None = None
+
+    external: str | None = None
+    language: str
+    ural: int
+    resume: str | None
+    # TODO: change type to bool in migration
+    coords: int | None = None
+    cover: int | None = None
+    occs: int | None = None
+    spec: int | None = None
+    e_author: str | None = None
+    e_name: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
