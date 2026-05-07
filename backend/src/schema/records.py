@@ -28,9 +28,6 @@ class RecordMetadata(BaseModel):
 
 
 class RecordData(BaseModel):
-    # idk how not to duplicate it
-    publ_id: int
-
     country: str | None = None
     region: str | None = None
     district: str | None = None

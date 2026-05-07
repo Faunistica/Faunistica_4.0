@@ -1,8 +1,11 @@
+from collections.abc import AsyncIterable, Sequence
 from datetime import datetime
-from typing import Annotated, Literal
+from typing import Annotated, Literal, TypedDict
 from uuid import UUID, uuid4
 
+import asyncstdlib as a
 from fastapi import Depends
+from pydantic import BaseModel, Json
 
 from core.config import settings
 from core.dependencies import DBSession
@@ -18,6 +21,7 @@ from repository.record import count_records_by_publ
 from repository.user import get_user_expect
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
 from service.actions import ActionService
+from service.export import ParseResult
 from service.milestone import check_and_log_milestone
 
 
@@ -56,9 +60,9 @@ def _determine_type(
 
 def create_record_metadata(
     record: RecordData | None,
-    *,
     user_id: int,
     publ_id: int,
+    *,
     submission_type: Literal["submit", "autosave"],
     ip: str | None = None,
     updated_at: datetime | None = None,
@@ -78,6 +82,17 @@ def create_record_metadata(
         updated_at=updated_at if updated_at else now,
         ip=ip,
     )
+
+
+class ImportError(BaseModel):
+    row: int
+    error: Json
+
+
+class ImportResult(BaseModel):
+    imported: int
+    failed: int
+    errors: list[ImportError]
 
 
 class RecordService:
@@ -211,3 +226,47 @@ class RecordService:
         current_count = await count_records_by_publ(self.session, publ_id)
         if current_count + additional_count > settings.MAX_RECORDS_PER_PUBLICATION:
             raise RecordLimitExceededError(publ_id, current_count, additional_count)
+
+    # TODO: check for duplicated?
+    async def import_records(
+        self,
+        records: AsyncIterable[ParseResult],
+        user_id: int,
+        publ_id: int,
+        ip: str | None,
+    ) -> ImportResult:
+        """Import records from parsed Excel/CSV rows."""
+        event_records: list[EventRecord] = []
+        all_errors: list[ImportError] = []
+
+        async for i, result in a.enumerate(records, 1):
+            if not result["success"]:
+                all_errors.append(ImportError(row=i, error=result["errors"]))
+                continue
+
+            record_data = result["record"]
+            if record_data is None:
+                all_errors.append(ImportError(row=i, error=["Record data is None"]))
+                continue
+
+            metadata = create_record_metadata(
+                record_data, user_id, publ_id, submission_type="submit", ip=ip
+            )
+
+            event_records.append(
+                EventRecord(
+                    **record_data.model_dump(exclude_unset=True),
+                    **metadata.model_dump(),
+                )
+            )
+
+        await self.check_import_limit(publ_id, len(event_records))
+
+        self.session.add_all(event_records)
+        await self.session.commit()
+
+        return ImportResult(
+            imported=len(event_records),
+            failed=len(all_errors),
+            errors=all_errors,
+        )

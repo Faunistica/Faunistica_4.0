@@ -135,12 +135,16 @@ class RecordStaleError(APIException):
         )
 
 
-class RecordLimitExceededError(Exception):
+class RecordLimitExceededError(APIException):
     def __init__(self, publ_id: int, current: int, additional: int) -> None:
         self.publ_id = publ_id
         self.current = current
         self.additional = additional
         super().__init__(
-            f"Publication {publ_id} has {current} records, "
-            f"importing {additional} more would exceed limit"
+            "RECORD_LIMIT",
+            (
+                f"Publication {publ_id} has {current} records, "
+                f"importing {additional} more would exceed limit"
+            ),
+            400,
         )
