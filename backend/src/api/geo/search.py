@@ -30,5 +30,5 @@ async def search_geo(
         )
         return GeoSearchResponse(suggestions=suggestions)
     except Exception as e:
-        logger.error("Geo search failed %s", e, exc_info=True)
+        logger.error("Geo search failed %e", e, exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error") from e
