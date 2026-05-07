@@ -53,13 +53,13 @@ class Publication(Base):
     __tablename__ = "publs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    type: Mapped[str | None] = mapped_column(Text)
+    type: Mapped[str] = mapped_column(Text)
     author: Mapped[str | None] = mapped_column(Text)
-    year: Mapped[int | None] = mapped_column(Integer)
-    name: Mapped[str | None] = mapped_column(Text)
+    year: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(Text)
     external: Mapped[str | None] = mapped_column(Text)
-    language: Mapped[str | None] = mapped_column(Text)
-    ural: Mapped[bool | None] = mapped_column(Boolean)
+    language: Mapped[str] = mapped_column(Text)
+    ural: Mapped[int] = mapped_column(Integer)
     pdf_file: Mapped[str | None] = mapped_column(Text)
     bib_file: Mapped[str | None] = mapped_column(Text)
     arj_file: Mapped[str | None] = mapped_column(Text)
@@ -69,8 +69,8 @@ class Publication(Base):
     cover: Mapped[int | None] = mapped_column(Integer, server_default="0")
     occs: Mapped[int | None] = mapped_column(Integer)
     spec: Mapped[int | None] = mapped_column(Integer)
-    e_author: Mapped[str | None] = mapped_column(Integer)
-    e_name: Mapped[int | None] = mapped_column(Integer)
+    e_author: Mapped[str | None] = mapped_column(Text)
+    e_name: Mapped[str | None] = mapped_column(Text)
 
 
 class Action(Base):

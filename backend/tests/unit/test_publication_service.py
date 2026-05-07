@@ -58,7 +58,15 @@ class TestValidateAccess:
     async def test_valid_access(self, publication_service: PublicationService) -> None:
         """Test that validate_access passes when user.publ_id matches."""
         mock_user = User(user_id=1, publ_id=123)
-        mock_publ = Publication(id=123)
+        mock_publ = Publication(
+            id=123,
+            type="A",
+            year=2000,
+            name="publ",
+            language="rus",
+            ural=1,
+            resume="resume",
+        )
 
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub.return_value = mock_publ
@@ -71,7 +79,14 @@ class TestValidateAccess:
     ) -> None:
         """Test that validate_access raises PublicationForbiddenError when mismatch."""
         mock_user = User(user_id=1, publ_id=456)
-        mock_publ = Publication(id=123)
+        mock_publ = Publication(
+            id=123,
+            type="A",
+            year=2000,
+            name="publ",
+            language="rus",
+            ural=1,
+        )
 
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub.return_value = mock_publ
@@ -139,7 +154,15 @@ class TestComplete:
     ) -> None:
         """Test complete with various processing levels."""
         mock_user = User(user_id=1, publ_id=123, items="456|789")
-        next_publ = Publication(id=456, author="Author 2", name="Next Publication")
+        next_publ = Publication(
+            id=456,
+            author="Author 2",
+            name="Next Publication",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
+        )
 
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub_expect.return_value = next_publ
@@ -181,7 +204,15 @@ class TestComplete:
         mock_user = User(user_id=1, publ_id=123, items="456|789")
 
         self.mock_get_user.return_value = mock_user
-        self.mock_get_pub_expect.return_value = Publication(id=456)
+        self.mock_get_pub_expect.return_value = Publication(
+            id=456,
+            author="Author 2",
+            name="Next Publication",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
+        )
 
         await publication_service.complete(
             token_user.user_id, 123, ProcessingLevel.FULL, "127.0.0.1"
@@ -225,7 +256,13 @@ class TestGetCurrent:
 
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub_expect.return_value = Publication(
-            id=123, author="Test Author", name="Test Publication"
+            id=123,
+            author="Test Author",
+            name="Test Publication",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
         )
 
         result = await publication_service.get_current(token_user, with_queue=False)
@@ -245,9 +282,33 @@ class TestGetCurrent:
         self.mock_get_user.return_value = mock_user
 
         self.mock_get_pubs.return_value = [
-            Publication(id=123, author="Author 1", name="Publication 1"),
-            Publication(id=456, author="Author 2", name="Publication 2"),
-            Publication(id=789, author="Author 3", name="Publication 3"),
+            Publication(
+                id=123,
+                author="Author 1",
+                name="Publication 1",
+                type="A",
+                year=2000,
+                language="rus",
+                ural=1,
+            ),
+            Publication(
+                id=456,
+                author="Author 2",
+                name="Publication 2",
+                type="A",
+                year=2000,
+                language="rus",
+                ural=1,
+            ),
+            Publication(
+                id=789,
+                author="Author 3",
+                name="Publication 3",
+                type="A",
+                year=2000,
+                language="rus",
+                ural=1,
+            ),
         ]
         result = await publication_service.get_current(token_user, with_queue=True)
 
@@ -278,13 +339,37 @@ class TestGetCurrent:
         publications = []
         if publ_id:
             publications.append(
-                Publication(id=publ_id, author="Author 1", name="Publication 1")
+                Publication(
+                    id=publ_id,
+                    author="Author 1",
+                    name="Publication 1",
+                    type="A",
+                    year=2000,
+                    language="rus",
+                    ural=1,
+                )
             )
         if items:
             publications.extend(
                 [
-                    Publication(id=456, author="Author 2", name="Publication 2"),
-                    Publication(id=789, author="Author 3", name="Publication 3"),
+                    Publication(
+                        id=456,
+                        author="Author 2",
+                        name="Publication 2",
+                        type="A",
+                        year=2000,
+                        language="rus",
+                        ural=1,
+                    ),
+                    Publication(
+                        id=789,
+                        author="Author 3",
+                        name="Publication 3",
+                        type="A",
+                        year=2000,
+                        language="rus",
+                        ural=1,
+                    ),
                 ]
             )
         self.mock_get_pubs.return_value = publications
@@ -322,7 +407,15 @@ class TestAssignCurrent:
     ) -> None:
         """Test assign_current assigns next publication from queue when publ_id is None."""
         mock_user = User(user_id=1, publ_id=None, items="123|456|789")
-        mock_publ = Publication(id=123, author="Author 1", name="Publication 1")
+        mock_publ = Publication(
+            id=123,
+            author="Author 1",
+            name="Publication 1",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
+        )
 
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub_expect.return_value = mock_publ
@@ -343,7 +436,13 @@ class TestAssignCurrent:
 
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub_expect.return_value = Publication(
-            id=456, author="Author 2", name="Publication 2"
+            id=456,
+            author="Author 2",
+            name="Publication 2",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
         )
 
         result = await publication_service.assign_current(1)

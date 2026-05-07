@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from core.database import get_session
+from core.database import get_session, init_db
 from core.model import EventRecord, Publication, User
 from core.security import get_password_hash
 
@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 async def seed() -> None:
     logger.info("Starting database seed...")
+
+    await init_db()
 
     async for session in get_session():
         # Publications

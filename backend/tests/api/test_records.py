@@ -321,38 +321,6 @@ async def test_export_records_xlsx_default(
     assert "records.xlsx" in response.headers["content-disposition"]
 
 
-def _create_test_excel_content() -> bytes:
-    """Create a minimal Excel file with test record data."""
-    from openpyxl import Workbook
-
-    wb = Workbook()
-    ws = wb.active
-    if ws is None:
-        raise RuntimeError("Failed to create worksheet")
-
-    from service.export import COLUMN_MAPPING
-
-    headers = list(COLUMN_MAPPING.values())
-    ws.append(headers)
-
-    ws.append(["Family", "Genus", "Species", "Country", "55.5", "37.5"])
-
-    output = io.BytesIO()
-    wb.save(output)
-    return output.getvalue()
-
-
-def _create_test_csv_content() -> bytes:
-    """Create a minimal CSV file with test record data."""
-    from service.export import COLUMN_MAPPING
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(list(COLUMN_MAPPING.values()))
-    writer.writerow(["Family", "Genus", "Species", "Country", "55.5", "37.5"])
-    return output.getvalue().encode("utf-8")
-
-
 @pytest.mark.asyncio
 async def test_import_from_excel(authenticated_client: AsyncClient) -> None:
     """Test importing records from Excel file."""

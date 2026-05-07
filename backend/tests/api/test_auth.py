@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Callable
 from datetime import datetime, timedelta
 
@@ -10,8 +9,6 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import User
-
-logger = logging.getLogger(__name__)
 
 
 @pytest.mark.asyncio

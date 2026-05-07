@@ -1,10 +1,11 @@
 import random
+from collections.abc import Callable
 from datetime import datetime
 from uuid import uuid4
 
 import pytest
-from conftest import SeedData
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.enums import UserState
 from core.model import Action, EventRecord, Publication, User
@@ -12,7 +13,8 @@ from core.model import Action, EventRecord, Publication, User
 
 @pytest.mark.asyncio
 async def test_get_project_statistics(
-    authenticated_client: AsyncClient, session_maker, seed_data: SeedData
+    authenticated_client: AsyncClient,
+    session_maker: Callable[[], AsyncSession],
 ):
     async with session_maker() as session:
         # Add test data
@@ -32,6 +34,10 @@ async def test_get_project_statistics(
             id=test_publ_id,
             author="Test Author",
             name="Test Publication",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
         )
         session.add(publ)
         await session.flush()  # Flush publication so record can reference it

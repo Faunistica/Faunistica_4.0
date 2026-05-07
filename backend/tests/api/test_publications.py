@@ -26,7 +26,6 @@ async def test_get_current_publication_with_queue(
 @pytest.mark.asyncio
 async def test_get_current_publication_empty_queue(
     authenticated_client_user2: AsyncClient,
-    seed_data: SeedData,
 ) -> None:
     response = await authenticated_client_user2.get("/api/publications/current")
     assert response.status_code == 200
@@ -91,7 +90,14 @@ async def test_complete_queue_advancement(
     publ2_id = seed_data["publs"][1].id
 
     async with session_maker() as session:
-        publ3 = Publication(id=random.randint(10000, 99999), name="third")
+        publ3 = Publication(
+            id=random.randint(10000, 99999),
+            name="third",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
+        )
         session.add(publ3)
         await session.flush()
 

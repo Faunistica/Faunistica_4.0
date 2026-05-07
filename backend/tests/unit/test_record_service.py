@@ -11,38 +11,6 @@ from service.export import COLUMN_MAPPING, ParseResult
 from service.records import ImportResult, RecordService
 
 
-def create_parse_result(
-    success: bool, record_data: dict | None = None, error=None
-) -> ParseResult:
-    """Helper to create ParseResult."""
-    if success and record_data:
-        return {
-            "success": True,
-            "record": RecordData(**record_data),
-            "error": None,
-        }
-    return {"success": False, "record": None, "error": error}
-
-
-def make_record_generator(
-    items: list[dict],
-) -> AsyncGenerator[ParseResult, None]:
-    """Create an async generator from a list of record dicts."""
-
-    async def gen() -> AsyncGenerator[ParseResult, None]:
-        for item in items:
-            if item.get("error"):
-                yield {"success": False, "record": None, "error": item["error"]}
-            else:
-                yield {
-                    "success": True,
-                    "record": RecordData(**item),
-                    "error": None,
-                }
-
-    return gen()
-
-
 @pytest.fixture
 def mock_session():
     """Create a mock database session."""

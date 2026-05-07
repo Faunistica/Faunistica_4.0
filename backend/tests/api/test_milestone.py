@@ -7,26 +7,9 @@ from conftest import SeedData
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.model import Action, EventRecord, User
-from core.security import get_password_hash
+from core.model import Action, EventRecord
 from service.actions import ActionService
 from service.milestone import check_and_log_milestone
-
-
-async def _create_user(
-    session: AsyncSession, user_id: int, username: str, publ_id: int | None = None
-) -> User:
-    user = User(
-        user_id=user_id,
-        name=username,
-        tlg_name=username,
-        tlg_username=username,
-        hash=get_password_hash("password"),
-        items=str(publ_id) if publ_id else "",
-    )
-    session.add(user)
-    await session.flush()
-    return user
 
 
 async def _seed_records(

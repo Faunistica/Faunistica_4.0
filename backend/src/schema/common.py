@@ -46,14 +46,16 @@ class Publication(BaseModel):
     author: str | None = None
     year: int
     name: str
+
+    external: str | None = None
+    language: str
+
     pdf_file: str | None = None
     bib_file: str | None = None
     arj_file: str | None = None
 
-    external: str | None = None
-    language: str
+    resume: str | None = None
     ural: int
-    resume: str | None
     # TODO: change type to bool in migration
     coords: int | None = None
     cover: int | None = None

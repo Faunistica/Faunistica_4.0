@@ -1,11 +1,7 @@
-import logging
-
 import pytest
 from conftest import SeedData
 from fastapi import status
 from httpx import AsyncClient
-
-logger = logging.getLogger(__name__)
 
 
 @pytest.mark.asyncio

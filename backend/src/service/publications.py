@@ -54,7 +54,7 @@ class PublicationService:
             raise NoPublicationsAssignedError(user_id)
 
         if user.publ_id != publ_id:
-            raise PublicationForbiddenError(publ_id, user_id)
+            raise PublicationForbiddenError(user_id, publ_id)
 
     async def complete(
         self,

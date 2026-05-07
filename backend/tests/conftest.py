@@ -135,9 +135,23 @@ async def seed_data(
     while publ_id_2 == publ_id_1:
         publ_id_2 = id()
 
-    publ1 = Publication(id=publ_id_1, name="Test Publ")
+    publ1 = Publication(
+        id=publ_id_1,
+        name="Test Publ",
+        type="A",
+        year=2000,
+        language="rus",
+        ural=1,
+    )
     session.add(publ1)
-    publ2 = Publication(id=publ_id_2, name="Test Publ 2")
+    publ2 = Publication(
+        id=publ_id_2,
+        name="Test Publ 2",
+        type="A",
+        year=2000,
+        language="rus",
+        ural=1,
+    )
     session.add(publ2)
 
     test_users = [
