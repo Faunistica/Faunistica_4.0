@@ -176,7 +176,9 @@ class TestCreateRefreshToken:
         token = create_refresh_token(payload)
 
         decoded = pyjwt.decode(token, options={"verify_signature": False})
-        expected_exp = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        expected_exp = datetime.now(UTC) + timedelta(
+            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+        )
         actual_exp = datetime.fromtimestamp(decoded["exp"], tz=UTC)
         assert abs((actual_exp - expected_exp).total_seconds()) < 5
 

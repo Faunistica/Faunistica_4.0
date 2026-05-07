@@ -2,12 +2,11 @@ import csv
 import io
 import logging
 from collections.abc import AsyncGenerator, Sequence
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
-from PIL.ImagePalette import raw
 from pydantic import ValidationError
 
 from core.model import EventRecord
@@ -63,73 +62,25 @@ REVERSE_COLUMN_MAPPING: dict[str, str] = {v: k for k, v in COLUMN_MAPPING.items(
 class ParseResult(TypedDict):
     success: bool
     record: RecordData | None
-    errors: str | None
+    error: ValidationError | None
 
 
-BOOLEAN_TRUE_VALUES: frozenset[str] = frozenset({"TRUE", "YES", "1", "T", "Y"})
-BOOLEAN_FALSE_VALUES: frozenset[str] = frozenset({"FALSE", "NO", "0", "F", "N"})
-
-FLOAT_FIELDS: frozenset[str] = frozenset(
-    {
-        "latitude",
-        "longitude",
-        "coordinate_uncertainty",
-        "sample_size_value",
-        "quantity",
-    }
-)
-
-BOOLEAN_FIELDS: frozenset[str] = frozenset(
-    {
-        "is_manual_location",
-        "is_interval",
-        "tax_verbatim",
-    }
-)
-
-
-def _convert_bool(str_value: str) -> bool | None:
-    upper = str_value.upper()
-    if upper in BOOLEAN_TRUE_VALUES:
-        return True
-    if upper in BOOLEAN_FALSE_VALUES:
-        return False
-    return None
-
-
-def _convert_value(field: str, value: object) -> object:
-    if value is None or value == "":
-        return None
-    str_value = str(value).strip()
-    if field in BOOLEAN_FIELDS:
-        return _convert_bool(str_value)
-    if field in FLOAT_FIELDS:
-        try:
-            return float(str_value)
-        except ValueError:
-            return None
-    return str_value
-
-
-def is_row_empty(row: dict[str, str | None]) -> bool:
+def is_row_empty(row: dict[str, Any | None]) -> bool:
     return all(v is None or str(v).strip() == "" for v in row.values())
 
 
 def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
     """Convert a row dict to RecordData using pydantic validation."""
-    print(row)
     data_dict: dict[str, str] = {}
     for display_name, field in REVERSE_COLUMN_MAPPING.items():
         raw_value = row.get(display_name)
-        # converted = _convert_value(field, raw_value)
         if raw_value is not None:
             data_dict[field] = raw_value
-    print(data_dict)
     try:
         record = RecordData.model_validate(data_dict)
-        return {"success": True, "record": record, "errors": None}
+        return {"success": True, "record": record, "error": None}
     except ValidationError as e:
-        return {"success": False, "record": None, "errors": e.json()}
+        return {"success": False, "record": None, "error": e}
 
 
 async def read_excel(file_content: bytes) -> AsyncGenerator[ParseResult]:
@@ -147,8 +98,7 @@ async def read_excel(file_content: bytes) -> AsyncGenerator[ParseResult]:
                 for j in range(len(headers))
                 if j < len(row)
             }
-            if not is_row_empty(row_dict):
-                yield _row_to_record_data(row_dict)
+            yield _row_to_record_data(row_dict)
     wb.close()
 
 
@@ -157,8 +107,7 @@ async def read_csv(file_content: bytes) -> AsyncGenerator[ParseResult, None]:
     reader = csv.DictReader(io.StringIO(text))
     for row in reader:
         row_dict = {k: (v if v else None) for k, v in row.items()}
-        if not is_row_empty(row_dict):
-            yield _row_to_record_data(row_dict)
+        yield _row_to_record_data(row_dict)
 
 
 def records_to_excel(records: Sequence[EventRecord]) -> bytes:

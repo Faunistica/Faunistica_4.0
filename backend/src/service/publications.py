@@ -5,10 +5,12 @@ from fastapi import Depends
 from sqlalchemy import update
 
 from core.dependencies import DBSession, TokenUser
-from core.exceptions import PublicationForbiddenError, PublicationNotFoundError
+from core.exceptions import (
+    NoPublicationsAssignedError,
+    PublicationForbiddenError,
+)
 from core.model import User
 from repository.publication import (
-    get_publication,
     get_publication_expect,
     get_publications_by_ids,
 )
@@ -28,14 +30,17 @@ class PublicationService:
         self.session = session
         self.actions = action_service
 
-    async def validate_access(self, user_id: int, publ_id: int) -> None:
+    async def validate_access(
+        self, publ_id: int, *, user_id: int | None = None, user: User | None = None
+    ) -> None:
         """Raises PublicationForbiddenError if user.publ_id != publ_id."""
         # Check if publication exists
-        if await get_publication(self.session, publ_id) is None:
-            logger.warning(
-                "user %d requested access non-existend publication %d", user_id, publ_id
-            )
-            raise PublicationNotFoundError(publ_id)
+        if user is None:
+            if user_id is None:
+                raise ValueError("both user and user_id are None")
+            user = await get_user_expect(self.session, user_id)
+
+        user_id = user.user_id
 
         if user.publ_id is None:
             raise NoPublicationsAssignedError(user_id)
@@ -55,13 +60,13 @@ class PublicationService:
         update user.publ_id and user.items, commit.
         Returns the next publication after advancing, or None if queue empty.
         """
-        await self.validate_access(user_id, publ_id)
+        user = await get_user_expect(self.session, user_id)
+        await self.validate_access(publ_id, user=user)
 
         # Log action (no commit - part of same transaction)
         await self.actions.log_publ_complete(user_id, level, publ_id, ip)
 
         # Advance queue
-        user = await get_user_expect(self.session, user_id)
         queue = self._pipe_to_array(user.items) if user.items else []
 
         # Remove publ_id from queue if it's at the front

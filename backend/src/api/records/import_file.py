@@ -1,13 +1,11 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 
 from core.config import settings
-from core.dependencies import ClientIP, DBSession, TokenUser
-from core.exceptions import NoPublicationsAssignedError
+from core.dependencies import ClientIP, TokenUser
 from core.rate_limiter import limiter
-from repository.user import get_user_expect
 from service.export import read_csv, read_excel
 from service.records import ImportResult, RecordService
 
@@ -25,22 +23,21 @@ async def import_records(
     ],
     ip: ClientIP,
     token: TokenUser,
-    session: DBSession,
     service: Annotated[RecordService, Depends()],
 ) -> ImportResult:
     try:
         content = await file.read()
-    except Exception:
-        return {"imported": 0, "failed": 0, "errors": []}
-
+    except Exception as e:
+        raise HTTPException(
+            detail="Couldn't read file", status_code=status.HTTP_404_NOT_FOUND
+        ) from e
     # TODO: use file size
 
     if len(content) > settings.MAX_IMPORT_FILE_BYTES:
-        return {"imported": 0, "failed": 0, "errors": []}
-
-    user = await get_user_expect(session, token.user_id)
-    if user.publ_id is None:
-        raise NoPublicationsAssignedError(user.user_id)
+        raise HTTPException(
+            detail=f"File larger than max size of {settings.MAX_IMPORT_FILE_BYTES}",
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+        )
 
     filename = file.filename or ""
     if filename.endswith(".xlsx"):
@@ -53,4 +50,4 @@ async def import_records(
             detail="Couldn't determine file type: file extention is not xlsx or csv",
         )
 
-    return await service.import_records(records, token.user_id, user.publ_id, ip)
+    return await service.import_records(records, token.user_id, ip)

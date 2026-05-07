@@ -291,9 +291,7 @@ async def test_export_records_project_non_admin_403(
 
 
 @pytest.mark.asyncio
-async def test_export_records_csv(
-    authenticated_client: AsyncClient, seed_data
-) -> None:
+async def test_export_records_csv(authenticated_client: AsyncClient, seed_data) -> None:
     """Test export returns CSV file with user's records."""
     user = seed_data["users"][0]
     response = await authenticated_client.get(
@@ -398,7 +396,13 @@ async def test_import_from_excel(
 
     response = await authenticated_client.post(
         "/api/records/import",
-        files={"file": ("test.xlsx", excel_content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        files={
+            "file": (
+                "test.xlsx",
+                excel_content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
     )
     assert response.status_code == 200
     data = response.json()
@@ -408,9 +412,7 @@ async def test_import_from_excel(
 
 
 @pytest.mark.asyncio
-async def test_import_from_csv(
-    authenticated_client: AsyncClient, seed_data
-) -> None:
+async def test_import_from_csv(authenticated_client: AsyncClient, seed_data) -> None:
     """Test importing records from CSV file."""
     from service.export import COLUMN_MAPPING
 
@@ -463,9 +465,7 @@ async def test_import_invalid_file_type(
 
 
 @pytest.mark.asyncio
-async def test_import_empty_file(
-    authenticated_client: AsyncClient, seed_data
-) -> None:
+async def test_import_empty_file(authenticated_client: AsyncClient, seed_data) -> None:
     """Test importing empty Excel file."""
     wb = Workbook()
     ws = wb.active
@@ -482,7 +482,13 @@ async def test_import_empty_file(
 
     response = await authenticated_client.post(
         "/api/records/import",
-        files={"file": ("empty.xlsx", excel_content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        files={
+            "file": (
+                "empty.xlsx",
+                excel_content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
     )
     assert response.status_code == 200
     data = response.json()
@@ -530,7 +536,13 @@ async def test_import_boolean_fields(
 
     response = await authenticated_client.post(
         "/api/records/import",
-        files={"file": ("test.xlsx", excel_content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        files={
+            "file": (
+                "test.xlsx",
+                excel_content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
     )
     assert response.status_code == 200
     data = response.json()
@@ -557,7 +569,13 @@ async def test_import_user_without_publ(
 
     response = await authenticated_client_user2.post(
         "/api/records/import",
-        files={"file": ("test.xlsx", excel_content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        files={
+            "file": (
+                "test.xlsx",
+                excel_content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
     )
     assert response.status_code == 200
     data = response.json()
@@ -575,7 +593,13 @@ async def test_import_file_size_limit(
 
     response = await authenticated_client.post(
         "/api/records/import",
-        files={"file": ("large.xlsx", large_content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        files={
+            "file": (
+                "large.xlsx",
+                large_content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
     )
     assert response.status_code == 200
     data = response.json()
@@ -618,7 +642,13 @@ async def test_import_limit_enforcement(
 
     response = await authenticated_client.post(
         "/api/records/import",
-        files={"file": ("test.xlsx", excel_content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        files={
+            "file": (
+                "test.xlsx",
+                excel_content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
     )
     assert response.status_code == 200
     data = response.json()

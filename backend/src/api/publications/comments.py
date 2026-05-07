@@ -28,5 +28,8 @@ async def add_publication_comment(
     pub_service: Annotated[PublicationService, Depends()],
     action_service: Annotated[ActionService, Depends()],
 ) -> None:
-    await pub_service.validate_access(token.user_id, publ_id)
+    await pub_service.validate_access(
+        publ_id,
+        user_id=token.user_id,
+    )
     await action_service.log_publ_comment(token.user_id, publ_id, data.comment, ip)

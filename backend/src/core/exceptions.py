@@ -49,7 +49,7 @@ class APIException(Exception):
 
 
 def api_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    print(exc)
+    logger.info(exc)
     if isinstance(exc, APIException):
         return JSONResponse(
             status_code=exc.status_code,

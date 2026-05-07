@@ -63,7 +63,7 @@ class TestValidateAccess:
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub.return_value = mock_publ
 
-        await publication_service.validate_access(1, 123)
+        await publication_service.validate_access(123, user_id=1)
 
     @pytest.mark.asyncio
     async def test_invalid_access(
@@ -76,7 +76,7 @@ class TestValidateAccess:
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub.return_value = mock_publ
         with pytest.raises(PublicationForbiddenError):
-            await publication_service.validate_access(1, 123)
+            await publication_service.validate_access(123, user_id=1)
 
     @pytest.mark.asyncio
     async def test_publication_not_found_raises_error(
@@ -89,7 +89,7 @@ class TestValidateAccess:
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub.return_value = None
         with pytest.raises(PublicationNotFoundError):
-            await publication_service.validate_access(1, 123)
+            await publication_service.validate_access(123, user_id=1)
 
 
 # ============================================================================

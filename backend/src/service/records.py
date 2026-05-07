@@ -1,6 +1,7 @@
-from collections.abc import AsyncIterable, Sequence
+import json
+from collections.abc import AsyncIterable
 from datetime import datetime
-from typing import Annotated, Literal, TypedDict
+from typing import Annotated, Any, Literal
 from uuid import UUID, uuid4
 
 import asyncstdlib as a
@@ -10,6 +11,7 @@ from pydantic import BaseModel, Json
 from core.config import settings
 from core.dependencies import DBSession
 from core.exceptions import (
+    NoPublicationsAssignedError,
     RecordForbiddenError,
     RecordLimitExceededError,
     RecordNotFoundError,
@@ -21,8 +23,9 @@ from repository.record import count_records_by_publ
 from repository.user import get_user_expect
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
 from service.actions import ActionService
-from service.export import ParseResult
+from service.export import ParseResult, is_row_empty
 from service.milestone import check_and_log_milestone
+from service.publications import PublicationService
 
 
 def _mock_validate_record(data: RecordData) -> str | None:
@@ -86,7 +89,7 @@ def create_record_metadata(
 
 class ImportError(BaseModel):
     row: int
-    error: Json
+    error: Json[Any]
 
 
 class ImportResult(BaseModel):
@@ -97,10 +100,14 @@ class ImportResult(BaseModel):
 
 class RecordService:
     def __init__(
-        self, session: DBSession, action_service: Annotated[ActionService, Depends()]
+        self,
+        session: DBSession,
+        publication_service: Annotated[PublicationService, Depends()],
+        action_service: Annotated[ActionService, Depends()],
     ) -> None:
         self.session = session
         self.action_service = action_service
+        self.publication_service = publication_service
 
     async def create_record(
         self,
@@ -110,6 +117,7 @@ class RecordService:
         submission_type: Literal["submit", "autosave"] = "autosave",
     ) -> RecordFull:
         """Create a new record (autosave by default, or submit)."""
+        await self.publication_service.validate_access(publ_id, user_id=user_id)
         metadata = create_record_metadata(
             None,
             user_id=user_id,
@@ -216,6 +224,7 @@ class RecordService:
         if record.user_id != user_id:
             raise RecordForbiddenError
 
+        await self.publication_service.validate_access(record.user_id, user=user)
         if record.publ_id != user.publ_id:
             raise RecordForbiddenError
 
@@ -232,38 +241,63 @@ class RecordService:
         self,
         records: AsyncIterable[ParseResult],
         user_id: int,
-        publ_id: int,
         ip: str | None,
     ) -> ImportResult:
         """Import records from parsed Excel/CSV rows."""
         event_records: list[EventRecord] = []
         all_errors: list[ImportError] = []
+        last_ok = None
+
+        user = await get_user_expect(self.session, user_id)
+        if user.publ_id is None:
+            raise NoPublicationsAssignedError(user_id)
+
+        await self.publication_service.validate_access(user.publ_id, user=user)
+
+        publ_id = user.publ_id
 
         async for i, result in a.enumerate(records, 1):
-            if not result["success"]:
-                all_errors.append(ImportError(row=i, error=result["errors"]))
+            if result["error"]:
+                all_errors.append(ImportError(row=i, error=result["error"].json()))
                 continue
 
             record_data = result["record"]
-            if record_data is None:
-                all_errors.append(ImportError(row=i, error=["Record data is None"]))
+            if record_data is None or is_row_empty(record_data.model_dump()):
+                all_errors.append(
+                    ImportError(
+                        row=i, error=json.dumps([{"msg": "Record data is empty"}])
+                    )
+                )
                 continue
 
             metadata = create_record_metadata(
                 record_data, user_id, publ_id, submission_type="submit", ip=ip
             )
 
-            event_records.append(
-                EventRecord(
-                    **record_data.model_dump(exclude_unset=True),
-                    **metadata.model_dump(),
-                )
+            record = EventRecord(
+                **record_data.model_dump(exclude_unset=True),
+                **metadata.model_dump(),
             )
+
+            event_records.append(record)
+
+            if metadata.type == "rec_ok":
+                last_ok = record
 
         await self.check_import_limit(publ_id, len(event_records))
 
         self.session.add_all(event_records)
         await self.session.commit()
+
+        if last_ok is not None:
+            await check_and_log_milestone(
+                self.session,
+                user_id,
+                # FIXME: This should be the exact record, that broke the record,
+                # but here we use the last one, which might not be expected
+                last_ok,
+                self.action_service,
+            )
 
         return ImportResult(
             imported=len(event_records),
