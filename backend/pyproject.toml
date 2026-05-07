@@ -3,31 +3,38 @@ name = "faunistica-backend"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = [
     "fastapi[standard]",
-    "slowapi",
     "geopy",
     "pygbif",
     "sqlalchemy",
-    "dotenv",
     "asyncpg",
     "aiogram",
     "cryptography",
     "argon2-cffi",
-    "python-jose[cryptography]",
+    "pyjwt[crypto]>=2.8.0",
     "pandas",
     "aiohttp",
-    "openpyxl",
     "aiohttp-socks>=0.11.0",
-    "python-dotenv>=1.2.2",
     "greenlet>=3.3.2",
-    "pyyaml",
     "alembic>=1.18.4",
+    "pydantic-settings[yaml]>=2.13.1",
+    "slowapi>=0.1.9",
+    "openpyxl>=3.1.5",
+    "asyncstdlib>=3.14.0",
 ]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.vulture]
+exclude = ["src/schema", "src/core/model.py", "src/core/enums.py"]
+ignore_decorators = ["@router.*"]
+ignore_names = ["cls", "settings_customise_sources", "model_config"]
+
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = [
@@ -50,8 +57,12 @@ select = [
     "PL",     # Pylint
 ]
 ignore = [
-    "PLR2004" # ignore magick variables for now
+    "PLR2004", # ignore magick variables for now
+    "PLR0913", # max 5 arguments
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S311", "ANN001", "ANN201", "E501", "PLC0415", "S105", "PLW0603", "ANN202"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
@@ -60,7 +71,37 @@ order-by-type = true
 
 [tool.ruff.format]
 
+[tool.ty.environment]
+python = ".venv"
+
 [dependency-groups]
 dev = [
+    "pandas-stubs>=3.0.0.260204",
     "ruff>=0.15.7",
+    "ty>=0.0.32",
+    "types-openpyxl>=3.1.5.20260408",
+    "vulture>=2.16",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-xdist>=3.5.0",
+    "httpx>=0.27.0",
+    "testcontainers>=4.0.0",
+    "pytest-cov>=7.1.0",
 ]
+test = [
+    "pytest>=8.3.0",
+    "httpx>=0.28.0",
+    "pytest-asyncio>=0.25.0",
+    "testcontainers>=4.1.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+pythonpath = ["src"]
+addopts = "-W ignore::DeprecationWarning --cov src --cov-report=html --cov-report=term"
+

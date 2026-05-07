@@ -1,90 +1,34 @@
-import logging
-from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel
 
-from api.rate_limiter import limiter
-from api.schemas import InsertRecordsRequest, Message
-from api.util import clean_value
-from database.database import get_session
-from service.geo import GeoService
-from service.record import RecordService
-from service.specimen import SpecimenService
-from service.token import get_current_user
-from service.user import UserService
+from core.dependencies import ClientIP, TokenUser
+from schema.records import RecordFull
+from service.records import RecordService
 
-logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(
+    prefix="/records",
+)
 
 
-@router.post("/")
-@limiter.limit("5/minute")
-async def create_record(  # noqa: PLR0913
-    request: Request,
-    data: InsertRecordsRequest,
-    user_data: Annotated[dict, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
-    geo: Annotated[GeoService, Depends()],
-    specimen: Annotated[SpecimenService, Depends()],
-    users: Annotated[UserService, Depends()],
-    records_svc: Annotated[RecordService, Depends()],
-) -> Message:
-    north = geo.parse_coordinate(data.north)
-    east = geo.parse_coordinate(data.east)
-    sp, num = specimen.parse(clean_value(data.specimens))
-    user_info = await users.get_by_id(session, int(user_data["sub"]))
-    record_json = {
-        "publ_id": user_info.publ_id,
-        "user_id": user_info.id,
-        "datetime": datetime.now(UTC).replace(tzinfo=None, microsecond=0),
-        "ip": None,
-        "errors": None,
-        "type": "rec_ok",
-        "country": clean_value(data.country),
-        "region": clean_value(data.region),
-        "district": clean_value(data.district),
-        "locality": clean_value(data.place),
-        "latitude": clean_value(north),
-        "longitude": clean_value(east),
-        "verbatimlatitude": clean_value(data.north),
-        "verbatimlongitude": clean_value(data.east),
-        "georef_source": clean_value(data.geo_origin),
-        "location_remarks": clean_value(data.geo_REM),
-        "year": clean_value(data.begin_year),
-        "month": clean_value(data.begin_month),
-        "day": clean_value(data.begin_day),
-        "day_defined": clean_value(data.begin_day) is not None,
-        "habitat": clean_value(data.biotope),
-        "sampling_effort": clean_value(data.selective_gain),
-        "recorded_by": clean_value(data.collector),
-        "event_remarks": clean_value(data.eve_REM),
-        "family": clean_value(data.family),
-        "genus": clean_value(data.genus),
-        "species": clean_value(data.species),
-        "taxon_rank": clean_value(data.is_defined_species) is not None,
-        "is_new_species": clean_value(data.is_new_species) is not None,
-        "type_status": clean_value(data.type_status),
-        "taxon_remarks": clean_value(data.taxonomic_notes),
-        "quantity": num,
-        "quantity_type": None,
-        "sex": None,
-        "life_stage": None,
-        "abu_details": sp,  # временно
-        "occurrence_remarks": clean_value(data.abu_ind_rem),
-        "uncertainty": clean_value(data.geo_uncert),
-        "year_end": clean_value(data.end_year),
-        "month_end": clean_value(data.end_month),
-        "day_end": clean_value(data.end_day),
-        "adm_verbatim": "1",
-    }
+class CreateRecordRequest(BaseModel):
+    publ_id: int
 
-    try:
-        await records_svc.add(session, record_json)
-        return Message(message="ok")
-    except Exception as e:
-        logger.error(f"Server database error: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Server database error: {str(e)}"
-        ) from e
+
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_record(
+    data: CreateRecordRequest,
+    ip: ClientIP,
+    token: TokenUser,
+    service: Annotated[RecordService, Depends()],
+) -> RecordFull:
+    return await service.create_record(
+        user_id=token.user_id,
+        publ_id=data.publ_id,
+        ip=ip,
+        submission_type="autosave",
+    )

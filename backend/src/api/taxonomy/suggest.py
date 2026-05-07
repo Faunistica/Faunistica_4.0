@@ -1,26 +1,26 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Query, Request
 
-from api.schemas import SuggestTaxonRequest, SuggestTaxonResponse
-from service.taxon import TaxonService
+from schema.taxonomy import SuggestTaxonRequest, SuggestTaxonResponse
+from service import taxon
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# TODO: Update to use GBIF API instead of local CSV file for taxonomy suggestions
 
-@router.post("/suggest")
-async def suggest_taxon(
+
+@router.get("/suggest")
+def suggest_taxon(
     request: Request,
-    data: SuggestTaxonRequest,
-    taxons: Annotated[TaxonService, Depends()],
+    data: Annotated[SuggestTaxonRequest, Query()],
 ) -> SuggestTaxonResponse:
-    try:
-        suggestions = await taxons.async_suggestion(
-            data.field, data.text, data.filters or {}
-        )
-        return SuggestTaxonResponse(suggestions=suggestions)
-    except ValueError as e:
-        logger.error(f"Value error: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    """
+    Подсказки таксонов.
+
+    Предлагает таксоны для автодополнения с фильтрацией по семейству и роду.
+    """
+    suggestions = taxon.suggest(data.field, data.text, data.filters)
+    return SuggestTaxonResponse(suggestions=suggestions)

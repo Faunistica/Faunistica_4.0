@@ -1,158 +1,116 @@
-import asyncio
 import logging
 from collections.abc import Sequence
+from typing import Literal
+from uuid import UUID
 
-from sqlalchemy import and_, func
+from sqlalchemy import and_, delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
-from database.models import Publ, Record
-from model import PublData
-from repository.user import username_and_publication
+from core.model import EventRecord
+from schema.records import RecordData, RecordMetadata
 
 logger = logging.getLogger(__name__)
 
 
-async def add_record_from_json(session: AsyncSession, record_json: dict) -> None:
-    record = Record(**record_json)
-    session.add(record)
+async def create_record(
+    session: AsyncSession,
+    metadata: RecordMetadata,
+) -> EventRecord:
+    stmt = pg_insert(EventRecord).values(**metadata.model_dump()).returning(EventRecord)
+    result = await session.execute(stmt)
     await session.commit()
 
-
-async def get_statistics(session: AsyncSession) -> dict:
-    stats = {}
-
-    stmt = select(func.count()).select_from(Publ)
-    result = await session.execute(stmt)
-    stats["total_publications"] = result.scalar()
-
-    stmt = select(func.count(func.distinct(Record.publ_id)))
-    result = await session.execute(stmt)
-    stats["processed_publications"] = result.scalar()
-
-    stmt = select(func.count()).select_from(Record).where(Record.type == "rec_ok")
-    result = await session.execute(stmt)
-    stats["total_species"] = result.scalar()
-
-    stmt = select(
-        func.count(func.distinct(func.concat(Record.genus, "_", Record.species)))
-    ).where(Record.type == "rec_ok")
-    result = await session.execute(stmt)
-    stats["unique_species"] = result.scalar()
-
-    stmt = (
-        select(
-            Record.genus, Record.species, func.count(Record.id).label("spider_count")
-        )
-        .group_by(Record.genus, Record.species)
-        .order_by(func.count(Record.id).desc())
-        .limit(4)
-    )
-    result = await session.execute(stmt)
-    top_species = result.fetchall()
-    stats["top_species"] = [
-        {"species": f"{row.genus} {row.species}", "count": row.spider_count}
-        for row in top_species
-    ]
-
-    stmt = (
-        select(
-            func.date(Record.datetime).label("formatted_date"),
-            Record.genus,
-            Record.species,
-            Record.district,
-            Record.region,
-            Record.user_id,
-        )
-        .order_by(Record.datetime.desc())
-        .limit(4)
-    )
-    result = await session.execute(stmt)
-    latest_records = result.fetchall()
-
-    user_ids = [record.user_id for record in latest_records]
-    user_name_data = await asyncio.gather(
-        *[username_and_publication(session, user_id) for user_id in user_ids]
-    )
-
-    stats["latest_records"] = [
-        {
-            "datetime": record.formatted_date.isoformat(),
-            "species": f"{record.genus} {record.species}",
-            "location": f"{record.district}, {record.region}",
-            "username": user_data["user_name"]
-            if user_data and "user_name" in user_data
-            else "Unknown",
-        }
-        for record, user_data in zip(latest_records, user_name_data, strict=False)
-    ]
-
-    return stats
+    return result.scalar_one()
 
 
-async def get_user_records(session: AsyncSession, user_id: int) -> Sequence[Record]:
-    stmt = select(Record).where(Record.user_id == user_id)
-    result = await session.execute(stmt)
-    return result.scalars().all()
+async def get_record(session: AsyncSession, record_id: UUID) -> EventRecord | None:
+    stmt = select(EventRecord).where(and_(EventRecord.id == record_id))
 
-
-async def remove_record_row_by_id(
-    session: AsyncSession, record_id: int, user_id: int
-) -> bool:
-    stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
-    result = await session.execute(stmt)
-    record = result.scalar_one_or_none()
-
-    if record is not None:
-        await session.delete(record)
-        await session.commit()
-        return True
-    return False
-
-
-async def get_record_by_id(
-    session: AsyncSession, record_id: int, user_id: int
-) -> Record | None:
-    stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
 
-async def edit_record_by_id(
-    session: AsyncSession, record_id: int, user_id: int, new_data: dict
-) -> bool:
-    stmt = select(Record).where(and_(Record.id == record_id, Record.user_id == user_id))
-    result = await session.execute(stmt)
-    record = result.scalar_one_or_none()
+async def update_record(
+    session: AsyncSession,
+    record_id: UUID,
+    data: RecordData,
+    metadata: RecordMetadata,
+) -> EventRecord | None:
+    """
+    Update a record with optimistic locking via updated_at.
+    Returns None if record not found or updated_at doesn't match (stale).
+    """
+    update_data = {**metadata.dump_for_update(), **data.model_dump(exclude_unset=True)}
 
-    if record is None:
-        return False
-
-    for key, value in new_data.items():
-        if key != "hash":
-            setattr(record, key, value)
-
-    await session.commit()
-    return True
-
-
-async def publ_by_hash(
-    session: AsyncSession, record_id: int, user_id: int
-) -> PublData | None:
-    record = await get_record_by_id(session, record_id, user_id)
-
-    if record is None:
-        return None
-
-    stmt = select(Publ).filter_by(id=record.publ_id)
-    result = await session.execute(stmt)
-    publication = result.scalar_one_or_none()
-    if publication is None:
-        return None
-
-    return PublData(
-        author=publication.author,
-        year=str(publication.year or ""),
-        name=publication.name,
-        pdf_file=publication.pdf_file,
+    stmt = (
+        update(EventRecord)
+        .where(
+            and_(
+                EventRecord.id == record_id,
+                EventRecord.updated_at == metadata.updated_at,
+            )
+        )
+        .values(update_data)
+        .returning(EventRecord)
     )
+
+    result = await session.execute(stmt)
+    await session.commit()
+
+    return result.scalar_one_or_none()
+
+
+async def delete_record(session: AsyncSession, record_id: UUID) -> EventRecord | None:
+    """Delete a record by ID.
+
+    Returns the deleted record if found, None otherwise.
+    """
+    stmt = delete(EventRecord).where(EventRecord.id == record_id).returning(EventRecord)
+    result = await session.execute(stmt)
+    await session.commit()
+
+    return result.scalar_one_or_none()
+
+
+async def get_records_paginated(
+    session: AsyncSession,
+    user_id: int,
+    publ_id: int | None,
+    page: int = 1,
+    page_size: int = 20,
+    sort: Literal["created_at", "updated_at"] = "created_at",
+) -> tuple[Sequence[EventRecord], int]:
+    offset = (page - 1) * page_size
+
+    order_col = getattr(EventRecord, sort, EventRecord.created_at)
+
+    if publ_id is None:
+        where_condition = EventRecord.user_id == user_id
+    else:
+        where_condition = and_(
+            EventRecord.user_id == user_id,
+            EventRecord.publ_id == publ_id,
+        )
+
+    count_stmt = select(func.count()).where(where_condition)
+    count_result = await session.execute(count_stmt)
+    total = count_result.scalar_one()
+
+    stmt = (
+        select(EventRecord)
+        .where(where_condition)
+        .order_by(order_col.desc())
+        .offset(offset)
+        .limit(page_size)
+    )
+
+    result = await session.execute(stmt)
+    return result.scalars().all(), total
+
+
+async def count_records_by_publ(session: AsyncSession, publ_id: int) -> int:
+    """Count total records for a publication."""
+    stmt = select(func.count()).where(EventRecord.publ_id == publ_id)
+    result = await session.execute(stmt)
+    return result.scalar_one()

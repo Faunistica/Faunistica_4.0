@@ -1,53 +1,86 @@
-import logging
-from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, Query
+from fastapi.responses import Response, StreamingResponse
 
-from api.rate_limiter import limiter
-from database.database import get_session
-from service.export import ExportService
-from service.record import RecordService
-from service.token import get_current_user
+from core.config import settings
+from core.exceptions import AdminOnlyError
+from schema.common import PaginatedResponse
+from schema.records import RecordFull
+from service.export import records_to_csv, records_to_excel
+from service.records import RecordService
 
-logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(
+    prefix="/records",
+)
 
 
-@router.get("/")
-@limiter.limit("1/minute")
+@router.get("")
 async def list_records(
-    request: Request,
-    user_data: Annotated[dict, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
-    records_svc: Annotated[RecordService, Depends()],
-    export: Annotated[ExportService, Depends()],
-) -> StreamingResponse:
-    user_id = int(user_data["sub"])
-    username = user_data["username"]
-    try:
-        records = await records_svc.get_by_user(session, user_id)
+    service: Annotated[RecordService, Depends()],
+    user_id: Annotated[int, Query(description="User ID")],
+    publ_id: Annotated[int | None, Query(description="Publication ID")] = None,
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100, description="Page size")] = 20,
+    sort: Annotated[
+        Literal["created_at", "updated_at"],
+        Query(description="Sort field"),
+    ] = "created_at",
+) -> PaginatedResponse[RecordFull]:
+    result = await service.list_records(
+        user_id=user_id,
+        publ_id=publ_id,
+        page=page,
+        page_size=page_size,
+        sort=sort,
+    )
 
-        if not records:
-            logger.warning(f"No records found for user: {username} - {user_id}")
-            raise HTTPException(
-                status_code=404, detail="No records found for this user"
-            )
+    return PaginatedResponse(
+        items=result["items"],
+        total=result["total"],
+        page=result["page"],
+        page_size=result["page_size"],
+        pages=result["pages"],
+    )
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        headers = {
-            "Content-Disposition": f"attachment; filename=records_{timestamp}.xlsx",
-            "Access-Control-Expose-Headers": "Content-Disposition",
-        }
 
-        return StreamingResponse(
-            export.records_to_excel(records),
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers=headers,
+@router.get("/export", response_model=None)
+async def export_records(
+    service: Annotated[RecordService, Depends()],
+    user_id: Annotated[int, Query(..., description="User ID")],
+    publ_id: Annotated[
+        int | None,
+        Query(..., description="Publication ID if exporting records for publication"),
+    ] = None,
+    scope: Annotated[
+        Literal["user", "project"],
+        Query(description="Export scope: use 'project' for full dataset"),
+    ] = "user",
+    format: Annotated[str, Query(description="Export format: xlsx or csv")] = "xlsx",
+) -> Response | StreamingResponse:
+    # TODO: remove or impl
+    if scope == "project":
+        raise AdminOnlyError
+
+    result = await service.list_records(
+        user_id=user_id,
+        publ_id=publ_id,
+        page=1,
+        page_size=settings.MAX_RECORDS_PER_PUBLICATION,
+    )
+
+    if format == "csv":
+        content = records_to_csv(result["items"])
+        return Response(
+            content=content,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=records.csv"},
         )
 
-    except Exception as e:
-        logger.error(f"Exception in list_records: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    content = records_to_excel(result["items"])
+
+    return StreamingResponse(
+        content=iter([content]),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=records.xlsx"},
+    )

@@ -1,24 +1,27 @@
 import logging
-from typing import Annotated
 
-import aiohttp
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
-from api.util import get_http_session
-from service.telegram import TelegramService
+from core.dependencies import HTTPClient
+from core.rate_limiter import limiter
+from service import telegram
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/me/photo")
+@router.get("/photo")
+@limiter.limit("1/minute")
 async def get_photo(
-    user_id: int,
-    session: Annotated[aiohttp.ClientSession, Depends(get_http_session)],
-    telegram: Annotated[TelegramService, Depends()],
+    request: Request, user_id: int, client: HTTPClient
 ) -> StreamingResponse:
-    photo = await telegram.fetch_photo(session, user_id)
+    """
+    Получение фотографии профиля пользователя из Telegram.
+
+    Возвращает изображение в формате JPEG.
+    """
+    photo = await telegram.fetch_photo(client, user_id)
     if not photo:
         logger.warning("No photo found")
         raise HTTPException(404, detail="No photo found")
