@@ -71,6 +71,9 @@ order-by-type = true
 
 [tool.ruff.format]
 
+[tool.ty.environment]
+python = ".venv"
+
 [dependency-groups]
 dev = [
     "pandas-stubs>=3.0.0.260204",
