@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
+from core.config import settings
 from core.dependencies import ClientIP, DBSession
 from core.rate_limiter import limiter
 from core.security import check_password, set_response_token_cookies
@@ -34,16 +35,16 @@ async def login(
     """
     user = await find_user_by_username(session, data.username)
     if user is None:
-        logger.warning("User not found: %s", data.username)
+        logger.info("User not found: %s", data.username)
         raise HTTPException(status_code=404, detail="User not found")
 
     if user.hash is None:
-        logger.warning("User has no password hash: %s", data.username)
+        logger.info("User has no password hash: %s", data.username)
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     result = check_password(data.password, user.hash)
     if not result.is_valid:
-        logger.warning("Wrong password for user: %s", data.username)
+        logger.info("Wrong password for user: %s", data.username)
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if result.new_hash:
@@ -52,8 +53,8 @@ async def login(
     if user.hash_date is not None:
         now = datetime.now()
         minutes_since_hash = (now - user.hash_date).total_seconds() / 60
-        if minutes_since_hash > 3000:
-            logger.warning("Password expired for user: %s", data.username)
+        if minutes_since_hash > settings.PASSWORD_EXPIRE_SECONDS:
+            logger.info("Password expired for user: %s", data.username)
             raise HTTPException(status_code=401, detail="Password expired")
 
     token_payload = TokenPayload(sub=str(user.user_id), username=data.username)

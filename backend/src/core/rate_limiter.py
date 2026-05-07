@@ -5,12 +5,12 @@ from slowapi.util import get_ipaddr
 
 from core.config import settings
 
-# NOTE: also use user_id as key_func param?
+# FIXME: also use user_id as key_func param?
 limiter = Limiter(
     key_func=get_ipaddr,
     enabled=not settings.DEV_MODE,
     # Global rate limit: 100/minute for all /api/ routes
-    default_limits=["100/minute"],
+    default_limits=[settings.GLOBAL_RATE_LIMIT],
 )
 
 

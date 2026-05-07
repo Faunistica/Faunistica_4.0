@@ -46,6 +46,7 @@ class SecuritySettings(CamelCaseSettings):
     JWT_SECRET: SecretStr = Field(init=False)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    PASSWORD_EXPIRE_MINUTES: int = 1440
 
 
 class BotSettings(CamelCaseSettings):
@@ -65,6 +66,8 @@ class LoggingSettings(CamelCaseSettings):
 
 class AppSettings(CamelCaseSettings):
     DEV_MODE: bool = False
+    # TODO: Check if other type is better
+    GLOBAL_RATE_LIMIT: str
     ALLOWED_ORIGINS: list[str] = []
     MAX_IMPORT_FILE_BYTES: int = 5 * 1024 * 1024  # 5MB
     MAX_RECORDS_PER_PUBLICATION: int = 1000
@@ -107,6 +110,10 @@ class Settings(
             file_secret_settings,
             yaml_source,
         )
+
+    @property
+    def PASSWORD_EXPIRE_SECONDS(self) -> int:
+        return self.PASSWORD_EXPIRE_MINUTES * 60
 
     @property
     def ACCESS_TOKEN_EXPIRE_SECONDS(self) -> int:

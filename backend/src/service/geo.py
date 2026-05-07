@@ -9,6 +9,7 @@ from schema.geo import GeoFilters, RegionData, ReverseGeoCodeLocation
 logger = logging.getLogger(__name__)
 
 
+# TODO: remove async or improve perf
 async def get_location_suggestions(
     location_data: list[RegionData],
     field: str,

@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
@@ -16,8 +16,10 @@ router = APIRouter(prefix="/publications")
 
 
 class PublicationMetadata(BaseModel):
-    urals_scope: str | None = None
-    material_status: str | None = None
+    urals_scope: Literal["urals_plus", "urals_only"] | None = None
+    material_status: Literal["absent", "idk", "present_rec", "present_skip"] | None = (
+        None
+    )
 
 
 @router.post("/{publ_id}/metadata", status_code=status.HTTP_204_NO_CONTENT)

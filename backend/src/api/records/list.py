@@ -3,6 +3,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response, StreamingResponse
 
+from core.config import settings
 from core.exceptions import AdminOnlyError
 from schema.common import PaginatedResponse
 from schema.records import RecordFull
@@ -57,6 +58,7 @@ async def export_records(
     ] = "user",
     format: Annotated[str, Query(description="Export format: xlsx or csv")] = "xlsx",
 ) -> Response | StreamingResponse:
+    # TODO: remove or impl
     if scope == "project":
         raise AdminOnlyError
 
@@ -64,7 +66,7 @@ async def export_records(
         user_id=user_id,
         publ_id=publ_id,
         page=1,
-        page_size=10000,
+        page_size=settings.MAX_RECORDS_PER_PUBLICATION,
     )
 
     if format == "csv":

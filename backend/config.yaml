@@ -2,4 +2,4 @@ DevMode: true
 AllowedOrigins:
   - "http://localhost:5173"
   - "http://localhost:8000"
-
+GlobalRateLimit: 100/minute
