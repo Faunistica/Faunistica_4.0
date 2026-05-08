@@ -178,6 +178,8 @@ class RecordService:
         user_id: int,
     ) -> None:
         """Delete a record, enforcing ownership and publication membership."""
+
+        # FIXME: if record is rec_ok change type to rec_del instead of deleting.
         record = await self._get_and_check_ownership(record_id, user_id)
         await repo.delete_record(self.session, record.id)
 
