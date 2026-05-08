@@ -27,29 +27,7 @@ from service.actions import ActionService
 from service.export import ParseResult, is_row_empty
 from service.milestone import check_and_log_milestone
 from service.publications import PublicationService
-
-
-def _mock_validate_record(data: RecordData) -> str | None:
-    errors: list[str] = []
-
-    if not data.family:
-        errors.append("family is required")
-    if not data.genus:
-        errors.append("genus is required")
-    if not data.species:
-        errors.append("species is required")
-
-    lat = data.latitude
-    if isinstance(lat, (int, float)) and (lat < -90 or lat > 90):
-        errors.append("latitude must be between -90 and 90")
-
-    lon = data.longitude
-    if isinstance(lon, (int, float)) and (lon < -180 or lon > 180):
-        errors.append("longitude must be between -180 and 180")
-
-    if errors:
-        return "; ".join(errors)
-    return None
+from service.records.validation import validate_record
 
 
 def _determine_type(
@@ -71,7 +49,7 @@ def create_record_metadata(
     ip: str | None = None,
     updated_at: datetime | None = None,
 ) -> RecordMetadata:
-    errors = _mock_validate_record(record) if record else "Пустая запись"
+    errors = validate_record(record) if record else "Пустая запись"
     type_val = _determine_type(errors, submission_type) if record else "check_fail"
 
     now = datetime.now()

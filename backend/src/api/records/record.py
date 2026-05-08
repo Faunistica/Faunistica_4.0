@@ -36,6 +36,23 @@ async def update_record(
     )
 
 
+@router.put("/submit")
+async def submit_record(
+    record_id: UUID,
+    data: RecordData,
+    user: TokenUser,
+    ip: ClientIP,
+    service: Annotated[RecordService, Depends()],
+) -> RecordFull:
+    return await service.update_record(
+        record_id=record_id,
+        user_id=user.user_id,
+        data=data,
+        ip=ip,
+        submission_type="submit",
+    )
+
+
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_record(
     record_id: UUID,
