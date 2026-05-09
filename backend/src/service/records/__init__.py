@@ -281,6 +281,8 @@ class RecordService:
             if metadata.type == "rec_ok":
                 last_ok = record
 
+        # FIXME: race condition - check and insert are not atomic.
+        # Concurrent imports can exceed MAX_RECORDS_PER_PUBLICATION.
         await self.check_import_limit(publ.id, len(event_records))
 
         self.session.add_all(event_records)
