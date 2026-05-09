@@ -20,6 +20,7 @@ from core.exceptions import (
 )
 from core.model import EventRecord
 from repository import record as repo
+from repository.publication import get_publication
 from repository.record import count_records_by_publ
 from repository.user import get_user_expect
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
@@ -45,11 +46,12 @@ def create_record_metadata(
     user_id: int,
     publ_id: int,
     *,
+    language: str | None,
     submission_type: Literal["submit", "autosave"],
     ip: str | None = None,
     updated_at: datetime | None = None,
 ) -> RecordMetadata:
-    errors = validate_record(record) if record else "Пустая запись"
+    errors = validate_record(record, language=language) if record else "Пустая запись"
     type_val = _determine_type(errors, submission_type) if record else "check_fail"
 
     now = datetime.now()
@@ -97,10 +99,13 @@ class RecordService:
     ) -> RecordFull:
         """Create a new record (autosave by default, or submit)."""
         await self.publication_service.validate_access(publ_id, user_id=user_id)
+        publ = await get_publication(self.session, publ_id)
+        language = publ.language if publ else None
         metadata = create_record_metadata(
             None,
             user_id=user_id,
             publ_id=publ_id,
+            language=language,
             submission_type=submission_type,
             ip=ip,
         )
@@ -119,10 +124,14 @@ class RecordService:
         """Update a record with optimistic locking via updated_at."""
         record = await self._get_and_check_ownership(record_id, user_id)
 
+        publ = await get_publication(self.session, record.publ_id)
+        language = publ.language if publ else None
+
         metadata = create_record_metadata(
             data,
             user_id=user_id,
             publ_id=record.publ_id,
+            language=language,
             submission_type=submission_type,
             ip=ip,
             updated_at=record.updated_at,
@@ -237,9 +246,7 @@ class RecordService:
         if user.publ_id is None:
             raise NoPublicationsAssignedError(user_id)
 
-        await self.publication_service.validate_access(user.publ_id, user=user)
-
-        publ_id = user.publ_id
+        publ = await self.publication_service.validate_access(user.publ_id, user=user)
 
         async for i, result in a.enumerate(records, 1):
             if result["error"]:
@@ -256,7 +263,12 @@ class RecordService:
                 continue
 
             metadata = create_record_metadata(
-                record_data, user_id, publ_id, submission_type="submit", ip=ip
+                record_data,
+                user_id,
+                publ.id,
+                language=publ.language,
+                submission_type="submit",
+                ip=ip,
             )
 
             record = EventRecord(
@@ -269,7 +281,7 @@ class RecordService:
             if metadata.type == "rec_ok":
                 last_ok = record
 
-        await self.check_import_limit(publ_id, len(event_records))
+        await self.check_import_limit(publ.id, len(event_records))
 
         self.session.add_all(event_records)
         await self.session.commit()
