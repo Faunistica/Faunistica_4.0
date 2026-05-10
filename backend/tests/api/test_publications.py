@@ -211,7 +211,7 @@ async def test_metadata_after_completion_returns_403(
     # Try to add metadata after completion
     response = await authenticated_client.post(
         f"/api/publications/{publ_id}/metadata",
-        json={"urals_scope": "ural", "material_status": "complete"},
+        json={"urals_scope": "urals_only", "material_status": "present_rec"},
     )
     assert response.status_code == 403
     assert response.json()["error"] == "PUBL_FORBIDDEN"
