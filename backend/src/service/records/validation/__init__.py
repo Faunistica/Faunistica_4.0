@@ -16,12 +16,14 @@ def validate_record(
 ) -> ErrorCollection:
     errors = ErrorCollection()
     if data is None:
-        errors.add("", "EMPTY", "Пустая запись")
+        errors.add([""], "EMPTY", "Пустая запись")
         return errors
 
     ctx = RuleContext(language=language)
     for rule in all_rules():
-        rule.func(data, ctx, errors)
+        msg = rule.func(data, ctx)
+        if msg:
+            errors.add(rule.fields, rule.code, msg, rule.category)
     return errors
 
 
