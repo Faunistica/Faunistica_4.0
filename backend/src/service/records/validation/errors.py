@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
-class ValidationError:
+class RecordValidationError:
     field: str
     code: str
     message: str
@@ -12,10 +12,12 @@ class ValidationError:
 
 @dataclass
 class ErrorCollection:
-    errors: list[ValidationError] = field(default_factory=list)
+    errors: list[RecordValidationError] = field(default_factory=list)
 
     def add(self, field: str, code: str, message: str) -> None:
-        self.errors.append(ValidationError(field=field, code=code, message=message))
+        self.errors.append(
+            RecordValidationError(field=field, code=code, message=message)
+        )
 
     def has_errors(self) -> bool:
         return bool(self.errors)
@@ -23,4 +25,7 @@ class ErrorCollection:
     def to_db_string(self) -> str | None:
         if not self.errors:
             return None
-        return "; ".join(e.message for e in self.errors)
+        return " | ".join(e.message for e in self.errors)
+
+    def to_list(self) -> list[RecordValidationError]:
+        return self.errors

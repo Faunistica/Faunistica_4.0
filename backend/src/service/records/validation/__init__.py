@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from service.records.validation.errors import ErrorCollection
-from service.records.validation.rules import _RULE_CONTEXT, all_rules
+from service.records.validation.rules import RuleContext, all_rules
 
 if TYPE_CHECKING:
     from schema.records import RecordData
@@ -13,17 +13,16 @@ def validate_record(
     data: RecordData | None,
     *,
     language: str | None = None,
-) -> str | None:
-    if data is None:
-        return "Пустая запись"
+) -> ErrorCollection:
     errors = ErrorCollection()
-    token = _RULE_CONTEXT.set({"language": language})
-    try:
-        for rule in all_rules():
-            rule.func(data, errors)
-        return errors.to_db_string()
-    finally:
-        _RULE_CONTEXT.reset(token)
+    if data is None:
+        errors.add("", "EMPTY", "Пустая запись")
+        return errors
+
+    ctx = RuleContext(language=language)
+    for rule in all_rules():
+        rule.func(data, ctx, errors)
+    return errors
 
 
 __all__ = ["validate_record"]

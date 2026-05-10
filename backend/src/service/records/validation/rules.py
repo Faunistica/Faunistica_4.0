@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextvars import ContextVar
 from dataclasses import dataclass
 
 from schema.records import RecordData
@@ -11,7 +10,6 @@ from service.records.validation.constants import (
     COORD_PRECISION_MIN,
     COORD_UNCERTAINTY_MAX,
     COORD_UNCERTAINTY_MIN,
-    CYRILLIC_LANGUAGES,
     DATE_PRECISIONS,
     GEOREF_SOURCES,
     LIFE_STAGES,
@@ -28,15 +26,21 @@ from service.records.validation.constants import (
 )
 from service.records.validation.errors import ErrorCollection
 from service.records.validation.helpers import (
-    contains_cyrillic,
     contains_forbidden_chars,
     decimal_places,
+    has_cyrillic_in_foreign_text,
     has_range_separator,
     should_skip_geo,
 )
 from service.taxon import family_genus_known, genus_species_known
 
-RuleFunc = Callable[[RecordData, ErrorCollection], None]
+
+@dataclass
+class RuleContext:
+    language: str | None = None
+
+
+RuleFunc = Callable[[RecordData, RuleContext, ErrorCollection], None]
 
 
 @dataclass(frozen=True)
@@ -61,45 +65,34 @@ def all_rules() -> list[Rule]:
     return list(_RULES)
 
 
-_RULE_CONTEXT: ContextVar[dict[str, object] | None] = ContextVar(
-    "_RULE_CONTEXT", default=None
-)
-
-
 @register("taxonomy", "family_required")
-def rule_family_required(data: RecordData, errors: ErrorCollection) -> None:
+def rule_family_requir_(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if not data.family:
         errors.add("family", "required", "Семейство обязательно")
 
 
 @register("taxonomy", "genus_required")
-def rule_genus_required(data: RecordData, errors: ErrorCollection) -> None:
+def rule_genus_required(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if not data.genus:
         errors.add("genus", "required", "Род обязателен")
 
 
 @register("taxonomy", "species_required")
-def rule_species_required(data: RecordData, errors: ErrorCollection) -> None:
+def rule_species_required(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if not data.species:
         errors.add("species", "required", "Вид обязателен")
 
 
-@register("location", "latitude_range")
-def rule_latitude_range(data: RecordData, errors: ErrorCollection) -> None:
-    lat = data.latitude
-    if isinstance(lat, (int, float)) and (lat < -90 or lat > 90):
-        errors.add("latitude", "out_of_range", "Широта должна быть от -90 до 90")
-
-
-@register("location", "longitude_range")
-def rule_longitude_range(data: RecordData, errors: ErrorCollection) -> None:
-    lon = data.longitude
-    if isinstance(lon, (int, float)) and (lon < -180 or lon > 180):
-        errors.add("longitude", "out_of_range", "Долгота должна быть от -180 до 180")
-
-
 @register("geo", "latitude_required")
-def rule_latitude_required(data: RecordData, errors: ErrorCollection) -> None:
+def rule_latitude_required(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     # TODO: 0,0 is a real location (Gulf of Guinea); consider dropping the == 0 check
@@ -108,7 +101,9 @@ def rule_latitude_required(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("geo", "longitude_required")
-def rule_longitude_required(data: RecordData, errors: ErrorCollection) -> None:
+def rule_longitude_required(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     # TODO: 0,0 is a real location (Gulf of Guinea); consider dropping the == 0 check
@@ -117,7 +112,9 @@ def rule_longitude_required(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("geo", "latitude_precision")
-def rule_latitude_precision(data: RecordData, errors: ErrorCollection) -> None:
+def rule_latitude_precision(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     lat = data.latitude
@@ -126,7 +123,9 @@ def rule_latitude_precision(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("geo", "latitude_excess_precision")
-def rule_latitude_excess_precision(data: RecordData, errors: ErrorCollection) -> None:
+def rule_latitude_excess_precision(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     lat = data.latitude
@@ -135,7 +134,9 @@ def rule_latitude_excess_precision(data: RecordData, errors: ErrorCollection) ->
 
 
 @register("geo", "longitude_precision")
-def rule_longitude_precision(data: RecordData, errors: ErrorCollection) -> None:
+def rule_longitude_precision(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     lon = data.longitude
@@ -144,7 +145,9 @@ def rule_longitude_precision(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("geo", "longitude_excess_precision")
-def rule_longitude_excess_precision(data: RecordData, errors: ErrorCollection) -> None:
+def rule_longitude_excess_precision(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     lon = data.longitude
@@ -153,7 +156,9 @@ def rule_longitude_excess_precision(data: RecordData, errors: ErrorCollection) -
 
 
 @register("geo", "coord_uncertainty_min")
-def rule_coord_uncertainty_min(data: RecordData, errors: ErrorCollection) -> None:
+def rule_coord_uncertainty_min(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     unc = data.coordinate_uncertainty
@@ -166,7 +171,9 @@ def rule_coord_uncertainty_min(data: RecordData, errors: ErrorCollection) -> Non
 
 
 @register("geo", "coord_uncertainty_max")
-def rule_coord_uncertainty_max(data: RecordData, errors: ErrorCollection) -> None:
+def rule_coord_uncertainty_max(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     unc = data.coordinate_uncertainty
@@ -179,7 +186,9 @@ def rule_coord_uncertainty_max(data: RecordData, errors: ErrorCollection) -> Non
 
 
 @register("geo", "georef_source_required")
-def rule_georef_source_required(data: RecordData, errors: ErrorCollection) -> None:
+def rule_georef_source_required(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     src = data.georef_source
@@ -188,7 +197,9 @@ def rule_georef_source_required(data: RecordData, errors: ErrorCollection) -> No
 
 
 @register("geo", "georef_source_valid")
-def rule_georef_source_valid(data: RecordData, errors: ErrorCollection) -> None:
+def rule_georef_source_valid(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     src = data.georef_source
@@ -201,7 +212,9 @@ def rule_georef_source_valid(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("geo", "region_bounds_lat")
-def rule_region_bounds_lat(data: RecordData, errors: ErrorCollection) -> None:
+def rule_region_bounds_lat(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     lat = data.latitude
@@ -214,7 +227,9 @@ def rule_region_bounds_lat(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("geo", "region_bounds_lon")
-def rule_region_bounds_lon(data: RecordData, errors: ErrorCollection) -> None:
+def rule_region_bounds_lon(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     lon = data.longitude
@@ -227,7 +242,9 @@ def rule_region_bounds_lon(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("geo", "ural_polygon_containment")
-def rule_ural_polygon_containment(data: RecordData, errors: ErrorCollection) -> None:
+def rule_ural_polygon_containment(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if should_skip_geo(data):
         return
     lat = data.latitude
@@ -245,7 +262,9 @@ def rule_ural_polygon_containment(data: RecordData, errors: ErrorCollection) -> 
 
 
 @register("geo", "geo_coords_conflict")
-def rule_geo_coords_conflict(data: RecordData, errors: ErrorCollection) -> None:
+def rule_geo_coords_conflict(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     src = data.georef_source
     lat = data.latitude
     lon = data.longitude
@@ -265,7 +284,9 @@ def rule_geo_coords_conflict(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("location", "forbidden_chars_location")
-def rule_forbidden_chars_location(data: RecordData, errors: ErrorCollection) -> None:
+def rule_forbidden_chars_location(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if contains_forbidden_chars(
         data.country,
         data.region,
@@ -281,19 +302,15 @@ def rule_forbidden_chars_location(data: RecordData, errors: ErrorCollection) -> 
 
 
 @register("location", "cyrillic_location")
-def rule_cyrillic_location(data: RecordData, errors: ErrorCollection) -> None:
-    ctx = _RULE_CONTEXT.get()
-    language = ctx.get("language") if ctx else None
-    if (
-        language is not None
-        and language not in CYRILLIC_LANGUAGES
-        and (
-            contains_cyrillic(data.country)
-            or contains_cyrillic(data.region)
-            or contains_cyrillic(data.district)
-            or contains_cyrillic(data.locality)
-            or contains_cyrillic(data.location_remarks)
-        )
+def rule_cyrillic_location(
+    data: RecordData, ctx: RuleContext, errors: ErrorCollection
+) -> None:
+    if has_cyrillic_in_foreign_text(
+        ctx.language,
+        data.country,
+        data.region,
+        data.district,
+        data.locality,
     ):
         errors.add(
             "location",
@@ -304,7 +321,9 @@ def rule_cyrillic_location(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("location", "country_min_length")
-def rule_country_min_length(data: RecordData, errors: ErrorCollection) -> None:
+def rule_country_min_length(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     country = data.country
     if (
         country is not None
@@ -315,27 +334,35 @@ def rule_country_min_length(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("location", "region_min_length")
-def rule_region_min_length(data: RecordData, errors: ErrorCollection) -> None:
+def rule_region_min_length(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     region = data.region
     if region is not None and len(region.strip()) < 5:
         errors.add("region", "too_short", "Регион указан некорректно")
 
 
 @register("location", "district_min_length")
-def rule_district_min_length(data: RecordData, errors: ErrorCollection) -> None:
+def rule_district_min_length(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     district = data.district
     if district is not None and len(district.strip()) < 5:
         errors.add("district", "too_short", "Район указан некорректно")
 
 
 @register("event", "date_not_empty")
-def rule_date_not_empty(data: RecordData, errors: ErrorCollection) -> None:
+def rule_date_not_empty(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if data.verbatim_date is None or data.verbatim_date.strip() == "":
         errors.add("verbatim_date", "required", "Дата сбора не указана")
 
 
 @register("event", "date_precision_valid")
-def rule_date_precision_valid(data: RecordData, errors: ErrorCollection) -> None:
+def rule_date_precision_valid(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     prec = data.date_precision
     if prec is not None and prec not in DATE_PRECISIONS:
         errors.add(
@@ -347,7 +374,9 @@ def rule_date_precision_valid(data: RecordData, errors: ErrorCollection) -> None
 
 
 @register("event", "interval_no_separator")
-def rule_interval_no_separator(data: RecordData, errors: ErrorCollection) -> None:
+def rule_interval_no_separator(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if (
         data.is_interval is True
         and data.verbatim_date is not None
@@ -361,7 +390,9 @@ def rule_interval_no_separator(data: RecordData, errors: ErrorCollection) -> Non
 
 
 @register("event", "date_precision_no_date")
-def rule_date_precision_no_date(data: RecordData, errors: ErrorCollection) -> None:
+def rule_date_precision_no_date(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if data.date_precision is not None and (
         data.verbatim_date is None or data.verbatim_date.strip() == ""
     ):
@@ -373,7 +404,9 @@ def rule_date_precision_no_date(data: RecordData, errors: ErrorCollection) -> No
 
 
 @register("event", "recorded_by_required")
-def rule_recorded_by_required(data: RecordData, errors: ErrorCollection) -> None:
+def rule_recorded_by_required(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     rb = data.recorded_by
     if rb is None or rb.strip() == "" or len(rb.strip()) < 4:
         errors.add(
@@ -385,7 +418,9 @@ def rule_recorded_by_required(data: RecordData, errors: ErrorCollection) -> None
 
 
 @register("event", "forbidden_chars_event")
-def rule_forbidden_chars_event(data: RecordData, errors: ErrorCollection) -> None:
+def rule_forbidden_chars_event(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     sv = str(data.sample_size_value) if data.sample_size_value is not None else None
     if contains_forbidden_chars(
         data.habitat,
@@ -404,22 +439,16 @@ def rule_forbidden_chars_event(data: RecordData, errors: ErrorCollection) -> Non
 
 
 @register("event", "cyrillic_event")
-def rule_cyrillic_event(data: RecordData, errors: ErrorCollection) -> None:
-    ctx = _RULE_CONTEXT.get()
-    language = ctx.get("language") if ctx else None
-    sv = str(data.sample_size_value) if data.sample_size_value is not None else None
-    if (
-        language is not None
-        and language not in CYRILLIC_LANGUAGES
-        and (
-            contains_cyrillic(data.habitat)
-            or contains_cyrillic(data.sampling_protocol)
-            or contains_cyrillic(data.sampling_effort)
-            or contains_cyrillic(sv)
-            or contains_cyrillic(data.sample_size_unit)
-            or contains_cyrillic(data.event_remarks)
-            or contains_cyrillic(data.recorded_by)
-        )
+def rule_cyrillic_event(
+    data: RecordData, ctx: RuleContext, errors: ErrorCollection
+) -> None:
+    if has_cyrillic_in_foreign_text(
+        ctx.language,
+        data.habitat,
+        data.sampling_protocol,
+        data.sampling_effort,
+        data.sample_size_unit,
+        data.recorded_by,
     ):
         errors.add(
             "event",
@@ -429,7 +458,9 @@ def rule_cyrillic_event(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("taxonomy", "family_genus_known")
-def rule_family_genus_known(data: RecordData, errors: ErrorCollection) -> None:
+def rule_family_genus_known(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if (
         data.tax_verbatim is not True
         and data.family is not None
@@ -440,7 +471,9 @@ def rule_family_genus_known(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("taxonomy", "genus_species_known")
-def rule_genus_species_known(data: RecordData, errors: ErrorCollection) -> None:
+def rule_genus_species_known(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if (
         data.tax_verbatim is not True
         and data.genus is not None
@@ -451,7 +484,9 @@ def rule_genus_species_known(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("taxonomy", "taxon_rank_valid")
-def rule_taxon_rank_valid(data: RecordData, errors: ErrorCollection) -> None:
+def rule_taxon_rank_valid(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     rank = data.taxon_rank
     if rank is not None and rank not in TAXON_RANKS:
         errors.add(
@@ -463,14 +498,18 @@ def rule_taxon_rank_valid(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("taxonomy", "type_status_valid")
-def rule_type_status_valid(data: RecordData, errors: ErrorCollection) -> None:
+def rule_type_status_valid(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     ts = data.type_status
     if ts is not None and ts not in TYPE_STATUSES:
         errors.add("type_status", "invalid", "Некорректный тип статуса")
 
 
 @register("taxonomy", "type_status_on_genus")
-def rule_type_status_on_genus(data: RecordData, errors: ErrorCollection) -> None:
+def rule_type_status_on_genus(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if (
         data.type_status is not None
         and data.type_status != "none"
@@ -480,7 +519,9 @@ def rule_type_status_on_genus(data: RecordData, errors: ErrorCollection) -> None
 
 
 @register("taxonomy", "forbidden_chars_taxon")
-def rule_forbidden_chars_taxon(data: RecordData, errors: ErrorCollection) -> None:
+def rule_forbidden_chars_taxon(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if contains_forbidden_chars(
         data.family,
         data.genus,
@@ -497,20 +538,16 @@ def rule_forbidden_chars_taxon(data: RecordData, errors: ErrorCollection) -> Non
 
 
 @register("taxonomy", "cyrillic_taxon")
-def rule_cyrillic_taxon(data: RecordData, errors: ErrorCollection) -> None:
-    ctx = _RULE_CONTEXT.get()
-    language = ctx.get("language") if ctx else None
-    if (
-        language is not None
-        and language not in CYRILLIC_LANGUAGES
-        and (
-            contains_cyrillic(data.family)
-            or contains_cyrillic(data.genus)
-            or contains_cyrillic(data.species)
-            or contains_cyrillic(data.accepted_name)
-            or contains_cyrillic(data.taxon_remarks)
-            or contains_cyrillic(data.identification_remarks)
-        )
+def rule_cyrillic_taxon(
+    data: RecordData, ctx: RuleContext, errors: ErrorCollection
+) -> None:
+    if has_cyrillic_in_foreign_text(
+        ctx.language,
+        data.family,
+        data.genus,
+        data.species,
+        data.accepted_name,
+        data.identification_remarks,
     ):
         errors.add(
             "taxonomy",
@@ -519,15 +556,10 @@ def rule_cyrillic_taxon(data: RecordData, errors: ErrorCollection) -> None:
         )
 
 
-@register("abundance", "quantity_non_negative")
-def rule_quantity_non_negative(data: RecordData, errors: ErrorCollection) -> None:
-    qty = data.quantity
-    if qty is not None and qty < 0:
-        errors.add("quantity", "out_of_range", "Некорректное число особей")
-
-
 @register("abundance", "quantity_max")
-def rule_quantity_max(data: RecordData, errors: ErrorCollection) -> None:
+def rule_quantity_max(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     qty = data.quantity
     if qty is not None and qty > QUANTITY_MAX:
         errors.add(
@@ -540,14 +572,18 @@ def rule_quantity_max(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("abundance", "total_quantity_positive")
-def rule_total_quantity_positive(data: RecordData, errors: ErrorCollection) -> None:
+def rule_total_quantity_positive(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     qty = data.quantity
     if qty is None or qty <= 0:
         errors.add("quantity", "too_low", "Слишком мало особей")
 
 
 @register("abundance", "quantity_type_valid")
-def rule_quantity_type_valid(data: RecordData, errors: ErrorCollection) -> None:
+def rule_quantity_type_valid(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     qt = data.quantity_type
     if qt is not None and qt not in QUANTITY_TYPES:
         errors.add(
@@ -558,7 +594,7 @@ def rule_quantity_type_valid(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("abundance", "sex_valid")
-def rule_sex_valid(data: RecordData, errors: ErrorCollection) -> None:
+def rule_sex_valid(data: RecordData, _: RuleContext, errors: ErrorCollection) -> None:
     sex = data.sex
     if sex is not None and sex not in SEX_VALUES:
         errors.add(
@@ -569,7 +605,9 @@ def rule_sex_valid(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("abundance", "life_stage_valid")
-def rule_life_stage_valid(data: RecordData, errors: ErrorCollection) -> None:
+def rule_life_stage_valid(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     ls = data.life_stage
     if ls is not None and ls not in LIFE_STAGES:
         errors.add(
@@ -581,7 +619,9 @@ def rule_life_stage_valid(data: RecordData, errors: ErrorCollection) -> None:
 
 
 @register("abundance", "sex_lifestage_consistency")
-def rule_sex_lifestage_consistency(data: RecordData, errors: ErrorCollection) -> None:
+def rule_sex_lifestage_consistency(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if (
         data.sex is not None
         and data.sex != "none"
@@ -595,7 +635,9 @@ def rule_sex_lifestage_consistency(data: RecordData, errors: ErrorCollection) ->
 
 
 @register("abundance", "forbidden_chars_occurrence")
-def rule_forbidden_chars_occurrence(data: RecordData, errors: ErrorCollection) -> None:
+def rule_forbidden_chars_occurrence(
+    data: RecordData, _: RuleContext, errors: ErrorCollection
+) -> None:
     if contains_forbidden_chars(
         data.occurrence_remarks,
         data.identification_remarks,

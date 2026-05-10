@@ -29,13 +29,14 @@ from service.export import ParseResult, is_row_empty
 from service.milestone import check_and_log_milestone
 from service.publications import PublicationService
 from service.records.validation import validate_record
+from service.records.validation.errors import ErrorCollection
 
 
 def _determine_type(
-    errors: str | None,
+    errors: ErrorCollection,
     submission_type: Literal["submit", "autosave"],
 ) -> RecordType:
-    if errors is None:
+    if not errors.has_errors():
         return "rec_ok" if submission_type == "submit" else "check_ok"
 
     return "rec_fail" if submission_type == "submit" else "check_fail"
@@ -50,21 +51,24 @@ def create_record_metadata(
     submission_type: Literal["submit", "autosave"],
     ip: str | None = None,
     updated_at: datetime | None = None,
-) -> RecordMetadata:
-    errors = validate_record(record, language=language) if record else "Пустая запись"
-    type_val = _determine_type(errors, submission_type) if record else "check_fail"
+) -> tuple[RecordMetadata, ErrorCollection]:
+    errors = validate_record(record, language=language)
+    type_val = _determine_type(errors, submission_type)
 
     now = datetime.now()
 
-    return RecordMetadata(
-        publ_id=publ_id,
-        user_id=user_id,
-        id=uuid4(),
-        errors=errors,
-        type=type_val,
-        created_at=now,
-        updated_at=updated_at if updated_at else now,
-        ip=ip,
+    return (
+        RecordMetadata(
+            publ_id=publ_id,
+            user_id=user_id,
+            id=uuid4(),
+            errors=errors.to_db_string(),
+            type=type_val,
+            created_at=now,
+            updated_at=updated_at if updated_at else now,
+            ip=ip,
+        ),
+        errors,
     )
 
 
@@ -96,12 +100,12 @@ class RecordService:
         publ_id: int,
         ip: str | None = None,
         submission_type: Literal["submit", "autosave"] = "autosave",
-    ) -> RecordFull:
+    ) -> tuple[RecordFull, ErrorCollection]:
         """Create a new record (autosave by default, or submit)."""
         await self.publication_service.validate_access(publ_id, user_id=user_id)
         publ = await get_publication(self.session, publ_id)
         language = publ.language if publ else None
-        metadata = create_record_metadata(
+        metadata, errors = create_record_metadata(
             None,
             user_id=user_id,
             publ_id=publ_id,
@@ -111,7 +115,7 @@ class RecordService:
         )
 
         record = await repo.create_record(self.session, metadata)
-        return RecordFull.model_validate(record)
+        return RecordFull.model_validate(record), errors
 
     async def update_record(
         self,
@@ -120,14 +124,14 @@ class RecordService:
         data: RecordData,
         ip: str | None = None,
         submission_type: Literal["submit", "autosave"] = "autosave",
-    ) -> RecordFull:
+    ) -> tuple[RecordFull, ErrorCollection]:
         """Update a record with optimistic locking via updated_at."""
         record = await self._get_and_check_ownership(record_id, user_id)
 
         publ = await get_publication(self.session, record.publ_id)
         language = publ.language if publ else None
 
-        metadata = create_record_metadata(
+        metadata, errors = create_record_metadata(
             data,
             user_id=user_id,
             publ_id=record.publ_id,
@@ -146,7 +150,7 @@ class RecordService:
                 self.session, user_id, updated, self.action_service
             )
 
-        return RecordFull.model_validate(updated)
+        return RecordFull.model_validate(updated), errors
 
     async def get_record(
         self,
@@ -262,7 +266,7 @@ class RecordService:
                 )
                 continue
 
-            metadata = create_record_metadata(
+            metadata, _ = create_record_metadata(
                 record_data,
                 user_id,
                 publ.id,

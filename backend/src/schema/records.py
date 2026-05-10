@@ -1,14 +1,13 @@
 from datetime import datetime
 from typing import Literal
-from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import UUID4, BaseModel, ConfigDict, field_validator
 
 RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail"]
 
 
 class RecordMetadata(BaseModel):
-    id: UUID
+    id: UUID4
 
     publ_id: int
     user_id: int
@@ -17,6 +16,8 @@ class RecordMetadata(BaseModel):
     type: RecordType | None = None
     created_at: datetime
     updated_at: datetime | None = None
+
+    # TODO: don't send to the client?
     ip: str | None = None
 
     def dump_for_update(self) -> dict[str, object]:
@@ -70,6 +71,83 @@ class RecordData(BaseModel):
     life_stage: str | None = None
     occurrence_remarks: str | None = None
     identification_remarks: str | None = None
+
+    @field_validator(
+        "country",
+        "region",
+        "district",
+        "locality",
+        "family",
+        "genus",
+        "species",
+        "accepted_name",
+        "recorded_by",
+    )
+    @classmethod
+    def max_255(cls, v: str | None) -> str | None:
+        if v is not None and len(v) > 255:
+            raise ValueError("Must be 255 characters or less")
+        return v
+
+    @field_validator(
+        "field_number", "catalog_number", "collection_code", "verbatimcoordinates"
+    )
+    @classmethod
+    def max_100(cls, v: str | None) -> str | None:
+        if v is not None and len(v) > 100:
+            raise ValueError("Must be 100 characters or less")
+        return v
+
+    @field_validator(
+        "location_remarks",
+        "habitat",
+        "sampling_protocol",
+        "sampling_effort",
+        "event_remarks",
+        "taxon_remarks",
+        "identification_remarks",
+        "occurrence_remarks",
+    )
+    @classmethod
+    def max_1000(cls, v: str | None) -> str | None:
+        if v is not None and len(v) > 1000:
+            raise ValueError("Must be 1000 characters or less")
+        return v
+
+    @field_validator("latitude")
+    @classmethod
+    def latitude_range(cls, v: float | None) -> float | None:
+        if v is not None and (v < -90 or v > 90):
+            raise ValueError("Latitude must be between -90 and 90")
+        return v
+
+    @field_validator("longitude")
+    @classmethod
+    def longitude_range(cls, v: float | None) -> float | None:
+        if v is not None and (v < -180 or v > 180):
+            raise ValueError("Longitude must be between -180 and 180")
+        return v
+
+    @field_validator("coordinate_uncertainty")
+    @classmethod
+    def coord_uncertainty_positive(cls, v: float | None) -> float | None:
+        if v is not None and v <= 0:
+            raise ValueError("Coordinate uncertainty must be positive")
+        return v
+
+    @field_validator("quantity")
+    @classmethod
+    def quantity_non_negative(cls, v: float | None) -> float | None:
+        if v is not None and v < 0:
+            raise ValueError("Quantity must be non-negative")
+        return v
+
+    @field_validator("sample_size_value")
+    @classmethod
+    def sample_size_non_negative(cls, v: float | None) -> float | None:
+        if v is not None and v < 0:
+            raise ValueError("Sample size must be non-negative")
+        return v
 
     model_config = ConfigDict(from_attributes=True)
 
