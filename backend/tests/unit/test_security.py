@@ -295,9 +295,11 @@ class TestGetJwtUser:
         mock_session = MagicMock(spec=AsyncSession)
         mock_user = MagicMock(token_version=1)
 
-        with patch("core.security.get_user", return_value=mock_user):
-            with pytest.raises(HTTPException) as exc_info:
-                await get_jwt_user(request, mock_session)
+        with (
+            patch("core.security.get_user", return_value=mock_user),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            await get_jwt_user(request, mock_session)
         assert exc_info.value.status_code == 403
         assert "Token invalidated" in exc_info.value.detail
 

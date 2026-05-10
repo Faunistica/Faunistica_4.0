@@ -7,11 +7,15 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from core.dependencies import ClientIP, DBSession
 from core.rate_limiter import limiter
 from core.security import check_password, set_response_token_cookies
-from repository.user import UserUpdate, find_user_by_username, update_user, increment_token_version
+from repository.user import (
+    UserUpdate,
+    find_user_by_username,
+    increment_token_version,
+    update_user,
+)
 from schema.common import LoginRequest, UserLoginResponse
 from schema.jwt import TokenPayload
 from service.actions import ActionService
-
 
 logger = logging.getLogger(__name__)
 
