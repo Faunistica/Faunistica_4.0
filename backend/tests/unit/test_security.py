@@ -1,6 +1,6 @@
 import hashlib
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import jwt as pyjwt
 import pytest
@@ -264,14 +264,19 @@ class TestVerifyToken:
 
 
 class TestGetJwtUser:
-    def test_valid_token_returns_user(self):
+    @pytest.mark.asyncio
+    async def test_valid_token_returns_user(self):
         payload = TokenPayload(sub="1", username="testuser")
         token = create_access_token(payload)
 
         request = MagicMock(spec=Request)
         request.cookies = {"access_token": token}
 
-        user = get_jwt_user(request)
+        mock_session = MagicMock(spec=AsyncSession)
+        mock_user = MagicMock(token_version=0)
+
+        with patch("core.security.get_user", return_value=mock_user):
+            user = await get_jwt_user(request, mock_session)
 
         from schema.user import UserMinimal
 
@@ -279,27 +284,50 @@ class TestGetJwtUser:
         assert user.user_id == 1
         assert user.name == "testuser"
 
-    def test_missing_token_raises_403(self):
+    @pytest.mark.asyncio
+    async def test_token_version_mismatch_raises_403(self):
+        payload = TokenPayload(sub="1", username="testuser", version=0)
+        token = create_access_token(payload)
+
+        request = MagicMock(spec=Request)
+        request.cookies = {"access_token": token}
+
+        mock_session = MagicMock(spec=AsyncSession)
+        mock_user = MagicMock(token_version=1)
+
+        with patch("core.security.get_user", return_value=mock_user):
+            with pytest.raises(HTTPException) as exc_info:
+                await get_jwt_user(request, mock_session)
+        assert exc_info.value.status_code == 403
+        assert "Token invalidated" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_missing_token_raises_403(self):
         request = MagicMock(spec=Request)
         request.cookies = {}
 
+        mock_session = MagicMock(spec=AsyncSession)
+
         with pytest.raises(HTTPException) as exc_info:
-            get_jwt_user(request)
+            await get_jwt_user(request, mock_session)
         assert exc_info.value.status_code == 403
 
-    def test_refresh_token_as_access_raises_403(self):
+    @pytest.mark.asyncio
+    async def test_refresh_token_as_access_raises_403(self):
         payload = TokenPayload(sub="1", username="testuser")
         token = create_refresh_token(payload)
 
         request = MagicMock(spec=Request)
         request.cookies = {"access_token": token}
 
+        mock_session = MagicMock(spec=AsyncSession)
+
         with pytest.raises(HTTPException) as exc_info:
-            get_jwt_user(request)
+            await get_jwt_user(request, mock_session)
         assert exc_info.value.status_code == 403
 
-    def test_invalid_sub_raises_403(self):
-        # Create token with non-numeric sub
+    @pytest.mark.asyncio
+    async def test_invalid_sub_raises_403(self):
         data = {
             "sub": "not_a_number",
             "username": "testuser",
@@ -313,8 +341,10 @@ class TestGetJwtUser:
         request = MagicMock(spec=Request)
         request.cookies = {"access_token": token}
 
+        mock_session = MagicMock(spec=AsyncSession)
+
         with pytest.raises(HTTPException) as exc_info:
-            get_jwt_user(request)
+            await get_jwt_user(request, mock_session)
         assert exc_info.value.status_code == 403
 
 

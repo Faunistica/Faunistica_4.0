@@ -2,7 +2,9 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
+from core.dependencies import DBSession
 from core.security import set_response_token_cookies, verify_token
+from repository.user import get_user
 from schema.common import Message
 from schema.jwt import TokenPayload
 
@@ -11,9 +13,10 @@ router = APIRouter()
 
 
 @router.post("/refresh")
-def refresh(
+async def refresh(
     request: Request,
     response: Response,
+    session: DBSession,
 ) -> Message:
     """
     Обновление токена доступа.
@@ -31,7 +34,13 @@ def refresh(
         logger.warning("Invalid refresh token")
         raise HTTPException(status_code=403, detail="Invalid refresh token")
 
-    token_payload = TokenPayload(sub=str(payload.sub), username=payload.username)
+    user = await get_user(session, int(payload.sub))
+    if user is None:
+        raise HTTPException(status_code=403, detail="User not found")
+
+    token_payload = TokenPayload(
+        sub=str(payload.sub), username=payload.username, version=user.token_version
+    )
     set_response_token_cookies(response, token_payload)
 
     return Message(message="Access token refreshed")

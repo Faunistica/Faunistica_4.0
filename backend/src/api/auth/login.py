@@ -56,7 +56,9 @@ async def login(
             logger.warning("Password expired for user: %s", data.username)
             raise HTTPException(status_code=401, detail="Password expired")
 
-    token_payload = TokenPayload(sub=str(user.user_id), username=data.username)
+    token_payload = TokenPayload(
+        sub=str(user.user_id), username=data.username, version=user.token_version
+    )
     set_response_token_cookies(response, token_payload)
 
     await action_service.log_login(user.user_id, ip)

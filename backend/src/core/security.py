@@ -14,7 +14,9 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
+from core.database import get_session
 from core.exceptions import AdminOnlyError
+from repository.user import get_user
 from schema.jwt import Token, TokenPayload
 from schema.user import UserMinimal
 
@@ -86,8 +88,7 @@ def create_access_token(payload: TokenPayload) -> str:
     )
 
     data = Token(
-        sub=payload.sub,
-        username=payload.username,
+        **payload.model_dump(),
         type="access",
         exp=expires,
     )
@@ -103,8 +104,7 @@ def create_refresh_token(payload: TokenPayload) -> str:
     )
 
     data = Token(
-        sub=payload.sub,
-        username=payload.username,
+        **payload.model_dump(),
         type="refresh",
         exp=expires,
     )
@@ -114,7 +114,6 @@ def create_refresh_token(payload: TokenPayload) -> str:
     )
 
 
-# FIXME: token blacklist
 def verify_token(token: str) -> Token:
     try:
         return Token.model_validate(
@@ -141,8 +140,9 @@ def verify_token(token: str) -> Token:
         ) from e
 
 
-def get_jwt_user(
+async def get_jwt_user(
     request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> UserMinimal:
     token = request.cookies.get("access_token")
     if not token:
@@ -159,11 +159,20 @@ def get_jwt_user(
         )
 
     try:
-        return UserMinimal(user_id=int(payload.sub), name=payload.username)
+        user_id = int(payload.sub)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
         ) from e
+
+    user = await get_user(session, user_id)
+    if user is None or user.token_version != payload.version:
+        logger.warning("Token version mismatch or user not found")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Token invalidated"
+        )
+
+    return UserMinimal(user_id=user_id, name=payload.username)
 
 
 def check_admin(
@@ -184,6 +193,6 @@ def validate_user_id(user_id: int, token_id: int) -> int:
 
 def validate_user_id_path(
     user_id: int,
-    token: Annotated[UserMinimal, Depends(get_jwt_user)],
+    token: Annotated[UserMinimal, Depends(get_jwt_user)],  # type: ignore[misc]
 ) -> int:
     return validate_user_id(user_id, token.user_id)
