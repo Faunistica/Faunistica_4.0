@@ -1,10 +1,10 @@
+import logging
 from datetime import datetime
 
 from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from api.auth.login import logger
 from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
 from core.config import settings
@@ -22,6 +22,7 @@ from service.publications import PublicationService
 from service.user import UserService
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 
 @router.message(Command("auth"))

@@ -170,16 +170,15 @@ async def test_complete_invalid_level(
 
 
 @pytest.mark.asyncio
-async def test_metadata_success(
+async def test_metadata_partial_update(
     authenticated_client: AsyncClient,
     seed_data: SeedData,
 ) -> None:
     publ_id = seed_data["publs"][0].id
     response = await authenticated_client.post(
         f"/api/publications/{publ_id}/metadata",
-        json={"urals_scope": "test_scope", "material_status": "test_status"},
+        json={"urals_scope": "urals_only"},
     )
-
     assert response.status_code == 204
 
 
@@ -190,7 +189,7 @@ async def test_metadata_404(
 ) -> None:
     response = await authenticated_client.post(
         "/api/publications/999/metadata",
-        json={"urals_scope": "test"},
+        json={"urals_scope": "urals_only"},
     )
 
     assert response.status_code == 404
@@ -240,17 +239,15 @@ async def test_comment_after_completion_returns_403(
     seed_data: SeedData,
 ) -> None:
     publ_id = seed_data["publs"][0].id
-    # First complete the publication
     response = await authenticated_client.post(
         f"/api/publications/{publ_id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
-    # Try to add comment after completion
     response = await authenticated_client.post(
-        f"/api/publications/{publ_id}/comments",
-        json={"comment": "This is a test comment with enough length"},
+        f"/api/publications/{publ_id}/metadata",
+        json={"urals_scope": "urals_plus", "material_status": "present_rec"},
     )
     assert response.status_code == 403
     assert response.json()["error"] == "PUBL_FORBIDDEN"
