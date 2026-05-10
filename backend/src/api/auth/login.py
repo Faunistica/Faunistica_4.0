@@ -7,10 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from core.dependencies import ClientIP, DBSession
 from core.rate_limiter import limiter
 from core.security import check_password, set_response_token_cookies
-from repository.user import UserUpdate, find_user_by_username, update_user
+from repository.user import UserUpdate, find_user_by_username, update_user, increment_token_version
 from schema.common import LoginRequest, UserLoginResponse
 from schema.jwt import TokenPayload
 from service.actions import ActionService
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ async def login(
 
     if result.new_hash:
         await update_user(session, user.user_id, UserUpdate(hash=result.new_hash))
+        await increment_token_version(session, user.user_id)
 
     if user.hash_date is not None:
         now = datetime.now()
