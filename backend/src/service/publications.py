@@ -34,10 +34,11 @@ class PublicationService:
 
     async def validate_access(
         self, publ_id: int, *, user_id: int | None = None, user: User | None = None
-    ) -> None:
+    ) -> Publication:
         """Raises PublicationForbiddenError if user.publ_id != publ_id."""
         # Check if publication exists
-        if await get_publication(self.session, publ_id) is None:
+        publ = await get_publication(self.session, publ_id)
+        if publ is None:
             logger.info(
                 "user %d requested access non-existend publication %d", user_id, publ_id
             )
@@ -55,6 +56,8 @@ class PublicationService:
 
         if user.publ_id != publ_id:
             raise PublicationForbiddenError(user_id, publ_id)
+
+        return Publication.model_validate(publ)
 
     async def complete(
         self,

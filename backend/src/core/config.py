@@ -67,7 +67,7 @@ class LoggingSettings(CamelCaseSettings):
 class AppSettings(CamelCaseSettings):
     DEV_MODE: bool = False
     # TODO: Check if other type is better
-    GLOBAL_RATE_LIMIT: str
+    GLOBAL_RATE_LIMIT: str = "100/minute"
     ALLOWED_ORIGINS: list[str] = []
     MAX_IMPORT_FILE_BYTES: int = 5 * 1024 * 1024  # 5MB
     MAX_RECORDS_PER_PUBLICATION: int = 1000
@@ -76,6 +76,8 @@ class AppSettings(CamelCaseSettings):
 class DataSettings(CamelCaseSettings):
     SPECIES_CSV_PATH: Path = Path("data/species_export.csv")
     LOCATIONS_JSON_PATH: Path = Path("data/locations.json")
+    SHORT_COUNTRIES_PATH: Path = Path("data/short_countries.txt")
+    URAL_BORDER_PATH: Path = Path("data/ural_border.geojson")
 
 
 class Settings(

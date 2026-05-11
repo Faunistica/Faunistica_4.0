@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 async def get_publication(session: AsyncSession, publ_id: int) -> Publication | None:
-    stmt = select(Publication).where(Publication.id == publ_id)
+    stmt = select(Publication).where(Publication.publ_id == publ_id)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -37,7 +37,7 @@ async def get_publications_for_language(
     if language != "all":
         filters.append(Publication.language.ilike(f"%{language}%"))
 
-    stmt = select(Publication.id).where(*filters)
+    stmt = select(Publication.publ_id).where(*filters)
     result = await session.execute(stmt)
     return result.scalars().all()
 
@@ -65,6 +65,6 @@ async def get_publications_by_ids(
     session: AsyncSession,
     ids: list[int],
 ) -> Sequence[Publication]:
-    stmt = select(Publication).where(Publication.id.in_(ids))
+    stmt = select(Publication).where(Publication.publ_id.in_(ids))
     result = await session.execute(stmt)
     return result.scalars().all()

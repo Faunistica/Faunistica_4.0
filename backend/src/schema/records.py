@@ -1,14 +1,13 @@
 from datetime import datetime
 from typing import Literal
-from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import UUID4, BaseModel, ConfigDict, Field as PydanticField
 
 RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail"]
 
 
 class RecordMetadata(BaseModel):
-    id: UUID
+    id: UUID4
 
     publ_id: int
     user_id: int
@@ -17,6 +16,7 @@ class RecordMetadata(BaseModel):
     type: RecordType | None = None
     created_at: datetime
     updated_at: datetime | None = None
+
     ip: str | None = None
 
     def dump_for_update(self) -> dict[str, object]:
@@ -28,48 +28,48 @@ class RecordMetadata(BaseModel):
 
 
 class RecordData(BaseModel):
-    country: str | None = None
-    region: str | None = None
-    district: str | None = None
-    locality: str | None = None
+    country: str | None = PydanticField(default=None, max_length=255)
+    region: str | None = PydanticField(default=None, max_length=255)
+    district: str | None = PydanticField(default=None, max_length=255)
+    locality: str | None = PydanticField(default=None, max_length=255)
     is_manual_location: bool | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-    verbatimcoordinates: str | None = None
-    coordinate_uncertainty: float | None = None
-    georef_source: str | None = None
-    location_remarks: str | None = None
+    latitude: str | None = None
+    longitude: str | None = None
+    verbatimcoordinates: str | None = PydanticField(default=None, max_length=100)
+    coordinate_uncertainty: float | None = PydanticField(default=None, gt=0)
+    georef_source: str | None = PydanticField(default=None, max_length=50)
+    location_remarks: str | None = PydanticField(default=None, max_length=1000)
 
-    verbatim_date: str | None = None
-    date_precision: str | None = None
+    verbatim_date: str | None = PydanticField(default=None, max_length=50)
+    date_precision: str | None = PydanticField(default=None, max_length=20)
     is_interval: bool | None = None
 
-    habitat: str | None = None
-    sampling_protocol: str | None = None
-    sampling_effort: str | None = None
-    sample_size_value: float | None = None
-    sample_size_unit: str | None = None
-    event_remarks: str | None = None
-    field_number: str | None = None
-    catalog_number: str | None = None
-    collection_code: str | None = None
-    recorded_by: str | None = None
+    habitat: str | None = PydanticField(default=None, max_length=1000)
+    sampling_protocol: str | None = PydanticField(default=None, max_length=1000)
+    sampling_effort: str | None = PydanticField(default=None, max_length=1000)
+    sample_size_value: float | None = PydanticField(default=None, ge=0)
+    sample_size_unit: str | None = PydanticField(default=None, max_length=50)
+    event_remarks: str | None = PydanticField(default=None, max_length=1000)
+    field_number: str | None = PydanticField(default=None, max_length=100)
+    catalog_number: str | None = PydanticField(default=None, max_length=100)
+    collection_code: str | None = PydanticField(default=None, max_length=100)
+    recorded_by: str | None = PydanticField(default=None, max_length=255)
 
-    family: str | None = None
-    genus: str | None = None
-    species: str | None = None
+    family: str | None = PydanticField(default=None, max_length=255)
+    genus: str | None = PydanticField(default=None, max_length=255)
+    species: str | None = PydanticField(default=None, max_length=255)
     tax_verbatim: bool | None = None
-    taxon_rank: str | None = None
-    type_status: str | None = None
-    accepted_name: str | None = None
-    taxon_remarks: str | None = None
+    taxon_rank: str | None = PydanticField(default=None, max_length=20)
+    type_status: str | None = PydanticField(default=None, max_length=20)
+    accepted_name: str | None = PydanticField(default=None, max_length=255)
+    taxon_remarks: str | None = PydanticField(default=None, max_length=1000)
 
-    quantity: float | None = None
-    quantity_type: str | None = None
-    sex: str | None = None
-    life_stage: str | None = None
-    occurrence_remarks: str | None = None
-    identification_remarks: str | None = None
+    quantity: float | None = PydanticField(default=None, ge=0)
+    quantity_type: str | None = PydanticField(default=None, max_length=50)
+    sex: str | None = PydanticField(default=None, max_length=20)
+    life_stage: str | None = PydanticField(default=None, max_length=20)
+    occurrence_remarks: str | None = PydanticField(default=None, max_length=1000)
+    identification_remarks: str | None = PydanticField(default=None, max_length=1000)
 
     model_config = ConfigDict(from_attributes=True)
 

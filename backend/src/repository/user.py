@@ -41,7 +41,7 @@ async def get_current_publication(
 ) -> Publication | None:
     stmt = (
         select(Publication)
-        .join(User, User.publ_id == Publication.id)
+        .join(User, User.publ_id == Publication.publ_id)
         .where(User.user_id == user_id)
     )
     result = await session.execute(stmt)

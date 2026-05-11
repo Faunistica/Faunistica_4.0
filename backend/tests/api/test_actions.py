@@ -34,7 +34,7 @@ async def test_log_win(session_maker, seed_data: SeedData) -> None:
 @pytest.mark.asyncio
 async def test_log_publ_complete(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
-    publ_id = seed_data["publs"][0].id
+    publ_id = seed_data["publs"][0].publ_id
 
     async with session_maker() as session:
         service = ActionService(session)
@@ -58,7 +58,7 @@ async def test_log_publ_complete(session_maker, seed_data: SeedData) -> None:
 @pytest.mark.asyncio
 async def test_log_publ_metadata(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
-    publ_id = seed_data["publs"][0].id
+    publ_id = seed_data["publs"][0].publ_id
 
     async with session_maker() as session:
         service = ActionService(session)
@@ -87,7 +87,7 @@ async def test_log_publ_metadata(session_maker, seed_data: SeedData) -> None:
 @pytest.mark.asyncio
 async def test_log_publ_comment(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
-    publ_id = seed_data["publs"][0].id
+    publ_id = seed_data["publs"][0].publ_id
 
     async with session_maker() as session:
         service = ActionService(session)

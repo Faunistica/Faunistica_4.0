@@ -20,6 +20,7 @@ from core.exceptions import (
 )
 from core.model import EventRecord
 from repository import record as repo
+from repository.publication import get_publication
 from repository.record import count_records_by_publ
 from repository.user import get_user_expect
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
@@ -27,36 +28,15 @@ from service.actions import ActionService
 from service.export import ParseResult, is_row_empty
 from service.milestone import check_and_log_milestone
 from service.publications import PublicationService
-
-
-def _mock_validate_record(data: RecordData) -> str | None:
-    errors: list[str] = []
-
-    if not data.family:
-        errors.append("family is required")
-    if not data.genus:
-        errors.append("genus is required")
-    if not data.species:
-        errors.append("species is required")
-
-    lat = data.latitude
-    if isinstance(lat, (int, float)) and (lat < -90 or lat > 90):
-        errors.append("latitude must be between -90 and 90")
-
-    lon = data.longitude
-    if isinstance(lon, (int, float)) and (lon < -180 or lon > 180):
-        errors.append("longitude must be between -180 and 180")
-
-    if errors:
-        return "; ".join(errors)
-    return None
+from service.records.validation import validate_record
+from service.records.validation.errors import ErrorCollection
 
 
 def _determine_type(
-    errors: str | None,
+    errors: ErrorCollection,
     submission_type: Literal["submit", "autosave"],
 ) -> RecordType:
-    if errors is None:
+    if not errors.has_errors():
         return "rec_ok" if submission_type == "submit" else "check_ok"
 
     return "rec_fail" if submission_type == "submit" else "check_fail"
@@ -67,24 +47,28 @@ def create_record_metadata(
     user_id: int,
     publ_id: int,
     *,
+    language: str | None,
     submission_type: Literal["submit", "autosave"],
     ip: str | None = None,
     updated_at: datetime | None = None,
-) -> RecordMetadata:
-    errors = _mock_validate_record(record) if record else "Пустая запись"
-    type_val = _determine_type(errors, submission_type) if record else "check_fail"
+) -> tuple[RecordMetadata, ErrorCollection]:
+    errors = validate_record(record, language=language)
+    type_val = _determine_type(errors, submission_type)
 
     now = datetime.now()
 
-    return RecordMetadata(
-        publ_id=publ_id,
-        user_id=user_id,
-        id=uuid4(),
-        errors=errors,
-        type=type_val,
-        created_at=now,
-        updated_at=updated_at if updated_at else now,
-        ip=ip,
+    return (
+        RecordMetadata(
+            publ_id=publ_id,
+            user_id=user_id,
+            id=uuid4(),
+            errors=errors.to_db_string(),
+            type=type_val,
+            created_at=now,
+            updated_at=updated_at if updated_at else now,
+            ip=ip,
+        ),
+        errors,
     )
 
 
@@ -116,19 +100,22 @@ class RecordService:
         publ_id: int,
         ip: str | None = None,
         submission_type: Literal["submit", "autosave"] = "autosave",
-    ) -> RecordFull:
+    ) -> tuple[RecordFull, ErrorCollection]:
         """Create a new record (autosave by default, or submit)."""
         await self.publication_service.validate_access(publ_id, user_id=user_id)
-        metadata = create_record_metadata(
+        publ = await get_publication(self.session, publ_id)
+        language = publ.language if publ else None
+        metadata, errors = create_record_metadata(
             None,
             user_id=user_id,
             publ_id=publ_id,
+            language=language,
             submission_type=submission_type,
             ip=ip,
         )
 
         record = await repo.create_record(self.session, metadata)
-        return RecordFull.model_validate(record)
+        return RecordFull.model_validate(record), errors
 
     async def update_record(
         self,
@@ -137,14 +124,18 @@ class RecordService:
         data: RecordData,
         ip: str | None = None,
         submission_type: Literal["submit", "autosave"] = "autosave",
-    ) -> RecordFull:
+    ) -> tuple[RecordFull, ErrorCollection]:
         """Update a record with optimistic locking via updated_at."""
         record = await self._get_and_check_ownership(record_id, user_id)
 
-        metadata = create_record_metadata(
+        publ = await get_publication(self.session, record.publ_id)
+        language = publ.language if publ else None
+
+        metadata, errors = create_record_metadata(
             data,
             user_id=user_id,
             publ_id=record.publ_id,
+            language=language,
             submission_type=submission_type,
             ip=ip,
             updated_at=record.updated_at,
@@ -159,7 +150,7 @@ class RecordService:
                 self.session, user_id, updated, self.action_service
             )
 
-        return RecordFull.model_validate(updated)
+        return RecordFull.model_validate(updated), errors
 
     async def get_record(
         self,
@@ -178,6 +169,8 @@ class RecordService:
         user_id: int,
     ) -> None:
         """Delete a record, enforcing ownership and publication membership."""
+
+        # FIXME: if record is rec_ok change type to rec_del instead of deleting.
         record = await self._get_and_check_ownership(record_id, user_id)
         await repo.delete_record(self.session, record.id)
 
@@ -257,9 +250,7 @@ class RecordService:
         if user.publ_id is None:
             raise NoPublicationsAssignedError(user_id)
 
-        await self.publication_service.validate_access(user.publ_id, user=user)
-
-        publ_id = user.publ_id
+        publ = await self.publication_service.validate_access(user.publ_id, user=user)
 
         async for i, result in a.enumerate(records, 1):
             if result["error"]:
@@ -275,8 +266,13 @@ class RecordService:
                 )
                 continue
 
-            metadata = create_record_metadata(
-                record_data, user_id, publ_id, submission_type="submit", ip=ip
+            metadata, _ = create_record_metadata(
+                record_data,
+                user_id,
+                publ.publ_id,
+                language=publ.language,
+                submission_type="submit",
+                ip=ip,
             )
 
             record = EventRecord(
@@ -289,7 +285,9 @@ class RecordService:
             if metadata.type == "rec_ok":
                 last_ok = record
 
-        await self.check_import_limit(publ_id, len(event_records))
+        # FIXME: race condition - check and insert are not atomic.
+        # Concurrent imports can exceed MAX_RECORDS_PER_PUBLICATION.
+        await self.check_import_limit(publ.publ_id, len(event_records))
 
         self.session.add_all(event_records)
         await self.session.commit()
