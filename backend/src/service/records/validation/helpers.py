@@ -13,9 +13,13 @@ _CYRILLIC_RE = re.compile(r"[А-Яа-яЁё]")
 _FORBIDDEN_CHARS_RE = re.compile(r"[\t\n\r\f\v]")
 
 
-def decimal_places(n: float) -> int:
-    """Count significant decimal places in a float."""
-    s = f"{n:.10f}".rstrip("0")
+def decimal_places(value: float | str) -> int:
+    """Count significant decimal places in a float or string."""
+    if isinstance(value, str):
+        if "." not in value:
+            return 0
+        return len(value.split(".")[1])
+    s = f"{value:.10f}".rstrip("0")
     if "." not in s:
         return 0
     return len(s.split(".")[1])

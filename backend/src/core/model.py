@@ -113,8 +113,8 @@ class EventRecord(Base):
     district: Mapped[str | None] = mapped_column("county", Text)
     locality: Mapped[str | None] = mapped_column("verbatimlocality", Text)
     is_manual_location: Mapped[bool | None] = mapped_column("adm_verbatim", Boolean)
-    latitude: Mapped[float | None] = mapped_column("decimallatitude", Double)
-    longitude: Mapped[float | None] = mapped_column("decimallongitude", Double)
+    latitude: Mapped[str | None] = mapped_column("decimallatitude", Text)
+    longitude: Mapped[str | None] = mapped_column("decimallongitude", Text)
 
     verbatimcoordinates: Mapped[str | None] = mapped_column("verbatimcoordinates", Text)
     coordinate_uncertainty: Mapped[float | None] = mapped_column(

@@ -83,12 +83,22 @@ def in_set(field: str, allowed: frozenset[str], msg: str) -> RuleFunc:
 
 
 def in_range(
-    field: str, min_val: float | None, max_val: float | None, msg: str
+    field: str,
+    min_val: float | None,
+    max_val: float | None,
+    msg: str,
+    *,
+    convert_to_float: bool = False,
 ) -> RuleFunc:
     def rule(data: RecordData, _: RuleContext) -> str | None:
         v = getattr(data, field, None)
         if v is None:
             return None
+        if convert_to_float and isinstance(v, str):
+            try:
+                v = float(v)
+            except ValueError:
+                return msg
         if min_val is not None and v < min_val:
             return msg
         if max_val is not None and v > max_val:
@@ -196,6 +206,7 @@ register("geo", ["latitude"], "out_of_range")(
         REGION_LAT_MIN,
         REGION_LAT_MAX,
         "Точка выходит за границы исследуемого региона по широте",
+        convert_to_float=True,
     )
 )
 register("geo", ["longitude"], "out_of_range")(
@@ -204,6 +215,7 @@ register("geo", ["longitude"], "out_of_range")(
         REGION_LON_MIN,
         REGION_LON_MAX,
         "Точка выходит за границы исследуемого региона по долготе",
+        convert_to_float=True,
     )
 )
 
@@ -212,9 +224,14 @@ register("geo", ["longitude"], "out_of_range")(
 def rule_ural_polygon_containment(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
         return None
-    lat = data.latitude
-    lon = data.longitude
-    if lat is None or lon is None:
+    lat_str = data.latitude
+    lon_str = data.longitude
+    if lat_str is None or lon_str is None:
+        return None
+    try:
+        lat = float(lat_str)
+        lon = float(lon_str)
+    except ValueError:
         return None
     if lat < 48 or lat > 75 or lon < 51 or lon > 75:
         return None
@@ -232,9 +249,9 @@ def rule_geo_coords_conflict(data: RecordData, ctx: RuleContext) -> str | None:
         src is not None
         and src.strip().lower() == "none"
         and lat is not None
-        and lat != 0
+        and lat != "0"
         and lon is not None
-        and lon != 0
+        and lon != "0"
     ):
         return "Источник координат указан как 'none', но координаты присутствуют"
     return None

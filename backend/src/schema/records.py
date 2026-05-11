@@ -33,8 +33,8 @@ class RecordData(BaseModel):
     district: str | None = PydanticField(default=None, max_length=255)
     locality: str | None = PydanticField(default=None, max_length=255)
     is_manual_location: bool | None = None
-    latitude: float | None = PydanticField(default=None, ge=-90, le=90)
-    longitude: float | None = PydanticField(default=None, ge=-180, le=180)
+    latitude: str | None = None
+    longitude: str | None = None
     verbatimcoordinates: str | None = PydanticField(default=None, max_length=100)
     coordinate_uncertainty: float | None = PydanticField(default=None, gt=0)
     georef_source: str | None = PydanticField(default=None, max_length=50)
