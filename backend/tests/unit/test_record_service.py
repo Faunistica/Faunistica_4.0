@@ -25,6 +25,7 @@ def mock_publication_service():
     """Create a mock publication service."""
     service = AsyncMock()
     service.validate_access = AsyncMock()
+    service.get_current = AsyncMock(return_value=[])
     return service
 
 
@@ -61,6 +62,9 @@ class TestImportRecords:
         mock_user = MagicMock()
         mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
@@ -108,6 +112,9 @@ class TestImportRecords:
         mock_user = MagicMock()
         mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
@@ -156,6 +163,9 @@ class TestImportRecords:
         mock_user = MagicMock()
         mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
@@ -219,6 +229,9 @@ class TestImportRecords:
         mock_user = MagicMock()
         mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
@@ -253,6 +266,9 @@ class TestImportRecords:
         mock_user = MagicMock()
         mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
@@ -302,6 +318,9 @@ class TestImportRecords:
         mock_user = MagicMock()
         mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         # Create a minimal Excel file
         wb = Workbook()

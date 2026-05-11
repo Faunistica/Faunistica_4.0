@@ -11,6 +11,7 @@ from pydantic import BaseModel, Json
 from core.config import settings
 from core.dependencies import DBSession
 from core.exceptions import (
+    NoPublicationsAssignedError,
     PublicationForbiddenError,
     RecordForbiddenError,
     RecordLimitExceededError,
@@ -261,7 +262,12 @@ class RecordService:
         last_ok = None
 
         user = await get_user_expect(self.session, user_id)
-        publ = (await self.publication_service.get_current(user=user))[0]
+        queue = await self.publication_service.get_current(user=user)
+        if len(queue) == 0:
+            raise NoPublicationsAssignedError(user_id)
+
+        publ = queue[0]
+
         # Always ok now, but rules may change
         await self.publication_service.validate_access(publ.publ_id, user=user)
 
