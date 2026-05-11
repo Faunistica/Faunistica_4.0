@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+
+from .rules import RuleCategory
 
 
 @dataclass(frozen=True)
@@ -8,7 +8,7 @@ class RecordValidationError:
     fields: list[str]
     code: str
     message: str
-    category: str | None = None
+    category: RuleCategory | None = None
 
 
 @dataclass
@@ -20,7 +20,7 @@ class ErrorCollection:
         fields: list[str],
         code: str,
         message: str,
-        category: str | None = None,
+        category: RuleCategory | None = None,
     ) -> None:
         self.errors.append(
             RecordValidationError(
