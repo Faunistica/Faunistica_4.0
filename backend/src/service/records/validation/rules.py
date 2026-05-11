@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from schema.records import RecordData
-from service.geo import UralPolygon
+from service.geo import UralBorder
 from service.records.validation.constants import (
     COORD_PRECISION_MAX,
     COORD_PRECISION_MIN,
@@ -233,9 +233,7 @@ def rule_ural_polygon_containment(data: RecordData, ctx: RuleContext) -> str | N
         lon = float(lon_str)
     except ValueError:
         return None
-    if lat < 48 or lat > 75 or lon < 51 or lon > 75:
-        return None
-    if not UralPolygon.contains(lon, lat):
+    if not UralBorder.contains(lon, lat):
         return "Указанные координаты выходят за пределы Урала"
     return None
 

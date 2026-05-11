@@ -82,7 +82,7 @@ def dms_to_degrees(
     return degrees + (minutes / 60) + (seconds / 3600)
 
 
-class UralPolygon:
+class UralBorder:
     """Lazy-loaded Ural border polygon for point-in-polygon containment check."""
 
     _polygon: list[list[float]] | None = None
@@ -101,6 +101,11 @@ class UralPolygon:
 
         Uses ray casting algorithm on GeoJSON polygon (lon/lat order).
         """
+
+        # check the bounding recrangle first
+        if lat < 48 or lat > 75 or lon < 51 or lon > 75:
+            return False
+
         if cls._polygon is None:
             cls._polygon = cls._load()
 
