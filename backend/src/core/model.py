@@ -27,7 +27,7 @@ class User(Base):
 
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     publ_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("publs.id", ondelete="CASCADE")
+        Integer, ForeignKey("publs.publ_id", ondelete="CASCADE")
     )
     tlg_name: Mapped[str | None] = mapped_column(String(255))
     tlg_username: Mapped[str | None] = mapped_column(String(255))
@@ -52,7 +52,7 @@ class User(Base):
 class Publication(Base):
     __tablename__ = "publs"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    publ_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     type: Mapped[str] = mapped_column(Text)
     author: Mapped[str | None] = mapped_column(Text)
     year: Mapped[int] = mapped_column(Integer)
@@ -93,7 +93,7 @@ class EventRecord(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     publ_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("publs.id", ondelete="CASCADE")
+        Integer, ForeignKey("publs.publ_id", ondelete="CASCADE")
     )
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")

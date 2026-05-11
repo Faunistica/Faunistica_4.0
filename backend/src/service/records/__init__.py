@@ -269,7 +269,7 @@ class RecordService:
             metadata, _ = create_record_metadata(
                 record_data,
                 user_id,
-                publ.id,
+                publ.publ_id,
                 language=publ.language,
                 submission_type="submit",
                 ip=ip,
@@ -287,7 +287,7 @@ class RecordService:
 
         # FIXME: race condition - check and insert are not atomic.
         # Concurrent imports can exceed MAX_RECORDS_PER_PUBLICATION.
-        await self.check_import_limit(publ.id, len(event_records))
+        await self.check_import_limit(publ.publ_id, len(event_records))
 
         self.session.add_all(event_records)
         await self.session.commit()

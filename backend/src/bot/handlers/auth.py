@@ -72,7 +72,7 @@ async def get_code(message: Message, bot: Bot) -> None:
                     parse_mode="HTML",
                     disable_web_page_preview=True,
                 )
-                publ_id = publ.id
+                publ_id = publ.publ_id
 
             password = generate_secure_password()
             hashed_password = get_password_hash(password)
