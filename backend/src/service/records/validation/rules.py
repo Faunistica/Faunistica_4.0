@@ -196,7 +196,8 @@ register("geo", ["georef_source"], "invalid")(
     in_set(
         "georef_source",
         GEOREF_SOURCES,
-        "Некорректный источник координат. Допустимые значения: lit, vol, none",
+        "Некорректный источник координат. Допустимые значения: "
+        + ", ".join(GEOREF_SOURCES),
     )
 )
 
@@ -306,7 +307,8 @@ register("event", ["date_precision"], "invalid")(
     in_set(
         "date_precision",
         DATE_PRECISIONS,
-        "Некорректная точность указания даты. Допустимые значения: год, месяц, день",
+        "Некорректная точность указания даты. Допустимые значения: "
+        + ", ".join(DATE_PRECISIONS),
     )
 )
 
@@ -423,7 +425,7 @@ register("taxonomy", ["taxon_rank"], "invalid")(
         TAXON_RANKS,
         (
             "Некорректная точность названия таксона. "
-            "Допустимые значения: genus, species, subspecies"
+            "Допустимые значения: " + ", ".join(TAXON_RANKS)
         ),
     )
 )
@@ -508,7 +510,7 @@ register("abundance", ["sex"], "invalid")(
     in_set(
         "sex",
         SEX_VALUES,
-        "Некорректное значение пола. Допустимые значения: none, male, female",
+        "Некорректное значение пола. Допустимые значения: " + ", ".join(SEX_VALUES),
     )
 )
 register("abundance", ["life_stage"], "invalid")(
@@ -517,7 +519,7 @@ register("abundance", ["life_stage"], "invalid")(
         LIFE_STAGES,
         (
             "Некорректное значение стадии развития. "
-            "Допустимые значения: none, взрослые, субвзрослые, ювенильные"
+            "Допустимые значения: " + ", ".join(LIFE_STAGES)
         ),
     )
 )
