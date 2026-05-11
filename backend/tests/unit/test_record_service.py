@@ -59,7 +59,7 @@ class TestImportRecords:
 
         # Mock user with publication
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
 
         with (
@@ -106,7 +106,7 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
 
         with (
@@ -154,7 +154,7 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
 
         with (
@@ -187,7 +187,7 @@ class TestImportRecords:
         user_id = 12345
 
         mock_user = MagicMock()
-        mock_user.publ_id = None
+        mock_user.items = ""
         mock_user.user_id = user_id
 
         with patch(
@@ -217,7 +217,7 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
 
         with (
@@ -251,7 +251,7 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
 
         with (
@@ -300,7 +300,7 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
 
         # Create a minimal Excel file

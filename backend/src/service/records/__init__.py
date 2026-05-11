@@ -11,7 +11,6 @@ from pydantic import BaseModel, Json
 from core.config import settings
 from core.dependencies import DBSession
 from core.exceptions import (
-    NoPublicationsAssignedError,
     PublicationForbiddenError,
     RecordForbiddenError,
     RecordLimitExceededError,
@@ -241,9 +240,6 @@ class RecordService:
         except PublicationForbiddenError as e:
             raise RecordForbiddenError from e
 
-        if record.publ_id != user.publ_id:
-            raise RecordForbiddenError
-
         return record
 
     async def check_import_limit(self, publ_id: int, additional_count: int) -> None:
@@ -265,10 +261,9 @@ class RecordService:
         last_ok = None
 
         user = await get_user_expect(self.session, user_id)
-        if user.publ_id is None:
-            raise NoPublicationsAssignedError(user_id)
-
-        publ = await self.publication_service.validate_access(user.publ_id, user=user)
+        publ = (await self.publication_service.get_current(user=user))[0]
+        # Always ok now, but rules may change
+        await self.publication_service.validate_access(publ.publ_id, user=user)
 
         async for i, result in a.enumerate(records, 1):
             if result["error"]:

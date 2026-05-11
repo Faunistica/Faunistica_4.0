@@ -116,7 +116,6 @@ async def seed_data(
             tlg_username=d["username"],
             hash=md5_hash(d["password"]),
             items=d.get("items", ""),
-            publ_id=d.get("publ_id"),
         )
 
     def id() -> int:
@@ -159,20 +158,19 @@ async def seed_data(
             "user_id": user_id_1,
             "username": "testuser1",
             "password": "password1",
-            "publ_id": publ_id_1,
-            "items": str(publ_id_2),
+            "items": f"{publ_id_1}|{publ_id_2}",
         },
         {
             "user_id": user_id_2,
             "username": "testuser2",
             "password": "password2",
-            "publ_id": None,
+            "items": "",
         },
         {
             "user_id": user_id_3,
             "username": "testuser3",
             "password": "password3",
-            "publ_id": publ_id_2,
+            "items": str(publ_id_2),
         },
     ]
 
@@ -267,7 +265,7 @@ def authenticated_client(
     async_client: AsyncClient,
     seed_data: SeedData,
 ) -> AsyncClient:
-    """Return async_client with testuser1's access token (user_id=1, has publ_id=1)."""
+    """Return async_client with testuser1's access token (user_id=1, has current publication publ_id_1)."""
     tokens = auth_tokens(seed_data["users"][0])
 
     async_client.cookies.set("access_token", tokens["access_token"])
@@ -279,7 +277,7 @@ def authenticated_client_user2(
     async_client: AsyncClient,
     seed_data: SeedData,
 ) -> AsyncClient:
-    """Return async_client with testuser2's access token (user_id=2, no publ_id)."""
+    """Return async_client with testuser2's access token (user_id=2, no publications)."""
     tokens = auth_tokens(seed_data["users"][1])
 
     async_client.cookies.set("access_token", tokens["access_token"])

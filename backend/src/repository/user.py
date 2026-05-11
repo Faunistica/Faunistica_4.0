@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 
 from core.enums import UserState
 from core.exceptions import ExpectationError
-from core.model import Publication, User
+from core.model import User
 from schema.user import UserUpdate
 
 logger = logging.getLogger(__name__)
@@ -31,19 +31,6 @@ async def get_user_expect(session: AsyncSession, user_id: int) -> User:
 
 async def get_user(session: AsyncSession, user_id: int) -> User | None:
     stmt = select(User).where(User.user_id == user_id)
-    result = await session.execute(stmt)
-
-    return result.scalar_one_or_none()
-
-
-async def get_current_publication(
-    session: AsyncSession, user_id: int
-) -> Publication | None:
-    stmt = (
-        select(Publication)
-        .join(User, User.publ_id == Publication.publ_id)
-        .where(User.user_id == user_id)
-    )
     result = await session.execute(stmt)
 
     return result.scalar_one_or_none()

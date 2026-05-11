@@ -22,7 +22,7 @@ async def test_create_record(
 
     response = await authenticated_client.post(
         "/api/records",
-        json={"publ_id": user.publ_id},
+        json={"publ_id": int(user.items.split("|")[0])},
     )
     assert response.status_code == 201
     assert "id" in response.json()
@@ -46,7 +46,7 @@ async def test_list_records(
 ) -> None:
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&page=1&page_size=20"
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split("|")[0])}&page=1&page_size=20"
     )
     assert response.status_code == 200
     data = response.json()
@@ -65,7 +65,7 @@ async def test_update_record_set_coords(
     record_id = seed_data["record_ids"][2]
     response = await authenticated_client.put(
         f"/api/records/{record_id}?user_id={user.user_id}",
-        json={"publ_id": user.publ_id, "latitude": "55.7", "longitude": "37.7"},
+        json={"publ_id": int(user.items.split("|")[0]), "latitude": "55.7", "longitude": "37.7"},
     )
     assert response.status_code == 200
 
@@ -78,7 +78,7 @@ async def test_update_record_clear_coords(
     record_id = seed_data["record_ids"][0]
     response = await authenticated_client.put(
         f"/api/records/{record_id}?user_id={user.user_id}",
-        json={"publ_id": user.publ_id, "latitude": None, "longitude": None},
+        json={"publ_id": int(user.items.split("|")[0]), "latitude": None, "longitude": None},
     )
     assert response.status_code == 200
 
@@ -91,7 +91,7 @@ async def test_update_record_set_genus(
     record_id = seed_data["record_ids"][2]
     response = await authenticated_client.put(
         f"/api/records/{record_id}?user_id={user.user_id}",
-        json={"publ_id": user.publ_id, "genus": "UpdatedGenus"},
+        json={"publ_id": int(user.items.split("|")[0]), "genus": "UpdatedGenus"},
     )
     assert response.status_code == 200
 
@@ -104,7 +104,7 @@ async def test_update_record_clear_genus(
     record_id = seed_data["record_ids"][0]
     response = await authenticated_client.put(
         f"/api/records/{record_id}?user_id={user.user_id}",
-        json={"publ_id": user.publ_id, "genus": None},
+        json={"publ_id": int(user.items.split("|")[0]), "genus": None},
     )
     assert response.status_code == 200
 
@@ -122,7 +122,7 @@ async def test_delete_record(
 async def test_list_records_no_token(async_client: AsyncClient, seed_data: SeedData):
     user = seed_data["users"][0]
     response = await async_client.get(
-        f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}"
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split("|")[0])}"
     )
     assert response.status_code == 403
 
@@ -151,7 +151,7 @@ async def test_list_records_all_publs(authenticated_client, seed_data: SeedData)
 async def test_list_records_invalid_sort(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&sort=invalid"
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split("|")[0])}&sort=invalid"
     )
     assert response.status_code == 422
 
@@ -162,7 +162,7 @@ async def test_list_records_page_size_exceeds_max(
 ):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&page_size=200"
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split("|")[0])}&page_size=200"
     )
     assert response.status_code == 422
 
@@ -173,7 +173,7 @@ async def test_list_records_pagination_second_page(
 ):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&page=2&page_size=1"
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split("|")[0])}&page=2&page_size=1"
     )
     assert response.status_code == 200
     data = response.json()
@@ -184,7 +184,7 @@ async def test_list_records_pagination_second_page(
 async def test_list_records_sort_updated_at(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records?user_id={user.user_id}&publ_id={user.publ_id}&sort=updated_at"
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split("|")[0])}&sort=updated_at"
     )
     assert response.status_code == 200
 
@@ -204,7 +204,7 @@ async def test_update_record_not_found(authenticated_client, seed_data: SeedData
     user = seed_data["users"][0]
     fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await authenticated_client.put(
-        f"/api/records/{fake_uuid}", json={"publ_id": user.publ_id, "latitude": "55.5"}
+        f"/api/records/{fake_uuid}", json={"publ_id": int(user.items.split("|")[0]), "latitude": "55.5"}
     )
     assert response.status_code == 404
 
