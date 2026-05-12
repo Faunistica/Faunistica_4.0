@@ -8,6 +8,15 @@ from schema.records import RecordData
 
 
 class RuleCategory(StrEnum):
+    """Categories of validation rules.
+
+    Each category corresponds to a logical group of fields in the record:
+        TAXONOMY - taxonomic fields (family, genus, species, etc.)
+        GEO - geographic coordinate fields (latitude, longitude, etc.)
+        LOCATION - administrative location fields (country, region, etc.)
+        EVENT - collection event fields (date, recorder, etc.)
+        ABUNDANCE - abundance/occurrence fields (quantity, sex, life stage)
+    """
     TAXONOMY = "taxonomy"
     GEO = "geo"
     LOCATION = "location"
@@ -34,13 +43,26 @@ class Rule:
 _RULES: list[Rule] = []
 
 
-def register(
-    category: RuleCategory, fields: list[str], code: str
-) -> Callable[[RuleFunc], RuleFunc]:
+def rule(
+    category: RuleCategory, fields: list[str], code: str,
+    func: RuleFunc | None = None,
+) -> Callable[[RuleFunc], RuleFunc] | RuleFunc:
+    """Register a validation rule.
+
+    Can be used as a decorator:
+        @rule(RuleCategory.GEO, ["latitude"], "precision")
+        def check_lat(data, ctx): ...
+
+    Or as a direct call with a factory function:
+        rule(RuleCategory.GEO, ["latitude"], "required", required("latitude", "..."))
+    """
     def decorator(func: RuleFunc) -> RuleFunc:
         _RULES.append(Rule(func=func, category=category, fields=fields, code=code))
         return func
 
+    if func is not None:
+        decorator(func)
+        return func
     return decorator
 
 
@@ -49,6 +71,7 @@ def all_rules() -> list[Rule]:
 
 
 def required(field: str, msg: str) -> RuleFunc:
+    """Check field is non-None and non-blank-string."""
     def rule(data: RecordData, _: RuleContext) -> str | None:
         v = getattr(data, field, None)
         return msg if not v or (isinstance(v, str) and not v.strip()) else None
@@ -57,6 +80,7 @@ def required(field: str, msg: str) -> RuleFunc:
 
 
 def in_set(field: str, allowed: frozenset[str], msg: str) -> RuleFunc:
+    """Membership check; returns None if field is None (skips check)."""
     def rule(data: RecordData, _: RuleContext) -> str | None:
         v = getattr(data, field, None)
         return msg if v is not None and v not in allowed else None
@@ -72,6 +96,7 @@ def in_range(
     *,
     convert_to_float: bool = False,
 ) -> RuleFunc:
+    """Min/max bounds check; if convert_to_float, tries string-to-float conversion first."""
     def rule(data: RecordData, _: RuleContext) -> str | None:
         v = getattr(data, field, None)
         if v is None:
@@ -91,6 +116,7 @@ def in_range(
 
 
 def min_length(field: str, min_len: int, msg: str) -> RuleFunc:
+    """Strip string then check length >= min_len."""
     def rule(data: RecordData, _: RuleContext) -> str | None:
         v = getattr(data, field, None)
         if v is not None and len(v.strip()) < min_len:

@@ -6,25 +6,19 @@ from service.taxon import family_genus_known, genus_species_known
 
 from ..constants import TAXON_RANKS, TYPE_STATUSES
 from ..helpers import contains_forbidden_chars, has_cyrillic_in_foreign_text
-from ..rules import RuleCategory, in_set, register, required
+from ..rules import RuleCategory, in_set, rule, required
 
 if TYPE_CHECKING:
     from schema.records import RecordData
 
     from ..rules import RuleContext
 
-register(RuleCategory.TAXONOMY, ["family"], "required")(
-    required("family", "Семейство обязательно")
-)
-register(RuleCategory.TAXONOMY, ["genus"], "required")(
-    required("genus", "Род обязателен")
-)
-register(RuleCategory.TAXONOMY, ["species"], "required")(
-    required("species", "Вид обязателен")
-)
+rule(RuleCategory.TAXONOMY, ["family"], "required", required("family", "Семейство обязательно"))
+rule(RuleCategory.TAXONOMY, ["genus"], "required", required("genus", "Род обязателен"))
+rule(RuleCategory.TAXONOMY, ["species"], "required", required("species", "Вид обязателен"))
 
 
-@register(RuleCategory.TAXONOMY, ["genus"], "unknown")
+@rule(RuleCategory.TAXONOMY, ["genus"], "unknown")
 def rule_family_genus_known(data: RecordData, ctx: RuleContext) -> str | None:
     if (
         data.tax_verbatim is not True
@@ -36,7 +30,7 @@ def rule_family_genus_known(data: RecordData, ctx: RuleContext) -> str | None:
     return None
 
 
-@register(RuleCategory.TAXONOMY, ["species"], "unknown")
+@rule(RuleCategory.TAXONOMY, ["species"], "unknown")
 def rule_genus_species_known(data: RecordData, ctx: RuleContext) -> str | None:
     if (
         data.tax_verbatim is not True
@@ -48,20 +42,17 @@ def rule_genus_species_known(data: RecordData, ctx: RuleContext) -> str | None:
     return None
 
 
-register(RuleCategory.TAXONOMY, ["taxon_rank"], "invalid")(
+rule(RuleCategory.TAXONOMY, ["taxon_rank"], "invalid",
     in_set(
         "taxon_rank",
         TAXON_RANKS,
         "Некорректная точность названия таксона. "
         "Допустимые значения: " + ", ".join(TAXON_RANKS),
-    )
-)
-register(RuleCategory.TAXONOMY, ["type_status"], "invalid")(
-    in_set("type_status", TYPE_STATUSES, "Некорректный тип статуса")
-)
+    ))
+rule(RuleCategory.TAXONOMY, ["type_status"], "invalid", in_set("type_status", TYPE_STATUSES, "Некорректный тип статуса"))
 
 
-@register(RuleCategory.TAXONOMY, ["type_status"], "conflict")
+@rule(RuleCategory.TAXONOMY, ["type_status"], "conflict")
 def rule_type_status_on_genus(data: RecordData, ctx: RuleContext) -> str | None:
     if (
         data.type_status is not None
@@ -72,7 +63,7 @@ def rule_type_status_on_genus(data: RecordData, ctx: RuleContext) -> str | None:
     return None
 
 
-@register(
+@rule(
     RuleCategory.TAXONOMY,
     [
         "family",
@@ -97,7 +88,7 @@ def rule_forbidden_chars_taxon(data: RecordData, ctx: RuleContext) -> str | None
     return None
 
 
-@register(
+@rule(
     RuleCategory.TAXONOMY,
     ["family", "genus", "species", "accepted_name", "identification_remarks"],
     "cyrillic",
