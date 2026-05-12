@@ -23,11 +23,12 @@ from repository import record as repo
 from repository.publication import get_publication
 from repository.record import count_records_by_publ
 from repository.user import get_user_expect
-from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
+from schema.records import RecordData, RecordFull, RecordMetadata, RecordType, Specimen
 from service.actions import ActionService
 from service.export import ParseResult, is_row_empty
 from service.milestone import check_and_log_milestone
 from service.publications import PublicationService
+from service.records.convert import specimens_from_record, specimens_to_db
 from service.records.validation import validate_record
 from service.records.validation.errors import ErrorCollection
 
@@ -70,6 +71,23 @@ def create_record_metadata(
         ),
         errors,
     )
+
+
+def _flatten_for_db(data: RecordData) -> dict:
+    dumped = data.model_dump(exclude_unset=True)
+    specimens = dumped.pop("specimens", None)
+    if specimens:
+        flat = specimens_to_db(specimens)
+        dumped.update(flat)
+    return dumped
+
+
+def _enrich_record(record: EventRecord) -> RecordFull:
+    full = RecordFull.model_validate(record)
+    specimens_list = specimens_from_record(record)
+    if specimens_list:
+        full.specimens = [Specimen(**s) for s in specimens_list]
+    return full
 
 
 class ImportError(BaseModel):
@@ -141,7 +159,8 @@ class RecordService:
             updated_at=record.updated_at,
         )
 
-        updated = await repo.update_record(self.session, record_id, data, metadata)
+        flat = _flatten_for_db(data)
+        updated = await repo.update_record(self.session, record_id, flat, metadata)
         if updated is None:
             raise RecordStaleError(record_id)
 
@@ -150,7 +169,7 @@ class RecordService:
                 self.session, user_id, updated, self.action_service
             )
 
-        return RecordFull.model_validate(updated), errors
+        return _enrich_record(updated), errors
 
     async def get_record(
         self,
@@ -161,7 +180,7 @@ class RecordService:
         if record is None:
             raise RecordNotFoundError(record_id)
 
-        return RecordFull.model_validate(record)
+        return _enrich_record(record)
 
     async def delete_record(
         self,
@@ -191,7 +210,7 @@ class RecordService:
         pages = (total + page_size - 1) // page_size if page_size > 0 else 0
 
         return {
-            "items": [RecordFull.model_validate(r) for r in records],
+            "items": [_enrich_record(r) for r in records],
             "total": total,
             "page": page,
             "page_size": page_size,
@@ -275,8 +294,9 @@ class RecordService:
                 ip=ip,
             )
 
+            flat = _flatten_for_db(record_data)
             record = EventRecord(
-                **record_data.model_dump(exclude_unset=True),
+                **flat,
                 **metadata.model_dump(),
             )
 

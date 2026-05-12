@@ -1,9 +1,17 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Literal
 
 from pydantic import UUID4, BaseModel, ConfigDict, Field
 
 RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail"]
+
+
+class Specimen(BaseModel):
+    sex: Literal["male", "female", "undefined", "none"]
+    life_stage: Literal["adult", "subadult", "juvenile", "none"]
+    count: float = Field(ge=0)
 
 
 class RecordMetadata(BaseModel):
@@ -64,10 +72,8 @@ class RecordData(BaseModel):
     accepted_name: str | None = Field(default=None, max_length=255)
     taxon_remarks: str | None = Field(default=None, max_length=1000)
 
-    quantity: float | None = Field(default=None, ge=0)
     quantity_type: str | None = Field(default=None, max_length=50)
-    sex: str | None = Field(default=None, max_length=20)
-    life_stage: str | None = Field(default=None, max_length=20)
+    specimens: list[Specimen] | None = None
     occurrence_remarks: str | None = Field(default=None, max_length=1000)
     identification_remarks: str | None = Field(default=None, max_length=1000)
 
