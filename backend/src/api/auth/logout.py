@@ -23,8 +23,8 @@ async def logout(
     session: DBSession,
     action_service: Annotated[ActionService, Depends()],
     invalidate_all: Annotated[
-        bool, Query(True, description="Invalidate all active sessions")
-    ],
+        bool, Query(description="Invalidate all active sessions")
+    ] = True,
 ) -> Message:
     """
     Выход пользователя.
