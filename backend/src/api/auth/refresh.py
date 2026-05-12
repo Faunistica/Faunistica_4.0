@@ -33,12 +33,12 @@ async def refresh(
 
     if payload.type != "refresh":
         logger.warning("Invalid refresh token type")
-        raise InvalidTokenError()
+        raise InvalidTokenError
 
     user = await get_user(session, int(payload.sub))
     if user is None or user.token_version != payload.version:
         logger.warning("Invalid refresh token")
-        raise InvalidTokenError()
+        raise InvalidTokenError
 
     token_payload = TokenPayload(
         sub=str(payload.sub), username=payload.username, version=user.token_version
