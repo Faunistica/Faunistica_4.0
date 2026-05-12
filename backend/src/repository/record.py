@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
@@ -36,6 +37,7 @@ async def update_record(
     record_id: UUID,
     data: dict,
     metadata: RecordMetadata,
+    previous_update: datetime,
 ) -> EventRecord | None:
     """
     Update a record with optimistic locking via updated_at.
@@ -48,7 +50,7 @@ async def update_record(
         .where(
             and_(
                 EventRecord.id == record_id,
-                EventRecord.updated_at == metadata.updated_at,
+                EventRecord.updated_at == previous_update,
             )
         )
         .values(update_data)

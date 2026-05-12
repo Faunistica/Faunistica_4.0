@@ -51,7 +51,6 @@ def create_record_metadata(
     language: str | None,
     submission_type: Literal["submit", "autosave"],
     ip: str | None = None,
-    updated_at: datetime | None = None,
 ) -> tuple[RecordMetadata, ErrorCollection]:
     errors = validate_record(record, language=language)
     type_val = _determine_type(errors, submission_type)
@@ -66,7 +65,7 @@ def create_record_metadata(
             errors=errors.to_db_string(),
             type=type_val,
             created_at=now,
-            updated_at=updated_at if updated_at else now,
+            updated_at=now,
             ip=ip,
         ),
         errors,
@@ -155,11 +154,12 @@ class RecordService:
             language=language,
             submission_type=submission_type,
             ip=ip,
-            updated_at=record.updated_at,
         )
 
         flat = _flatten_for_db(data)
-        updated = await repo.update_record(self.session, record_id, flat, metadata)
+        updated = await repo.update_record(
+            self.session, record_id, flat, metadata, previous_update=record.updated_at
+        )
         if updated is None:
             raise RecordStaleError(record_id)
 

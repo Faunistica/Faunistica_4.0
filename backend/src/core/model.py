@@ -96,9 +96,9 @@ class EventRecord(Base):
         BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
     )
     created_at: Mapped[datetime_type] = mapped_column(
-        TIMESTAMP(precision=6), server_default=func.now()
+        "datetime", TIMESTAMP(precision=6), server_default=func.now()
     )
-    updated_at: Mapped[datetime_type | None] = mapped_column(
+    updated_at: Mapped[datetime_type] = mapped_column(
         TIMESTAMP(precision=6), server_default=func.now(), server_onupdate=func.now()
     )
     ip: Mapped[str | None] = mapped_column(Text)

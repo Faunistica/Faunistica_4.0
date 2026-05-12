@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.Column("publ_id", sa.Integer(), nullable=True),
         sa.Column("user_id", sa.BigInteger(), nullable=False),
         sa.Column("datetime", TIMESTAMP(precision=6), nullable=True),
-        sa.Column("updated_at", TIMESTAMP(precision=6), nullable=True),
+        sa.Column("updated_at", TIMESTAMP(precision=6), nullable=False),
         sa.Column("ip", sa.Text(), nullable=True),
         sa.Column("errors", sa.Text(), nullable=True),
         sa.Column("type", sa.Text(), nullable=True),
