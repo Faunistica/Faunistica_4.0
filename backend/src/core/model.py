@@ -6,6 +6,7 @@ from sqlalchemy import (
     Boolean,
     Double,
     ForeignKey,
+    Identity,
     Integer,
     Numeric,
     String,
@@ -37,7 +38,7 @@ class User(Base):
     items: Mapped[str] = mapped_column(Text, default="")
     age: Mapped[int | None] = mapped_column(Integer)
     lng: Mapped[str | None] = mapped_column(String)
-    comm: Mapped[str | None] = mapped_column(Text)
+    comm: Mapped[str | None] = mapped_column(String)
     reg_run: Mapped[datetime_type] = mapped_column(TIMESTAMP, server_default=func.now())
     reg_end: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
     sex: Mapped[str | None] = mapped_column(String(3))
@@ -73,10 +74,12 @@ class Publication(Base):
 class Action(Base):
     __tablename__ = "actions"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        primary_key=True,
+        server_default=Identity(),
     )
+    user_id: Mapped[int] = mapped_column(BigInteger)
     user_ip: Mapped[str | None] = mapped_column(Text)
     action: Mapped[str] = mapped_column(Text, nullable=False)
     object: Mapped[str | None] = mapped_column(Text)
