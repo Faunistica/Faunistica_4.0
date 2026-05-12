@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
-from core.database import get_session
+from core.dependencies import DBSession
 from core.exceptions import AdminOnlyError, InvalidTokenError
 from repository.user import get_user
 from schema.jwt import Token, TokenPayload
@@ -136,7 +136,7 @@ def verify_token(token: str) -> Token:
 
 async def get_jwt_user(
     request: Request,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: DBSession,
 ) -> UserMinimal:
     token = request.cookies.get("access_token")
     if not token:
@@ -156,7 +156,7 @@ async def get_jwt_user(
     user = await get_user(session, user_id)
     if user is None or user.token_version != payload.version:
         logger.warning("Token version mismatch or user not found")
-        raise InvalidTokenError("Invalid token")
+        raise InvalidTokenError
 
     return UserMinimal(user_id=user_id, name=payload.username)
 
