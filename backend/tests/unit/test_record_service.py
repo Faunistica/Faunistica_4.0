@@ -369,12 +369,18 @@ class TestImportRecords:
         user_id = 12345
         publ_id = 67890
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
             patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
