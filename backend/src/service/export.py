@@ -76,7 +76,7 @@ def is_row_empty(row: dict[str, Any | None]) -> bool:
 
 def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
     """Convert a row dict to RecordData using pydantic validation."""
-    data_dict: dict[str, str] = {}
+    data_dict: dict[str, Any] = {}
     for display_name, field in REVERSE_COLUMN_MAPPING.items():
         raw_value = row.get(display_name)
         if raw_value is not None:
@@ -91,7 +91,20 @@ def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
             try:
                 qty = float(quantity)
             except (ValueError, TypeError):
-                pass
+                return {
+                    "success": False,
+                    "record": None,
+                    "error": ValidationError.from_exception_data(
+                        "Quantity",
+                        [
+                            {
+                                "type": "float_parsing",
+                                "loc": ("Quantity",),
+                                "input": quantity,
+                            }
+                        ],
+                    ),
+                }
         specimens = specimens_from_db(qty, sex, life_stage)
         if specimens:
             data_dict["specimens"] = specimens
@@ -163,8 +176,7 @@ def records_to_csv(records: Sequence[EventRecord]) -> str:
 
     for record in records:
         row = {
-            ALL_COLUMNS[field]: getattr(record, field, None)
-            for field in ALL_COLUMNS
+            ALL_COLUMNS[field]: getattr(record, field, None) for field in ALL_COLUMNS
         }
         writer.writerow(row)
 

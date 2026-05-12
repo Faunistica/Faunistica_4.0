@@ -23,7 +23,7 @@ from repository import record as repo
 from repository.publication import get_publication
 from repository.record import count_records_by_publ
 from repository.user import get_user_expect
-from schema.records import RecordData, RecordFull, RecordMetadata, RecordType, Specimen
+from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
 from service.actions import ActionService
 from service.export import ParseResult, is_row_empty
 from service.milestone import check_and_log_milestone
@@ -74,10 +74,9 @@ def create_record_metadata(
 
 
 def _flatten_for_db(data: RecordData) -> dict:
-    dumped = data.model_dump(exclude_unset=True)
-    specimens = dumped.pop("specimens", None)
-    if specimens:
-        flat = specimens_to_db(specimens)
+    dumped = data.model_dump(exclude_unset=True, exclude={"specimens"})
+    if data.specimens:
+        flat = specimens_to_db(data.specimens)
         dumped.update(flat)
     return dumped
 
@@ -86,7 +85,7 @@ def _enrich_record(record: EventRecord) -> RecordFull:
     full = RecordFull.model_validate(record)
     specimens_list = specimens_from_record(record)
     if specimens_list:
-        full.specimens = [Specimen(**s) for s in specimens_list]
+        full.specimens = specimens_list
     return full
 
 

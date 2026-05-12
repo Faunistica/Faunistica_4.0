@@ -8,6 +8,7 @@ from ..rules.base import RuleCategory, in_set, rule
 
 if TYPE_CHECKING:
     from schema.records import RecordData
+
     from ..rules.base import RuleContext
 
 
@@ -41,9 +42,8 @@ def rule_specimens_valid_sex(data: RecordData, ctx: RuleContext) -> str | None:
         return None
     for s in data.specimens:
         if s.sex not in SEX_VALUES:
-            return (
-                "Некорректное значение пола. Допустимые значения: "
-                + ", ".join(sorted(SEX_VALUES))
+            return "Некорректное значение пола. Допустимые значения: " + ", ".join(
+                sorted(SEX_VALUES)
             )
     return None
 
