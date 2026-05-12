@@ -1,17 +1,9 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
+from schema.records import RecordData
 from service.taxon import family_genus_known, genus_species_known
 
 from ..constants import TAXON_RANKS, TYPE_STATUSES
 from ..helpers import contains_forbidden_chars, has_cyrillic_in_foreign_text
-from ..rules.base import RuleCategory, in_set, required, rule
-
-if TYPE_CHECKING:
-    from schema.records import RecordData
-
-    from ..rules.base import RuleContext
+from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
 
 rule(
     RuleCategory.TAXONOMY,

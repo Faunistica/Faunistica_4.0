@@ -1,15 +1,8 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from schema.records import RecordData
 
 from ..constants import LIFE_STAGES, QUANTITY_MAX, QUANTITY_TYPES, SEX_VALUES
 from ..helpers import contains_forbidden_chars
-from ..rules.base import RuleCategory, in_set, rule
-
-if TYPE_CHECKING:
-    from schema.records import RecordData
-
-    from ..rules.base import RuleContext
+from ..rules.base import RuleCategory, RuleContext, in_set, rule
 
 
 @rule(RuleCategory.ABUNDANCE, ["specimens"], "out_of_range")

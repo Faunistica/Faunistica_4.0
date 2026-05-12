@@ -1,10 +1,4 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from core.model import EventRecord
-
+from core.model import EventRecord
 from schema.records import Specimen
 
 from .validation.constants import SEX_VALUES

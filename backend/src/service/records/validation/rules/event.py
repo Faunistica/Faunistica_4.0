@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from schema.records import RecordData
 
 from ..constants import DATE_PRECISIONS
 from ..helpers import (
@@ -8,12 +6,7 @@ from ..helpers import (
     has_cyrillic_in_foreign_text,
     has_range_separator,
 )
-from ..rules.base import RuleCategory, in_set, required, rule
-
-if TYPE_CHECKING:
-    from schema.records import RecordData
-
-    from ..rules.base import RuleContext
+from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
 
 rule(
     RuleCategory.EVENT,

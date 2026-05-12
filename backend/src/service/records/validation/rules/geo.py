@@ -1,7 +1,4 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
+from schema.records import RecordData
 from service.geo import UralBorder
 
 from ..constants import (
@@ -16,12 +13,7 @@ from ..constants import (
     REGION_LON_MIN,
 )
 from ..helpers import decimal_places, should_skip_geo
-from ..rules.base import RuleCategory, in_range, in_set, required, rule
-
-if TYPE_CHECKING:
-    from schema.records import RecordData
-
-    from ..rules.base import RuleContext
+from ..rules.base import RuleCategory, RuleContext, in_range, in_set, required, rule
 
 rule(
     RuleCategory.GEO, ["latitude"], "required", required("latitude", "Широта не задана")

@@ -1,14 +1,7 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from schema.records import RecordData
 
 from ..helpers import contains_forbidden_chars, has_cyrillic_in_foreign_text
-from ..rules.base import RuleCategory, min_length, rule
-
-if TYPE_CHECKING:
-    from schema.records import RecordData
-
-    from ..rules.base import RuleContext
+from ..rules.base import RuleCategory, RuleContext, min_length, rule
 
 
 @rule(

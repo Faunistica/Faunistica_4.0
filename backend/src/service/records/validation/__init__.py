@@ -1,12 +1,6 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
+from schema.records import RecordData
 from service.records.validation.errors import ErrorCollection
 from service.records.validation.rules import RuleContext, all_rules
-
-if TYPE_CHECKING:
-    from schema.records import RecordData
 
 
 def validate_record(

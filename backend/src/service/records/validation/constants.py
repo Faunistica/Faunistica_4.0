@@ -1,11 +1,6 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from core.config import settings
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def _load_short_countries(path: Path) -> frozenset[str]:
