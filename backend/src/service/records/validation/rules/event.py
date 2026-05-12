@@ -8,21 +8,30 @@ from ..helpers import (
     has_cyrillic_in_foreign_text,
     has_range_separator,
 )
-from ..rules import RuleCategory, in_set, rule, required
+from ..rules.base import RuleCategory, in_set, required, rule
 
 if TYPE_CHECKING:
     from schema.records import RecordData
 
-    from ..rules import RuleContext
+    from ..rules.base import RuleContext
 
-rule(RuleCategory.EVENT, ["verbatim_date"], "required", required("verbatim_date", "Дата сбора не указана"))
-rule(RuleCategory.EVENT, ["date_precision"], "invalid",
+rule(
+    RuleCategory.EVENT,
+    ["verbatim_date"],
+    "required",
+    required("verbatim_date", "Дата сбора не указана"),
+)
+rule(
+    RuleCategory.EVENT,
+    ["date_precision"],
+    "invalid",
     in_set(
         "date_precision",
         DATE_PRECISIONS,
         "Некорректная точность указания даты. Допустимые значения: "
         + ", ".join(DATE_PRECISIONS),
-    ))
+    ),
+)
 
 
 @rule(RuleCategory.EVENT, ["verbatim_date"], "conflict")

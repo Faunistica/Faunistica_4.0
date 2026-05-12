@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ..helpers import contains_forbidden_chars, has_cyrillic_in_foreign_text
-from ..rules import RuleCategory, min_length, rule
+from ..rules.base import RuleCategory, min_length, rule
 
 if TYPE_CHECKING:
     from schema.records import RecordData
 
-    from ..rules import RuleContext
+    from ..rules.base import RuleContext
+
 
 @rule(
     RuleCategory.LOCATION,
@@ -47,6 +48,21 @@ def rule_cyrillic_location(data: RecordData, ctx: RuleContext) -> str | None:
     return None
 
 
-rule(RuleCategory.LOCATION, ["country"], "too_short", min_length("country", 4, "Страна указана некорректно"))
-rule(RuleCategory.LOCATION, ["region"], "too_short", min_length("region", 5, "Регион указан некорректно"))
-rule(RuleCategory.LOCATION, ["district"], "too_short", min_length("district", 5, "Район указан некорректно"))
+rule(
+    RuleCategory.LOCATION,
+    ["country"],
+    "too_short",
+    min_length("country", 4, "Страна указана некорректно"),
+)
+rule(
+    RuleCategory.LOCATION,
+    ["region"],
+    "too_short",
+    min_length("region", 5, "Регион указан некорректно"),
+)
+rule(
+    RuleCategory.LOCATION,
+    ["district"],
+    "too_short",
+    min_length("district", 5, "Район указан некорректно"),
+)

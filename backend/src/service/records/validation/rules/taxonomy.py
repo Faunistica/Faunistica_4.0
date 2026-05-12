@@ -6,16 +6,26 @@ from service.taxon import family_genus_known, genus_species_known
 
 from ..constants import TAXON_RANKS, TYPE_STATUSES
 from ..helpers import contains_forbidden_chars, has_cyrillic_in_foreign_text
-from ..rules import RuleCategory, in_set, rule, required
+from ..rules.base import RuleCategory, in_set, required, rule
 
 if TYPE_CHECKING:
     from schema.records import RecordData
 
-    from ..rules import RuleContext
+    from ..rules.base import RuleContext
 
-rule(RuleCategory.TAXONOMY, ["family"], "required", required("family", "Семейство обязательно"))
+rule(
+    RuleCategory.TAXONOMY,
+    ["family"],
+    "required",
+    required("family", "Семейство обязательно"),
+)
 rule(RuleCategory.TAXONOMY, ["genus"], "required", required("genus", "Род обязателен"))
-rule(RuleCategory.TAXONOMY, ["species"], "required", required("species", "Вид обязателен"))
+rule(
+    RuleCategory.TAXONOMY,
+    ["species"],
+    "required",
+    required("species", "Вид обязателен"),
+)
 
 
 @rule(RuleCategory.TAXONOMY, ["genus"], "unknown")
@@ -42,14 +52,23 @@ def rule_genus_species_known(data: RecordData, ctx: RuleContext) -> str | None:
     return None
 
 
-rule(RuleCategory.TAXONOMY, ["taxon_rank"], "invalid",
+rule(
+    RuleCategory.TAXONOMY,
+    ["taxon_rank"],
+    "invalid",
     in_set(
         "taxon_rank",
         TAXON_RANKS,
         "Некорректная точность названия таксона. "
         "Допустимые значения: " + ", ".join(TAXON_RANKS),
-    ))
-rule(RuleCategory.TAXONOMY, ["type_status"], "invalid", in_set("type_status", TYPE_STATUSES, "Некорректный тип статуса"))
+    ),
+)
+rule(
+    RuleCategory.TAXONOMY,
+    ["type_status"],
+    "invalid",
+    in_set("type_status", TYPE_STATUSES, "Некорректный тип статуса"),
+)
 
 
 @rule(RuleCategory.TAXONOMY, ["type_status"], "conflict")

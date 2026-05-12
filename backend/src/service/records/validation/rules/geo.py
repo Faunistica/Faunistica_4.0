@@ -16,16 +16,28 @@ from ..constants import (
     REGION_LON_MIN,
 )
 from ..helpers import decimal_places, should_skip_geo
-from ..rules import RuleCategory, in_range, in_set, rule, required
+from ..rules.base import RuleCategory, in_range, in_set, required, rule
 
 if TYPE_CHECKING:
     from schema.records import RecordData
 
-    from ..rules import RuleContext
+    from ..rules.base import RuleContext
 
-rule(RuleCategory.GEO, ["latitude"], "required", required("latitude", "Широта не задана"))
-rule(RuleCategory.GEO, ["longitude"], "required", required("longitude", "Долгота не задана"))
-rule(RuleCategory.GEO, ["georef_source"], "required", required("georef_source", "Происхождение координат не указано"))
+rule(
+    RuleCategory.GEO, ["latitude"], "required", required("latitude", "Широта не задана")
+)
+rule(
+    RuleCategory.GEO,
+    ["longitude"],
+    "required",
+    required("longitude", "Долгота не задана"),
+)
+rule(
+    RuleCategory.GEO,
+    ["georef_source"],
+    "required",
+    required("georef_source", "Происхождение координат не указано"),
+)
 
 
 # TODO: decide whether should_skip_geo should apply consistently to all geo rules
@@ -69,45 +81,65 @@ def rule_longitude_excess_precision(data: RecordData, ctx: RuleContext) -> str |
     return None
 
 
-rule(RuleCategory.GEO, ["coordinate_uncertainty"], "out_of_range",
+rule(
+    RuleCategory.GEO,
+    ["coordinate_uncertainty"],
+    "out_of_range",
     in_range(
         "coordinate_uncertainty",
         COORD_UNCERTAINTY_MIN,
         None,
         "Радиус неточности координат недопустимо мал (менее 30 м)",
-    ))
-rule(RuleCategory.GEO, ["coordinate_uncertainty"], "out_of_range",
+    ),
+)
+rule(
+    RuleCategory.GEO,
+    ["coordinate_uncertainty"],
+    "out_of_range",
     in_range(
         "coordinate_uncertainty",
         None,
         COORD_UNCERTAINTY_MAX,
         "Радиус неточности координат недопустимо большой (более 15 км)",
-    ))
+    ),
+)
 
-rule(RuleCategory.GEO, ["georef_source"], "invalid",
+rule(
+    RuleCategory.GEO,
+    ["georef_source"],
+    "invalid",
     in_set(
         "georef_source",
         GEOREF_SOURCES,
         "Некорректный источник координат. Допустимые значения: "
         + ", ".join(GEOREF_SOURCES),
-    ))
+    ),
+)
 
-rule(RuleCategory.GEO, ["latitude"], "out_of_range",
+rule(
+    RuleCategory.GEO,
+    ["latitude"],
+    "out_of_range",
     in_range(
         "latitude",
         REGION_LAT_MIN,
         REGION_LAT_MAX,
         "Точка выходит за границы исследуемого региона по широте",
         convert_to_float=True,
-    ))
-rule(RuleCategory.GEO, ["longitude"], "out_of_range",
+    ),
+)
+rule(
+    RuleCategory.GEO,
+    ["longitude"],
+    "out_of_range",
     in_range(
         "longitude",
         REGION_LON_MIN,
         REGION_LON_MAX,
         "Точка выходит за границы исследуемого региона по долготе",
         convert_to_float=True,
-    ))
+    ),
+)
 
 
 @rule(RuleCategory.GEO, ["latitude", "longitude"], "out_of_region")

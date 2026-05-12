@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING
 
 from ..constants import LIFE_STAGES, QUANTITY_MAX, QUANTITY_TYPES, SEX_VALUES
 from ..helpers import contains_forbidden_chars
-from ..rules import RuleCategory, in_range, in_set, rule
+from ..rules.base import RuleCategory, in_range, in_set, rule
 
 if TYPE_CHECKING:
     from schema.records import RecordData
 
-    from ..rules import RuleContext
+    from ..rules.base import RuleContext
 
 
 @rule(RuleCategory.ABUNDANCE, ["quantity"], "out_of_range")
@@ -24,21 +24,41 @@ def rule_quantity_max(data: RecordData, ctx: RuleContext) -> str | None:
     return None
 
 
-rule(RuleCategory.ABUNDANCE, ["quantity"], "too_low", in_range("quantity", 0.001, None, "Слишком мало особей"))
-rule(RuleCategory.ABUNDANCE, ["quantity_type"], "invalid", in_set("quantity_type", QUANTITY_TYPES, "Некорректный тип единицы измерения обилия"))
-rule(RuleCategory.ABUNDANCE, ["sex"], "invalid",
+rule(
+    RuleCategory.ABUNDANCE,
+    ["quantity"],
+    "too_low",
+    in_range("quantity", 0.001, None, "Слишком мало особей"),
+)
+rule(
+    RuleCategory.ABUNDANCE,
+    ["quantity_type"],
+    "invalid",
+    in_set(
+        "quantity_type", QUANTITY_TYPES, "Некорректный тип единицы измерения обилия"
+    ),
+)
+rule(
+    RuleCategory.ABUNDANCE,
+    ["sex"],
+    "invalid",
     in_set(
         "sex",
         SEX_VALUES,
         "Некорректное значение пола. Допустимые значения: " + ", ".join(SEX_VALUES),
-    ))
-rule(RuleCategory.ABUNDANCE, ["life_stage"], "invalid",
+    ),
+)
+rule(
+    RuleCategory.ABUNDANCE,
+    ["life_stage"],
+    "invalid",
     in_set(
         "life_stage",
         LIFE_STAGES,
         "Некорректное значение стадии развития. Допустимые значения: "
         + ", ".join(LIFE_STAGES),
-    ))
+    ),
+)
 
 
 @rule(RuleCategory.ABUNDANCE, ["sex"], "inconsistent")
