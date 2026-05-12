@@ -7,12 +7,61 @@ from service.records.convert import (
 )
 
 
-def test_roundtrip_single_specimen():
+def test_single_specimen_format():
+    """Sex column omits lifestage when only one sex and one stage."""
     specimens = [Specimen(sex="male", life_stage="adult", count=5)]
     db = specimens_to_db(specimens)
     assert db["quantity"] == 5
-    assert db["sex"] == "5 adult male"
-    assert db["life_stage"] == "5 adult male"
+    assert db["sex"] == "5 male"
+    assert db["life_stage"] == "5 adult"
+
+
+def test_mixed_sexes_same_stage_format():
+    """Sex column omits lifestage when all share the same stage."""
+    specimens = [
+        Specimen(sex="male", life_stage="adult", count=3),
+        Specimen(sex="female", life_stage="adult", count=2),
+    ]
+    db = specimens_to_db(specimens)
+    assert db["quantity"] == 5
+    assert db["sex"] == "3 male | 2 female"
+    assert db["life_stage"] == "5 adult"
+
+
+def test_mixed_sexes_mixed_stages_format():
+    """Sex column includes lifestage when sexes span multiple stages."""
+    specimens = [
+        Specimen(sex="male", life_stage="adult", count=3),
+        Specimen(sex="male", life_stage="juvenile", count=1),
+        Specimen(sex="female", life_stage="adult", count=2),
+    ]
+    db = specimens_to_db(specimens)
+    assert db["quantity"] == 6
+    assert db["sex"] == "3 adult male | 1 juvenile male | 2 adult female"
+    assert db["life_stage"] == "5 adult | 1 juvenile"
+
+
+def test_life_stage_column_never_has_sex():
+    """Lifestage column should never contain sex info."""
+    db = specimens_to_db([
+        Specimen(sex="male", life_stage="adult", count=3),
+        Specimen(sex="female", life_stage="adult", count=2),
+    ])
+    assert "male" not in db["life_stage"]
+    assert "female" not in db["life_stage"]
+
+    db = specimens_to_db([
+        Specimen(sex="male", life_stage="adult", count=3),
+        Specimen(sex="male", life_stage="juvenile", count=1),
+        Specimen(sex="female", life_stage="adult", count=2),
+    ])
+    assert "male" not in db["life_stage"]
+    assert "female" not in db["life_stage"]
+
+
+def test_roundtrip_single_specimen():
+    specimens = [Specimen(sex="male", life_stage="adult", count=5)]
+    db = specimens_to_db(specimens)
     result = specimens_from_db(db["quantity"], db["sex"], db["life_stage"])
     assert result == specimens
 
@@ -23,8 +72,6 @@ def test_roundtrip_mixed_sexes_same_stage():
         Specimen(sex="female", life_stage="adult", count=2),
     ]
     db = specimens_to_db(specimens)
-    assert db["quantity"] == 5
-    assert "male" in db["sex"] and "female" in db["sex"]
     result = specimens_from_db(db["quantity"], db["sex"], db["life_stage"])
     assert sorted(result, key=lambda x: x.sex) == sorted(specimens, key=lambda x: x.sex)
 
