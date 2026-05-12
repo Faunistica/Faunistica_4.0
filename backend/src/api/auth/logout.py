@@ -1,9 +1,10 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 
 from core.dependencies import DBSession
+from core.exceptions import InvalidTokenError
 from core.rate_limiter import limiter
 from core.security import get_jwt_user
 from repository.user import increment_token_version
@@ -35,7 +36,7 @@ async def logout(
     user = None
     try:
         user = await get_jwt_user(request, session)
-    except HTTPException:
+    except InvalidTokenError:
         logger.warning("Logout with invalid/missing token")
 
     if user is not None and invalidate_all:
