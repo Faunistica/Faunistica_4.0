@@ -21,7 +21,6 @@ from core.exceptions import (
 from core.model import EventRecord
 from repository import record as repo
 from repository.publication import get_publication
-from repository.record import count_records_by_publ
 from repository.user import get_user_expect
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
 from service.actions import ActionService
@@ -186,11 +185,16 @@ class RecordService:
         record_id: UUID,
         user_id: int,
     ) -> None:
-        """Delete a record, enforcing ownership and publication membership."""
+        """Delete a record, enforcing ownership and publication membership.
 
-        # FIXME: if record is rec_ok change type to rec_del instead of deleting.
+        If record type is rec_ok, soft-delete by changing type to rec_del.
+        Otherwise, hard-delete.
+        """
         record = await self._get_and_check_ownership(record_id, user_id)
-        await repo.delete_record(self.session, record.id)
+        if record.type == "rec_ok":
+            record.type = "rec_del"
+        else:
+            await repo.delete_record(self.session, record.id)
 
     async def list_records(
         self,
@@ -305,12 +309,12 @@ class RecordService:
             if metadata.type == "rec_ok":
                 last_ok = record
 
-        # FIXME: race condition - check and insert are not atomic.
-        # Concurrent imports can exceed MAX_RECORDS_PER_PUBLICATION.
-        await self.check_import_limit(publ.publ_id, len(event_records))
+        # Delete old records, then check limit and insert — all in one transaction
+        await repo.delete_records_by_user_and_publ(self.session, user_id, publ.publ_id)
+        if len(event_records) > settings.MAX_RECORDS_PER_PUBLICATION:
+            raise RecordLimitExceededError(publ.publ_id, 0, len(event_records))
 
         self.session.add_all(event_records)
-        await self.session.commit()
 
         if last_ok is not None:
             await check_and_log_milestone(

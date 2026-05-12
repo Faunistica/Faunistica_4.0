@@ -106,7 +106,6 @@ class PublicationService:
 
         stmt = update(User).where(User.user_id == user_id).values(items=new_items)
         await self.session.execute(stmt)
-        await self.session.commit()
 
         if next_publ_id is None:
             return None

@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import UUID4, BaseModel, ConfigDict, Field
 
-RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail"]
+RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail", "rec_del"]
 
 
 class Specimen(BaseModel):
@@ -21,7 +21,7 @@ class RecordMetadata(BaseModel):
     errors: str | None = None
     type: RecordType | None = None
     created_at: datetime
-    updated_at: datetime | None = None
+    updated_at: datetime
 
     ip: str | None = None
 

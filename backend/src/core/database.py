@@ -32,6 +32,7 @@ async def get_session() -> AsyncGenerator[AsyncSession]:
     async with async_session_factory() as session:
         try:
             yield session
+            await session.commit()
         except IntegrityError as e:
             await session.rollback()
             raise DBException from e

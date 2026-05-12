@@ -20,7 +20,6 @@ async def create_record(
 ) -> EventRecord:
     stmt = pg_insert(EventRecord).values(**metadata.model_dump()).returning(EventRecord)
     result = await session.execute(stmt)
-    await session.commit()
 
     return result.scalar_one()
 
@@ -58,7 +57,6 @@ async def update_record(
     )
 
     result = await session.execute(stmt)
-    await session.commit()
 
     return result.scalar_one_or_none()
 
@@ -70,7 +68,6 @@ async def delete_record(session: AsyncSession, record_id: UUID) -> EventRecord |
     """
     stmt = delete(EventRecord).where(EventRecord.id == record_id).returning(EventRecord)
     result = await session.execute(stmt)
-    await session.commit()
 
     return result.scalar_one_or_none()
 
@@ -116,3 +113,13 @@ async def count_records_by_publ(session: AsyncSession, publ_id: int) -> int:
     stmt = select(func.count()).where(EventRecord.publ_id == publ_id)
     result = await session.execute(stmt)
     return result.scalar_one()
+
+
+async def delete_records_by_user_and_publ(
+    session: AsyncSession, user_id: int, publ_id: int
+) -> None:
+    """Delete all records for a given user and publication."""
+    stmt = delete(EventRecord).where(
+        and_(EventRecord.user_id == user_id, EventRecord.publ_id == publ_id)
+    )
+    await session.execute(stmt)

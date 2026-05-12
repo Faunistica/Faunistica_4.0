@@ -45,7 +45,6 @@ async def create_user_or_update(
         set_={User.reg_stat: stmt.excluded.reg_stat, User.reg_run: datetime.now()},
     ).returning(User)
     result = await session.execute(stmt)
-    await session.commit()
 
     return result.scalar_one()
 
@@ -60,7 +59,6 @@ async def update_user(
         .returning(User)
     )
     result = await session.execute(stmt)
-    await session.commit()
 
     return result.scalar_one_or_none()
 
