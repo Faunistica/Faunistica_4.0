@@ -42,20 +42,20 @@ class UserLoginResponse(BaseModel):
 
 class Publication(BaseModel):
     publ_id: int
-    type: str
+    type: str | None = None
     author: str | None = None
-    year: int
-    name: str
+    year: int | None = None
+    name: str | None = None
 
     external: str | None = None
-    language: str
+    language: str | None = None
 
     pdf_file: str | None = None
     bib_file: str | None = None
     arj_file: str | None = None
 
     resume: str | None = None
-    ural: int
+    ural: int | None = None
     # TODO: change type to bool in migration
     coords: int | None = None
     cover: int | None = None
