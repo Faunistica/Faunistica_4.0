@@ -587,7 +587,7 @@ async def test_import_limit_enforcement(authenticated_client: AsyncClient) -> No
 
     header_to_idx = {h: i for i, h in enumerate(headers)}
 
-    num_records = settings.MAX_RECORDS_PER_PUBLICATION + 1
+    num_records = settings.MAX_USER_RECORDS_PER_PUBLICATION + 1
     for _ in range(num_records):
         row_data = [None] * len(headers)
         if "Family" in header_to_idx:

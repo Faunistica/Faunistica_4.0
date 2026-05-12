@@ -66,7 +66,7 @@ async def export_records(
         user_id=user_id,
         publ_id=publ_id,
         page=1,
-        page_size=settings.MAX_RECORDS_PER_PUBLICATION,
+        page_size=settings.MAX_USER_RECORDS_PER_PUBLICATION,
     )
 
     if format == "csv":

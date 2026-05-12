@@ -140,6 +140,6 @@ class RecordLimitExceededError(APIException):
         self.count = count
         super().__init__(
             "RECORD_LIMIT",
-            f"importing {count} more would exceed limit",
+            f"adding {count} more would exceed limit",
             400,
         )

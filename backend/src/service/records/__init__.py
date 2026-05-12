@@ -21,6 +21,7 @@ from core.exceptions import (
 from core.model import EventRecord
 from repository import record as repo
 from repository.publication import get_publication
+from repository.record import count_records_by_user_publ
 from repository.user import get_user_expect
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
 from service.actions import ActionService
@@ -118,6 +119,10 @@ class RecordService:
     ) -> tuple[RecordFull, ErrorCollection]:
         """Create a new record (autosave by default, or submit)."""
         await self.publication_service.validate_access(publ_id, user_id=user_id)
+        count = await count_records_by_user_publ(self.session, user_id, publ_id)
+        if count >= settings.MAX_USER_RECORDS_PER_PUBLICATION:
+            raise RecordLimitExceededError(1)
+
         publ = await get_publication(self.session, publ_id)
         language = publ.language if publ else None
         metadata, errors = create_record_metadata(
@@ -247,13 +252,6 @@ class RecordService:
 
         return record
 
-    async def check_import_limit(self, publ_id: int, additional_count: int) -> None:
-        """Raise exception if adding additional_count would exceed limit."""
-        current_count = await count_records_by_publ(self.session, publ_id)
-        if current_count + additional_count > settings.MAX_RECORDS_PER_PUBLICATION:
-            raise RecordLimitExceededError(publ_id, current_count, additional_count)
-
-    # TODO: check for duplicated?
     async def import_records(
         self,
         records: AsyncIterable[ParseResult],
@@ -311,8 +309,8 @@ class RecordService:
 
         # Delete old records, then check limit and insert — all in one transaction
         await repo.delete_records_by_user_and_publ(self.session, user_id, publ.publ_id)
-        if len(event_records) > settings.MAX_RECORDS_PER_PUBLICATION:
-            raise RecordLimitExceededError(publ.publ_id, 0, len(event_records))
+        if len(event_records) > settings.MAX_USER_RECORDS_PER_PUBLICATION:
+            raise RecordLimitExceededError(len(event_records))
 
         self.session.add_all(event_records)
 
