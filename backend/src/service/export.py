@@ -25,7 +25,7 @@ COLUMN_MAPPING: dict[str, str] = {
     "longitude": "Longitude",
     "verbatimcoordinates": "Verbatim Coordinates",
     "coordinate_uncertainty": "Coordinate Uncertainty (m)",
-    "georeferencedby": "Geo Referenced By",
+    "georef_source": "Geo Referenced By",
     "location_remarks": "Location Remarks",
     "verbatim_date": "Date",
     "date_precision": "Date Precision",
