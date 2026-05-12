@@ -10,7 +10,6 @@ from core.security import check_password, set_response_token_cookies
 from repository.user import (
     UserUpdate,
     find_user_by_username,
-    increment_token_version,
     update_user,
 )
 from schema.common import LoginRequest, UserLoginResponse
@@ -53,7 +52,6 @@ async def login(
 
     if result.new_hash:
         await update_user(session, user.user_id, UserUpdate(hash=result.new_hash))
-        await increment_token_version(session, user.user_id)
 
     if user.hash_date is not None:
         now = datetime.now()

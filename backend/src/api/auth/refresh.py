@@ -1,8 +1,9 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Request, Response
 
 from core.dependencies import DBSession
+from core.exceptions import InvalidTokenError
 from core.security import set_response_token_cookies, verify_token
 from repository.user import get_user
 from schema.common import Message
@@ -26,17 +27,18 @@ async def refresh(
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         logger.warning("Refresh token missing")
-        raise HTTPException(status_code=403, detail="Refresh token missing")
+        raise InvalidTokenError("Refresh token missing")
 
     payload = verify_token(refresh_token)
 
     if payload.type != "refresh":
-        logger.warning("Invalid refresh token")
-        raise HTTPException(status_code=403, detail="Invalid refresh token")
+        logger.warning("Invalid refresh token type")
+        raise InvalidTokenError("Invalid token")
 
     user = await get_user(session, int(payload.sub))
-    if user is None:
-        raise HTTPException(status_code=403, detail="User not found")
+    if user is None or user.token_version != payload.version:
+        logger.warning("Invalid refresh token")
+        raise InvalidTokenError("Invalid token")
 
     token_payload = TokenPayload(
         sub=str(payload.sub), username=payload.username, version=user.token_version
