@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from openpyxl import Workbook
 
+from core.config import settings
 from core.exceptions import NoPublicationsAssignedError, RecordLimitExceededError
 from schema.records import RecordData, Specimen
 from service.export import ALL_COLUMNS, ParseResult
@@ -68,7 +69,9 @@ class TestImportRecords:
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
             patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
@@ -118,7 +121,9 @@ class TestImportRecords:
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
             patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             # Create a mock ValidationError
@@ -169,7 +174,9 @@ class TestImportRecords:
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
         ):
 
             async def gen() -> AsyncGenerator[ParseResult, None]:
@@ -235,18 +242,15 @@ class TestImportRecords:
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            # Simulate already at limit
-            patch(
-                "service.records.count_records_by_publ", AsyncMock(return_value=1000)
-            ),
         ):
 
             async def gen() -> AsyncGenerator[ParseResult, None]:
-                yield {
-                    "success": True,
-                    "record": RecordData(family="Formicidae"),
-                    "error": None,
-                }
+                for _ in range(settings.MAX_USER_RECORDS_PER_PUBLICATION + 1):
+                    yield {
+                        "success": True,
+                        "record": RecordData(family="Formicidae"),
+                        "error": None,
+                    }
 
             with pytest.raises(RecordLimitExceededError):
                 await record_service.import_records(
@@ -272,7 +276,9 @@ class TestImportRecords:
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
             patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
@@ -338,7 +344,9 @@ class TestImportRecords:
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
             patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             result = await record_service.import_records(

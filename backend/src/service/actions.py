@@ -32,6 +32,7 @@ class ActionService:
             datetime=datetime.now(),
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     async def log_publ_metadata(
         self,
@@ -57,6 +58,7 @@ class ActionService:
             datetime=datetime.now(),
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     async def log_publ_comment(
         self, user_id: int, publ_id: int, comment: str, ip: str | None
@@ -70,6 +72,7 @@ class ActionService:
             datetime=datetime.now(),
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     async def log_win(
         self, user_id: int, picfile: str, message: str, ip: str | None
@@ -83,6 +86,7 @@ class ActionService:
             datetime=datetime.now(),
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     async def log_login(self, user_id: int, ip: str | None) -> None:
         stmt = insert(Action).values(
@@ -93,6 +97,7 @@ class ActionService:
             datetime=datetime.now(),
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     async def log_logout(self, user_id: int, ip: str | None) -> None:
         stmt = insert(Action).values(
@@ -103,6 +108,7 @@ class ActionService:
             datetime=datetime.now(),
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     async def log_bot_auth(
         self, user_id: int, status: str, ip: str | None = None
@@ -115,6 +121,7 @@ class ActionService:
             datetime=datetime.now(),
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     async def log_bot_rename(
         self, user_id: int, old: str | None, new: str, ip: str | None = None
@@ -127,6 +134,7 @@ class ActionService:
             datetime=datetime.now(),
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     async def log_bot_other(
         self, user_id: int, content_type: str, ip: str | None = None
@@ -143,6 +151,7 @@ class ActionService:
             )
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     async def log_milestone(self, user_id: int, milestone: int, ip: str | None) -> None:
         stmt = insert(Action).values(
@@ -153,6 +162,7 @@ class ActionService:
             datetime=datetime.now(),
         )
         await self.session.execute(stmt)
+        await self.session.commit()
 
     # Query methods - update to session.execute(select(...)) style
 

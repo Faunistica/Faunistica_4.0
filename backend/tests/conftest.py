@@ -25,6 +25,7 @@ from app import app
 from core.config import settings
 from core.database import get_session
 from core.dependencies import get_http_session
+from core.enums import UserState
 from core.model import Base, EventRecord, Publication, User
 from core.rate_limiter import limiter
 from schema.jwt import Token
@@ -111,6 +112,7 @@ async def seed_data(
     def from_test(d: dict) -> User:
         return User(
             user_id=d["user_id"],
+            reg_stat=UserState.REG_COMPLETED,
             name=d["username"],
             tlg_name=d["username"],
             tlg_username=d["username"],
@@ -237,6 +239,7 @@ async def async_client(session_maker: Callable[[], AsyncSession]):
     async def _maker():
         async with session_maker() as session:
             yield session
+            await session.commit()
 
     app.dependency_overrides[get_session] = _maker
 

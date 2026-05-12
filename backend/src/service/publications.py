@@ -111,6 +111,8 @@ class PublicationService:
             return None
 
         next_publ = await get_publication_expect(self.session, next_publ_id)
+        await self.session.commit()
+
         return Publication.model_validate(next_publ)
 
     async def assign_current(self, user_id: int) -> Publication | None:

@@ -135,6 +135,8 @@ class RecordService:
         )
 
         record = await repo.create_record(self.session, metadata)
+        await self.session.commit()
+
         return RecordFull.model_validate(record), errors
 
     async def update_record(
@@ -171,6 +173,7 @@ class RecordService:
             await check_and_log_milestone(
                 self.session, user_id, updated, self.action_service
             )
+        await self.session.commit()
 
         return _enrich_record(updated), errors
 
@@ -182,6 +185,7 @@ class RecordService:
         record = await repo.get_record(self.session, record_id)
         if record is None:
             raise RecordNotFoundError(record_id)
+        await self.session.commit()
 
         return _enrich_record(record)
 
@@ -200,6 +204,8 @@ class RecordService:
             record.type = "rec_del"
         else:
             await repo.delete_record(self.session, record.id)
+
+        await self.session.commit()
 
     async def list_records(
         self,
@@ -323,6 +329,8 @@ class RecordService:
                 last_ok,
                 self.action_service,
             )
+
+        await self.session.commit()
 
         return ImportResult(
             imported=len(event_records),
