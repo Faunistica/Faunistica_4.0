@@ -113,7 +113,10 @@ def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
         record = RecordData.model_validate(data_dict)
         return {"success": True, "record": record, "error": None}
     except ValidationError as e:
-        return {"success": False, "record": None, "error": e}
+        bad_fields = {err["loc"][0] for err in e.errors()}
+        cleaned = {k: v for k, v in data_dict.items() if k not in bad_fields}
+        partial = RecordData.model_validate(cleaned)
+        return {"success": False, "record": partial, "error": e}
 
 
 async def read_excel(file_content: bytes) -> AsyncGenerator[ParseResult]:

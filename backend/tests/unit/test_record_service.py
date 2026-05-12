@@ -137,8 +137,12 @@ class TestImportRecords:
                     "record": RecordData(family="Formicidae", genus="Camponotus"),
                     "error": None,
                 }
-                # Invalid record (simulate validation error)
-                yield {"success": False, "record": None, "error": mock_error}
+                # Invalid record (simulate validation error with partial data)
+                yield {
+                    "success": False,
+                    "record": RecordData(family="Formicidae"),
+                    "error": mock_error,
+                }
                 # Valid record
                 yield {
                     "success": True,
@@ -150,7 +154,7 @@ class TestImportRecords:
                 gen(), user_id=user_id, ip="127.0.0.1"
             )
 
-            assert result.imported == 2
+            assert result.imported == 3
             assert result.failed == 1
             assert len(result.errors) == 1
             assert result.errors[0].row == 2

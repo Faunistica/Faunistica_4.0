@@ -51,8 +51,12 @@ def create_record_metadata(
     language: str | None,
     submission_type: Literal["submit", "autosave"],
     ip: str | None = None,
+    import_errors: list[str] | None = None,
 ) -> tuple[RecordMetadata, ErrorCollection]:
     errors = validate_record(record, language=language)
+    if import_errors:
+        for msg in import_errors:
+            errors.add(fields=[], code="import_error", message=msg)
     type_val = _determine_type(errors, submission_type)
 
     now = datetime.now()
@@ -282,7 +286,6 @@ class RecordService:
         async for i, result in a.enumerate(records, 1):
             if result["error"]:
                 all_errors.append(ImportError(row=i, error=result["error"].json()))
-                continue
 
             record_data = result["record"]
             if record_data is None or is_row_empty(record_data.model_dump()):
@@ -300,6 +303,7 @@ class RecordService:
                 language=publ.language,
                 submission_type="submit",
                 ip=ip,
+                import_errors=["Ошибка при импорте"] if result["error"] else None,
             )
 
             flat = _flatten_for_db(record_data)
