@@ -95,16 +95,19 @@ class EventRecord(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     publ_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("publs.publ_id", ondelete="CASCADE")
+        Integer, ForeignKey("publs.publ_id", ondelete="CASCADE"), nullable=False
     )
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
     )
     created_at: Mapped[datetime_type] = mapped_column(
-        "datetime", TIMESTAMP(precision=6), server_default=func.now()
+        "datetime", TIMESTAMP(precision=6), server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime_type] = mapped_column(
-        TIMESTAMP(precision=6), server_default=func.now(), server_onupdate=func.now()
+        TIMESTAMP(precision=6),
+        server_default=func.now(),
+        server_onupdate=func.now(),
+        nullable=False,
     )
     ip: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)
