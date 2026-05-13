@@ -9,7 +9,7 @@ RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail"]
 class Specimen(BaseModel):
     sex: Literal["male", "female", "undefined", "none"]
     life_stage: Literal["adult", "subadult", "juvenile", "none"]
-    count: float = Field(ge=0)
+    count: float
 
 
 class RecordMetadata(BaseModel):
