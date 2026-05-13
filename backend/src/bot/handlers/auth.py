@@ -1,10 +1,10 @@
+import logging
 from datetime import datetime
 
 from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from api.auth.login import logger
 from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
 from core.config import settings
@@ -22,6 +22,7 @@ from service.publications import PublicationService
 from service.user import UserService
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 
 @router.message(Command("auth"))
@@ -71,7 +72,7 @@ async def get_code(message: Message, bot: Bot) -> None:
                     parse_mode="HTML",
                     disable_web_page_preview=True,
                 )
-                publ_id = publ.id
+                publ_id = publ.publ_id
 
             password = generate_secure_password()
             hashed_password = get_password_hash(password)

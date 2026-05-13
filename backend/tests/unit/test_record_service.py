@@ -6,8 +6,8 @@ import pytest
 from openpyxl import Workbook
 
 from core.exceptions import NoPublicationsAssignedError, RecordLimitExceededError
-from schema.records import RecordData
-from service.export import COLUMN_MAPPING, ParseResult
+from schema.records import RecordData, Specimen
+from service.export import ALL_COLUMNS, ParseResult
 from service.records import ImportResult, RecordService
 
 
@@ -112,6 +112,7 @@ class TestImportRecords:
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
             patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             # Create a mock ValidationError
             mock_error = MagicMock(spec=ValidationError)
@@ -308,7 +309,7 @@ class TestImportRecords:
         if ws is None:
             pytest.fail("Workbook active sheet is None")
 
-        headers = list(COLUMN_MAPPING.values())
+        headers = list(ALL_COLUMNS.values())
         ws.append(headers)
         ws.append(["Formicidae", "Camponotus", "herculeanus", "Finland"])
 
@@ -327,3 +328,38 @@ class TestImportRecords:
 
             assert result.imported >= 1
             assert result.failed == 0
+
+    async def test_import_with_specimens(
+        self,
+        record_service: RecordService,
+        mock_session: MagicMock,
+        mock_publication_service: MagicMock,
+    ) -> None:
+        user_id = 12345
+        publ_id = 67890
+        mock_user = MagicMock()
+        mock_user.publ_id = publ_id
+        mock_user.user_id = user_id
+
+        with (
+            patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
+            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch("service.records.check_and_log_milestone", AsyncMock()),
+        ):
+            records_data = [
+                RecordData(
+                    family="Formicidae",
+                    genus="Camponotus",
+                    species="herculeanus",
+                    specimens=[Specimen(sex="male", life_stage="adult", count=3)],
+                ),
+            ]
+
+            async def gen() -> AsyncGenerator[ParseResult, None]:
+                for record_data in records_data:
+                    yield {"success": True, "record": record_data, "error": None}
+
+            result = await record_service.import_records(
+                gen(), user_id=user_id, ip="127.0.0.1"
+            )
+            assert result.imported == 1

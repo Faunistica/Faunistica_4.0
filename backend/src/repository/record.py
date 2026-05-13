@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import EventRecord
-from schema.records import RecordData, RecordMetadata
+from schema.records import RecordMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -34,14 +34,14 @@ async def get_record(session: AsyncSession, record_id: UUID) -> EventRecord | No
 async def update_record(
     session: AsyncSession,
     record_id: UUID,
-    data: RecordData,
+    data: dict,
     metadata: RecordMetadata,
 ) -> EventRecord | None:
     """
     Update a record with optimistic locking via updated_at.
     Returns None if record not found or updated_at doesn't match (stale).
     """
-    update_data = {**metadata.dump_for_update(), **data.model_dump(exclude_unset=True)}
+    update_data = {**metadata.dump_for_update(), **data}
 
     stmt = (
         update(EventRecord)

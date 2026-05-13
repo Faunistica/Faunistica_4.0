@@ -136,7 +136,7 @@ async def seed_data(
         publ_id_2 = id()
 
     publ1 = Publication(
-        id=publ_id_1,
+        publ_id=publ_id_1,
         name="Test Publ",
         type="A",
         year=2000,
@@ -145,7 +145,7 @@ async def seed_data(
     )
     session.add(publ1)
     publ2 = Publication(
-        id=publ_id_2,
+        publ_id=publ_id_2,
         name="Test Publ 2",
         type="A",
         year=2000,
@@ -191,8 +191,8 @@ async def seed_data(
             publ_id=publ_id_1,
             type="rec_ok",
             genus="Testus",
-            latitude=55.5,
-            longitude=37.5,
+            latitude="55.5",
+            longitude="37.5",
             created_at=now,
             updated_at=now,
         ),
@@ -202,8 +202,8 @@ async def seed_data(
             publ_id=publ_id_1,
             type="rec_ok",
             genus="Testus",
-            latitude=55.6,
-            longitude=37.6,
+            latitude="55.6",
+            longitude="37.6",
             created_at=now,
             updated_at=now,
         ),

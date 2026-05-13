@@ -8,6 +8,8 @@ Create Date: 2026-04-27 17:37:42.433543
 
 from collections.abc import Sequence
 
+from sqlalchemy import inspect
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -18,8 +20,14 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.create_primary_key("users_pkey", "users", ["user_id"])
-    op.create_primary_key("publs_pkey", "publs", ["publ_id"])
+    bind = op.get_bind()
+    inspector = inspect(bind)
+
+    if "user_id" not in inspector.get_pk_constraint("users")["constrained_columns"]:
+        op.create_primary_key("users_pkey", "users", ["user_id"])
+
+    if "publs_pkey" not in inspector.get_pk_constraint("publs")["constrained_columns"]:
+        op.create_primary_key("publs_pkey", "publs", ["publ_id"])
 
 
 def downgrade() -> None:

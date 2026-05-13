@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from core.model import EventRecord
 from schema.records import RecordData
+from service.records.convert import specimens_from_db
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ COLUMN_MAPPING: dict[str, str] = {
     "longitude": "Longitude",
     "verbatimcoordinates": "Verbatim Coordinates",
     "coordinate_uncertainty": "Coordinate Uncertainty (m)",
-    "georef_source": "Georef Source",
+    "georeferencedby": "Geo Referenced By",
     "location_remarks": "Location Remarks",
     "verbatim_date": "Date",
     "date_precision": "Date Precision",
@@ -47,14 +48,18 @@ COLUMN_MAPPING: dict[str, str] = {
     "type_status": "Type Status",
     "accepted_name": "Accepted Name",
     "taxon_remarks": "Taxon Remarks",
-    "quantity": "Quantity",
     "quantity_type": "Quantity Type",
-    "sex": "Sex",
-    "life_stage": "Life Stage",
     "occurrence_remarks": "Occurrence Remarks",
     "identification_remarks": "Identification Remarks",
 }
 
+EXPORT_FLAT_COLUMNS: dict[str, str] = {
+    "quantity": "Quantity",
+    "sex": "Sex",
+    "life_stage": "Life Stage",
+}
+
+ALL_COLUMNS: dict[str, str] = {**COLUMN_MAPPING, **EXPORT_FLAT_COLUMNS}
 
 REVERSE_COLUMN_MAPPING: dict[str, str] = {v: k for k, v in COLUMN_MAPPING.items()}
 
@@ -71,11 +76,39 @@ def is_row_empty(row: dict[str, Any | None]) -> bool:
 
 def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
     """Convert a row dict to RecordData using pydantic validation."""
-    data_dict: dict[str, str] = {}
+    data_dict: dict[str, Any] = {}
     for display_name, field in REVERSE_COLUMN_MAPPING.items():
         raw_value = row.get(display_name)
         if raw_value is not None:
             data_dict[field] = raw_value
+
+    quantity = row.get("Quantity")
+    sex = row.get("Sex")
+    life_stage = row.get("Life Stage")
+    if quantity or sex or life_stage:
+        qty = None
+        if quantity is not None:
+            try:
+                qty = float(quantity)
+            except (ValueError, TypeError):
+                return {
+                    "success": False,
+                    "record": None,
+                    "error": ValidationError.from_exception_data(
+                        "Quantity",
+                        [
+                            {
+                                "type": "float_parsing",
+                                "loc": ("Quantity",),
+                                "input": quantity,
+                            }
+                        ],
+                    ),
+                }
+        specimens = specimens_from_db(qty, sex, life_stage)
+        if specimens:
+            data_dict["specimens"] = specimens
+
     try:
         record = RecordData.model_validate(data_dict)
         return {"success": True, "record": record, "error": None}
@@ -118,7 +151,7 @@ def records_to_excel(records: Sequence[EventRecord]) -> bytes:
         logger.error("ws is None")
         raise Exception
 
-    headers = [COLUMN_MAPPING[field] for field in COLUMN_MAPPING]
+    headers = list(ALL_COLUMNS.values())
     ws.append(headers)
 
     for col in range(1, len(headers) + 1):
@@ -126,7 +159,7 @@ def records_to_excel(records: Sequence[EventRecord]) -> bytes:
         ws.cell(row=1, column=col).font = Font(bold=True)
 
     for record in records:
-        row = [getattr(record, field, None) for field in COLUMN_MAPPING]
+        row = [getattr(record, field, None) for field in ALL_COLUMNS]
         ws.append(row)
 
     output = io.BytesIO()
@@ -137,14 +170,13 @@ def records_to_excel(records: Sequence[EventRecord]) -> bytes:
 
 def records_to_csv(records: Sequence[EventRecord]) -> str:
     output = io.StringIO()
-    fieldnames = [COLUMN_MAPPING[field] for field in COLUMN_MAPPING]
+    fieldnames = list(ALL_COLUMNS.values())
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
 
     for record in records:
         row = {
-            COLUMN_MAPPING[field]: getattr(record, field, None)
-            for field in COLUMN_MAPPING
+            ALL_COLUMNS[field]: getattr(record, field, None) for field in ALL_COLUMNS
         }
         writer.writerow(row)
 
