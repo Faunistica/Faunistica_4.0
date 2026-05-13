@@ -27,7 +27,7 @@ async def import_records(
 ) -> ImportResult:
     try:
         content = await file.read()
-    except Exception as e:
+    except (IOError, OSError) as e:
         raise HTTPException(
             detail="Couldn't read file", status_code=status.HTTP_404_NOT_FOUND
         ) from e

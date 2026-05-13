@@ -27,7 +27,7 @@ class MsgErr:
 
 class HandlerError(Exception):
     def __init__(self) -> None:
-        super("incorrectly configured handler")
+        super().__init__("incorrectly configured handler")
 
 
 class DBException(Exception):

@@ -185,7 +185,7 @@ class ActionService:
             msg = parts[1] if len(parts) > 1 else ""
 
             return WinnerInfo(picfile=pic, message=msg, datetime=action.datetime)
-        except Exception as e:
+        except DBException as e:
             logger.error("Failed to get winner info: %s", e, exc_info=True)
             return None
 

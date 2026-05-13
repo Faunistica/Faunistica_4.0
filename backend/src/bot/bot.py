@@ -3,7 +3,7 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession
-from aiogram.exceptions import TelegramAPIError
+from aiogram.exceptions import TelegramAPIError, TelegramRetryAfter
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import DeleteWebhook
 
@@ -17,7 +17,7 @@ async def start() -> None:
     session = None
     if settings.BOT_PROXY is not None:
         session = AiohttpSession(proxy=settings.BOT_PROXY.unicode_string())
-        logger.info(f"Bot session configured with proxy: {settings.BOT_PROXY}")
+        logger.info("Bot session configured with proxy: %s", settings.BOT_PROXY)
 
     bot_instance = Bot(token=settings.BOT_TOKEN.get_secret_value(), session=session)
     dp_instance = Dispatcher(storage=MemoryStorage())
@@ -31,10 +31,10 @@ async def start() -> None:
     except asyncio.CancelledError:
         logger.info("Shutting down bot...")
     except TelegramAPIError as api_error:
-        logger.error(f"Telegram API error: {api_error}", exc_info=True)
+        logger.error("Telegram API error: %s", api_error, exc_info=True)
         raise
-    except Exception as polling_error:
-        logger.error(f"Polling failed: {polling_error}", exc_info=True)
+    except (TelegramAPIError, TelegramRetryAfter, OSError) as polling_error:
+        logger.error("Polling failed: %s", polling_error, exc_info=True)
     finally:
         logger.info("Closing bot session...")
         await bot_instance.session.close()

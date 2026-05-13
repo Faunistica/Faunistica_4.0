@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         app.state.http_session = aiohttp.ClientSession(
             proxy=settings.BOT_PROXY.unicode_string()
         )
-        logger.info(f"HTTP session configured with proxy: {settings.BOT_PROXY}")
+        logger.info("HTTP session configured with proxy: %s", settings.BOT_PROXY)
     else:
         app.state.http_session = aiohttp.ClientSession()
         logger.info("HTTP session created without proxy")
@@ -35,17 +35,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
                 raw_data = json.load(f)
                 app.state.location_data = [RegionData(**item) for item in raw_data]
             logger.info("Location data loaded")
-        except Exception as e:
-            logger.error(f"Failed to load location data: {e}", exc_info=True)
+        except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
+            logger.error("Failed to load location data: %s", e, exc_info=True)
             app.state.location_data = []
     else:
-        logger.warning(f"Location data file not found at {json_path}")
+        logger.warning("Location data file not found at %s", json_path)
         app.state.location_data = []
 
     try:
         bot_task = asyncio.create_task(bot.start())
-    except Exception as db_error:
-        logger.error(f"Database initialization failed: {db_error}", exc_info=True)
+    except OSError as db_error:
+        logger.error("Database initialization failed: %s", db_error, exc_info=True)
         raise
 
     if not await ping_db():

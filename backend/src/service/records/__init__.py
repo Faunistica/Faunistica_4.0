@@ -26,7 +26,7 @@ from repository.user import get_user_expect
 from schema.common import PaginatedResponse
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
 from service.actions import ActionService
-from service.export import ParseResult, _is_row_empty
+from service.export import ParseResult, is_row_empty
 from service.milestone import check_and_log_milestone
 from service.publications import PublicationService
 from service.records.convert import specimens_from_record, specimens_to_db
@@ -44,7 +44,7 @@ def _determine_type(
     return "rec_fail" if submission_type == "submit" else "check_fail"
 
 
-def create_record_metadata(
+def _create_record_metadata(
     record: RecordData | None,
     user_id: int,
     publ_id: int,
@@ -130,7 +130,7 @@ class RecordService:
 
         publ = await get_publication(self.session, publ_id)
         language = publ.language if publ else None
-        metadata, errors = create_record_metadata(
+        metadata, errors = _create_record_metadata(
             None,
             user_id=user_id,
             publ_id=publ_id,
@@ -158,7 +158,7 @@ class RecordService:
         publ = await get_publication(self.session, record.publ_id)
         language = publ.language if publ else None
 
-        metadata, errors = create_record_metadata(
+        metadata, errors = _create_record_metadata(
             data,
             user_id=user_id,
             publ_id=record.publ_id,
@@ -288,7 +288,7 @@ class RecordService:
             if error:
                 all_errors.append(ImportError(row=i, error=error.json()))
 
-            if record_data is None or _is_row_empty(record_data.model_dump()):
+            if record_data is None or is_row_empty(record_data.model_dump()):
                 all_errors.append(
                     ImportError(
                         row=i, error=json.dumps([{"msg": "Record data is empty"}])
@@ -296,7 +296,7 @@ class RecordService:
                 )
                 continue
 
-            metadata, _ = create_record_metadata(
+            metadata, _ = _create_record_metadata(
                 record_data,
                 user_id,
                 publ.publ_id,

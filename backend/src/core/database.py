@@ -50,7 +50,7 @@ async def ping_db() -> bool:
     try:
         async with _engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
-    except Exception:
+    except SQLAlchemyError:
         logger.exception("couldn't ping DB")
         return False
     return True

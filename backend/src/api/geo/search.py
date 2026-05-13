@@ -24,11 +24,7 @@ async def search_geo(
 
     Ищет подсказки локаций по полю и тексту с фильтрацией по региону.
     """
-    try:
-        suggestions = await geo.get_location_suggestions(
-            location_data, data.field, data.text, data.filters
-        )
-        return GeoSearchResponse(suggestions=suggestions)
-    except Exception as e:
-        logger.error("Geo search failed %e", e, exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error") from e
+    suggestions = await geo.get_location_suggestions(
+        location_data, data.field, data.text, data.filters
+    )
+    return GeoSearchResponse(suggestions=suggestions)

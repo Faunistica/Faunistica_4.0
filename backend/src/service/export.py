@@ -86,7 +86,7 @@ class SpecimenColumnError(TypedDict):
 ParseResult = tuple[RecordData | None, ValidationError | None]
 
 
-def _is_row_empty(row: dict[str, Any | None]) -> bool:
+def is_row_empty(row: dict[str, Any | None]) -> bool:
     return all(v is None or str(v).strip() == "" for v in row.values())
 
 
@@ -248,8 +248,8 @@ def records_to_excel(records: Sequence[RecordFull]) -> bytes:
     ws = wb.active
 
     if ws is None:
-        logger.error("ws is None")
-        raise Exception
+        logger.error("ws is None - workbook has no active sheet")
+        raise RuntimeError("Workbook has no active sheet")
 
     headers = list(COLUMN_MAPPING.values()) + list(SPECIMEN_HEADER_MAP)
     ws.append(headers)
