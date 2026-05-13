@@ -215,6 +215,35 @@ def _parse_excel_value(value: Any) -> Any:  # noqa: ANN401
             return False
     return value
 
+    if specimen_parse_err:
+        error = ValidationError.from_exception_data(
+            "specimens",
+            [
+                {
+                    "type": "value_error",
+                    "loc": ("specimens",),
+                    "input": None,
+                    "ctx": {"error": specimen_parse_err},
+                }
+            ],
+        )
+        return {"success": False, "record": record, "error": error}
+
+    return {"success": True, "record": record, "error": None}
+
+
+def parse_excel_value(value: Any) -> Any:  # noqa: ANN401
+    """Convert Excel boolean formulas and string representations to Python bool."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        upper = value.strip().upper()
+        if upper in ("=TRUE()", "TRUE", "YES", "1"):
+            return True
+        if upper in ("=FALSE()", "FALSE", "NO", "0"):
+            return False
+    return value
+
 
 async def read_excel(file_content: bytes) -> AsyncGenerator[ParseResult]:
     wb = load_workbook(filename=io.BytesIO(file_content), read_only=True)
