@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum, StrEnum
+from typing import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -93,6 +94,24 @@ class MilestoneInfo(BaseModel):
     milestone: int
     user_id: int
     datetime: datetime
+
+
+class ProjectStats(TypedDict):
+    total_volunteers: int
+    total_records: int
+    species_count: int
+    processed_publications_count: int
+    most_common_family: str | None
+    most_common_genus: str | None
+    most_common_species: str | None
+
+
+class UserStats(TypedDict):
+    records_entered: int
+    publications_processed: int
+    most_common_family: str | None
+    most_common_genus: str | None
+    most_common_species: str | None
 
 
 class ProcessingLevel(StrEnum):

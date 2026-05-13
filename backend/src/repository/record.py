@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import EventRecord
-from schema.records import RecordMetadata
+from schema.records import RecordMetadata, SpecimenDbRow
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ async def get_record(session: AsyncSession, record_id: UUID) -> EventRecord | No
 async def update_record(
     session: AsyncSession,
     record_id: UUID,
-    data: dict,
+    data: SpecimenDbRow,
     metadata: RecordMetadata,
     previous_update: datetime,
 ) -> EventRecord | None:

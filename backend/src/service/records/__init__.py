@@ -24,7 +24,13 @@ from repository.publication import get_publication
 from repository.record import count_records_by_user_publ
 from repository.user import get_user_expect
 from schema.common import PaginatedResponse
-from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
+from schema.records import (
+    RecordData,
+    RecordFull,
+    RecordMetadata,
+    RecordType,
+    SpecimenDbRow,
+)
 from service.actions import ActionService
 from service.export import ParseResult, is_row_empty
 from service.milestone import check_and_log_milestone
@@ -77,7 +83,7 @@ def _create_record_metadata(
     )
 
 
-def _flatten_for_db(data: RecordData) -> dict:
+def _flatten_for_db(data: RecordData) -> SpecimenDbRow:
     dumped = data.model_dump(exclude_unset=True, exclude={"specimens"})
     if data.specimens:
         flat = specimens_to_db(data.specimens)

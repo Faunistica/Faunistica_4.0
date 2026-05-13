@@ -1,5 +1,5 @@
 from core.model import EventRecord
-from schema.records import Specimen
+from schema.records import Specimen, SpecimenDbRow
 
 from .validation.constants import SEX_VALUES
 
@@ -10,7 +10,7 @@ def _fmt_count(c: float) -> str:
     return str(c)
 
 
-def specimens_to_db(specimens: list[Specimen]) -> dict:
+def specimens_to_db(specimens: list[Specimen]) -> SpecimenDbRow:
     if not specimens:
         return {}
 

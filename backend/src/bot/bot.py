@@ -33,7 +33,7 @@ async def start() -> None:
     except TelegramAPIError as api_error:
         logger.error("Telegram API error: %s", api_error, exc_info=True)
         raise
-    except (TelegramAPIError, TelegramRetryAfter, OSError) as polling_error:
+    except (TelegramRetryAfter, OSError) as polling_error:
         logger.error("Polling failed: %s", polling_error, exc_info=True)
     finally:
         logger.info("Closing bot session...")

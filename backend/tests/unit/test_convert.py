@@ -49,6 +49,7 @@ def test_life_stage_column_never_has_sex():
             Specimen(sex="female", life_stage="adult", count=2),
         ]
     )
+    assert db["life_stage"] is not None
     assert "male" not in db["life_stage"]
     assert "female" not in db["life_stage"]
 
@@ -59,8 +60,8 @@ def test_life_stage_column_never_has_sex():
             Specimen(sex="female", life_stage="adult", count=2),
         ]
     )
-    assert "male" not in db["life_stage"]
-    assert "female" not in db["life_stage"]
+    assert "male" not in (db["life_stage"] or "")
+    assert "female" not in (db["life_stage"] or "")
 
 
 def test_roundtrip_single_specimen():
