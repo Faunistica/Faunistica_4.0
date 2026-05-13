@@ -43,18 +43,22 @@ def test_mixed_sexes_mixed_stages_format():
 
 def test_life_stage_column_never_has_sex():
     """Lifestage column should never contain sex info."""
-    db = specimens_to_db([
-        Specimen(sex="male", life_stage="adult", count=3),
-        Specimen(sex="female", life_stage="adult", count=2),
-    ])
+    db = specimens_to_db(
+        [
+            Specimen(sex="male", life_stage="adult", count=3),
+            Specimen(sex="female", life_stage="adult", count=2),
+        ]
+    )
     assert "male" not in db["life_stage"]
     assert "female" not in db["life_stage"]
 
-    db = specimens_to_db([
-        Specimen(sex="male", life_stage="adult", count=3),
-        Specimen(sex="male", life_stage="juvenile", count=1),
-        Specimen(sex="female", life_stage="adult", count=2),
-    ])
+    db = specimens_to_db(
+        [
+            Specimen(sex="male", life_stage="adult", count=3),
+            Specimen(sex="male", life_stage="juvenile", count=1),
+            Specimen(sex="female", life_stage="adult", count=2),
+        ]
+    )
     assert "male" not in db["life_stage"]
     assert "female" not in db["life_stage"]
 

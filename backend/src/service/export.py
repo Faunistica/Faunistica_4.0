@@ -2,16 +2,14 @@ import csv
 import io
 import logging
 from collections.abc import AsyncGenerator, Sequence
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 from pydantic import ValidationError
 
-from core.model import EventRecord
-from schema.records import RecordData
-from service.records.convert import specimens_from_db
+from schema.records import RecordData, RecordFull, Specimen
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +51,27 @@ COLUMN_MAPPING: dict[str, str] = {
     "identification_remarks": "Identification Remarks",
 }
 
-EXPORT_FLAT_COLUMNS: dict[str, str] = {
-    "quantity": "Quantity",
-    "sex": "Sex",
-    "life_stage": "Life Stage",
-}
 
-ALL_COLUMNS: dict[str, str] = {**COLUMN_MAPPING, **EXPORT_FLAT_COLUMNS}
+SPECIMEN_HEADER_MAP: dict[
+    str,
+    tuple[
+        Literal["male", "female", "none"],
+        Literal["adult", "subadult", "juvenile", "none"],
+    ],
+] = {
+    "Male Adult Quantity": ("male", "adult"),
+    "Male Subadult Quantity": ("male", "subadult"),
+    "Male Juvenile Quantity": ("male", "juvenile"),
+    "Male Unknown Quantity": ("male", "none"),
+    "Female Adult Quantity": ("female", "adult"),
+    "Female Subadult Quantity": ("female", "subadult"),
+    "Female Juvenile Quantity": ("female", "juvenile"),
+    "Female Unknown Quantity": ("female", "none"),
+    "Unknown Adult Quantity": ("none", "adult"),
+    "Unknown Subadult Quantity": ("none", "subadult"),
+    "Unknown Juvenile Quantity": ("none", "juvenile"),
+    "Unknown Quantity": ("none", "none"),
+}
 
 REVERSE_COLUMN_MAPPING: dict[str, str] = {v: k for k, v in COLUMN_MAPPING.items()}
 
@@ -74,6 +86,46 @@ def is_row_empty(row: dict[str, Any | None]) -> bool:
     return all(v is None or str(v).strip() == "" for v in row.values())
 
 
+def _parse_specimen_columns(row: dict[str, str | None]) -> list[Specimen] | None:
+    has_any = False
+    specimens: list[Specimen] = []
+    for header, (sex_val, ls_val) in SPECIMEN_HEADER_MAP.items():
+        raw = row.get(header)
+        if raw is None:
+            continue
+
+        has_any = True
+        try:
+            count = float(raw)
+        except (ValueError, TypeError):
+            raise ValueError(f"Invalid number in '{header}': got '{raw}'") from None
+
+        if count > 0:
+            specimens.append(
+                Specimen(
+                    sex=sex_val,
+                    life_stage=ls_val,
+                    count=count,
+                )
+            )
+    return specimens if has_any else None
+
+
+def _specimens_to_12_columns(
+    specimens: list[Specimen],
+) -> dict[str, float]:
+    result: dict[str, float] = dict.fromkeys(list(SPECIMEN_HEADER_MAP), 0.0)
+    for sp in specimens:
+        sex_label = "Unknown" if sp.sex == "none" else sp.sex.capitalize()
+        ls_label = "Unknown" if sp.life_stage == "none" else sp.life_stage.capitalize()
+        if sex_label == "Unknown" and ls_label == "Unknown":
+            header = "Unknown Quantity"
+        else:
+            header = f"{sex_label} {ls_label} Quantity"
+        result[header] += sp.count
+    return result
+
+
 def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
     """Convert a row dict to RecordData using pydantic validation."""
     data_dict: dict[str, Any] = {}
@@ -82,41 +134,52 @@ def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
         if raw_value is not None:
             data_dict[field] = raw_value
 
-    quantity = row.get("Quantity")
-    sex = row.get("Sex")
-    life_stage = row.get("Life Stage")
-    if quantity or sex or life_stage:
-        qty = None
-        if quantity is not None:
-            try:
-                qty = float(quantity)
-            except (ValueError, TypeError):
-                return {
-                    "success": False,
-                    "record": None,
-                    "error": ValidationError.from_exception_data(
-                        "Quantity",
-                        [
-                            {
-                                "type": "float_parsing",
-                                "loc": ("Quantity",),
-                                "input": quantity,
-                            }
-                        ],
-                    ),
-                }
-        specimens = specimens_from_db(qty, sex, life_stage)
-        if specimens:
+    specimen_parse_err = None
+    try:
+        specimens = _parse_specimen_columns(row)
+        if specimens is not None:
             data_dict["specimens"] = specimens
+    except ValueError:
+        specimen_parse_err = (
+            "Ошибка при импорте: некорректное значение в колонках экземпляров"
+        )
 
     try:
         record = RecordData.model_validate(data_dict)
-        return {"success": True, "record": record, "error": None}
     except ValidationError as e:
         bad_fields = {err["loc"][0] for err in e.errors()}
         cleaned = {k: v for k, v in data_dict.items() if k not in bad_fields}
         partial = RecordData.model_validate(cleaned)
         return {"success": False, "record": partial, "error": e}
+
+    if specimen_parse_err:
+        error = ValidationError.from_exception_data(
+            "specimens",
+            [
+                {
+                    "type": "value_error",
+                    "loc": ("specimens",),
+                    "input": None,
+                    "ctx": {"error": specimen_parse_err},
+                }
+            ],
+        )
+        return {"success": False, "record": record, "error": error}
+
+    return {"success": True, "record": record, "error": None}
+
+
+def parse_excel_value(value: Any) -> Any:  # noqa: ANN401
+    """Convert Excel boolean formulas and string representations to Python bool."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        upper = value.strip().upper()
+        if upper in ("=TRUE()", "TRUE", "YES", "1"):
+            return True
+        if upper in ("=FALSE()", "FALSE", "NO", "0"):
+            return False
+    return value
 
 
 async def read_excel(file_content: bytes) -> AsyncGenerator[ParseResult]:
@@ -130,7 +193,7 @@ async def read_excel(file_content: bytes) -> AsyncGenerator[ParseResult]:
             headers = [str(cell) if cell is not None else "" for cell in row]
         else:
             row_dict: dict[str, str | None] = {
-                headers[j]: (str(row[j]) if row[j] is not None else None)
+                headers[j]: parse_excel_value(row[j])
                 for j in range(len(headers))
                 if j < len(row)
             }
@@ -146,7 +209,7 @@ async def read_csv(file_content: bytes) -> AsyncGenerator[ParseResult, None]:
         yield _row_to_record_data(row_dict)
 
 
-def records_to_excel(records: Sequence[EventRecord]) -> bytes:
+def records_to_excel(records: Sequence[RecordFull]) -> bytes:
     wb = Workbook()
     ws = wb.active
 
@@ -154,15 +217,17 @@ def records_to_excel(records: Sequence[EventRecord]) -> bytes:
         logger.error("ws is None")
         raise Exception
 
-    headers = list(ALL_COLUMNS.values())
+    headers = list(COLUMN_MAPPING.values()) + list(SPECIMEN_HEADER_MAP)
     ws.append(headers)
 
     for col in range(1, len(headers) + 1):
         ws.column_dimensions[get_column_letter(col)].width = 20
         ws.cell(row=1, column=col).font = Font(bold=True)
 
-    for record in records:
-        row = [getattr(record, field, None) for field in ALL_COLUMNS]
+    for record in reversed(records):
+        row = [getattr(record, field, None) for field in COLUMN_MAPPING]
+        specimen_vals = _specimens_to_12_columns(record.specimens or [])
+        row.extend(specimen_vals[h] for h in list(SPECIMEN_HEADER_MAP))
         ws.append(row)
 
     output = io.BytesIO()
@@ -171,16 +236,20 @@ def records_to_excel(records: Sequence[EventRecord]) -> bytes:
     return output.read()
 
 
-def records_to_csv(records: Sequence[EventRecord]) -> str:
+def records_to_csv(records: Sequence[RecordFull]) -> str:
     output = io.StringIO()
-    fieldnames = list(ALL_COLUMNS.values())
+    fieldnames = list(COLUMN_MAPPING.values()) + list(SPECIMEN_HEADER_MAP)
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
 
-    for record in records:
-        row = {
-            ALL_COLUMNS[field]: getattr(record, field, None) for field in ALL_COLUMNS
+    for record in reversed(records):
+        row: dict[str, object] = {
+            COLUMN_MAPPING[field]: getattr(record, field, None)
+            for field in COLUMN_MAPPING
         }
+        specimen_vals = _specimens_to_12_columns(record.specimens or [])
+        for h in list(SPECIMEN_HEADER_MAP):
+            row[h] = specimen_vals[h]
         writer.writerow(row)
 
     return output.getvalue()

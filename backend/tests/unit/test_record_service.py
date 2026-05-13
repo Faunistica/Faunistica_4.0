@@ -8,7 +8,7 @@ from openpyxl import Workbook
 from core.config import settings
 from core.exceptions import NoPublicationsAssignedError, RecordLimitExceededError
 from schema.records import RecordData, Specimen
-from service.export import ALL_COLUMNS, ParseResult
+from service.export import COLUMN_MAPPING, ParseResult
 from service.records import ImportResult, RecordService
 
 
@@ -338,7 +338,7 @@ class TestImportRecords:
         if ws is None:
             pytest.fail("Workbook active sheet is None")
 
-        headers = list(ALL_COLUMNS.values())
+        headers = list(COLUMN_MAPPING.values())
         ws.append(headers)
         ws.append(["Formicidae", "Camponotus", "herculeanus", "Finland"])
 
