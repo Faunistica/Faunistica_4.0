@@ -49,7 +49,7 @@ class RecordData(BaseModel):
     latitude: str | None = Field(default=None, max_length=255)
     longitude: str | None = Field(default=None, max_length=255)
     verbatimcoordinates: str | None = Field(default=None, max_length=100)
-    coordinate_uncertainty: float | None
+    coordinate_uncertainty: float | None = None
     georef_source: str | None = Field(default=None, max_length=50)
     location_remarks: str | None = Field(default=None, max_length=1000)
 
