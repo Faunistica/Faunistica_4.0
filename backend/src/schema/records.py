@@ -16,7 +16,7 @@ RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail", "rec_del"]
 class Specimen(BaseModel):
     sex: Literal["male", "female", "none"]
     life_stage: Literal["adult", "subadult", "juvenile", "none"]
-    count: float = Field(ge=0)
+    count: float
 
 
 class RecordMetadata(BaseModel):
@@ -49,7 +49,7 @@ class RecordData(BaseModel):
     latitude: str | None = Field(default=None, max_length=255)
     longitude: str | None = Field(default=None, max_length=255)
     verbatimcoordinates: str | None = Field(default=None, max_length=100)
-    coordinate_uncertainty: float | None = Field(default=None, gt=0)
+    coordinate_uncertainty: float | None
     georef_source: str | None = Field(default=None, max_length=50)
     location_remarks: str | None = Field(default=None, max_length=1000)
 
@@ -60,7 +60,7 @@ class RecordData(BaseModel):
     habitat: str | None = Field(default=None, max_length=1000)
     sampling_protocol: str | None = Field(default=None, max_length=1000)
     sampling_effort: str | None = Field(default=None, max_length=1000)
-    sample_size_value: float | None = Field(default=None, ge=0)
+    sample_size_value: float | None = None
     sample_size_unit: str | None = Field(default=None, max_length=50)
     event_remarks: str | None = Field(default=None, max_length=1000)
     field_number: str | None = Field(default=None, max_length=100)
