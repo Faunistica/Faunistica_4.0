@@ -2,17 +2,15 @@ import csv
 import io
 import logging
 from collections.abc import AsyncGenerator, Sequence
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 from pydantic import ValidationError
+from pydantic_core import ErrorDetails, InitErrorDetails
 
 from schema.records import RecordData, RecordFull, Specimen
-
-if TYPE_CHECKING:
-    from pydantic_core import InitErrorDetails
 
 logger = logging.getLogger(__name__)
 
@@ -85,14 +83,27 @@ class SpecimenColumnError(TypedDict):
     raw: str
 
 
-class ParseResult(TypedDict):
-    success: bool
-    record: RecordData | None
-    error: ValidationError | None
+ParseResult = tuple[RecordData | None, ValidationError | None]
 
 
-def is_row_empty(row: dict[str, Any | None]) -> bool:
+def _is_row_empty(row: dict[str, Any | None]) -> bool:
     return all(v is None or str(v).strip() == "" for v in row.values())
+
+
+def _error_details_to_init(e: ErrorDetails) -> InitErrorDetails:
+    if "ctx" in e:
+        return {
+            "type": e["type"],
+            "loc": e["loc"],
+            "input": e["input"],
+            "ctx": e["ctx"],
+        }
+
+    return {
+        "type": e["type"],
+        "loc": e["loc"],
+        "input": e["input"],
+    }
 
 
 def _merge_errors(
@@ -102,15 +113,7 @@ def _merge_errors(
     merged: list[InitErrorDetails] = []
 
     if val:
-        merged = [
-            {
-                "type": e["type"],
-                "loc": e["loc"],
-                "input": e["input"],
-                "ctx": e["ctx"],
-            }
-            for e in val.errors()
-        ]
+        merged = [_error_details_to_init(e) for e in val.errors()]
 
     if errors:
         merged.extend(_specimen_errors_to_details(errors))
@@ -192,23 +195,15 @@ def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
         bad_fields = {err["loc"][0] for err in e.errors()}
         cleaned = {k: v for k, v in data_dict.items() if k not in bad_fields}
         partial = RecordData.model_validate(cleaned)
-        return {
-            "success": False,
-            "record": partial,
-            "error": _merge_errors(e, specimen_errors),
-        }
+        return (partial, _merge_errors(e, specimen_errors))
 
     if specimen_errors:
-        return {
-            "success": False,
-            "record": record,
-            "error": _merge_errors(None, specimen_errors),
-        }
+        return (record, _merge_errors(None, specimen_errors))
 
-    return {"success": True, "record": record, "error": None}
+    return (record, None)
 
 
-def parse_excel_value(value: Any) -> Any:  # noqa: ANN401
+def _parse_excel_value(value: Any) -> Any:  # noqa: ANN401
     """Convert Excel boolean formulas and string representations to Python bool."""
     if value is None:
         return None
@@ -232,7 +227,7 @@ async def read_excel(file_content: bytes) -> AsyncGenerator[ParseResult]:
             headers = [str(cell) if cell is not None else "" for cell in row]
         else:
             row_dict: dict[str, str | None] = {
-                headers[j]: parse_excel_value(row[j])
+                headers[j]: _parse_excel_value(row[j])
                 for j in range(len(headers))
                 if j < len(row)
             }

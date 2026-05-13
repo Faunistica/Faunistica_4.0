@@ -26,7 +26,7 @@ from repository.user import get_user_expect
 from schema.common import PaginatedResponse
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
 from service.actions import ActionService
-from service.export import ParseResult, is_row_empty
+from service.export import ParseResult, _is_row_empty
 from service.milestone import check_and_log_milestone
 from service.publications import PublicationService
 from service.records.convert import specimens_from_record, specimens_to_db
@@ -284,12 +284,11 @@ class RecordService:
         # Always ok now, but rules may change
         await self.publication_service.validate_access(publ.publ_id, user=user)
 
-        async for i, result in a.enumerate(records, 1):
-            if result["error"]:
-                all_errors.append(ImportError(row=i, error=result["error"].json()))
+        async for i, (record_data, error) in a.enumerate(records, 1):
+            if error:
+                all_errors.append(ImportError(row=i, error=error.json()))
 
-            record_data = result["record"]
-            if record_data is None or is_row_empty(record_data.model_dump()):
+            if record_data is None or _is_row_empty(record_data.model_dump()):
                 all_errors.append(
                     ImportError(
                         row=i, error=json.dumps([{"msg": "Record data is empty"}])
@@ -304,7 +303,7 @@ class RecordService:
                 language=publ.language,
                 submission_type="submit",
                 ip=ip,
-                import_errors=["Ошибка при импорте"] if result["error"] else None,
+                import_errors=["Ошибка при импорте"] if error else None,
             )
 
             flat = _flatten_for_db(record_data)

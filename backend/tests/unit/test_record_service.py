@@ -83,11 +83,7 @@ class TestImportRecords:
 
             async def gen() -> AsyncGenerator[ParseResult, None]:
                 for record_data in records_data:
-                    yield {
-                        "success": True,
-                        "record": record_data,
-                        "error": None,
-                    }
+                    yield (record_data, None)
 
             result = await record_service.import_records(
                 gen(), user_id=user_id, ip="127.0.0.1"
@@ -132,23 +128,11 @@ class TestImportRecords:
 
             async def gen() -> AsyncGenerator[ParseResult, None]:
                 # Valid record
-                yield {
-                    "success": True,
-                    "record": RecordData(family="Formicidae", genus="Camponotus"),
-                    "error": None,
-                }
+                yield (RecordData(family="Formicidae", genus="Camponotus"), None)
                 # Invalid record (simulate validation error with partial data)
-                yield {
-                    "success": False,
-                    "record": RecordData(family="Formicidae"),
-                    "error": mock_error,
-                }
+                yield (RecordData(family="Formicidae"), mock_error)
                 # Valid record
-                yield {
-                    "success": True,
-                    "record": RecordData(family="Formicidae", genus="Lasius"),
-                    "error": None,
-                }
+                yield (RecordData(family="Formicidae", genus="Lasius"), None)
 
             result = await record_service.import_records(
                 gen(), user_id=user_id, ip="127.0.0.1"
@@ -185,11 +169,7 @@ class TestImportRecords:
 
             async def gen() -> AsyncGenerator[ParseResult, None]:
                 # Empty row (will be caught by is_row_empty)
-                yield {
-                    "success": True,
-                    "record": RecordData(family=None, genus=None, species=None),
-                    "error": None,
-                }
+                yield (RecordData(family=None, genus=None, species=None), None)
 
             result = await record_service.import_records(
                 gen(), user_id=user_id, ip="127.0.0.1"
@@ -216,11 +196,7 @@ class TestImportRecords:
         ):
 
             async def gen() -> AsyncGenerator[ParseResult, None]:
-                yield {
-                    "success": True,
-                    "record": RecordData(family="Formicidae"),
-                    "error": None,
-                }
+                yield (RecordData(family="Formicidae"), None)
 
             with pytest.raises(NoPublicationsAssignedError):
                 await record_service.import_records(
@@ -250,11 +226,7 @@ class TestImportRecords:
 
             async def gen() -> AsyncGenerator[ParseResult, None]:
                 for _ in range(settings.MAX_USER_RECORDS_PER_PUBLICATION + 1):
-                    yield {
-                        "success": True,
-                        "record": RecordData(family="Formicidae"),
-                        "error": None,
-                    }
+                    yield (RecordData(family="Formicidae"), None)
 
             with pytest.raises(RecordLimitExceededError):
                 await record_service.import_records(
@@ -295,11 +267,7 @@ class TestImportRecords:
 
             async def gen() -> AsyncGenerator[ParseResult, None]:
                 for record_data in records_data:
-                    yield {
-                        "success": True,
-                        "record": record_data,
-                        "error": None,
-                    }
+                    yield (record_data, None)
 
             result = await record_service.import_records(
                 gen(), user_id=user_id, ip="127.0.0.1"
@@ -394,7 +362,7 @@ class TestImportRecords:
 
             async def gen() -> AsyncGenerator[ParseResult, None]:
                 for record_data in records_data:
-                    yield {"success": True, "record": record_data, "error": None}
+                    yield (record_data, None)
 
             result = await record_service.import_records(
                 gen(), user_id=user_id, ip="127.0.0.1"
