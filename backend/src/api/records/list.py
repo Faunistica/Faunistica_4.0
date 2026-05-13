@@ -27,20 +27,12 @@ async def list_records(
         Query(description="Sort field"),
     ] = "created_at",
 ) -> PaginatedResponse[RecordFull]:
-    result = await service.list_records(
+    return await service.list_records(
         user_id=user_id,
         publ_id=publ_id,
         page=page,
         page_size=page_size,
         sort=sort,
-    )
-
-    return PaginatedResponse(
-        items=result["items"],
-        total=result["total"],
-        page=result["page"],
-        page_size=result["page_size"],
-        pages=result["pages"],
     )
 
 
@@ -70,14 +62,14 @@ async def export_records(
     )
 
     if format == "csv":
-        content = records_to_csv(result["items"])
+        content = records_to_csv(result.items)
         return Response(
             content=content,
             media_type="text/csv",
             headers={"Content-Disposition": "attachment; filename=records.csv"},
         )
 
-    content = records_to_excel(result["items"])
+    content = records_to_excel(result.items)
 
     return StreamingResponse(
         content=iter([content]),

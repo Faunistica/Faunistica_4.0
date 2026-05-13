@@ -23,6 +23,7 @@ from repository import record as repo
 from repository.publication import get_publication
 from repository.record import count_records_by_user_publ
 from repository.user import get_user_expect
+from schema.common import PaginatedResponse
 from schema.records import RecordData, RecordFull, RecordMetadata, RecordType
 from service.actions import ActionService
 from service.export import ParseResult, is_row_empty
@@ -218,7 +219,7 @@ class RecordService:
         page: int = 1,
         page_size: int = 20,
         sort: Literal["created_at", "updated_at"] = "created_at",
-    ) -> dict:
+    ) -> PaginatedResponse[RecordFull]:
         """List records with pagination, filtered by user_id and publ_id."""
         records, total = await repo.get_records_paginated(
             self.session, user_id, publ_id, page=page, page_size=page_size, sort=sort
@@ -227,13 +228,13 @@ class RecordService:
         # TODO: Check math
         pages = (total + page_size - 1) // page_size if page_size > 0 else 0
 
-        return {
-            "items": [_enrich_record(r) for r in records],
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-            "pages": pages,
-        }
+        return PaginatedResponse(
+            items=[_enrich_record(r) for r in records],
+            total=total,
+            page=page,
+            page_size=page_size,
+            pages=pages,
+        )
 
     async def _get_and_check_ownership(
         self,
