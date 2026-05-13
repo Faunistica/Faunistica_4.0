@@ -2,7 +2,7 @@ import csv
 import io
 import logging
 from collections.abc import AsyncGenerator, Sequence
-from typing import Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
@@ -10,6 +10,9 @@ from openpyxl.utils import get_column_letter
 from pydantic import ValidationError
 
 from schema.records import RecordData, RecordFull, Specimen
+
+if TYPE_CHECKING:
+    from pydantic_core import InitErrorDetails
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +79,12 @@ SPECIMEN_HEADER_MAP: dict[
 REVERSE_COLUMN_MAPPING: dict[str, str] = {v: k for k, v in COLUMN_MAPPING.items()}
 
 
+class SpecimenColumnError(TypedDict):
+    sex: Literal["male", "female", "none"]
+    life_stage: Literal["adult", "subadult", "juvenile", "none"]
+    raw: str
+
+
 class ParseResult(TypedDict):
     success: bool
     record: RecordData | None
@@ -86,19 +95,58 @@ def is_row_empty(row: dict[str, Any | None]) -> bool:
     return all(v is None or str(v).strip() == "" for v in row.values())
 
 
-def _parse_specimen_columns(row: dict[str, str | None]) -> list[Specimen] | None:
-    has_any = False
+def _merge_errors(
+    val: ValidationError | None,
+    errors: list[SpecimenColumnError] | None,
+) -> ValidationError:
+    merged: list[InitErrorDetails] = []
+
+    if val:
+        merged = [
+            {
+                "type": e["type"],
+                "loc": e["loc"],
+                "input": e["input"],
+                "ctx": e["ctx"],
+            }
+            for e in val.errors()
+        ]
+
+    if errors:
+        merged.extend(_specimen_errors_to_details(errors))
+
+    return ValidationError.from_exception_data("specimens", merged)
+
+
+def _specimen_errors_to_details(
+    errors: list[SpecimenColumnError],
+) -> list[InitErrorDetails]:
+    return [
+        {
+            "type": "value_error",
+            "loc": ("specimens", err["sex"], err["life_stage"]),
+            "input": err["raw"],
+            "ctx": {"error": f"Invalid number: got '{err['raw']}'"},
+        }
+        for err in errors
+    ]
+
+
+def _parse_specimen_columns(
+    row: dict[str, str | None],
+) -> tuple[list[Specimen], list[SpecimenColumnError]]:
     specimens: list[Specimen] = []
+    errors: list[SpecimenColumnError] = []
     for header, (sex_val, ls_val) in SPECIMEN_HEADER_MAP.items():
         raw = row.get(header)
         if raw is None:
             continue
 
-        has_any = True
         try:
             count = float(raw)
         except (ValueError, TypeError):
-            raise ValueError(f"Invalid number in '{header}': got '{raw}'") from None
+            errors.append({"sex": sex_val, "life_stage": ls_val, "raw": raw})
+            continue
 
         if count > 0:
             specimens.append(
@@ -108,7 +156,7 @@ def _parse_specimen_columns(row: dict[str, str | None]) -> list[Specimen] | None
                     count=count,
                 )
             )
-    return specimens if has_any else None
+    return specimens, errors
 
 
 def _specimens_to_12_columns(
@@ -134,15 +182,9 @@ def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
         if raw_value is not None:
             data_dict[field] = raw_value
 
-    specimen_parse_err = None
-    try:
-        specimens = _parse_specimen_columns(row)
-        if specimens is not None:
-            data_dict["specimens"] = specimens
-    except ValueError:
-        specimen_parse_err = (
-            "Ошибка при импорте: некорректное значение в колонках экземпляров"
-        )
+    specimens, specimen_errors = _parse_specimen_columns(row)
+    if specimens:
+        data_dict["specimens"] = specimens
 
     try:
         record = RecordData.model_validate(data_dict)
@@ -150,21 +192,18 @@ def _row_to_record_data(row: dict[str, str | None]) -> ParseResult:
         bad_fields = {err["loc"][0] for err in e.errors()}
         cleaned = {k: v for k, v in data_dict.items() if k not in bad_fields}
         partial = RecordData.model_validate(cleaned)
-        return {"success": False, "record": partial, "error": e}
+        return {
+            "success": False,
+            "record": partial,
+            "error": _merge_errors(e, specimen_errors),
+        }
 
-    if specimen_parse_err:
-        error = ValidationError.from_exception_data(
-            "specimens",
-            [
-                {
-                    "type": "value_error",
-                    "loc": ("specimens",),
-                    "input": None,
-                    "ctx": {"error": specimen_parse_err},
-                }
-            ],
-        )
-        return {"success": False, "record": record, "error": error}
+    if specimen_errors:
+        return {
+            "success": False,
+            "record": record,
+            "error": _merge_errors(None, specimen_errors),
+        }
 
     return {"success": True, "record": record, "error": None}
 
