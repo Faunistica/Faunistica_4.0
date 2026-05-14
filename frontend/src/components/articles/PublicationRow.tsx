@@ -11,25 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router";
-
-export interface Publication {
-    id: number;
-    author?: string | null;
-    year?: number | null;
-    name?: string | null;
-    pdf_file?: string | null;
-}
-
-export interface ExtendedPublication extends Publication {
-    type?: string;
-    language?: string;
-    ural?: boolean;
-    bookedBy?: number;
-    processedBy?: number;
-}
+import * as Types from '@/types/api.dto';
 
 interface PublicationRowProps {
-    pub: ExtendedPublication;
+    pub: Types.Publication;
     mode: "suggested" | "progress" | "available";
 }
 
@@ -59,7 +44,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-slate-500 bg-slate-100 rounded-full px-2.5 py-0.5">
                         <Hash className="h-3 w-3" />
-                        {pub.id}
+                        {pub.publ_id}
                     </span>
 
                     {pub.type && (
@@ -150,7 +135,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                             size="sm"
                             className="h-9 rounded-lg gap-2 bg-amber-500 hover:bg-amber-600 text-white w-full sm:w-auto justify-center shadow-sm shadow-amber-200/50"
                         >
-                            <Link to={`/publication/${pub.id}`}>
+                            <Link to={`/publication/${pub.publ_id}`}>
                                 <FileSearch className="h-4 w-4" />
                                 <span>Взять в работу</span>
                             </Link>

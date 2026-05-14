@@ -1,0 +1,28 @@
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from conftest import SeedData
+from fastapi import status
+from httpx import AsyncClient
+
+
+@pytest.mark.asyncio
+async def test_support_with_valid_username(
+    async_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """POST with valid username returns 204"""
+    user = seed_data["users"][0]
+
+    with patch("service.telegram.support_message", new_callable=AsyncMock):
+        response = await async_client.post(
+            "/api/support",
+            json={
+                "link": "http://example.com",
+                "user_name": user.name,
+                "text": "Test support request",
+                "issue_type": "bug",
+            },
+        )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT

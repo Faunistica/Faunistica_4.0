@@ -1,24 +1,31 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Query, Request
 
-from api.schemas import GetLocationRequest, GetLocationResponse
-from service.geo import GeoService
+from core.rate_limiter import limiter
+from schema.geo import GetLocationRequest, GetLocationResponse
+from service import geo
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/reverse-geocode")
-async def reverse_geocode(
+@router.get("/reverse-geocode")
+@limiter.limit("10/second")
+def reverse_geocode(
     request: Request,
-    data: GetLocationRequest,
-    geo: Annotated[GeoService, Depends()],
+    data: Annotated[GetLocationRequest, Query()],
 ) -> GetLocationResponse:
+    """
+    Обратное геокодирование координат.
+
+    Конвертирует координаты DMS в названия страны, региона и района.
+    """
     latitude = geo.dms_to_degrees(data.degrees_n, data.minutes_n, data.seconds_n)
     longitude = geo.dms_to_degrees(data.degrees_e, data.minutes_e, data.seconds_e)
     location = geo.get_location_names(latitude, longitude)
+
     return GetLocationResponse(
         country=location.country,
         region=location.region,

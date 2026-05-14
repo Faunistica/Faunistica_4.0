@@ -9,6 +9,7 @@ Create Date: 2026-04-24 21:05:21.798025
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from alembic import op
 
@@ -24,14 +25,14 @@ def upgrade() -> None:
         "users",
         sa.Column("tlg_name", sa.String(255), nullable=True),
         sa.Column("tlg_username", sa.String(255), nullable=True),
-        sa.Column("name", sa.String(255), nullable=False),
+        sa.Column("name", sa.String(255), nullable=True),
         sa.Column("reg_stat", sa.Integer(), nullable=True),
         sa.Column("hash", sa.String(255), nullable=True),
         sa.Column("hash_date", sa.TIMESTAMP(), nullable=True),
         sa.Column("items", sa.Text(), nullable=True),
         sa.Column("age", sa.Integer(), nullable=True),
         sa.Column("lng", sa.String(), nullable=True),
-        sa.Column("comm", sa.Text(), nullable=True),
+        sa.Column("comm", sa.String(), nullable=True),
         sa.Column("user_id", sa.BigInteger(), nullable=True),
         sa.Column("reg_run", sa.TIMESTAMP(), nullable=True),
         sa.Column("reg_end", sa.TIMESTAMP(), nullable=True),
@@ -77,7 +78,7 @@ def upgrade() -> None:
 
     op.create_table(
         "records",
-        sa.Column("datetime", sa.TIMESTAMP(), nullable=True),
+        sa.Column("datetime", TIMESTAMP(precision=6), nullable=True),
         sa.Column("ip", sa.Text(), nullable=True),
         sa.Column("publ_id", sa.Integer(), nullable=True),
         sa.Column("type", sa.Text(), nullable=True),
@@ -103,7 +104,7 @@ def upgrade() -> None:
         sa.Column("tax_fam", sa.Text(), nullable=True),
         sa.Column("tax_gen", sa.Text(), nullable=True),
         sa.Column("tax_sp", sa.Text(), nullable=True),
-        sa.Column("tax_sp_def", sa.Boolean(), nullable=True),
+        sa.Column("tax_sp.def", sa.Boolean(), nullable=True),
         sa.Column("tax_nsp", sa.Boolean(), nullable=True),
         sa.Column("type_status", sa.Text(), nullable=True),
         sa.Column("tax_REM", sa.Text(), nullable=True),
@@ -166,9 +167,9 @@ def upgrade() -> None:
         sa.Column("day", sa.Integer(), nullable=True),
         sa.Column("verbatimeventdate", sa.String(100), nullable=True),
         sa.Column("habitat", sa.Text(), nullable=True),
-        sa.Column("samplingprotocol", sa.String(100), nullable=True),
+        sa.Column("samplingprotocol", sa.Text(), nullable=True),
         sa.Column("samplingeffort", sa.Text(), nullable=True),
-        sa.Column("samplesizevalue", sa.Float(), nullable=True),
+        sa.Column("samplesizevalue", sa.REAL(), nullable=True),
         sa.Column("samplesizeunit", sa.String(100), nullable=True),
         sa.Column("eventremarks", sa.Text(), nullable=True),
         sa.Column("LOCATION", sa.String(10), nullable=True, server_default="LOCATION"),
@@ -188,7 +189,7 @@ def upgrade() -> None:
         sa.Column("decimallongitude", sa.Float(), nullable=True),
         sa.Column("geodeticdatum", sa.String(30), nullable=True),
         sa.Column("coordinateuncertaintyinmeters", sa.Integer(), nullable=True),
-        sa.Column("coordinateprecision", sa.Float(), nullable=True),
+        sa.Column("coordinateprecision", sa.REAL(), nullable=True),
         sa.Column("verbatimcoordinates", sa.String(50), nullable=True),
         sa.Column("georeferencedby", sa.String(200), nullable=True),
         sa.Column("georeferenceddate", sa.String(10), nullable=True),

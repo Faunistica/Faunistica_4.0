@@ -83,7 +83,7 @@ const Footer: FC<FooterProps> = ({ isAutoSaving, lastSavedTime, onSaveDraft, onS
                 }}
                 animate={shouldAnimate ? "hidden" : "visible"}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="fixed bottom-0 left-0 right-0 md:left-64 bg-white/95 backdrop-blur-md px-4 md:px-10 py-4 border-t border-slate-200 z-40 flex flex-col md:flex-row items-center justify-between gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+                className="fixed bottom-0 left-0 right-0 md:left-64 bg-white/95 backdrop-blur-md px-4 md:px-10 py-4 border-t border-slate-200 z-[90] flex flex-col md:flex-row items-center justify-between gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
             >
                 <div className="flex items-center gap-3 text-sm text-slate-500 order-2 md:order-1 w-full md:w-auto justify-center md:justify-start">
                     <span className={`flex h-2.5 w-2.5 rounded-full ${isAutoSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>

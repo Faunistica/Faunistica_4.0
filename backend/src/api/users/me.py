@@ -1,25 +1,42 @@
-from typing import Annotated
+import logging
 
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, HTTPException, status
 
-from database.database import get_session
-from service.token import get_current_user
-from service.user import UserService
+from core.dependencies import DBSession, TokenUser
+from repository import user as repo
+from schema.user import UserFull, UserMinimal, UserUpdate, UserUpdateMe
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
+
 
 @router.get("/me")
-async def personal_stats(
-    request: Request,
-    user_data: Annotated[dict, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
-    users: Annotated[UserService, Depends()],
-) -> tuple[str, int, dict, list[dict]]:
-    user_id = int(user_data["sub"])
-    user_info = await users.get_by_id(session, user_id)
-    username = user_info.name
-    stats = await users.get_stats(session, user_id)
-    table_stats = await users.get_personal(session, user_id)
-    return username, user_id, stats, table_stats
+async def get_current_user(
+    token: TokenUser,
+) -> UserMinimal:
+    """
+    Получение информации о текущем пользователе.
+
+    Возвращает минимальные данные аутентифицированного пользователя.
+    """
+    return UserMinimal(user_id=token.user_id, name=token.name)
+
+
+@router.put("/me")
+async def update_current_user(
+    data: UserUpdateMe,
+    token: TokenUser,
+    session: DBSession,
+) -> UserFull:
+    update_data = UserUpdate(lng=data.lng, email=data.email)
+    user = await repo.update_user(session, token.user_id, update_data)
+
+    if user is None:
+        logger.warning("User not found during update: %d", token.user_id)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return UserFull.model_validate(user)

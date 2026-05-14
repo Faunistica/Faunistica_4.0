@@ -1,48 +1,62 @@
 import logging
-from typing import Any
 
+from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import User
-from repository import user as user_repo
+from bot.messages import Messages
+from core.enums import UserState
+from core.exceptions import MsgErr, Ok
+from core.model import User
+from repository.user import (
+    get_user,
+)
+from service.actions import ActionService
 
 logger = logging.getLogger(__name__)
 
 
 class UserService:
-    async def get_by_id(self, session: AsyncSession, user_id: int) -> User:
-        return await user_repo.get_user(session, user_id)
-
-    async def get_by_username(self, session: AsyncSession, username: str) -> int | None:
-        return await user_repo.get_user_id_by_username(session, username)
-
-    async def verify_password(
-        self, session: AsyncSession, user_id: int, password: str
-    ) -> bool:
-        return await user_repo.is_pass_correct(session, user_id, password)
-
-    # FIXME: maybe just get whole user instead?
-    async def get_username_and_current_publication(
-        self, session: AsyncSession, user_id: int
-    ) -> dict:
-        return await user_repo.username_and_publication(session, user_id)
-
-    async def create(self, session: AsyncSession, user_id: int, reg_stat: int) -> None:
-        await user_repo.create_user(session, user_id, reg_stat)
-
-    async def update(
+    def __init__(
         self,
         session: AsyncSession,
-        user_id: int,
-        **fields: Any,  # noqa: ANN401
+        bot: Bot,
+        action_service: ActionService,
     ) -> None:
-        await user_repo.update_user(session, user_id, **fields)
+        self.session = session
+        self.bot = bot
+        self.actions = action_service
 
-    async def count_with_username(self, session: AsyncSession, name: str) -> int:
-        return await user_repo.count_users_with_name(session, name)
+    async def check_commands_allowed(
+        self, *, user_id: int | None = None, user: User | None = None
+    ) -> Ok | MsgErr:
+        """
+        Check if user can use commands.
+        """
 
-    async def get_stats(self, session: AsyncSession, user_id: int) -> dict:
-        return await user_repo.get_user_stats(session, user_id)
+        if user is None:
+            if user_id is None:
+                raise ValueError("both user and user_id are None")
 
-    async def get_personal(self, session: AsyncSession, user_id: int) -> list[dict]:
-        return await user_repo.get_personal_stats(session, user_id)
+            user = await get_user(self.session, user_id)
+            if user is None:
+                return MsgErr(error=Messages.not_registered())
+
+        reg_stat = user.reg_stat
+
+        # Switch-case here?
+        if reg_stat == UserState.DATA_CLEARED:
+            await self.actions.log_bot_other(user.user_id, "not_reg_end")
+            error = Messages.register_for_old()
+        elif reg_stat.is_in_registration():
+            error = Messages.registration_not_finished()
+            await self.actions.log_bot_other(user.user_id, "not_reg_end")
+        elif reg_stat.is_in_support():
+            error = Messages.support_flow_not_finished()
+        elif reg_stat.is_in_survey():
+            error = Messages.sociology_flow_not_finished()
+        elif reg_stat == UserState.RENAME:
+            error = Messages.rename_flow_not_finished()
+        else:
+            return Ok()
+
+        return MsgErr(error=error)

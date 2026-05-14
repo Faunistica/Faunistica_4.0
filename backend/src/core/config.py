@@ -1,0 +1,129 @@
+from pathlib import Path
+
+from pydantic import ConfigDict, Field, SecretStr, computed_field
+from pydantic_core import Url
+from pydantic_extra_types.dsn import PostgresDsn
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+    YamlConfigSettingsSource,
+)
+
+
+def to_camel_case(string: str) -> str:
+    components = string.split("_")
+    return "".join(c.title() for c in components)
+
+
+# THX: https://github.com/lsst-sqre/safir/blob/main/src/safir/pydantic/_camel.py
+class CamelCaseSettings(BaseSettings):
+    model_config = ConfigDict(alias_generator=to_camel_case, populate_by_name=True)
+
+
+class DatabaseSettings(CamelCaseSettings):
+    DB_NAME: str = "faunistica"
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_USER: str = "faunistica"
+    DB_PASSWORD: SecretStr = Field(init=False)
+    DB_ECHO: bool = False
+
+    @computed_field
+    @property
+    def DB_URL(self) -> PostgresDsn:
+        return PostgresDsn.build(
+            scheme="postgresql+asyncpg",
+            username=self.DB_USER,
+            password=self.DB_PASSWORD.get_secret_value(),
+            host=self.DB_HOST,
+            port=self.DB_PORT,
+            path=self.DB_NAME,
+        )
+
+
+class SecuritySettings(CamelCaseSettings):
+    JWT_SECRET: SecretStr = Field(init=False)
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    PASSWORD_EXPIRE_MINUTES: int = 1440
+
+
+class BotSettings(CamelCaseSettings):
+    BOT_TOKEN: SecretStr = Field(init=False)
+    BOT_PROXY: Url | None = None
+    ADMIN_CHAT_ID: int = Field(init=False)
+
+
+class LoggingSettings(CamelCaseSettings):
+    LOG_LEVEL: str = "INFO"
+    LOGS_DIR: Path = Path("logs")
+    LOG_FORMAT: str = (
+        "%(asctime)s | %(levelname)-8s | "
+        "[%(filename)s:%(funcName)s:%(lineno)d] | %(message)s"
+    )
+
+
+class AppSettings(CamelCaseSettings):
+    DEV_MODE: bool = False
+    # TODO: Check if other type is better
+    GLOBAL_RATE_LIMIT: str = "100/minute"
+    ALLOWED_ORIGINS: list[str] = []
+    MAX_IMPORT_FILE_BYTES: int = 5 * 1024 * 1024  # 5MB
+    MAX_RECORDS_PER_PUBLICATION: int = 1000
+
+
+class DataSettings(CamelCaseSettings):
+    SPECIES_CSV_PATH: Path = Path("data/species_export.csv")
+    LOCATIONS_JSON_PATH: Path = Path("data/locations.json")
+    SHORT_COUNTRIES_PATH: Path = Path("data/short_countries.txt")
+    URAL_BORDER_PATH: Path = Path("data/ural_border.geojson")
+
+
+class Settings(
+    DatabaseSettings,
+    SecuritySettings,
+    BotSettings,
+    LoggingSettings,
+    AppSettings,
+    DataSettings,
+):
+    model_config = SettingsConfigDict(
+        yaml_file=Path("config.yaml"),
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        yaml_source = YamlConfigSettingsSource(settings_cls)
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            file_secret_settings,
+            yaml_source,
+        )
+
+    @property
+    def PASSWORD_EXPIRE_SECONDS(self) -> int:
+        return self.PASSWORD_EXPIRE_MINUTES * 60
+
+    @property
+    def ACCESS_TOKEN_EXPIRE_SECONDS(self) -> int:
+        return self.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+
+    @property
+    def REFRESH_TOKEN_EXPIRE_SECONDS(self) -> int:
+        return self.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+
+
+settings = Settings()

@@ -10,7 +10,7 @@ const Dashboard: FC = () => {
         data: currentPublications = [],
         isLoading,
         isError
-    } = publAPI.useGetCurrentPublicationQuery({ list: false });
+    } = publAPI.useGetCurrentPublicationQuery({ list: true });
 
     /* 
      * TODO: Функционал "В работе" и "Бронирование" будет добавлен в API в будущем.
@@ -56,7 +56,7 @@ const Dashboard: FC = () => {
                         <Card className="border-amber-200 bg-amber-50/30 shadow-sm overflow-hidden rounded-xl">
                             <div className="flex flex-col">
                                 {currentPublications.map(pub => (
-                                    <PublicationRow key={pub.id} pub={pub} mode="suggested" />
+                                    <PublicationRow key={pub.publ_id} pub={pub} mode="suggested" />
                                 ))}
                             </div>
                         </Card>

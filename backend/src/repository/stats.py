@@ -1,82 +1,141 @@
-import logging
-from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import func, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
-from database.models import Publ, Record, User
-
-logger = logging.getLogger(__name__)
+from core.enums import UserState
+from core.model import Action, EventRecord, User
 
 
-async def get_general_stats(session: AsyncSession) -> dict:
-    stats = {}
+async def get_project_statistics(session: AsyncSession) -> dict[str, Any]:
+    # TODO: Performance optimization point - consider caching
 
-    stmt = (
+    total_volunteers = await session.scalar(
         select(func.count())
         .select_from(User)
-        .where((User.reg_stat == 1) | (User.reg_stat >= 7))
-    )
-    result = await session.execute(stmt)
-    stats["total_users"] = result.scalar()
-
-    result = await session.execute(select(func.avg(User.age)))
-    avg_age = result.scalar()
-    stats["avg_age"] = round(avg_age, 1) if avg_age else 0
-
-    stmt = select(Publ.language).where(
-        Publ.ural.is_(True), Publ.coords.is_(True), Publ.occs.is_(True)
-    )
-    result = await session.execute(stmt)
-    langs = result.scalars().all()
-    stats.update(
-        {
-            "total_publs": len(langs),
-            "rus_publs": sum("rus" in (lang or "").lower() for lang in langs),
-            "eng_publs": sum("eng" in (lang or "").lower() for lang in langs),
-        }
+        .where(
+            (User.reg_stat == UserState.REG_COMPLETED)
+            | (User.reg_stat >= UserState.SUPPORT)
+        )
     )
 
-    result = await session.execute(select(Record.type))
-    records = result.scalars().all()
-    rec_ok = records.count("rec_ok")
-
-    stats["rec_ok"] = rec_ok
-    stats["rec_fail_ratio"] = (
-        round(records.count("rec_fail") / rec_ok, 2) if rec_ok else 0
-    )
-    stats["check_ratio"] = (
-        round(sum("check" in (r or "") for r in records) / rec_ok, 2) if rec_ok else 0
+    total_records = await session.scalar(
+        select(func.count())
+        .select_from(EventRecord)
+        .where(EventRecord.type == "rec_ok")
     )
 
-    species_stmt = select(
-        func.count(func.distinct(func.concat(Record.genus, "_", Record.species)))
-    ).where(Record.type == "rec_ok")
-    families_stmt = select(func.count(func.distinct(Record.family))).where(
-        Record.type == "rec_ok"
+    species_count = await session.scalar(
+        select(func.count(func.distinct(EventRecord.genus + " " + EventRecord.species)))
+        .select_from(EventRecord)
+        .where(EventRecord.type == "rec_ok")
     )
 
-    species_result = await session.execute(species_stmt)
-    families_result = await session.execute(families_stmt)
+    processed_publications = await session.scalar(
+        select(func.count(func.distinct(Action.object)))
+        .select_from(Action)
+        .where(Action.action == "publ_end_full")
+    )
 
-    stats["species_count"] = species_result.scalar()
-    stats["families_count"] = families_result.scalar()
+    most_common_family = await session.scalar(
+        select(EventRecord.family)
+        .where(EventRecord.type == "rec_ok")
+        .group_by(EventRecord.family)
+        .order_by(func.count().desc())
+        .limit(1)
+    )
 
-    return stats
+    most_common_genus = await session.scalar(
+        select(EventRecord.genus)
+        .where(EventRecord.type == "rec_ok")
+        .group_by(EventRecord.genus)
+        .order_by(func.count().desc())
+        .limit(1)
+    )
+
+    most_common_species = await session.scalar(
+        select(EventRecord.genus + " " + EventRecord.species)
+        .where(EventRecord.type == "rec_ok")
+        .group_by(EventRecord.genus, EventRecord.species)
+        .order_by(func.count().desc())
+        .limit(1)
+    )
+
+    return {
+        "total_volunteers": total_volunteers or 0,
+        "total_records": total_records or 0,
+        "species_count": species_count or 0,
+        "processed_publications_count": processed_publications or 0,
+        "most_common_family": most_common_family,
+        "most_common_genus": most_common_genus,
+        "most_common_species": most_common_species,
+    }
+
+
+async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:
+    return await session.scalar(select(User).where(User.user_id == user_id))
+
+
+async def get_user_by_name(session: AsyncSession, name: str) -> User | None:
+    return await session.scalar(select(User).where(User.name.like(f"%{name}%")))
+
+
+async def get_user_statistics(session: AsyncSession, user_id: int) -> dict[str, Any]:
+    records_entered = await session.scalar(
+        select(func.count())
+        .select_from(EventRecord)
+        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+    )
+
+    publications_processed = await session.scalar(
+        select(func.count(func.distinct(EventRecord.publ_id)))
+        .select_from(EventRecord)
+        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+    )
+
+    most_common_family = await session.scalar(
+        select(EventRecord.family)
+        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+        .group_by(EventRecord.family)
+        .order_by(func.count().desc())
+        .limit(1)
+    )
+
+    most_common_genus = await session.scalar(
+        select(EventRecord.genus)
+        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+        .group_by(EventRecord.genus)
+        .order_by(func.count().desc())
+        .limit(1)
+    )
+
+    most_common_species = await session.scalar(
+        select(EventRecord.genus + " " + EventRecord.species)
+        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+        .group_by(EventRecord.genus, EventRecord.species)
+        .order_by(func.count().desc())
+        .limit(1)
+    )
+
+    return {
+        "records_entered": records_entered or 0,
+        "publications_processed": publications_processed or 0,
+        "most_common_family": most_common_family,
+        "most_common_genus": most_common_genus,
+        "most_common_species": most_common_species,
+    }
 
 
 async def get_volunteers_achievements(
     session: AsyncSession,
-) -> Sequence[Any]:
+) -> list[Any]:
     stmt = text("""
         SELECT a.user_id, a.object, a.datetime,
                u.name, u.tlg_name, u.tlg_username
         FROM actions a
-        INNER JOIN users u ON a.user_id = u.id
-        WHERE a.action = 'fau_100'
+        INNER JOIN users u ON a.user_id = u.user_id
+        WHERE a.action = 'fau_50'
         ORDER BY a.datetime DESC
     """)
     result = await session.execute(stmt)
-    return result.fetchall()
+    return list(result.fetchall())

@@ -1,15 +1,21 @@
 import logging
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.rate_limiter import limiter
-from api.schemas import Message, UserRequest
-from config.config import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE
-from database.database import get_session
-from service.token import TokenService
-from service.user import UserService
+from core.config import settings
+from core.dependencies import ClientIP, DBSession
+from core.rate_limiter import limiter
+from core.security import check_password, set_response_token_cookies
+from repository.user import (
+    UserUpdate,
+    find_user_by_username,
+    update_user,
+)
+from schema.common import LoginRequest, UserLoginResponse
+from schema.jwt import TokenPayload
+from service.actions import ActionService
 
 logger = logging.getLogger(__name__)
 
@@ -17,47 +23,52 @@ router = APIRouter()
 
 
 @router.post("/login")
-@limiter.limit("15/minute")
-async def login(  # noqa: PLR0913
+@limiter.limit("5/minute")
+async def login(
     request: Request,
     response: Response,
-    data: UserRequest,
-    session: Annotated[AsyncSession, Depends(get_session)],
-    tokens: Annotated[TokenService, Depends()],
-    users: Annotated[UserService, Depends()],
-) -> Message:
-    print("ABOBA")
-    user_id = await users.get_by_username(session, data.username)
-    if user_id is None:
-        logger.warning("User not found for this username")
-        raise HTTPException(status_code=404, detail="User not found for this username")
+    data: LoginRequest,
+    session: DBSession,
+    ip: ClientIP,
+    action_service: Annotated[ActionService, Depends()],
+) -> UserLoginResponse:
+    """
+    Аутентификация пользователя по логину и паролю.
 
-    if not await users.verify_password(session, user_id, data.password):
-        logger.warning("Wrong password")
-        raise HTTPException(status_code=401, detail="Wrong password")
+    При успешной проверке устанавливает JWT токены в HTTP-only cookies
+    """
+    user = await find_user_by_username(session, data.username)
+    if user is None:
+        logger.info("User not found: %s", data.username)
+        raise HTTPException(status_code=404, detail="User not found")
 
-    token_payload = {"sub": str(user_id), "username": data.username}
-    access_token = tokens.create_access_token(token_payload)
-    refresh_token = tokens.create_refresh_token(token_payload)
+    if user.hash is None:
+        logger.info("User has no password hash: %s", data.username)
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=False,
-        samesite="strict",
-        max_age=ACCESS_TOKEN_EXPIRE * 60,
-        path="/",
+    result = check_password(data.password, user.hash)
+    if not result.is_valid:
+        logger.info("Wrong password for user: %s", data.username)
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if result.new_hash:
+        await update_user(session, user.user_id, UserUpdate(hash=result.new_hash))
+
+    if user.hash_date is not None:
+        now = datetime.now()
+        minutes_since_hash = (now - user.hash_date).total_seconds() / 60
+        if minutes_since_hash > settings.PASSWORD_EXPIRE_MINUTES:
+            logger.info("Password expired for user: %s", data.username)
+            raise HTTPException(status_code=401, detail="Password expired")
+
+    token_payload = TokenPayload(
+        sub=str(user.user_id), username=data.username, version=user.token_version
     )
+    set_response_token_cookies(response, token_payload)
 
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=False,
-        samesite="strict",
-        max_age=REFRESH_TOKEN_EXPIRE * 60,
-        path="/",
+    await action_service.log_login(user.user_id, ip)
+
+    return UserLoginResponse(
+        user_id=user.user_id,
+        username=data.username,
     )
-
-    return Message(message="ok")

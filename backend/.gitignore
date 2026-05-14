@@ -5,6 +5,11 @@ pyvenv.cfg
 
 __pycache__
 
+.coverage
+htmlcov
+
 .env
 
 logs
+NOTES
+*xlsx*

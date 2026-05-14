@@ -1,48 +1,48 @@
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Request, Response
 
-from api.schemas import Message
-from config.config import ACCESS_TOKEN_EXPIRE
-from service.token import TokenService
+from core.dependencies import DBSession
+from core.exceptions import InvalidTokenError
+from core.security import set_response_token_cookies, verify_token
+from repository.user import get_user
+from schema.common import Message
+from schema.jwt import TokenPayload
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
 @router.post("/refresh")
-def refresh(
+async def refresh(
     request: Request,
     response: Response,
-    tokens: Annotated[TokenService, Depends()],
+    session: DBSession,
 ) -> Message:
+    """
+    Обновление токена доступа.
+
+    Проверяет refresh токен из куки и выдает новый токен доступа.
+    """
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         logger.warning("Refresh token missing")
-        raise HTTPException(status_code=403, detail="Refresh token missing")
+        raise InvalidTokenError("Refresh token missing")
 
-    payload = tokens.verify(refresh_token)
+    payload = verify_token(refresh_token)
 
-    if payload.get("type") != "refresh":
+    if payload.type != "refresh":
+        logger.warning("Invalid refresh token type")
+        raise InvalidTokenError
+
+    user = await get_user(session, int(payload.sub))
+    if user is None or user.token_version != payload.version:
         logger.warning("Invalid refresh token")
-        raise HTTPException(status_code=403, detail="Invalid refresh token")
+        raise InvalidTokenError
 
-    user_id = payload.get("sub")
-    username = payload.get("username")
-
-    new_access_token = tokens.create_access_token(
-        {"sub": user_id, "username": username}
+    token_payload = TokenPayload(
+        sub=str(payload.sub), username=payload.username, version=user.token_version
     )
-
-    response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        secure=False,
-        samesite="strict",
-        max_age=ACCESS_TOKEN_EXPIRE,
-        path="/",
-    )
+    set_response_token_cookies(response, token_payload)
 
     return Message(message="Access token refreshed")

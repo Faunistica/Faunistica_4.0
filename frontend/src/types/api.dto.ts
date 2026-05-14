@@ -160,9 +160,22 @@ export interface SupportRequest {
 }
 
 export interface Publication {
-    id: number;
+    publ_id: number;
+    type: string;
     author?: string | null;
     year?: number | null;
     name?: string | null;
+    external?: string | null;
+    language?: string | null;
     pdf_file?: string | null;
+    bib_file?: string | null;
+    arj_file?: string | null;
+    resume?: string | null;
+    ural?: number | boolean;
+    coords?: number | boolean;
+    cover?: number | boolean;
+    occs?: number | boolean;
+    spec?: number | boolean;
+    e_author?: string | null;
+    e_name?: string | null;
 }

@@ -1,6 +1,8 @@
 services:
   db:
-    image: postgres:18-alpine
+    # FIXME: 15 for now, but it's already EOL.
+    # should upgrade this, and propose and upgrade plan for customer
+    image: postgres:15-alpine
     container_name: "fau_db"
     env_file:
       - .env

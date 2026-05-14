@@ -15,7 +15,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
     const { isLanding, isNavigateEnabled } = useRouteHandle();
 
     return (
-        <header className="sticky top-0 z-50 w-full overflow-x-clip bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <header className="sticky top-0 z-[100] w-full overflow-x-clip bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
             <div className="relative h-16 flex items-center justify-between px-4 md:px-8">
                 <div className="flex items-center gap-4">
                     {isSidebarEnabled && setSidebarOpen && (
