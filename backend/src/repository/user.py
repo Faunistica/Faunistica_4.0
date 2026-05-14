@@ -82,3 +82,15 @@ async def count_users_with_name(session: AsyncSession, name: str) -> int:
     stmt = select(func.count()).select_from(User).where(User.name == name)
     result = await session.execute(stmt)
     return result.scalar_one()
+
+
+async def increment_token_version(session: AsyncSession, user_id: int) -> int:
+    stmt = (
+        update(User)
+        .where(User.user_id == user_id)
+        .values(token_version=User.token_version + 1)
+        .returning(User.token_version)
+    )
+    result = await session.execute(stmt)
+    await session.commit()
+    return result.scalar_one()

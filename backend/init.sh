@@ -5,6 +5,6 @@ set -e
 echo "Populating dev DB with sample data (using Python seed script)..."
 
 source .env
-scripts/seed.py
+python3 scripts/seed.py
 
 echo "Sample data created successfully."
