@@ -10,14 +10,14 @@ sync:
 	uv sync
 
 format: isort
-	uv run ruff format src/ alembic/ tests/ scripts/
+	uv run ruff format src/ alembic/
 
 isort:
-	uv run ruff check --select I --fix src/ alembic/ tests/ scripts/
+	uv run ruff check --select I --fix src/ alembic/
 
 lint:
-	uv run ruff check src/ alembic/ tests/ scripts/
-	uv run ty check src/ alembic/ tests/ scripts/
+	uv run ruff check src/ alembic/ tests/
+	uv run ty check src/ alembic/ tests/
 
 migrate:
 	uv run alembic upgrade head

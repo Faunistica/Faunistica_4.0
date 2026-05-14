@@ -18,8 +18,8 @@ router = APIRouter(
 @router.get("")
 async def list_records(
     service: Annotated[RecordService, Depends()],
-    user_id: Annotated[int, Query(ge=1, description="User ID")],
-    publ_id: Annotated[int | None, Query(ge=1, description="Publication ID")] = None,
+    user_id: Annotated[int, Query(description="User ID")],
+    publ_id: Annotated[int | None, Query(description="Publication ID")] = None,
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     page_size: Annotated[int, Query(ge=1, le=100, description="Page size")] = 20,
     sort: Annotated[

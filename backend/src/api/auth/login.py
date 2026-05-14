@@ -57,7 +57,7 @@ async def login(
     if user.hash_date is not None:
         now = datetime.now()
         minutes_since_hash = (now - user.hash_date).total_seconds() / 60
-        if minutes_since_hash > settings.PASSWORD_EXPIRE_MINUTES:
+        if minutes_since_hash > settings.PASSWORD_EXPIRE_SECONDS:
             logger.info("Password expired for user: %s", data.username)
             raise HTTPException(status_code=401, detail="Password expired")
 

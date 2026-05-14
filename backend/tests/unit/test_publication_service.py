@@ -59,7 +59,7 @@ class TestValidateAccess:
         """Test that validate_access passes when user.publ_id matches."""
         mock_user = User(user_id=1, publ_id=123)
         mock_publ = Publication(
-            publ_id=123,
+            id=123,
             type="A",
             year=2000,
             name="publ",
@@ -80,7 +80,7 @@ class TestValidateAccess:
         """Test that validate_access raises PublicationForbiddenError when mismatch."""
         mock_user = User(user_id=1, publ_id=456)
         mock_publ = Publication(
-            publ_id=123,
+            id=123,
             type="A",
             year=2000,
             name="publ",
@@ -155,7 +155,7 @@ class TestComplete:
         """Test complete with various processing levels."""
         mock_user = User(user_id=1, publ_id=123, items="456|789")
         next_publ = Publication(
-            publ_id=456,
+            id=456,
             author="Author 2",
             name="Next Publication",
             type="A",
@@ -173,4 +173,301 @@ class TestComplete:
         self.mock_log.assert_called_once_with(1, expected_level, 123, ip)
         mock_session.commit.assert_called_once()
         assert result is not None
-        assert result.publ_id == 456
+        assert result.id == 456
+
+    @pytest.mark.asyncio
+    async def test_complete_returns_none_when_queue_empty(
+        self,
+        publication_service: PublicationService,
+        mock_session: MagicMock,
+        token_user: TokenUser,
+    ) -> None:
+        """Test that complete returns None when queue is empty after advancing."""
+        mock_user = User(user_id=1, publ_id=123, items=None)
+
+        self.mock_get_user.return_value = mock_user
+
+        result = await publication_service.complete(
+            token_user.user_id, 123, ProcessingLevel.FULL, "127.0.0.1"
+        )
+
+        assert result is None
+        mock_session.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_complete_calls_validate_access(
+        self,
+        publication_service: PublicationService,
+        token_user: TokenUser,
+    ) -> None:
+        """Test that complete calls validate_access first."""
+        mock_user = User(user_id=1, publ_id=123, items="456|789")
+
+        self.mock_get_user.return_value = mock_user
+        self.mock_get_pub_expect.return_value = Publication(
+            id=456,
+            author="Author 2",
+            name="Next Publication",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
+        )
+
+        await publication_service.complete(
+            token_user.user_id, 123, ProcessingLevel.FULL, "127.0.0.1"
+        )
+
+        self.mock_validate.assert_called_once_with(123, user=mock_user)
+
+
+# ============================================================================
+# TESTS FOR GET_CURRENT
+# ============================================================================
+
+
+class TestGetCurrent:
+    @pytest.fixture(autouse=True, scope="function")
+    def setup_mocks(self):
+        with (
+            patch(
+                "service.publications.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
+            patch(
+                "service.publications.get_publication", new_callable=AsyncMock
+            ) as self.mock_get_pub,
+            patch(
+                "service.publications.get_publication_expect", new_callable=AsyncMock
+            ) as self.mock_get_pub_expect,
+            patch(
+                "service.publications.get_publications_by_ids", new_callable=AsyncMock
+            ) as self.mock_get_pubs,
+        ):
+            yield
+
+    @pytest.mark.asyncio
+    async def test_get_current_single(
+        self,
+        publication_service: PublicationService,
+        token_user: TokenUser,
+    ) -> None:
+        """Test get_current with list_all=False returns only current publication."""
+        mock_user = User(user_id=1, publ_id=123, items="456|789")
+
+        self.mock_get_user.return_value = mock_user
+        self.mock_get_pub_expect.return_value = Publication(
+            id=123,
+            author="Test Author",
+            name="Test Publication",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
+        )
+
+        result = await publication_service.get_current(token_user, with_queue=False)
+
+        assert len(result) == 1
+        assert result[0].id == 123
+
+    @pytest.mark.asyncio
+    async def test_get_current_all(
+        self,
+        publication_service: PublicationService,
+        token_user: TokenUser,
+    ) -> None:
+        """Test get_current with list_all=True returns all publications in queue."""
+        mock_user = User(user_id=1, publ_id=123, items="456|789")
+
+        self.mock_get_user.return_value = mock_user
+
+        self.mock_get_pubs.return_value = [
+            Publication(
+                id=123,
+                author="Author 1",
+                name="Publication 1",
+                type="A",
+                year=2000,
+                language="rus",
+                ural=1,
+            ),
+            Publication(
+                id=456,
+                author="Author 2",
+                name="Publication 2",
+                type="A",
+                year=2000,
+                language="rus",
+                ural=1,
+            ),
+            Publication(
+                id=789,
+                author="Author 3",
+                name="Publication 3",
+                type="A",
+                year=2000,
+                language="rus",
+                ural=1,
+            ),
+        ]
+        result = await publication_service.get_current(token_user, with_queue=True)
+
+        assert len(result) == 3
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "publ_id,items,expected_len",
+        [
+            (None, "456|789", 2),
+            (123, None, 1),
+            (None, None, 0),
+        ],
+    )
+    async def test_get_current_various_states(
+        self,
+        publication_service: PublicationService,
+        token_user: TokenUser,
+        publ_id: int | None,
+        items: str | None,
+        expected_len: int,
+    ) -> None:
+        """Test get_current with various publ_id and items combinations."""
+        mock_user = User(user_id=1, publ_id=publ_id, items=items)
+
+        self.mock_get_user.return_value = mock_user
+
+        publications = []
+        if publ_id:
+            publications.append(
+                Publication(
+                    id=publ_id,
+                    author="Author 1",
+                    name="Publication 1",
+                    type="A",
+                    year=2000,
+                    language="rus",
+                    ural=1,
+                )
+            )
+        if items:
+            publications.extend(
+                [
+                    Publication(
+                        id=456,
+                        author="Author 2",
+                        name="Publication 2",
+                        type="A",
+                        year=2000,
+                        language="rus",
+                        ural=1,
+                    ),
+                    Publication(
+                        id=789,
+                        author="Author 3",
+                        name="Publication 3",
+                        type="A",
+                        year=2000,
+                        language="rus",
+                        ural=1,
+                    ),
+                ]
+            )
+        self.mock_get_pubs.return_value = publications
+
+        result = await publication_service.get_current(token_user, with_queue=True)
+        assert len(result) == expected_len
+
+
+# ============================================================================
+# TESTS FOR ASSIGN_CURRENT
+# ============================================================================
+
+
+class TestAssignCurrent:
+    @pytest.fixture(autouse=True, scope="function")
+    def setup_mocks(self, publication_service: PublicationService):
+        with (
+            patch(
+                "service.publications.get_user_expect", new_callable=AsyncMock
+            ) as self.mock_get_user,
+            patch(
+                "service.publications.get_publication", new_callable=AsyncMock
+            ) as self.mock_get_pub,
+            patch(
+                "service.publications.get_publication_expect", new_callable=AsyncMock
+            ) as self.mock_get_pub_expect,
+        ):
+            yield
+
+    @pytest.mark.asyncio
+    async def test_assign_current_when_none_assigned(
+        self,
+        publication_service: PublicationService,
+        mock_session: MagicMock,
+    ) -> None:
+        """Test assign_current assigns next publication from queue when publ_id is None."""
+        mock_user = User(user_id=1, publ_id=None, items="123|456|789")
+        mock_publ = Publication(
+            id=123,
+            author="Author 1",
+            name="Publication 1",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
+        )
+
+        self.mock_get_user.return_value = mock_user
+        self.mock_get_pub_expect.return_value = mock_publ
+        result = await publication_service.assign_current(1)
+
+        assert result is not None
+        assert result.id == 123
+        mock_session.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_assign_current_when_already_assigned(
+        self,
+        publication_service: PublicationService,
+        mock_session: MagicMock,
+    ) -> None:
+        """Test assign_current returns current publication when already assigned."""
+        mock_user = User(user_id=1, publ_id=456, items="123|456|789")
+
+        self.mock_get_user.return_value = mock_user
+        self.mock_get_pub_expect.return_value = Publication(
+            id=456,
+            author="Author 2",
+            name="Publication 2",
+            type="A",
+            year=2000,
+            language="rus",
+            ural=1,
+        )
+
+        result = await publication_service.assign_current(1)
+
+        assert result is not None
+        assert result.id == 456
+        mock_session.execute.assert_not_called()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "items",
+        [None, ""],
+    )
+    async def test_assign_current_when_queue_empty(
+        self,
+        publication_service: PublicationService,
+        mock_session: MagicMock,
+        items: str | None,
+    ) -> None:
+        """Test assign_current returns None when queue is empty."""
+        mock_user = User(user_id=1, publ_id=None, items=items)
+
+        self.mock_get_user.return_value = mock_user
+
+        result = await publication_service.assign_current(1)
+
+        assert result is None
+        mock_session.execute.assert_not_called()

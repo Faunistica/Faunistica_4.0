@@ -26,10 +26,9 @@ async def create_record(
     token: TokenUser,
     service: Annotated[RecordService, Depends()],
 ) -> RecordFull:
-    record, _ = await service.create_record(
+    return await service.create_record(
         user_id=token.user_id,
         publ_id=data.publ_id,
         ip=ip,
         submission_type="autosave",
     )
-    return record

@@ -65,7 +65,7 @@ async def test_update_record_set_coords(
     record_id = seed_data["record_ids"][2]
     response = await authenticated_client.put(
         f"/api/records/{record_id}?user_id={user.user_id}",
-        json={"publ_id": user.publ_id, "latitude": "55.7", "longitude": "37.7"},
+        json={"publ_id": user.publ_id, "latitude": 55.7, "longitude": 37.7},
     )
     assert response.status_code == 200
 
@@ -204,7 +204,7 @@ async def test_update_record_not_found(authenticated_client, seed_data: SeedData
     user = seed_data["users"][0]
     fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await authenticated_client.put(
-        f"/api/records/{fake_uuid}", json={"publ_id": user.publ_id, "latitude": "55.5"}
+        f"/api/records/{fake_uuid}", json={"publ_id": user.publ_id, "latitude": 55.5}
     )
     assert response.status_code == 404
 
@@ -231,7 +231,7 @@ async def test_delete_record_previous_publ_403(
         record = EventRecord(
             id=uuid4(),
             user_id=user.user_id,
-            publ_id=seed_data["publs"][1].publ_id,
+            publ_id=seed_data["publs"][1].id,
             type="rec_ok",
             created_at=now,
             updated_at=now,
@@ -255,7 +255,7 @@ async def test_update_record_wrong_user(
     record_id = seed_data["record_ids"][0]
     response = await authenticated_client_user2.put(
         f"/api/records/{record_id}?user_id={user2.user_id}",
-        json={"publ_id": seed_data["publs"][0].publ_id, "latitude": "55.5"},
+        json={"publ_id": seed_data["publs"][0].id, "latitude": 55.5},
     )
     assert response.status_code == 403
 

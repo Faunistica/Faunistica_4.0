@@ -112,7 +112,6 @@ class TestImportRecords:
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
             patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             # Create a mock ValidationError
             mock_error = MagicMock(spec=ValidationError)

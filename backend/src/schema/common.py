@@ -41,7 +41,7 @@ class UserLoginResponse(BaseModel):
 
 
 class Publication(BaseModel):
-    publ_id: int
+    id: int
     type: str
     author: str | None = None
     year: int

@@ -25,8 +25,8 @@ async def _seed_records(
             publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
-            latitude="55.5",
-            longitude="37.5",
+            latitude=55.5,
+            longitude=37.5,
             created_at=datetime.now(),
         )
         session.add(record)
@@ -53,8 +53,8 @@ async def test_fau50_detected(
             publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
-            latitude="55.5",
-            longitude="37.5",
+            latitude=55.5,
+            longitude=37.5,
             created_at=datetime.now(),
         )
         session.add(fiftieth)
@@ -83,8 +83,8 @@ async def test_fau50_detected(
             publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
-            latitude="55.5",
-            longitude="37.5",
+            latitude=55.5,
+            longitude=37.5,
             created_at=datetime.now(),
         )
         session.add(hundredth)
@@ -140,8 +140,8 @@ async def test_fau50_not_duplicated(
             publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
-            latitude="55.5",
-            longitude="37.5",
+            latitude=55.5,
+            longitude=37.5,
             created_at=datetime.now(),
         )
         session.add(new_record)
