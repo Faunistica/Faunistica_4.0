@@ -1,12 +1,20 @@
-// src/hooks/useSampleStatus.ts
+// src/hooks/useRecordStatus.ts
 import { useFormContext } from 'react-hook-form';
 import { useMemo } from 'react';
 import type { FormSchema } from '@/types/forms';
 import { BLOCKING_FIELDS, type BlockingFieldName } from '@/types/forms';
 
-export type SampleStatus = 'empty' | 'draft' | 'valid' | 'error';
+export type RecordStatus = 'empty' | 'draft' | 'valid' | 'error';
 
-export function useSampleStatus(index: number): SampleStatus {
+/**
+ * Determines the visual status of a single record in the sidebar.
+ * Also accepts an external `validationErrors` map populated by the
+ * "Проверить всё" mass-validation pass — these override local form state.
+ */
+export function useRecordStatus(
+    index: number,
+    validationErrors?: Map<number, string[]>,
+): RecordStatus {
     const { formState: { errors, touchedFields }, getValues } = useFormContext<FormSchema>();
 
     const sampleErrors = errors.samples?.[index] as Record<string, any> | undefined;
@@ -14,7 +22,12 @@ export function useSampleStatus(index: number): SampleStatus {
     const sampleValues = getValues(`samples.${index}`) as Partial<FormSchema['samples'][0]> | undefined;
 
     return useMemo(() => {
-        // 🟡 Пустой образец — ничего не тронуто
+        // If mass-validation found errors for this record — always show error
+        if (validationErrors?.has(index) && (validationErrors.get(index)?.length ?? 0) > 0) {
+            return 'error';
+        }
+
+        // 🟡 Пустая запись — ничего не тронуто
         if (!sampleTouched || Object.keys(sampleTouched).length === 0) {
             return 'empty';
         }
@@ -33,5 +46,5 @@ export function useSampleStatus(index: number): SampleStatus {
 
         // 🔵 В процессе заполнения
         return 'draft';
-    }, [sampleErrors, sampleTouched, sampleValues]);
+    }, [sampleErrors, sampleTouched, sampleValues, validationErrors, index]);
 }

@@ -1,13 +1,15 @@
+// src/components/sidebar/RecordStatusIndicator.tsx
 import { type FC } from 'react';
 import { CheckCircle2, AlertCircle, CircleDashed, Circle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { useSampleStatus } from '@/hooks/useSampleStatus.ts';
+import { useRecordStatus } from '@/hooks/useRecordStatus';
 import { BLOCKING_FIELDS, getFieldLabel } from '@/types/forms';
 import { useFormContext } from 'react-hook-form';
 import type { FormSchema } from '@/types/forms';
 
 interface Props {
     index: number;
+    validationErrors?: Map<number, string[]>;
 }
 
 const STATUS_CONFIG = {
@@ -37,17 +39,24 @@ const STATUS_CONFIG = {
     },
 } as const;
 
-export const SampleStatusIndicator: FC<Props> = ({ index }) => {
-    const status = useSampleStatus(index);
+export const RecordStatusIndicator: FC<Props> = ({ index, validationErrors }) => {
+    const status = useRecordStatus(index, validationErrors);
     const { formState: { errors } } = useFormContext<FormSchema>();
     const config = STATUS_CONFIG[status];
 
     // Для тултипа: какие именно поля не заполнены
+    const externalErrors = validationErrors?.get(index);
     const sampleErrors = errors.samples?.[index] as Record<string, any> | undefined;
-    const missingFields = status === 'error' && sampleErrors
-        ? BLOCKING_FIELDS.filter(f => sampleErrors[f as keyof typeof sampleErrors])
-            .map(f => getFieldLabel(f))
-        : [];
+
+    let missingFields: string[] = [];
+    if (status === 'error') {
+        if (externalErrors && externalErrors.length > 0) {
+            missingFields = externalErrors;
+        } else if (sampleErrors) {
+            missingFields = BLOCKING_FIELDS.filter(f => sampleErrors[f as keyof typeof sampleErrors])
+                .map(f => getFieldLabel(f));
+        }
+    }
 
     const tooltipContent = status === 'error' && missingFields.length > 0
         ? `Заполните: ${missingFields.join(', ')}`

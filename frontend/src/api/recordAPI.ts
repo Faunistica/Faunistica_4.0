@@ -2,6 +2,12 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
 
+export interface ImportRecordsResponse {
+    imported_count: number;
+    errors?: string[];
+    warnings?: string[];
+}
+
 export const recordAPI = createApi({
     reducerPath: 'recordAPI',
     baseQuery: baseQueryWithReauth,
@@ -45,6 +51,15 @@ export const recordAPI = createApi({
                 params: { user_id },
             }),
         }),
+        // ── Импорт записей из Excel/CSV ──
+        importRecords: build.mutation<ImportRecordsResponse, FormData>({
+            query: (formData) => ({
+                url: '/records/import',
+                method: 'POST',
+                body: formData,
+            }),
+            invalidatesTags: ['record'],
+        }),
     }),
 });
 
@@ -53,5 +68,6 @@ export const {
     useGetRecordByIdQuery,
     useCreateRecordMutation,
     useEditRecordMutation,
-    useDeleteRecordMutation
+    useDeleteRecordMutation,
+    useImportRecordsMutation,
 } = recordAPI;

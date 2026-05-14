@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { authAPI } from '@/api/authAPI';
-import type { UserRequest } from '@/types/api.dto';
+import type { LoginRequest } from '@/types/api.dto';
 
 const Login: FC = () => {
   const navigate = useNavigate();
@@ -21,9 +21,9 @@ const Login: FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<UserRequest>();
+  } = useForm<LoginRequest>();
 
-  const onSubmit = async (data: UserRequest) => {
+  const onSubmit = async (data: LoginRequest) => {
     const result = await login(data);
     if (!result.error) {
       const redirectTo = searchParams.get('redirectTo');
@@ -33,9 +33,9 @@ const Login: FC = () => {
 
   const apiErrorMessage =
     error && 'status' in error
-      ? (error.data as { detail?: string })?.detail ?? 'Login failed. Please try again.'
+      ? (error.data as { detail?: string })?.detail ?? 'Ошибка входа. Пожалуйста, попробуйте снова.'
       : error
-        ? 'Network error. Please check your connection.'
+        ? 'Ошибка сети. Пожалуйста, проверьте ваше подключение.'
         : null;
 
   return (

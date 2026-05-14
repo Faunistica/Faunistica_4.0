@@ -9,18 +9,23 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
+import { CheckCheck, ShieldCheck } from "lucide-react";
 
 interface FooterProps {
     isAutoSaving: boolean;
     lastSavedTime: Date | null;
-    onSaveDraft: () => void;
+    onSaveAll: () => void;
+    onValidateAll: () => void;
     onSubmit: () => Promise<boolean>;
     isValid: boolean;
+    isValidating: boolean;
 }
 
 const ENABLE_MOTION_ON_DESKTOP = true;
 
-const Footer: FC<FooterProps> = ({ isAutoSaving, lastSavedTime, onSaveDraft, onSubmit, isValid }) => {
+const Footer: FC<FooterProps> = ({
+    isAutoSaving, lastSavedTime, onSaveAll, onValidateAll, onSubmit, isValid, isValidating,
+}) => {
     const [isHidden, setIsHidden] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
 
@@ -97,13 +102,26 @@ const Footer: FC<FooterProps> = ({ isAutoSaving, lastSavedTime, onSaveDraft, onS
                 </div>
 
                 <div className="flex w-full md:w-auto gap-3 order-1 md:order-2">
+                    {/* Проверить всё */}
                     <Button
-                        onClick={onSaveDraft}
-                        disabled={isAutoSaving}
-                        className="flex-1 md:flex-none md:px-6 font-semibold border-slate-300 text-slate-700 hover:bg-slate-50 transition-all w-48"
+                        onClick={onValidateAll}
+                        disabled={isValidating}
+                        className="flex-1 md:flex-none md:px-5 font-semibold border-amber-300 text-amber-700 hover:bg-amber-50 transition-all"
                         variant="outline"
                     >
-                        {isAutoSaving ? "Сохранение..." : "Сохранить сейчас"}
+                        <CheckCheck className="h-4 w-4 mr-1.5" />
+                        {isValidating ? "Проверка..." : "Проверить всё"}
+                    </Button>
+
+                    {/* Сохранить всё */}
+                    <Button
+                        onClick={onSaveAll}
+                        disabled={isAutoSaving}
+                        className="flex-1 md:flex-none md:px-5 font-semibold border-slate-300 text-slate-700 hover:bg-slate-50 transition-all"
+                        variant="outline"
+                    >
+                        <ShieldCheck className="h-4 w-4 mr-1.5" />
+                        {isAutoSaving ? "Сохранение..." : "Сохранить всё"}
                     </Button>
 
                     <Button

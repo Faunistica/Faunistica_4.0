@@ -112,7 +112,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
 
             {isOpen && suggestions.length > 0 && (
                 <ul
-                    className="absolute z-50 mt-2 w-full max-h-60 overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white/95 backdrop-blur-md py-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-200"
+                    className="absolute z-[150] mt-2 w-full max-h-60 overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white/95 backdrop-blur-md py-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-200"
                     role="listbox"
                 >
                     {suggestions.map((item, i) => (

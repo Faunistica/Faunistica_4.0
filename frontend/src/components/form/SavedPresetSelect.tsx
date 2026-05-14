@@ -33,8 +33,8 @@ const LABEL_BUILDERS: Record<PresetType, (d: Record<string, unknown>) => string>
 };
 
 const BUTTON_TEXT: Record<PresetType, string> = {
-    location: 'Заполнить как у другого образца (место)',
-    event: 'Заполнить как у другого образца (событие)',
+    location: 'Заполнить как у другой записи (место)',
+    event: 'Заполнить как у другой записи (событие)',
 };
 
 /**
@@ -111,7 +111,7 @@ const SavedPresetSelect: FC<Props> = ({ type, currentIndex }) => {
                         defaultOpen={true}
                     >
                         <SelectTrigger className="w-full bg-blue-50 border-blue-200 text-sm h-10">
-                            <SelectValue placeholder="Выберите образец для копирования…" />
+                            <SelectValue placeholder="Выберите запись для копирования…" />
                         </SelectTrigger>
                         <SelectContent>
                             {presets.map((p) => (
