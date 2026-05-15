@@ -1,0 +1,77 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: backend
+
+env:
+  JWT_SECRET: dev_secret_change_in_production_min_32_chars
+  BOT_TOKEN: dummy_bot_token_for_ci
+  ADMIN_CHAT_ID: -1
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --group dev
+      - run: uv run ruff check src/ alembic/ tests/
+      - run: uv run ruff format --check src/ alembic/ tests/
+      - run: uv run ty check src/ alembic/ tests/
+      - name: Minimize uv cache
+        run: uv cache prune --ci
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: faunistica
+          POSTGRES_PASSWORD: faunistica
+          POSTGRES_DB: faunistica
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      USE_REAL_DB_FOR_TESTS: '1'
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: faunistica
+      DB_PASSWORD: faunistica
+      DB_NAME: faunistica
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --group dev
+      - run: uv run alembic upgrade head
+      - run: uv run alembic check
+      - run: uv run pytest tests/ -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: backend/htmlcov/
+      - name: Minimize uv cache
+        run: uv cache prune --ci
