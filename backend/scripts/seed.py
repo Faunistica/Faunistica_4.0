@@ -88,19 +88,20 @@ async def seed() -> None:
         dev_tg_id = int(os.environ.get("DEV_TG_ID", "351318551"))
         logger.info(f"Using DEV_TG_ID: {dev_tg_id}")
 
+        passwords = ["dev", "test"]
+
         user_data = [
             {
                 "user_id": dev_tg_id,
                 "name": "DEV",
                 "tlg_username": "dev_user",
                 "tlg_name": "Dev User",
-                "hash": get_password_hash("dev"),
+                "hash": get_password_hash(passwords[0]),
                 "hash_date": datetime.now(),
                 "reg_stat": 1,
                 "age": 30,
                 "lng": "ru",
                 "rating": 5,
-                "publ_id": 2,
                 "items": "2|3",
                 "reg_run": datetime.now(),
                 "reg_end": datetime.now(),
@@ -114,14 +115,13 @@ async def seed() -> None:
                 "name": "TEST",
                 "tlg_username": "test_user",
                 "tlg_name": "Test User",
-                "hash": get_password_hash("test"),
+                "hash": get_password_hash(passwords[1]),
                 "hash_date": datetime.now(),
                 "reg_stat": 1,
                 "age": 25,
                 "lng": "en",
                 "rating": 3,
-                "publ_id": 1,
-                "items": "",
+                "items": "1",
                 "reg_run": datetime.now(),
                 "reg_end": datetime.now(),
                 "sex": "F",
@@ -131,14 +131,19 @@ async def seed() -> None:
             },
         ]
 
-        for u in user_data:
+        for i, u in enumerate(user_data):
             stmt = (
                 insert(User)
                 .values(**u)
                 .on_conflict_do_nothing(index_elements=["user_id"])
             )
             await session.execute(stmt)
-        logger.info("Users inserted")
+            logger.info(
+                "User inserted: name: %s; password: %s; publications: %s",
+                u["name"],
+                passwords[i],
+                u["items"],
+            )
 
         # Check if records already exist
         existing = await session.execute(select(EventRecord).limit(1))
