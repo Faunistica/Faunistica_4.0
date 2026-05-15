@@ -132,7 +132,7 @@ async def test_list_records_no_token(async_client: AsyncClient, seed_data: SeedD
     response = await async_client.get(
         f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}"
     )
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio

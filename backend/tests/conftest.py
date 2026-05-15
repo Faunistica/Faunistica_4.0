@@ -2,11 +2,10 @@ import hashlib
 import os
 import random
 from collections.abc import AsyncGenerator, Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import TypedDict, cast
 from uuid import uuid4
 
-import jwt as pyjwt
 import pytest
 import pytest_asyncio
 from aiohttp import ClientSession
@@ -28,7 +27,8 @@ from core.dependencies import get_http_session
 from core.enums import UserState
 from core.model import Base, EventRecord, Publication, User
 from core.rate_limiter import limiter
-from schema.jwt import Token
+from core.security import create_access_token, create_refresh_token
+from schema.jwt import TokenPayload
 
 
 def md5_hash(password: str) -> str:
@@ -287,24 +287,11 @@ def authenticated_client_user2(
     return async_client
 
 
-def create_test_token(user_id: int, username: str, token_type: str) -> str:
-    if token_type == "access":
-        expires = datetime.now(UTC) + timedelta(minutes=30)
-    else:
-        expires = datetime.now(UTC) + timedelta(days=30)
-
-    payload = Token(sub=str(user_id), username=username, type=token_type, exp=expires)
-    return pyjwt.encode(
-        payload.model_dump(),
-        settings.JWT_SECRET.get_secret_value(),
-        algorithm="HS256",
-    )
-
-
 def auth_tokens(user: User):
+    payload = TokenPayload(sub=str(user.user_id), username=user.name or "")
     return {
-        "access_token": create_test_token(user.user_id, user.name or "", "access"),
-        "refresh_token": create_test_token(user.user_id, user.name or "", "refresh"),
+        "access_token": create_access_token(payload),
+        "refresh_token": create_refresh_token(payload),
     }
 
 
