@@ -81,7 +81,7 @@ class TestImportRecords:
                 RecordData(family="Formicidae", genus="Lasius", species="niger"),
             ]
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 for record_data in records_data:
                     yield (record_data, None)
 
@@ -126,7 +126,7 @@ class TestImportRecords:
             mock_error = MagicMock(spec=ValidationError)
             mock_error.json.return_value = '[{"msg": "Validation failed"}]'
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 # Valid record
                 yield (RecordData(family="Formicidae", genus="Camponotus"), None)
                 # Invalid record (simulate validation error with partial data)
@@ -167,7 +167,7 @@ class TestImportRecords:
             ),
         ):
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 # Empty row (will be caught by is_row_empty)
                 yield (RecordData(family=None, genus=None, species=None), None)
 
@@ -195,7 +195,7 @@ class TestImportRecords:
             "service.records.get_user_expect", AsyncMock(return_value=mock_user)
         ):
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 yield (RecordData(family="Formicidae"), None)
 
             with pytest.raises(NoPublicationsAssignedError):
@@ -224,7 +224,7 @@ class TestImportRecords:
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
         ):
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 for _ in range(settings.MAX_USER_RECORDS_PER_PUBLICATION + 1):
                     yield (RecordData(family="Formicidae"), None)
 
@@ -268,7 +268,7 @@ class TestImportRecords:
                 ),
             ]
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 for record_data in records_data:
                     yield (record_data, None)
 
@@ -364,7 +364,7 @@ class TestImportRecords:
                 ),
             ]
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 for record_data in records_data:
                     yield (record_data, None)
 
