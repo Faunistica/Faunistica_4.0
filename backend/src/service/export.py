@@ -86,6 +86,12 @@ class SpecimenColumnError(TypedDict):
 ParseResult = tuple[RecordData | None, ValidationError | None]
 
 
+async def _gen_none() -> AsyncGenerator[ParseResult]:
+    """Empty generator — yields nothing."""
+    if False:
+        yield  # type: ignore
+
+
 def is_row_empty(row: dict[str, Any | None]) -> bool:
     return all(v is None or str(v).strip() == "" for v in row.values())
 
@@ -245,31 +251,47 @@ def parse_excel_value(value: Any) -> Any:  # noqa: ANN401
     return value
 
 
-async def read_excel(file_content: bytes) -> AsyncGenerator[ParseResult]:
-    wb = load_workbook(filename=io.BytesIO(file_content), read_only=True)
+async def read_excel(file_content: bytes) -> tuple[AsyncGenerator[ParseResult], int]:
+    wb = load_workbook(filename=io.BytesIO(file_content))
     ws = wb.active
+
     if ws is None:
-        return
-    headers: list[str] = []
-    for i, row in enumerate(ws.iter_rows(values_only=True)):
-        if i == 0:
-            headers = [str(cell) if cell is not None else "" for cell in row]
-        else:
-            row_dict: dict[str, str | None] = {
+        wb.close()
+        return (_gen_none(), 0)
+
+    all_rows = list(ws.iter_rows(values_only=True))
+    total = max(len(all_rows) - 1, 0)
+    if total == 0 or len(all_rows) < 2:
+        wb.close()
+        return (_gen_none(), 0)
+
+    headers = [str(cell) if cell is not None else "" for cell in all_rows[0]]
+    data_rows = all_rows[1:]
+    wb.close()
+
+    async def _gen() -> AsyncGenerator[ParseResult]:
+        for row in data_rows:
+            row_dict = {
                 headers[j]: _parse_excel_value(row[j])
                 for j in range(len(headers))
                 if j < len(row)
             }
             yield _row_to_record_data(row_dict)
-    wb.close()
+
+    return (_gen(), total)
 
 
-async def read_csv(file_content: bytes) -> AsyncGenerator[ParseResult, None]:
+async def read_csv(file_content: bytes) -> tuple[AsyncGenerator[ParseResult], int]:
     text = file_content.decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(text))
-    for row in reader:
-        row_dict = {k: (v if v else None) for k, v in row.items()}
-        yield _row_to_record_data(row_dict)
+    rows = [{k: (v if v else None) for k, v in row.items()} for row in reader]
+    total = len(rows)
+
+    async def _gen() -> AsyncGenerator[ParseResult]:
+        for row_dict in rows:
+            yield _row_to_record_data(row_dict)
+
+    return (_gen(), total)
 
 
 def records_to_excel(records: Sequence[RecordFull]) -> bytes:

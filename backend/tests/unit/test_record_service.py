@@ -6,7 +6,7 @@ import pytest
 from openpyxl import Workbook
 
 from core.config import settings
-from core.exceptions import NoPublicationsAssignedError, RecordLimitExceededError
+from core.exceptions import ImportLimitExceededError, NoPublicationsAssignedError
 from schema.records import RecordData, Specimen
 from service.export import COLUMN_MAPPING, ParseResult
 from service.records import ImportResult, RecordService
@@ -86,7 +86,7 @@ class TestImportRecords:
                     yield (record_data, None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1"
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=2
             )
 
             assert isinstance(result, ImportResult)
@@ -135,7 +135,7 @@ class TestImportRecords:
                 yield (RecordData(family="Formicidae", genus="Lasius"), None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1"
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=3
             )
 
             assert result.imported == 3
@@ -172,7 +172,7 @@ class TestImportRecords:
                 yield (RecordData(family=None, genus=None, species=None), None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1"
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=1
             )
 
             assert result.imported == 0
@@ -200,7 +200,7 @@ class TestImportRecords:
 
             with pytest.raises(NoPublicationsAssignedError):
                 await record_service.import_records(
-                    gen(), user_id=user_id, ip="127.0.0.1"
+                    gen(), user_id=user_id, ip="127.0.0.1", total_count=1
                 )
 
     async def test_import_limit_exceeded(
@@ -228,9 +228,12 @@ class TestImportRecords:
                 for _ in range(settings.MAX_USER_RECORDS_PER_PUBLICATION + 1):
                     yield (RecordData(family="Formicidae"), None)
 
-            with pytest.raises(RecordLimitExceededError):
+            with pytest.raises(ImportLimitExceededError):
                 await record_service.import_records(
-                    gen(), user_id=user_id, ip="127.0.0.1"
+                    gen(),
+                    user_id=user_id,
+                    ip="127.0.0.1",
+                    total_count=settings.MAX_USER_RECORDS_PER_PUBLICATION + 1,
                 )
 
     async def test_boolean_fields_parsing(
@@ -270,7 +273,7 @@ class TestImportRecords:
                     yield (record_data, None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1"
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=1
             )
 
             assert result.imported == 1
@@ -321,8 +324,9 @@ class TestImportRecords:
             ),
             patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
+            records, total = await read_excel(excel_content)
             result = await record_service.import_records(
-                read_excel(excel_content), user_id=user_id, ip="127.0.0.1"
+                records, user_id=user_id, ip="127.0.0.1", total_count=total
             )
 
             assert result.imported >= 1
@@ -365,6 +369,6 @@ class TestImportRecords:
                     yield (record_data, None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1"
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=1
             )
             assert result.imported == 1

@@ -10,6 +10,7 @@ from pydantic import BaseModel, Json
 from core.config import settings
 from core.dependencies import DBSession
 from core.exceptions import (
+    ImportLimitExceededError,
     NoPublicationsAssignedError,
     PublicationForbiddenError,
     RecordForbiddenError,
@@ -69,7 +70,12 @@ class RecordService:
         await self.publication_service.validate_access(publ_id, user_id=user_id)
         count = await count_records_by_user_publ(self.session, user_id, publ_id)
         if count >= settings.MAX_USER_RECORDS_PER_PUBLICATION:
-            raise RecordLimitExceededError(1)
+            raise RecordLimitExceededError(
+                publ_id,
+                current_count=count,
+                additional=1,
+                limit=settings.MAX_USER_RECORDS_PER_PUBLICATION,
+            )
 
         publ = await get_publication(self.session, publ_id)
         language = publ.language if publ else None
@@ -133,7 +139,6 @@ class RecordService:
         record = await repo.get_record(self.session, record_id)
         if record is None:
             raise RecordNotFoundError(record_id)
-        await self.session.commit()
 
         return _enrich_record(record)
 
@@ -211,12 +216,9 @@ class RecordService:
         records: AsyncIterable[ParseResult],
         user_id: int,
         ip: str | None,
+        total_count: int,
     ) -> ImportResult:
         """Import records from parsed Excel/CSV rows."""
-        event_records: list[EventRecord] = []
-        all_errors: list[ImportError] = []
-        last_ok = None
-
         user = await get_user_expect(self.session, user_id)
         queue = await self.publication_service.get_current(user=user)
         if len(queue) == 0:
@@ -227,16 +229,26 @@ class RecordService:
         # Always ok now, but rules may change
         await self.publication_service.validate_access(publ.publ_id, user=user)
 
+        if total_count > settings.MAX_USER_RECORDS_PER_PUBLICATION:
+            raise ImportLimitExceededError(
+                publ.publ_id, total_count, settings.MAX_USER_RECORDS_PER_PUBLICATION
+            )
+
+        event_records: list[EventRecord] = []
+        all_errors: list[ImportError] = []
+        last_ok = None
+
         async for i, (record_data, error) in a.enumerate(records, 1):
             if error:
                 all_errors.append(ImportError(row=i, error=error.json()))
 
             if record_data is None or is_row_empty(record_data.model_dump()):
-                all_errors.append(
-                    ImportError(
-                        row=i, error=json.dumps([{"msg": "Record data is empty"}])
+                if not error:
+                    all_errors.append(
+                        ImportError(
+                            row=i, error=json.dumps([{"msg": "Record data is empty"}])
+                        )
                     )
-                )
                 continue
 
             metadata, _ = _create_record_metadata(
@@ -260,10 +272,8 @@ class RecordService:
             if metadata.type == "rec_ok":
                 last_ok = record
 
-        # Delete old records, then check limit and insert — all in one transaction
+        # Delete old records, then insert — all in one transaction
         await repo.delete_records_by_user_and_publ(self.session, user_id, publ.publ_id)
-        if len(event_records) > settings.MAX_USER_RECORDS_PER_PUBLICATION:
-            raise RecordLimitExceededError(len(event_records))
 
         self.session.add_all(event_records)
 
