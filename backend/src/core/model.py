@@ -31,11 +31,13 @@ class User(Base):
     tlg_username: Mapped[str | None] = mapped_column(String(255))
     name: Mapped[str | None] = mapped_column(String(255))
     reg_stat: Mapped[UserState] = mapped_column(
-        UserStateType, default=UserState.DATA_CLEARED
+        UserStateType,
+        default=UserState.DATA_CLEARED,
+        server_default="0",
     )
     hash: Mapped[str | None] = mapped_column(String(255))
     hash_date: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
-    items: Mapped[str] = mapped_column(Text, default="")
+    items: Mapped[str] = mapped_column(Text, server_default="")
     age: Mapped[int | None] = mapped_column(Integer)
     lng: Mapped[str | None] = mapped_column(String)
     comm: Mapped[str | None] = mapped_column(String)

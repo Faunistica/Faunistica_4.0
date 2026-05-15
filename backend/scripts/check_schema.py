@@ -17,8 +17,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import logging
 
-from sqlalchemy import ColumnDefault, inspect as sa_inspect
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.sql.schema import DefaultClause
 
 from core.config import settings
 from core.model import Base
@@ -67,6 +68,12 @@ def _clean_default(raw: str | None) -> str | None:
     if raw is None:
         return None
     cleaned = raw.strip().lower().rstrip(";").replace('"', "'")
+    # PG wraps literals like ''::text → normalize
+    if cleaned.endswith("::text") or cleaned.endswith("::character varying"):
+        cleaned = cleaned.rsplit("::", 1)[0]
+    # PG encodes empty string as '' → normalize
+    if cleaned in ("''", '""'):
+        cleaned = ""
     return _NORM_DEFAULTS.get(cleaned, cleaned)
 
 
@@ -135,9 +142,13 @@ async def check_schema() -> int:  # noqa: PLR0912, PLR0915
                         )
 
                     sv_def = model_col.server_default
-                    sv_def_arg = (
-                        sv_def.arg if isinstance(sv_def, ColumnDefault) else None
-                    )
+                    sv_def_arg = None
+                    if isinstance(sv_def, DefaultClause):
+                        try:
+                            sv_def_arg = str(sv_def.arg)
+                        except Exception:
+                            sv_def_arg = None
+
                     model_default = _clean_default(sv_def_arg)
                     pgdefault = _clean_default(pg_col.get("default"))
                     if model_default != pgdefault:

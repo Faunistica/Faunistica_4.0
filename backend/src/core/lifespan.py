@@ -6,32 +6,44 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import aiohttp
-from alembic.command import check as check_alembic
 from alembic.config import Config
-from alembic.util.exc import CommandError
+from alembic.script import ScriptDirectory
 from fastapi import FastAPI
+from sqlalchemy import text
 
 from bot import bot
 from core.config import settings
-from core.database import init_db, ping_db
+from core.database import _engine, init_db, ping_db
 from schema.geo import RegionData
 
 _ALEMBIC_CFG_PATH = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
 
 
-def _check_migrations(logger: logging.Logger) -> None:
+async def _check_migrations(logger: logging.Logger) -> None:
     """Verify DB schema matches Alembic head revision."""
     cfg = Config(str(_ALEMBIC_CFG_PATH))
+    script = ScriptDirectory.from_config(cfg)
+    head_rev = script.get_current_head()
+
     try:
-        check_alembic(cfg)
-    except CommandError as e:
+        async with _engine.connect() as conn:
+            result = await conn.execute(
+                text("SELECT version_num FROM alembic_version")
+            )
+            row = result.fetchone()
+            db_rev = row[0] if row else None
+    except Exception:
+        db_rev = None
+
+    if db_rev != head_rev:
         msg = (
-            "Database schema is not at the Alembic head revision. "
+            f"Database is at revision {db_rev}, expected {head_rev}. "
             "Run `alembic upgrade head` to sync."
         )
         logger.critical(msg)
-        raise RuntimeError(msg) from e
-    logger.info("Alembic migrations are up to date")
+        raise RuntimeError(msg)
+
+    logger.info("Alembic migrations are up to date (head: %s)", head_rev)
 
 
 @asynccontextmanager
@@ -39,7 +51,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger = logging.getLogger(__name__)
 
     await init_db()
-    _check_migrations(logger)
+    await _check_migrations(logger)
 
     if not await ping_db():
         logger.critical("Database is not available. Application cannot start.")
