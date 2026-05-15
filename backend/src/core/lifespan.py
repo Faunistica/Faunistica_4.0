@@ -12,14 +12,17 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from bot import bot
+from core.check_schema import run_check_schema
 from core.config import settings
 from core.database import _engine, init_db, ping_db
 from schema.geo import RegionData
 
 _ALEMBIC_CFG_PATH = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
 
+logger = logging.getLogger(__name__)
 
-async def _check_migrations(logger: logging.Logger) -> None:
+
+async def _check_migrations() -> None:
     """Verify DB schema matches Alembic head revision."""
     cfg = Config(str(_ALEMBIC_CFG_PATH))
     script = ScriptDirectory.from_config(cfg)
@@ -27,9 +30,7 @@ async def _check_migrations(logger: logging.Logger) -> None:
 
     try:
         async with _engine.connect() as conn:
-            result = await conn.execute(
-                text("SELECT version_num FROM alembic_version")
-            )
+            result = await conn.execute(text("SELECT version_num FROM alembic_version"))
             row = result.fetchone()
             db_rev = row[0] if row else None
     except Exception:
@@ -46,12 +47,31 @@ async def _check_migrations(logger: logging.Logger) -> None:
     logger.info("Alembic migrations are up to date (head: %s)", head_rev)
 
 
+async def _check_schema_dev() -> None:
+    """Fine-grained model-vs-DB schema check for dev mode only."""
+    mismatches, warnings = await run_check_schema(_engine)
+    if mismatches:
+        logger.warning(
+            "DEV: Schema mismatches found between models and DB "
+            "(app will start, but fix before deploying):"
+        )
+        for m in mismatches:
+            logger.warning("  %s", m)
+    for w in warnings:
+        logger.warning("DEV: Schema warning: %s", w)
+    if not mismatches:
+        logger.info("DEV: Model and DB schemas are in sync")
+    else:
+        raise RuntimeError("Model and DB schema are out of sync")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-    logger = logging.getLogger(__name__)
-
     await init_db()
-    await _check_migrations(logger)
+    await _check_migrations()
+
+    if settings.DEV_MODE:
+        await _check_schema_dev()
 
     if not await ping_db():
         logger.critical("Database is not available. Application cannot start.")
