@@ -286,7 +286,8 @@ async def seed() -> None:
     await init_db()
 
     async for session in get_session():
-        dev_tg_id = int(os.environ.get("DEV_TG_ID", "351318551"))
+        dev_tg_id = int(os.environ.get("DEV_TG_ID", "1"))
+        logger.info(f"Using DEV_TG_ID: {dev_tg_id}")
 
         # Fill in runtime user_id
         for data in RECORDS_DATA:
@@ -352,9 +353,6 @@ async def seed() -> None:
         logger.info("Publications inserted")
 
         # Users
-        dev_tg_id = int(os.environ.get("DEV_TG_ID", "1"))
-        logger.info(f"Using DEV_TG_ID: {dev_tg_id}")
-
         passwords = ["dev", "test"]
 
         user_data = [
