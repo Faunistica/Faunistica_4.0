@@ -49,6 +49,7 @@ class User(Base):
     rating: Mapped[int | None] = mapped_column(Integer)
     email: Mapped[str | None] = mapped_column(Text)
     region: Mapped[str | None] = mapped_column(Text)
+    token_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
 class Publication(Base):

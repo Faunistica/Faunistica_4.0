@@ -169,3 +169,8 @@ class ImportLimitExceededError(APIException):
             f"Publication {publ_id}: batch size {batch_size} exceeds limit of {limit}",
             400,
         )
+
+
+class InvalidTokenError(APIException):
+    def __init__(self, detail: str = "Invalid token") -> None:
+        super().__init__("INVALID_TOKEN", detail, 401)

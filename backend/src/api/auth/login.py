@@ -9,7 +9,11 @@ from core.dependencies import ClientIP, DBSession
 from core.enums import UserState
 from core.rate_limiter import limiter
 from core.security import check_password, set_response_token_cookies
-from repository.user import UserUpdate, find_user_by_username, update_user
+from repository.user import (
+    UserUpdate,
+    find_user_by_username,
+    update_user,
+)
 from schema.common import LoginRequest, UserLoginResponse
 from schema.jwt import TokenPayload
 from service.actions import ActionService
@@ -73,7 +77,9 @@ async def login(
             logger.info("Password expired for user: %s", data.username)
             raise HTTPException(status_code=401, detail="Password expired")
 
-    token_payload = TokenPayload(sub=str(user.user_id), username=data.username)
+    token_payload = TokenPayload(
+        sub=str(user.user_id), username=data.username, version=user.token_version
+    )
     set_response_token_cookies(response, token_payload)
 
     await action_service.log_login(user.user_id, ip)
