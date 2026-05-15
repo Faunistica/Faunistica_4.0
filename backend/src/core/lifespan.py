@@ -34,6 +34,7 @@ async def _check_migrations() -> None:
             row = result.fetchone()
             db_rev = row[0] if row else None
     except Exception:
+        logger.warning("Database schema was created without using alembic")
         db_rev = None
 
     if db_rev != head_rev:
@@ -51,10 +52,7 @@ async def _check_schema_dev() -> None:
     """Fine-grained model-vs-DB schema check for dev mode only."""
     mismatches, warnings = await run_check_schema(_engine)
     if mismatches:
-        logger.warning(
-            "DEV: Schema mismatches found between models and DB "
-            "(app will start, but fix before deploying):"
-        )
+        logger.warning("DEV: Schema mismatches found between models and DB")
         for m in mismatches:
             logger.warning("  %s", m)
     for w in warnings:
@@ -102,11 +100,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.warning("Location data file not found at %s", json_path)
         app.state.location_data = []
 
-    try:
-        bot_task = asyncio.create_task(bot.start())
-    except OSError as db_error:
-        logger.error("Database initialization failed: %s", db_error, exc_info=True)
-        raise
+    bot_task = asyncio.create_task(bot.start())
 
     try:
         yield
