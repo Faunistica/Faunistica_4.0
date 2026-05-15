@@ -106,7 +106,6 @@ class EventRecord(Base):
     updated_at: Mapped[datetime_type] = mapped_column(
         TIMESTAMP(precision=6),
         server_default=func.now(),
-        server_onupdate=func.now(),
         nullable=False,
     )
     ip: Mapped[str | None] = mapped_column(Text)
