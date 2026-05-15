@@ -3,8 +3,12 @@ import json
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import aiohttp
+from alembic.command import check as check_alembic
+from alembic.config import Config
+from alembic.util.exc import CommandError
 from fastapi import FastAPI
 
 from bot import bot
@@ -12,12 +16,36 @@ from core.config import settings
 from core.database import init_db, ping_db
 from schema.geo import RegionData
 
+_ALEMBIC_CFG_PATH = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
+
+
+def _check_migrations(logger: logging.Logger) -> None:
+    """Verify DB schema matches Alembic head revision."""
+    cfg = Config(str(_ALEMBIC_CFG_PATH))
+    try:
+        check_alembic(cfg)
+    except CommandError as e:
+        msg = (
+            "Database schema is not at the Alembic head revision. "
+            "Run `alembic upgrade head` to sync."
+        )
+        logger.critical(msg)
+        raise RuntimeError(msg) from e
+    logger.info("Alembic migrations are up to date")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger = logging.getLogger(__name__)
 
     await init_db()
+    _check_migrations(logger)
+
+    if not await ping_db():
+        logger.critical("Database is not available. Application cannot start.")
+        raise RuntimeError("Database connection failed")
+
+    logger.info("Database connection verified")
 
     if settings.BOT_PROXY is not None:
         app.state.http_session = aiohttp.ClientSession(
@@ -47,12 +75,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     except OSError as db_error:
         logger.error("Database initialization failed: %s", db_error, exc_info=True)
         raise
-
-    if not await ping_db():
-        logger.critical("Database is not available. Application cannot start.")
-        raise RuntimeError("Database connection failed")
-
-    logger.info("Database connection verified")
 
     try:
         yield
