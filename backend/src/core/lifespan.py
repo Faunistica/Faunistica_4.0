@@ -31,8 +31,38 @@ def _compare(conn: Connection) -> None:
     if len(diff) == 0:
         return
 
+    _LABEL = {
+        "add_table": "Missing table in database",
+        "remove_table": "Unexpected table in database",
+        "add_column": "Missing column",
+        "remove_column": "Unexpected column in database",
+        "modify_column": "Modified column",
+        "add_constraint": "Missing constraint",
+        "remove_constraint": "Unexpected constraint in database",
+    }
+
     for i in diff:
-        logger.error(" %s", i)
+        op = i[0]
+        label = _LABEL.get(op)
+        if label is not None and op in ("add_table", "remove_table"):
+            logger.error("Schema diff: %s (%s)", label, i[1].name)
+        elif label is not None and op in ("add_column", "remove_column"):
+            _, _, table_name, col = i
+            logger.error(
+                "Schema diff: %s (%s.%s %s)", label, table_name, col.name, col.type
+            )
+        elif label is not None and op == "modify_column":
+            _, _, table_name, old_col, new_col = i
+            logger.error(
+                "Schema diff: %s (%s.%s): %s -> %s",
+                label,
+                table_name,
+                new_col.name,
+                old_col.type,
+                new_col.type,
+            )
+        else:
+            logger.error("Schema diff: unhandled alembic action proposed — %s", i)
 
     raise RuntimeError("Database schema diff detected")
 
