@@ -10,9 +10,15 @@ export const UNCERTAINTY_MAX = 15000;
 // 🔒 Поля, обязательные для перехода к следующему образцу
 export const BLOCKING_FIELDS = [
     'country',
+    'region',
+    'district',
+    'locality',
+    'verbatim_date',
+    'sampling_protocol',
+    'recorded_by',
     'family',
     'genus',
-    // Координаты: валидируются парой через zod refine
+    'species',
 ] as const;
 
 export type BlockingFieldName = typeof BLOCKING_FIELDS[number];
@@ -20,12 +26,16 @@ export type BlockingFieldName = typeof BLOCKING_FIELDS[number];
 // 📋 Человеко-читаемые названия полей для ошибок
 export const FIELD_LABELS: Record<string, string> = {
     country: 'Страна',
+    region: 'Регион',
+    district: 'Район',
+    locality: 'Локалитет',
     family: 'Семейство',
     genus: 'Род',
     latitude: 'Широта',
     longitude: 'Долгота',
-    species: 'Видовой эпитет',
+    species: 'Вид',
     verbatim_date: 'Дата сбора',
+    sampling_protocol: 'Метод сбора',
     recorded_by: 'Коллектор',
     mmm: 'Самцы',
     ssm: 'Самки',

@@ -18,15 +18,20 @@ export interface RecordBelonging {
     user_id: number;
 }
 
+export interface Specimen {
+    sex: string;
+    life_stage: string;
+    count: number;
+}
+
 export interface RecordData {
-    publ_id: number;
     country?: string | null;
     region?: string | null;
     district?: string | null;
     locality?: string | null;
     is_manual_location?: boolean | null;
-    latitude?: number | null;
-    longitude?: number | null;
+    latitude?: string | null;
+    longitude?: string | null;
     verbatimcoordinates?: string | null;
     coordinate_uncertainty?: number | null;
     georef_source?: string | null;
@@ -52,22 +57,41 @@ export interface RecordData {
     type_status?: string | null;
     accepted_name?: string | null;
     taxon_remarks?: string | null;
-    quantity?: number | null;
     quantity_type?: string | null;
-    sex?: string | null;
-    life_stage?: string | null;
+    specimens?: Specimen[] | null;
     occurrence_remarks?: string | null;
     identification_remarks?: string | null;
 }
 
 export interface RecordFull extends RecordData {
-    user_id: number;
     id: string;
+    publ_id: number;
+    user_id: number;
     errors?: string | null;
     type?: string | null;
     created_at: string;
     updated_at?: string | null;
     ip?: string | null;
+}
+
+export interface RuleCategory {
+    // taxonomy, geo, location, event, abundance
+}
+
+export interface RecordValidationError {
+    fields: string[];
+    code: string;
+    message: string;
+    category?: string | null;
+}
+
+export interface UpdateRecordResponse {
+    record: RecordFull;
+    errors: RecordValidationError[];
+}
+
+export interface CreateRecordRequest {
+    publ_id: number;
 }
 
 export interface PaginatedResponse<T> {
@@ -78,7 +102,7 @@ export interface PaginatedResponse<T> {
     pages: number;
 }
 
-export interface DraftRecord extends Omit<RecordData, 'quantity' | 'sex' | 'life_stage'> {
+export interface DraftRecord extends Omit<RecordData, 'specimens'> {
     mmm?: number | null;
     ssm?: number | null;
     fff?: number | null;
@@ -111,20 +135,19 @@ export interface AutofillTaxonResponse {
 
 export interface RecordIdRequest {
     record_id: string;
-    user_id: number;
 }
 
 export interface RecordListRequest {
-    publ_id: number;
+    publ_id?: number;
     user_id: number;
     page?: number;
     page_size?: number;
     sort?: string;
 }
 
-export interface EditRecordRequest extends RecordData {
+export interface EditRecordRequest {
     record_id: string;
-    user_id: number;
+    data: RecordData;
 }
 
 export interface GetLocationRequest {

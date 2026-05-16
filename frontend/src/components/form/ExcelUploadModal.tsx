@@ -1,13 +1,16 @@
 // src/components/form/ExcelUploadModal.tsx
 import { type FC, useState, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Upload, FileSpreadsheet, X, AlertTriangle, Loader2 } from 'lucide-react';
+import { Upload, FileSpreadsheet, X, AlertTriangle, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     AlertDialog, AlertDialogContent, AlertDialogDescription,
     AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useImportRecordsMutation } from '@/api/recordAPI';
+import { useImportRecordsMutation, useExportRecordsMutation } from '@/api/recordAPI';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router';
+import type { RootState } from '@/store/store';
 
 interface Props {
     open: boolean;
@@ -29,6 +32,11 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [importRecords] = useImportRecordsMutation();
+    const [exportRecords, { isLoading: isExporting }] = useExportRecordsMutation();
+
+    const user_id = useSelector((state: RootState) => state.user.user_id);
+    const { id } = useParams<{ id: string }>();
+    const publ_id = Number(id);
 
     const isValidFile = (file: File) => {
         const ext = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -121,17 +129,52 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
         onOpenChange(false);
     };
 
+    const handleExport = async () => {
+        if (!user_id) return;
+        try {
+            const blob = await exportRecords({ user_id, publ_id, scope: 'user', format: 'xlsx' }).unwrap();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `records_export_${publ_id || 'all'}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            toast.success('Файл успешно скачан');
+        } catch (error) {
+            toast.error('Ошибка при скачивании файла');
+            console.error(error);
+        }
+    };
+
     return (
         <>
             <AlertDialog open={open} onOpenChange={handleClose}>
                 <AlertDialogContent className="max-w-lg">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2">
-                            <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
-                            Импорт данных из файла
-                        </AlertDialogTitle>
+                        <div className="flex w-full items-center justify-between gap-4">
+                            <AlertDialogTitle className="flex items-center gap-2 text-xl">
+                                <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                                Работа с Excel
+                            </AlertDialogTitle>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleExport}
+                                disabled={isExporting}
+                                className="shrink-0 text-emerald-700 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 shadow-sm transition-all active:scale-95"
+                            >
+                                {isExporting ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Download className="h-4 w-4 mr-2" />
+                                )}
+                                Скачать XLSX
+                            </Button>
+                        </div>
                         <AlertDialogDescription>
-                            Загрузите файл Excel (.xlsx) или CSV (.csv) с данными записей.
+                            Загрузите файл Excel (.xlsx) или CSV (.csv) с данными записей или скачайте текущие.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 

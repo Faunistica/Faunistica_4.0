@@ -114,7 +114,7 @@ const Footer: FC<FooterProps> = ({
                     </Button>
 
                     {/* Сохранить всё */}
-                    <Button
+                    {/* <Button
                         onClick={onSaveAll}
                         disabled={isAutoSaving}
                         className="flex-1 md:flex-none md:px-5 font-semibold border-slate-300 text-slate-700 hover:bg-slate-50 transition-all"
@@ -122,11 +122,10 @@ const Footer: FC<FooterProps> = ({
                     >
                         <ShieldCheck className="h-4 w-4 mr-1.5" />
                         {isAutoSaving ? "Сохранение..." : "Сохранить всё"}
-                    </Button>
+                    </Button> */}
 
                     <Button
                         onClick={() => setIsDialogOpen(true)}
-                        disabled={!isValid}
                         className="flex-1 md:flex-none bg-slate-900 text-white hover:bg-slate-800 md:px-8 font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Отправить данные

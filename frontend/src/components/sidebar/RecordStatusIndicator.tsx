@@ -9,6 +9,7 @@ import type { FormSchema } from '@/types/forms';
 
 interface Props {
     index: number;
+    sample: any;
     validationErrors?: Map<number, string[]>;
 }
 
@@ -39,8 +40,8 @@ const STATUS_CONFIG = {
     },
 } as const;
 
-export const RecordStatusIndicator: FC<Props> = ({ index, validationErrors }) => {
-    const status = useRecordStatus(index, validationErrors);
+export const RecordStatusIndicator: FC<Props> = ({ index, sample, validationErrors }) => {
+    const status = useRecordStatus(index, sample, validationErrors);
     const { formState: { errors } } = useFormContext<FormSchema>();
     const config = STATUS_CONFIG[status];
 

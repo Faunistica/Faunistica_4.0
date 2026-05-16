@@ -147,7 +147,7 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                             name={`${prefix}.taxon_rank`}
                             control={control}
                             render={({ field }) => (
-                                <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                                <Select value={field.value || undefined} onValueChange={field.onChange}>
                                     <SelectTrigger aria-invalid={!!err?.taxon_rank}><SelectValue placeholder="Выберите ранг" /></SelectTrigger>
                                     <SelectContent>
                                         {TAXON_RANK_OPTIONS.map(opt => (
@@ -164,8 +164,8 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                             name={`${prefix}.type_status`}
                             control={control}
                             render={({ field }) => (
-                                <Select value={field.value ?? 'none'} onValueChange={field.onChange}>
-                                    <SelectTrigger><SelectValue placeholder="Нет" /></SelectTrigger>
+                                <Select value={field.value || undefined} onValueChange={field.onChange}>
+                                    <SelectTrigger><SelectValue placeholder="Выберите статус" /></SelectTrigger>
                                     <SelectContent>
                                         {TYPE_STATUS_OPTIONS.map(opt => (
                                             <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>

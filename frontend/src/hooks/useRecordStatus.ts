@@ -13,13 +13,12 @@ export type RecordStatus = 'empty' | 'draft' | 'valid' | 'error';
  */
 export function useRecordStatus(
     index: number,
+    sample: Record<string, any>,
     validationErrors?: Map<number, string[]>,
 ): RecordStatus {
-    const { formState: { errors, touchedFields }, getValues } = useFormContext<FormSchema>();
+    const { formState: { errors } } = useFormContext<FormSchema>();
 
     const sampleErrors = errors.samples?.[index] as Record<string, any> | undefined;
-    const sampleTouched = touchedFields.samples?.[index] as Record<string, any> | undefined;
-    const sampleValues = getValues(`samples.${index}`) as Partial<FormSchema['samples'][0]> | undefined;
 
     return useMemo(() => {
         // If mass-validation found errors for this record — always show error
@@ -27,24 +26,28 @@ export function useRecordStatus(
             return 'error';
         }
 
-        // 🟡 Пустая запись — ничего не тронуто
-        if (!sampleTouched || Object.keys(sampleTouched).length === 0) {
+        // 🟡 Пустая запись
+        const hasAnyValue = BLOCKING_FIELDS.some(
+            (field: BlockingFieldName) => {
+                const val = sample?.[field];
+                return val !== undefined && val !== null && val !== '';
+            }
+        );
+
+        if (!hasAnyValue) {
             return 'empty';
         }
 
-        // 🔴 Есть ошибки в блокирующих полях
-        const hasBlockingError = BLOCKING_FIELDS.some(
-            (field: BlockingFieldName) => sampleErrors?.[field] !== undefined
+        // 🟢 Все блокирующие поля заполнены и не имеют ошибок
+        const allBlockingFilled = BLOCKING_FIELDS.every(
+            (field: BlockingFieldName) => {
+                const val = sample?.[field];
+                return val !== undefined && val !== null && val !== '';
+            }
         );
-        if (hasBlockingError) return 'error';
-
-        // 🟢 Все блокирующие поля тронуты и не имеют ошибок
-        const allBlockingTouched = BLOCKING_FIELDS.every(
-            (field: BlockingFieldName) => sampleTouched?.[field] === true
-        );
-        if (allBlockingTouched) return 'valid';
+        if (allBlockingFilled) return 'valid';
 
         // 🔵 В процессе заполнения
         return 'draft';
-    }, [sampleErrors, sampleTouched, sampleValues, validationErrors, index]);
+    }, [sampleErrors, sample, validationErrors, index]);
 }

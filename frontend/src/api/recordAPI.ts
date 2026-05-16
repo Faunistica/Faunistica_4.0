@@ -22,13 +22,12 @@ export const recordAPI = createApi({
             providesTags: ['record']
         }),
         getRecordById: build.query<Types.RecordFull, Types.RecordIdRequest>({
-            query: ({ record_id, user_id }) => ({
+            query: ({ record_id }) => ({
                 url: `/records/${record_id}`,
                 method: 'GET',
-                params: { user_id },
             }),
         }),
-        createRecord: build.mutation<Types.RecordFull, Types.RecordBelonging>({
+        createRecord: build.mutation<Types.RecordFull, Types.CreateRecordRequest>({
             query: (record) => ({
                 url: '/records/',
                 method: 'POST',
@@ -36,19 +35,25 @@ export const recordAPI = createApi({
             }),
             invalidatesTags: ['record']
         }),
-        editRecord: build.mutation<Types.RecordFull, Types.EditRecordRequest>({
-            query: ({ record_id, user_id, ...recordData }) => ({
+        editRecord: build.mutation<Types.UpdateRecordResponse, Types.EditRecordRequest>({
+            query: ({ record_id, data }) => ({
                 url: `/records/${record_id}`,
                 method: 'PUT',
-                params: { user_id },
-                body: recordData,
+                body: data,
             }),
         }),
         deleteRecord: build.mutation<void, Types.RecordIdRequest>({
-            query: ({ record_id, user_id }) => ({
+            query: ({ record_id }) => ({
                 url: `/records/${record_id}`,
                 method: 'DELETE',
-                params: { user_id },
+            }),
+        }),
+        exportRecords: build.mutation<Blob, { user_id: number; publ_id?: number; scope?: string; format?: string }>({
+            query: (params) => ({
+                url: '/records/export',
+                method: 'GET',
+                params,
+                responseHandler: (response) => response.blob(),
             }),
         }),
         // ── Импорт записей из Excel/CSV ──
@@ -69,5 +74,6 @@ export const {
     useCreateRecordMutation,
     useEditRecordMutation,
     useDeleteRecordMutation,
+    useExportRecordsMutation,
     useImportRecordsMutation,
 } = recordAPI;

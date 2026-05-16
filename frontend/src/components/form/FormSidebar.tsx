@@ -27,24 +27,26 @@ interface SidebarProps {
     removeRecord: (index: number) => void;
     validationErrors?: Map<number, string[]>;
     onImportComplete: () => void;
+    samplesCount: number;
 }
 
 // 🔒 Memoized list item — обновляется только при изменении своего индекса
 const SidebarRecordItem = memo(({
     index,
-    sample,
     isActive,
     onSelect,
     onDelete,
     validationErrors,
 }: {
     index: number;
-    sample: any;
     isActive: boolean;
     onSelect: () => void;
     onDelete: () => void;
     validationErrors?: Map<number, string[]>;
 }) => {
+    const { control } = useFormContext<FormSchema>();
+    const sample = useWatch({ control, name: `samples.${index}` as any });
+    
     const recordName = sample?.species || sample?.genus || sample?.family || 'Новая запись';
 
 
@@ -69,7 +71,7 @@ const SidebarRecordItem = memo(({
                 {/* Заголовок: номер + название + статус + удалить */}
                 <div className="flex w-full items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                        <RecordStatusIndicator index={index} validationErrors={validationErrors} />
+                        <RecordStatusIndicator index={index} validationErrors={validationErrors} sample={sample} />
                         <span className={`text-xs font-bold leading-tight truncate ${isActive ? 'text-slate-900' : 'text-slate-700'
                             }`}>
                             {recordName}
@@ -138,11 +140,9 @@ const SidebarRecordItem = memo(({
 SidebarRecordItem.displayName = 'SidebarRecordItem';
 
 const FormSidebar: FC<SidebarProps> = ({
-    activeRecordIndex, setActiveRecordIndex, addRecord, removeRecord, validationErrors, onImportComplete,
+    activeRecordIndex, setActiveRecordIndex, addRecord, removeRecord, validationErrors, onImportComplete, samplesCount
 }) => {
     const { isMobile, setOpenMobile } = useSidebar();
-    const { control } = useFormContext<FormSchema>();
-    const samples = useWatch({ control, name: 'samples' }) ?? [];
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
     return (
@@ -191,7 +191,7 @@ const FormSidebar: FC<SidebarProps> = ({
                             size="sm"
                         >
                             <FileSpreadsheet className="h-4 w-4" />
-                            Импорт из Excel
+                            Работа с Excel
                         </Button>
                     </div>
 
@@ -201,12 +201,11 @@ const FormSidebar: FC<SidebarProps> = ({
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu className="gap-1.5 px-2">
-                                {samples.map((sample, index) => {
+                                {Array.from({ length: samplesCount }).map((_, index) => {
                                     return (
                                         <SidebarRecordItem
                                             key={index}
                                             index={index}
-                                            sample={sample}
                                             isActive={index === activeRecordIndex}
                                             validationErrors={validationErrors}
                                             onSelect={() => {

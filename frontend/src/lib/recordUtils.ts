@@ -2,23 +2,23 @@ import type { RecordData, DraftRecord, RecordFull } from '@/types/api.dto';
 import type { RecordSchema, QuantityField } from '@/types/forms';
 
 export const getFieldFromSexAndLifestage = (sex?: string | null, life_stage?: string | null): QuantityField | null => {
-    if (sex === 'male' && life_stage === 'взрослые') return 'mmm';
-    if (sex === 'male' && life_stage === 'субвзрослые') return 'ssm';
-    if (sex === 'female' && life_stage === 'взрослые') return 'fff';
-    if (sex === 'female' && life_stage === 'субвзрослые') return 'ssf';
-    if ((sex === 'none' || !sex) && life_stage === 'взрослые') return 'adu';
-    if ((sex === 'none' || !sex) && life_stage === 'ювенильные') return 'juv';
+    if (sex === 'male' && life_stage === 'adult') return 'mmm';
+    if (sex === 'male' && life_stage === 'subadult') return 'ssm';
+    if (sex === 'female' && life_stage === 'adult') return 'fff';
+    if (sex === 'female' && life_stage === 'subadult') return 'ssf';
+    if ((sex === 'none' || !sex) && life_stage === 'adult') return 'adu';
+    if ((sex === 'none' || !sex) && life_stage === 'juvenile') return 'juv';
     return null;
 };
 
 export const getSexAndLifestageFromField = (field: string): { sex: string; life_stage: string } => {
     switch (field) {
-        case 'mmm': return { sex: 'male', life_stage: 'взрослые' };
-        case 'ssm': return { sex: 'male', life_stage: 'субвзрослые' };
-        case 'fff': return { sex: 'female', life_stage: 'взрослые' };
-        case 'ssf': return { sex: 'female', life_stage: 'субвзрослые' };
-        case 'adu': return { sex: 'none', life_stage: 'взрослые' };
-        case 'juv': return { sex: 'none', life_stage: 'ювенильные' };
+        case 'mmm': return { sex: 'male', life_stage: 'adult' };
+        case 'ssm': return { sex: 'male', life_stage: 'subadult' };
+        case 'fff': return { sex: 'female', life_stage: 'adult' };
+        case 'ssf': return { sex: 'female', life_stage: 'subadult' };
+        case 'adu': return { sex: 'none', life_stage: 'adult' };
+        case 'juv': return { sex: 'none', life_stage: 'juvenile' };
         default: return { sex: 'none', life_stage: 'none' };
     }
 };
@@ -28,61 +28,31 @@ export const getSexAndLifestageFromField = (field: string): { sex: string; life_
  * where each draft represents a single sample with multiple quantity fields.
  */
 export const groupRecordsIntoDrafts = (records: RecordFull[]): DraftRecord[] => {
-    const draftsMap = new Map<string, DraftRecord>();
+    return records.map(record => {
+        const draft: DraftRecord = {
+            ...record,
+            record_ids: { 'base': record.id },
+        };
 
-    records.forEach(record => {
-        // Create a hash for the combination of Location + Event + Taxon
-        const hash = [
-            record.country, record.region, record.district, record.locality,
-            record.latitude, record.longitude, record.verbatim_date,
-            record.habitat, record.sampling_protocol, record.recorded_by,
-            record.family, record.genus, record.species, record.accepted_name,
-        ].join('|');
-
-        let draft = draftsMap.get(hash);
-        if (!draft) {
-            draft = {
-                ...record,
-                record_ids: {},
-            };
-            draftsMap.set(hash, draft);
+        if (record.specimens) {
+            record.specimens.forEach(spec => {
+                const field = getFieldFromSexAndLifestage(spec.sex, spec.life_stage);
+                if (field) {
+                    (draft as any)[field] = spec.count;
+                }
+            });
         }
 
-        const field = getFieldFromSexAndLifestage(record.sex, record.life_stage);
-        if (field && record.quantity) {
-            (draft as any)[field] = record.quantity;
-            if (draft.record_ids) {
-                draft.record_ids[field] = record.id;
-            }
-        } else {
-            // Store as base record if it doesn't have a quantity yet
-            if (draft.record_ids) {
-                draft.record_ids['base'] = record.id;
-            }
-        }
-
-        // Always take the latest metadata
-        if (record.quantity_type) draft.quantity_type = record.quantity_type;
-        if (record.occurrence_remarks) draft.occurrence_remarks = record.occurrence_remarks;
-        if (record.identification_remarks) draft.identification_remarks = record.identification_remarks;
-        if (record.georef_source) draft.georef_source = record.georef_source;
-        if (record.taxon_rank) draft.taxon_rank = record.taxon_rank;
-        if (record.type_status) draft.type_status = record.type_status;
-        if (record.verbatimcoordinates) draft.verbatimcoordinates = record.verbatimcoordinates;
-        if (record.coordinate_uncertainty) draft.coordinate_uncertainty = record.coordinate_uncertainty;
-        if (record.location_remarks) draft.location_remarks = record.location_remarks;
-        if (record.taxon_remarks) draft.taxon_remarks = record.taxon_remarks;
+        return draft;
     });
-
-    return Array.from(draftsMap.values());
 };
 
 /**
  * Convert a form DraftRecord back to the flat RecordData shape expected by the API.
  * Strips quantity fields and record_ids – caller handles those separately.
  */
-export const draftToRecordData = (draft: Partial<RecordSchema>, publ_id: number): RecordData => {
-    const data: RecordData = { publ_id };
+export const draftToRecordData = (draft: Partial<RecordSchema>): RecordData => {
+    const data: RecordData = {};
 
     // Copy all string/number/boolean fields that exist in RecordData
     const fieldsToCopy: (keyof RecordData)[] = [
@@ -102,8 +72,28 @@ export const draftToRecordData = (draft: Partial<RecordSchema>, publ_id: number)
     for (const key of fieldsToCopy) {
         const val = (draft as any)[key];
         if (val !== undefined) {
-            (data as any)[key] = val;
+            if ((key === 'latitude' || key === 'longitude') && val !== null) {
+                (data as any)[key] = String(val);
+            } else {
+                (data as any)[key] = val;
+            }
         }
+    }
+
+    // Process specimens
+    const specimens: any[] = [];
+    const quantityFields = ['mmm', 'ssm', 'fff', 'ssf', 'adu', 'juv'] as const;
+
+    for (const field of quantityFields) {
+        const count = (draft as any)[field];
+        if (count !== undefined && count !== null && count > 0) {
+            const { sex, life_stage } = getSexAndLifestageFromField(field);
+            specimens.push({ sex, life_stage, count });
+        }
+    }
+
+    if (specimens.length > 0) {
+        data.specimens = specimens;
     }
 
     return data;

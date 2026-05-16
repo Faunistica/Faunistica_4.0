@@ -43,27 +43,7 @@ interface OutletContextType {
     setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
-// ── React.memo wrappers (Requirement #4) ──
-// Каждая карточка перерендеривается только при смене своего index / publ_id.
-const MemoGeographyCard = memo(GeographyCard, (prev, next) =>
-    prev.index === next.index && prev.publ_id === next.publ_id,
-);
-MemoGeographyCard.displayName = 'MemoGeographyCard';
 
-const MemoCollectionEventCard = memo(CollectionEventCard, (prev, next) =>
-    prev.index === next.index && prev.publ_id === next.publ_id,
-);
-MemoCollectionEventCard.displayName = 'MemoCollectionEventCard';
-
-const MemoTaxonomyCard = memo(TaxonomyCard, (prev, next) =>
-    prev.index === next.index,
-);
-MemoTaxonomyCard.displayName = 'MemoTaxonomyCard';
-
-const MemoQuantitiesCard = memo(QuantitiesCard, (prev, next) =>
-    prev.index === next.index,
-);
-MemoQuantitiesCard.displayName = 'MemoQuantitiesCard';
 
 // ═════════════════════════════════════════════════════════════════════════
 // FormFilling — тонкий оркестратор
@@ -76,6 +56,7 @@ const FormFilling: FC = () => {
     const user_id = useSelector((state: RootState) => state.user.user_id);
 
     const [activeRecordIndex, setActiveRecordIndex] = useState(0);
+    const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
 
     // ── RTK Query ──
     const { data: recordsData, isLoading, refetch } = useGetRecordsDataQuery(
@@ -95,9 +76,18 @@ const FormFilling: FC = () => {
     const fieldArray = useFieldArray({ control, name: 'samples' });
     const { fields, remove } = fieldArray;
 
+    // ── РЕГИСТРАЦИЯ СКРЫТЫХ ПОЛЕЙ ──
+    // Это критически важно: RHF игнорирует в update/getValues объекты, которые не зарегистрированы.
+    // Если record_ids потеряются, автосохранение будет плодить клоны.
+    useEffect(() => {
+        fields.forEach((_, index) => {
+            methods.register(`samples.${index}.record_ids` as any);
+        });
+    }, [fields, methods]);
+
     // ── Хук: серверная персистенция ──
     const { handleSave, handleManualSave, deleteServerRecords, createRecord } =
-        useRecordPersistence({ publ_id, user_id: user_id!, methods });
+        useRecordPersistence({ publ_id, user_id: user_id!, methods, fieldArray });
 
     // ── Хук: валидация (блокировка + массовая) ──
     const {
@@ -123,21 +113,30 @@ const FormFilling: FC = () => {
         handleSave,
     });
 
-    // ── Загрузка данных (только если форма не «грязная») ──
+    // ── Загрузка данных (только при первоначальной загрузке) ──
     useEffect(() => {
-        if (recordsData?.items && !methods.formState.isDirty) {
+        if (recordsData?.items && !hasLoadedInitial) {
             const drafts = groupRecordsIntoDrafts(recordsData.items);
             reset({ samples: drafts.length > 0 ? (drafts as any) : [{}] });
+            setHasLoadedInitial(true);
         }
-    }, [recordsData, reset, methods.formState.isDirty]);
+    }, [recordsData, reset, hasLoadedInitial]);
 
     // ── Удаление записи ──
     const removeRecord = useCallback(
         async (index: number) => {
             await deleteServerRecords(index);
-            remove(index);
+
+            const currentValues = getValues();
+            const newSamples = (currentValues.samples || []).filter((_, i) => i !== index);
+
+            reset({
+                ...currentValues,
+                samples: newSamples
+            }); // Убрали keepDirty, чтобы избежать багов RHF с коррупцией стейта и дублированием записей
+
             setActiveRecordIndex((prev) => {
-                const newLength = fields.length - 1;
+                const newLength = newSamples.length;
                 if (newLength === 0) return 0;
                 if (prev === index) return 0;
                 if (index < prev) return prev - 1;
@@ -145,15 +144,19 @@ const FormFilling: FC = () => {
             });
             clearValidationError(index);
         },
-        [deleteServerRecords, remove, fields.length, clearValidationError],
+        [deleteServerRecords, getValues, reset, clearValidationError],
     );
 
     // ── Импорт завершён — перезагрузить данные ──
-    const handleImportComplete = useCallback(() => {
-        refetch();
+    const handleImportComplete = useCallback(async () => {
+        const { data } = await refetch();
+        if (data?.items) {
+            const drafts = groupRecordsIntoDrafts(data.items);
+            reset({ samples: drafts.length > 0 ? (drafts as any) : [{}] });
+        }
         setActiveRecordIndex(0);
         resetValidationErrors();
-    }, [refetch, resetValidationErrors]);
+    }, [refetch, resetValidationErrors, reset]);
 
     // ── Финальная отправка ──
     const handleFinalSubmit = useCallback(async () => {
@@ -193,6 +196,7 @@ const FormFilling: FC = () => {
                 className="flex-1"
             >
                 <FormSidebar
+                    samplesCount={fields.length}
                     activeRecordIndex={activeRecordIndex}
                     setActiveRecordIndex={setActiveRecordIndex}
                     addRecord={addRecord}
@@ -206,34 +210,32 @@ const FormFilling: FC = () => {
                         <div className="max-w-6xl mx-auto space-y-6">
                             {fields.length > 0 && (
                                 <>
-                                    <div className="relative z-20 focus-within:z-50 transition-all duration-200">
+                                    <div className="relative z-20 focus-within:z-50 transition-all duration-200 mb-6">
                                         <ArticleSourceCard publ_id={publ_id} />
                                     </div>
-                                    <div className="relative z-15 focus-within:z-50 transition-all duration-200">
-                                        <MemoGeographyCard
-                                            key={`geo-${activeRecordIndex}`}
-                                            index={activeRecordIndex}
-                                            publ_id={publ_id}
-                                        />
-                                    </div>
-                                    <div className="relative z-10 focus-within:z-50 transition-all duration-200">
-                                        <MemoCollectionEventCard
-                                            key={`event-${activeRecordIndex}`}
-                                            index={activeRecordIndex}
-                                            publ_id={publ_id}
-                                        />
-                                    </div>
-                                    <div className="relative z-5 focus-within:z-50 transition-all duration-200">
-                                        <MemoTaxonomyCard
-                                            key={`tax-${activeRecordIndex}`}
-                                            index={activeRecordIndex}
-                                        />
-                                    </div>
-                                    <div className="relative z-0 focus-within:z-50 transition-all duration-200">
-                                        <MemoQuantitiesCard
-                                            key={`quant-${activeRecordIndex}`}
-                                            index={activeRecordIndex}
-                                        />
+                                    <div key={fields[activeRecordIndex]?.id || activeRecordIndex} className="space-y-6">
+                                        <div className="relative z-15 focus-within:z-50 transition-all duration-200">
+                                            <GeographyCard
+                                                index={activeRecordIndex}
+                                                publ_id={publ_id}
+                                            />
+                                        </div>
+                                        <div className="relative z-10 focus-within:z-50 transition-all duration-200">
+                                            <CollectionEventCard
+                                                index={activeRecordIndex}
+                                                publ_id={publ_id}
+                                            />
+                                        </div>
+                                        <div className="relative z-5 focus-within:z-50 transition-all duration-200">
+                                            <TaxonomyCard
+                                                index={activeRecordIndex}
+                                            />
+                                        </div>
+                                        <div className="relative z-0 focus-within:z-50 transition-all duration-200">
+                                            <QuantitiesCard
+                                                index={activeRecordIndex}
+                                            />
+                                        </div>
                                     </div>
                                 </>
                             )}

@@ -38,7 +38,7 @@ const GeographyCard: FC<Props> = ({ index }) => {
     const isCustom = georefSource === 'vol';
 
     const [showMap, setShowMap] = useState(false);
-    const [coordFormat, setCoordFormat] = useState<'DD' | 'DM' | 'DMS'>('DD');
+    const [coordFormat, setCoordFormat] = useState<'DD' | 'DM' | 'DMS' | ''>('');
 
     useEffect(() => {
         if (isCustom) {
@@ -49,7 +49,7 @@ const GeographyCard: FC<Props> = ({ index }) => {
     // Reset local state when switching samples
     useEffect(() => {
         setShowMap(false);
-        setCoordFormat('DD');
+        setCoordFormat('');
     }, [index]);
 
     const handleMapSelect = (lat: number, lng: number) => {
@@ -97,6 +97,8 @@ const GeographyCard: FC<Props> = ({ index }) => {
                         <Label className="font-medium">Происхождение координат</Label>
                         <Controller
                             name={`${prefix}.georef_source`}
+                            // это лютый костыль, но без него не работает
+                            defaultValue={"none"}
                             control={control}
                             render={({ field }) => (
                                 <RadioGroup
@@ -134,12 +136,10 @@ const GeographyCard: FC<Props> = ({ index }) => {
                         <Controller
                             name={`${prefix}.country`}
                             control={control}
-                            defaultValue="RU"
                             render={({ field }) => (
                                 <Select
                                     onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                    value={field.value}
+                                    value={field.value || undefined}
                                 >
                                     <SelectTrigger id={`${prefix}.country`} className="w-full" aria-invalid={!!err?.country}>
                                         <SelectValue placeholder="Выберите страну" />
@@ -219,8 +219,8 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <Label>Формат ввода координат</Label>
-                                        <Select value={coordFormat} onValueChange={(val: 'DD' | 'DM' | 'DMS') => setCoordFormat(val)}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <Select value={coordFormat || undefined} onValueChange={(val: 'DD' | 'DM' | 'DMS') => setCoordFormat(val)}>
+                                            <SelectTrigger><SelectValue placeholder="Выберите формат" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="DD">Десятичные градусы (DD)</SelectItem>
                                                 <SelectItem value="DM">Градусы и минуты (DM)</SelectItem>

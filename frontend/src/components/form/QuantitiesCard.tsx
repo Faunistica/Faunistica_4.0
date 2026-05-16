@@ -9,6 +9,8 @@ import { Hash } from 'lucide-react';
 import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/types/forms';
 import type { FormSchema } from '@/types/forms';
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 interface Props {
     index: number;
 }
@@ -49,23 +51,35 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* ── Quantity fields grid ── */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    {quantityFields.map(({ key, label, color }) => (
-                        <div key={key} className="space-y-1.5">
-                            <Label htmlFor={`${prefix}.${key}`} className={`text-xs font-medium ${color}`}>
-                                {label}
-                            </Label>
-                            <Input
-                                id={`${prefix}.${key}`}
-                                type="number"
-                                min={0}
-                                placeholder="0"
-                                className="text-center"
-                                {...register(`${prefix}.${key}` as any, { valueAsNumber: true })}
-                            />
-                        </div>
-                    ))}
-                </div>
+                <TooltipProvider>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        {quantityFields.map(({ key, label, color }) => (
+                            <div key={key} className="space-y-1.5 min-w-0">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Label
+                                            htmlFor={`${prefix}.${key}`}
+                                            className={`text-[10px] uppercase tracking-wider font-semibold ${color} truncate block cursor-help`}
+                                        >
+                                            {label}
+                                        </Label>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-xs">
+                                        {label}
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Input
+                                    id={`${prefix}.${key}`}
+                                    type="number"
+                                    min={0}
+                                    placeholder="0"
+                                    className="text-center h-9 focus-visible:ring-1 focus-visible:ring-slate-300"
+                                    {...register(`${prefix}.${key}` as any, { valueAsNumber: true })}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </TooltipProvider>
 
                 {/* ── Unit type + Total ── */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-5">
@@ -75,7 +89,7 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                             name={`${prefix}.quantity_type` as any}
                             control={control}
                             render={({ field }) => (
-                                <Select value={field.value ?? 'особей'} onValueChange={field.onChange}>
+                                <Select value={field.value || undefined} onValueChange={field.onChange}>
                                     <SelectTrigger><SelectValue placeholder="Выберите единицы" /></SelectTrigger>
                                     <SelectContent>
                                         {QUANTITY_TYPE_OPTIONS.map(opt => (
