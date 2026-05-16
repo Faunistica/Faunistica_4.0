@@ -4,8 +4,8 @@ import asyncio
 import logging
 import os
 import sys
-from datetime import UTC, datetime
-from uuid import UUID, uuid5
+from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -22,7 +22,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 SEED_DT = datetime(2024, 6, 1, 12, 0, 0)
-SEED_NS = UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+_SEED_UUIDS: list[UUID] = [
+    UUID("6f53928a-ecff-42e0-bf58-1e16bdfd63b2"),
+    UUID("20358368-7c29-4b30-9de3-94ae849a87f7"),
+    UUID("24e3c13e-dd60-4668-99e6-bb91ed3a728f"),
+    UUID("216ad40d-236a-48b7-9f92-a4e85f28b62c"),
+    UUID("84ed3c6d-2f57-4ee5-a74c-d4b612343c7c"),
+    UUID("cca913fb-6960-4e1f-bb60-a1058e5bed63"),
+    UUID("5d512f23-9af7-4ed1-b6c7-4aba615dca56"),
+    UUID("77203fce-a3af-434b-a3dc-b78faf455159"),
+    UUID("0cee6c03-eaff-4d81-bb61-7815c5b27023"),
+    UUID("64c6ca7a-7d3f-468b-a857-17d29bf8f034"),
+]
 
 
 def build_record(i: int, data: dict) -> EventRecord:
@@ -34,7 +46,7 @@ def build_record(i: int, data: dict) -> EventRecord:
         language=data.get("language", "rus"),
         submission_type="submit",
     )
-    metadata.id = uuid5(SEED_NS, f"record-{i}")
+    metadata.id = _SEED_UUIDS[i]
     metadata.created_at = SEED_DT
     metadata.updated_at = SEED_DT
 
@@ -362,7 +374,7 @@ async def seed() -> None:
                 "tlg_username": "dev_user",
                 "tlg_name": "Dev User",
                 "hash": get_password_hash(passwords[0]),
-                "hash_date": SEED_DT,
+                "hash_date": datetime.now(),
                 "reg_stat": 1,
                 "age": 30,
                 "lng": "ru",
@@ -381,7 +393,7 @@ async def seed() -> None:
                 "tlg_username": "test_user",
                 "tlg_name": "Test User",
                 "hash": get_password_hash(passwords[1]),
-                "hash_date": SEED_DT,
+                "hash_date": datetime.now(),
                 "reg_stat": 1,
                 "age": 25,
                 "lng": "en",
