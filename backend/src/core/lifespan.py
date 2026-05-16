@@ -6,20 +6,35 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import aiohttp
+from alembic.autogenerate import compare_metadata
 from alembic.config import Config
+from alembic.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from fastapi import FastAPI
-from sqlalchemy import text
+from sqlalchemy import Connection, text
 
 from bot import bot
-from core.check_schema import run_check_schema
 from core.config import settings
 from core.database import _engine, init_db, ping_db
+from core.model import Base
 from schema.geo import RegionData
 
 _ALEMBIC_CFG_PATH = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
 
 logger = logging.getLogger(__name__)
+
+
+def _compare(conn: Connection) -> None:
+    context = MigrationContext.configure(conn)
+    diff = compare_metadata(context, Base.metadata)
+
+    if len(diff) == 0:
+        return
+
+    for i in diff:
+        logger.error(" %s", i)
+
+    raise RuntimeError("Database schema diff detected")
 
 
 async def _check_migrations() -> None:
@@ -45,31 +60,16 @@ async def _check_migrations() -> None:
         logger.critical(msg)
         raise RuntimeError(msg)
 
+    async with _engine.connect() as conn:
+        await conn.run_sync(_compare)
+
     logger.info("Alembic migrations are up to date (head: %s)", head_rev)
-
-
-async def _check_schema_dev() -> None:
-    """Fine-grained model-vs-DB schema check for dev mode only."""
-    mismatches, warnings = await run_check_schema(_engine)
-    if mismatches:
-        logger.warning("DEV: Schema mismatches found between models and DB")
-        for m in mismatches:
-            logger.warning("  %s", m)
-    for w in warnings:
-        logger.warning("DEV: Schema warning: %s", w)
-    if not mismatches:
-        logger.info("DEV: Model and DB schemas are in sync")
-    else:
-        raise RuntimeError("Model and DB schema are out of sync")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     await init_db()
     await _check_migrations()
-
-    if settings.DEV_MODE:
-        await _check_schema_dev()
 
     if not await ping_db():
         logger.critical("Database is not available. Application cannot start.")
