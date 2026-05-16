@@ -21,7 +21,7 @@ from service.records.util import _create_record_metadata, _flatten_for_db
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-SEED_DT = datetime(2024, 6, 1, 12, 0, 0, tzinfo=UTC)
+SEED_DT = datetime(2024, 6, 1, 12, 0, 0)
 SEED_NS = UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 
