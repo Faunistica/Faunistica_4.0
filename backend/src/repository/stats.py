@@ -1,13 +1,13 @@
-from typing import Any
-
 from sqlalchemy import func, select, text
+from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.enums import UserState
 from core.model import Action, EventRecord, User
+from schema.common import ProjectStats, UserStats
 
 
-async def get_project_statistics(session: AsyncSession) -> dict[str, Any]:
+async def get_project_statistics(session: AsyncSession) -> ProjectStats:
     # TODO: Performance optimization point - consider caching
 
     total_volunteers = await session.scalar(
@@ -80,7 +80,7 @@ async def get_user_by_name(session: AsyncSession, name: str) -> User | None:
     return await session.scalar(select(User).where(User.name.like(f"%{name}%")))
 
 
-async def get_user_statistics(session: AsyncSession, user_id: int) -> dict[str, Any]:
+async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     records_entered = await session.scalar(
         select(func.count())
         .select_from(EventRecord)
@@ -128,7 +128,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> dict[str, 
 
 async def get_volunteers_achievements(
     session: AsyncSession,
-) -> list[Any]:
+) -> list[Row]:
     stmt = text("""
         SELECT a.user_id, a.object, a.datetime,
                u.name, u.tlg_name, u.tlg_username

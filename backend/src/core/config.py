@@ -70,7 +70,7 @@ class AppSettings(CamelCaseSettings):
     GLOBAL_RATE_LIMIT: str = "100/minute"
     ALLOWED_ORIGINS: list[str] = []
     MAX_IMPORT_FILE_BYTES: int = 5 * 1024 * 1024  # 5MB
-    MAX_RECORDS_PER_PUBLICATION: int = 1000
+    MAX_USER_RECORDS_PER_PUBLICATION: int = 1000
 
 
 class DataSettings(CamelCaseSettings):

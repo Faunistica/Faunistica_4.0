@@ -4,7 +4,7 @@ import json
 import logging
 
 from fastapi import HTTPException
-from geopy.exc import GeocoderTimedOut
+from geopy.exc import GeocoderTimedOut, GeopyError
 from geopy.geocoders import Nominatim
 
 from core.config import settings
@@ -65,10 +65,10 @@ def get_location_names(lat: float, lon: float) -> ReverseGeoCodeLocation:
 
         return ReverseGeoCodeLocation(country=country, region=region, district=district)
     except GeocoderTimedOut as e:
-        logger.error(f"GeocoderTimedOut: {e}", exc_info=True)
+        logger.error("GeocoderTimedOut: %s", e, exc_info=True)
         raise HTTPException(status_code=408, detail="Geocoding service timeout") from e
-    except Exception as e:
-        logger.error(f"HTTP Error: {e}", exc_info=True)
+    except GeopyError as e:
+        logger.error("Geocoding error: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 

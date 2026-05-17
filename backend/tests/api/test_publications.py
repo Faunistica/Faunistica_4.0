@@ -20,7 +20,7 @@ async def test_get_current_publication_with_queue(
     response = await authenticated_client.get("/api/publications/current")
     assert response.status_code == 200
     data = response.json()
-    assert data[0]["publ_id"] == user.publ_id
+    assert data[0]["publ_id"] == int(user.items.split("|")[0])
 
 
 @pytest.mark.asyncio
@@ -105,16 +105,17 @@ async def test_complete_queue_advancement(
         result = await session.execute(stmt)
         user = result.scalar_one()
 
-        user.items = f"{publ2_id}|{publ3.publ_id}"
+        user.items = f"{publ1_id}|{publ2_id}|{publ3.publ_id}"
         await session.commit()
 
+    # Complete first publication (was items[0]), queue advances to publ2
     response = await authenticated_client.post(
         f"/api/publications/{publ1_id}/complete",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
-    # Complete second publication, should get third
+    # Complete second publication (now items[0]), queue advances to publ3
     response = await authenticated_client.post(
         f"/api/publications/{publ2_id}/complete",
         json={"processing_level": "full"},
@@ -128,6 +129,7 @@ async def test_complete_queue_advancement(
     )
     assert response.status_code == 204
 
+    # Queue is empty, completing again should fail
     response = await authenticated_client.post(
         f"/api/publications/{publ3.publ_id}/complete",
         json={"processing_level": "full"},
