@@ -25,8 +25,8 @@ async def _seed_records(
             publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
-            latitude=55.5,
-            longitude=37.5,
+            latitude="55.5",
+            longitude="37.5",
             created_at=datetime.now(),
         )
         session.add(record)
@@ -42,7 +42,7 @@ async def test_fau50_detected(
         action_service = ActionService(session)
 
         user = seed_data["users"][2]
-        publ_id = user.publ_id
+        publ_id = int(user.items.split("|")[0])
         assert publ_id is not None
 
         await _seed_records(session, user.user_id, publ_id, 49)
@@ -53,8 +53,8 @@ async def test_fau50_detected(
             publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
-            latitude=55.5,
-            longitude=37.5,
+            latitude="55.5",
+            longitude="37.5",
             created_at=datetime.now(),
         )
         session.add(fiftieth)
@@ -83,8 +83,8 @@ async def test_fau50_detected(
             publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
-            latitude=55.5,
-            longitude=37.5,
+            latitude="55.5",
+            longitude="37.5",
             created_at=datetime.now(),
         )
         session.add(hundredth)
@@ -122,7 +122,7 @@ async def test_fau50_not_duplicated(
         action_service = ActionService(session)
 
         user = seed_data["users"][2]
-        publ_id = user.publ_id
+        publ_id = int(user.items.split("|")[0])
         assert publ_id is not None
 
         existing_action = Action(
@@ -140,8 +140,8 @@ async def test_fau50_not_duplicated(
             publ_id=publ_id,
             type="rec_ok",
             genus="Testus",
-            latitude=55.5,
-            longitude=37.5,
+            latitude="55.5",
+            longitude="37.5",
             created_at=datetime.now(),
         )
         session.add(new_record)

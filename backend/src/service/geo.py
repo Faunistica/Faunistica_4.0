@@ -1,9 +1,13 @@
+from __future__ import annotations
+
+import json
 import logging
 
 from fastapi import HTTPException
-from geopy.exc import GeocoderTimedOut
+from geopy.exc import GeocoderTimedOut, GeopyError
 from geopy.geocoders import Nominatim
 
+from core.config import settings
 from schema.geo import GeoFilters, RegionData, ReverseGeoCodeLocation
 
 logger = logging.getLogger(__name__)
@@ -61,10 +65,10 @@ def get_location_names(lat: float, lon: float) -> ReverseGeoCodeLocation:
 
         return ReverseGeoCodeLocation(country=country, region=region, district=district)
     except GeocoderTimedOut as e:
-        logger.error(f"GeocoderTimedOut: {e}", exc_info=True)
+        logger.error("GeocoderTimedOut: %s", e, exc_info=True)
         raise HTTPException(status_code=408, detail="Geocoding service timeout") from e
-    except Exception as e:
-        logger.error(f"HTTP Error: {e}", exc_info=True)
+    except GeopyError as e:
+        logger.error("Geocoding error: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -76,3 +80,45 @@ def dms_to_degrees(
     minutes = minutes if minutes is not None else 0
     seconds = seconds if seconds is not None else 0
     return degrees + (minutes / 60) + (seconds / 3600)
+
+
+class UralBorder:
+    """Lazy-loaded Ural border polygon for point-in-polygon containment check."""
+
+    _polygon: list[list[float]] | None = None
+
+    @classmethod
+    def _load(cls) -> list[list[float]]:
+        path = settings.URAL_BORDER_PATH
+        with open(path) as f:
+            data = json.load(f)
+        coords = data["features"][0]["geometry"]["coordinates"][0]
+        return [[float(c[0]), float(c[1])] for c in coords]
+
+    @classmethod
+    def contains(cls, lon: float, lat: float) -> bool:
+        """Test if point (lon, lat) is inside the Ural border polygon.
+
+        Uses ray casting algorithm on GeoJSON polygon (lon/lat order).
+        """
+
+        # check the bounding recrangle first
+        if lat < 48 or lat > 75 or lon < 51 or lon > 75:
+            return False
+
+        if cls._polygon is None:
+            cls._polygon = cls._load()
+
+        poly = cls._polygon
+        n = len(poly)
+        inside = False
+        j = n - 1
+        for i in range(n):
+            lon_i, lat_i = poly[i]
+            lon_j, lat_j = poly[j]
+            if ((lat_i > lat) != (lat_j > lat)) and (
+                lon < (lon_j - lon_i) * (lat - lat_i) / (lat_j - lat_i) + lon_i
+            ):
+                inside = not inside
+            j = i
+        return inside

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from core.config import settings
 from core.dependencies import ClientIP, DBSession
+from core.enums import UserState
 from core.rate_limiter import limiter
 from core.security import check_password, set_response_token_cookies
 from repository.user import (
@@ -42,6 +43,21 @@ async def login(
         logger.info("User not found: %s", data.username)
         raise HTTPException(status_code=404, detail="User not found")
 
+    if user.name is None or user.reg_stat not in (
+        UserState.REG_COMPLETED,
+        UserState.SUPPORT,
+        UserState.SURVEY_AGE,
+        UserState.SURVEY_PREFERENCES,
+        UserState.SURVEY_LANGUAGE,
+        UserState.SURVEY_RATING,
+        UserState.SURVEY_REGION,
+        UserState.SURVEY_EMAIL,
+        UserState.SURVEY_SEX,
+        UserState.RENAME,
+    ):
+        logger.info("User not fully registered: %s", data.username)
+        raise HTTPException(status_code=403, detail="Registration not completed")
+
     if user.hash is None:
         logger.info("User has no password hash: %s", data.username)
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -57,7 +73,7 @@ async def login(
     if user.hash_date is not None:
         now = datetime.now()
         minutes_since_hash = (now - user.hash_date).total_seconds() / 60
-        if minutes_since_hash > settings.PASSWORD_EXPIRE_SECONDS:
+        if minutes_since_hash > settings.PASSWORD_EXPIRE_MINUTES:
             logger.info("Password expired for user: %s", data.username)
             raise HTTPException(status_code=401, detail="Password expired")
 

@@ -27,7 +27,7 @@ async def import_records(
 ) -> ImportResult:
     try:
         content = await file.read()
-    except Exception as e:
+    except OSError as e:
         raise HTTPException(
             detail="Couldn't read file", status_code=status.HTTP_404_NOT_FOUND
         ) from e
@@ -41,13 +41,13 @@ async def import_records(
 
     filename = file.filename or ""
     if filename.endswith(".xlsx"):
-        records = read_excel(content)
+        records, total = await read_excel(content)
     elif filename.endswith(".csv"):
-        records = read_csv(content)
+        records, total = await read_csv(content)
     else:
         raise HTTPException(
             status_code=400,
             detail="Couldn't determine file type: file extention is not xlsx or csv",
         )
 
-    return await service.import_records(records, token.user_id, ip)
+    return await service.import_records(records, token.user_id, ip, total_count=total)
