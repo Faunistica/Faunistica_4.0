@@ -2,7 +2,7 @@ import logging
 from collections.abc import AsyncGenerator
 
 from sqlalchemy import text
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -34,10 +34,13 @@ async def get_session() -> AsyncGenerator[AsyncSession]:
             yield session
         except IntegrityError as e:
             await session.rollback()
-            raise DBException from e
+            raise DBException("Database integrity conflict", 409, "DB_CONFLICT") from e
+        except OperationalError as e:
+            await session.rollback()
+            raise DBException("Database unavailable", 503, "DB_UNAVAILABLE") from e
         except SQLAlchemyError as e:
             await session.rollback()
-            raise DBException from e
+            raise DBException("Database error", 500, "DB_ERROR") from e
 
 
 async def init_db() -> None:
@@ -49,7 +52,7 @@ async def ping_db() -> bool:
     try:
         async with _engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
-    except Exception:
+    except SQLAlchemyError:
         logger.exception("couldn't ping DB")
         return False
     return True

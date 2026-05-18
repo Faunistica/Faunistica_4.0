@@ -40,7 +40,7 @@ async def test_search_doesnt_work_without_authentication(
         "/api/geo/search",
         params={"field": "region", "text": "Москва"},
     )
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio

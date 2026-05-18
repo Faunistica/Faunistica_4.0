@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
-from core.dependencies import DBSession
+from core.database import get_session
 from core.exceptions import AdminOnlyError, InvalidTokenError
 from repository.user import get_user
 from schema.jwt import Token, TokenPayload
@@ -135,8 +135,7 @@ def verify_token(token: str) -> Token:
 
 
 async def get_jwt_user(
-    request: Request,
-    session: DBSession,
+    request: Request, session: Annotated[AsyncSession, Depends(get_session)]
 ) -> UserMinimal:
     token = request.cookies.get("access_token")
     if not token:

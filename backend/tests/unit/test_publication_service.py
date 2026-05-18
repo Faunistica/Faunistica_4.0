@@ -56,8 +56,8 @@ class TestValidateAccess:
 
     @pytest.mark.asyncio
     async def test_valid_access(self, publication_service: PublicationService) -> None:
-        """Test that validate_access passes when user.publ_id matches."""
-        mock_user = User(user_id=1, publ_id=123)
+        """Test that validate_access passes when user.items[0] matches."""
+        mock_user = User(user_id=1, items="123")
         mock_publ = Publication(
             publ_id=123,
             type="A",
@@ -78,7 +78,7 @@ class TestValidateAccess:
         self, publication_service: PublicationService
     ) -> None:
         """Test that validate_access raises PublicationForbiddenError when mismatch."""
-        mock_user = User(user_id=1, publ_id=456)
+        mock_user = User(user_id=1, items="456")
         mock_publ = Publication(
             publ_id=123,
             type="A",
@@ -99,7 +99,7 @@ class TestValidateAccess:
         publication_service: PublicationService,
     ) -> None:
         """Test that validate_access raises PublicationNotFoundError when publication doesn't exist."""
-        mock_user = User(user_id=1, publ_id=123)
+        mock_user = User(user_id=1, items="123")
 
         self.mock_get_user.return_value = mock_user
         self.mock_get_pub.return_value = None
@@ -153,7 +153,7 @@ class TestComplete:
         expected_level: ProcessingLevel,
     ) -> None:
         """Test complete with various processing levels."""
-        mock_user = User(user_id=1, publ_id=123, items="456|789")
+        mock_user = User(user_id=1, items="123|456|789")
         next_publ = Publication(
             publ_id=456,
             author="Author 2",

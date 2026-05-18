@@ -4,7 +4,8 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import update
 
-from core.dependencies import DBSession, TokenUser
+from core import model
+from core.dependencies import DBSession
 from core.exceptions import (
     NoPublicationsAssignedError,
     PublicationForbiddenError,
@@ -32,17 +33,32 @@ class PublicationService:
         self.session = session
         self.actions = action_service
 
+    def _get_current_publ_id(self, user: User) -> int | None:
+        """Return items[0] as current publ_id, or None if items is empty."""
+        queue = self._pipe_to_array(user.items) if user.items else []
+        return queue[0] if queue else None
+
     async def validate_access(
-        self, publ_id: int, *, user_id: int | None = None, user: User | None = None
+        self,
+        publ: int | model.Publication,
+        *,
+        user_id: int | None = None,
+        user: User | None = None,
     ) -> Publication:
-        """Raises PublicationForbiddenError if user.publ_id != publ_id."""
-        # Check if publication exists
-        publ = await get_publication(self.session, publ_id)
-        if publ is None:
-            logger.info(
-                "user %d requested access non-existend publication %d", user_id, publ_id
-            )
-            raise PublicationNotFoundError(publ_id)
+        if isinstance(publ, int):
+            publ_db = await get_publication(self.session, publ)
+
+            if publ_db is None:
+                logger.info(
+                    "user %d requested access non-existend publication %d",
+                    user_id,
+                    publ,
+                )
+                raise PublicationNotFoundError(publ)
+        else:
+            publ_db = publ
+
+        publ_id = publ_db.publ_id
 
         if user is None:
             if user_id is None:
@@ -50,14 +66,15 @@ class PublicationService:
             user = await get_user_expect(self.session, user_id)
 
         user_id = user.user_id
+        current_publ_id = self._get_current_publ_id(user)
 
-        if user.publ_id is None:
+        if current_publ_id is None:
             raise NoPublicationsAssignedError(user_id)
 
-        if user.publ_id != publ_id:
+        if current_publ_id != publ_id:
             raise PublicationForbiddenError(user_id, publ_id)
 
-        return Publication.model_validate(publ)
+        return Publication.model_validate(publ_db)
 
     async def complete(
         self,
@@ -66,88 +83,68 @@ class PublicationService:
         level: ProcessingLevel,
         ip: str | None,
     ) -> Publication | None:
-        """
-        Single transaction: validate access, log action, advance queue,
-        update user.publ_id and user.items, commit.
-        Returns the next publication after advancing, or None if queue empty.
-        """
         user = await get_user_expect(self.session, user_id)
         await self.validate_access(publ_id, user=user)
 
-        # Log action (no commit - part of same transaction)
         await self.actions.log_publ_complete(user_id, level, publ_id, ip)
 
-        # Advance queue
+        # Advance queue: items includes current at position 0, pop it
         queue = self._pipe_to_array(user.items) if user.items else []
-
-        # Remove publ_id from queue if it's at the front
-        if queue and queue[0] == publ_id:
+        if queue:
+            if queue[0] != publ_id:
+                logger.warning(
+                    "user %d completed publ %d but queue head is %d;"
+                    "validation passed, popping anyway",
+                    user_id,
+                    publ_id,
+                    queue[0],
+                )
             queue.pop(0)
 
-        next_publ_id = queue[0] if queue else None
         new_items = self._array_to_pipe(queue)
+        next_publ_id = queue[0] if queue else None
 
-        stmt = (
-            update(User)
-            .where(User.user_id == user_id)
-            .values(publ_id=next_publ_id, items=new_items)
-        )
+        stmt = update(User).where(User.user_id == user_id).values(items=new_items)
         await self.session.execute(stmt)
-        await self.session.commit()
 
         if next_publ_id is None:
             return None
 
         next_publ = await get_publication_expect(self.session, next_publ_id)
-        return Publication.model_validate(next_publ)
-
-    # FIXME: remove
-    async def assign_current(self, user_id: int) -> Publication | None:
-        """
-        Assign next publication from queue if user.publ_id is None.
-        Returns the assigned publication or None if queue empty.
-        """
-        user = await get_user_expect(self.session, user_id)
-
-        if user.publ_id is not None:
-            publ = await get_publication_expect(self.session, user.publ_id)
-            return Publication.model_validate(publ)
-
-        queue = self._pipe_to_array(user.items) if user.items else []
-        if not queue:
-            return None
-
-        next_publ_id = queue[0]
-
-        # Update user's publ_id
-        stmt = update(User).where(User.user_id == user_id).values(publ_id=next_publ_id)
-        await self.session.execute(stmt)
         await self.session.commit()
 
-        publ = await get_publication_expect(self.session, next_publ_id)
+        return Publication.model_validate(next_publ)
+
+    async def assign_current(self, user_id: int) -> Publication | None:
+        """Return current publication from items[0], or None if queue empty."""
+        user = await get_user_expect(self.session, user_id)
+        current_publ_id = self._get_current_publ_id(user)
+
+        if current_publ_id is None:
+            return None
+
+        publ = await get_publication_expect(self.session, current_publ_id)
         return Publication.model_validate(publ)
 
     async def get_current(
         self,
-        token_user: TokenUser,
+        *,
+        user: User | None = None,
+        user_id: int | None = None,
         with_queue: bool = False,
     ) -> list[Publication]:
-        """Parse queue, resolve publ_ids, return publications."""
-        user_id = token_user.user_id
-        user = await get_user_expect(self.session, user_id)
+        if user is None:
+            if user_id is None:
+                raise ValueError("both user and user_id are None")
+            user = await get_user_expect(self.session, user_id)
+
+        publ_ids = self._pipe_to_array(user.items) if user.items else []
 
         if not with_queue:
-            # Return only current publication
-            if user.publ_id is None:
+            if not publ_ids:
                 return []
-
-            publ = await get_publication_expect(self.session, user.publ_id)
+            publ = await get_publication_expect(self.session, publ_ids[0])
             return [Publication.model_validate(publ)]
-
-        # Return all: current + queue
-        publ_ids: list[int] = [user.publ_id] if user.publ_id else []
-        queue = self._pipe_to_array(user.items) if user.items else []
-        publ_ids.extend(queue)
 
         if not publ_ids:
             return []

@@ -87,7 +87,7 @@ async def logs(message: Message) -> None:
 
     except ValueError:
         await message.answer(Messages.incorrect_date())
-    except Exception:
+    except (FileNotFoundError, PermissionError, OSError):
         await message.answer(Messages.unexpected_error())
 
 

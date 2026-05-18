@@ -8,7 +8,7 @@ from fastapi import HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
-from core.exceptions import AdminOnlyError
+from core.exceptions import AdminOnlyError, InvalidTokenError
 from core.security import (
     PasswordCheckResult,
     check_admin,
@@ -229,7 +229,7 @@ class TestVerifyToken:
         assert result.sub == "1"
         assert result.type == "refresh"
 
-    def test_expired_token_raises_403(self):
+    def test_expired_token_raises_401(self):
         # Create an already-expired token
         payload = TokenPayload(sub="1", username="testuser")
         exp = datetime.now(UTC) - timedelta(hours=1)
@@ -243,24 +243,24 @@ class TestVerifyToken:
             data, settings.JWT_SECRET.get_secret_value(), algorithm="HS256"
         )
 
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(InvalidTokenError) as exc_info:
             verify_token(token)
-        assert exc_info.value.status_code == 403
+        assert exc_info.value.status_code == 401
 
-    def test_invalid_token_raises_403(self):
-        with pytest.raises(HTTPException) as exc_info:
+    def test_invalid_token_raises_401(self):
+        with pytest.raises(InvalidTokenError) as exc_info:
             verify_token("not_a_valid_jwt")
-        assert exc_info.value.status_code == 403
+        assert exc_info.value.status_code == 401
 
-    def test_wrong_signature_raises_403(self):
+    def test_wrong_signature_raises_401(self):
         payload = TokenPayload(sub="1", username="testuser")
         token = create_access_token(payload)
         # Tamper with token
         tampered = token[:-5] + "XXXXX"
 
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(InvalidTokenError) as exc_info:
             verify_token(tampered)
-        assert exc_info.value.status_code == 403
+        assert exc_info.value.status_code == 401
 
 
 class TestGetJwtUser:
@@ -285,7 +285,7 @@ class TestGetJwtUser:
         assert user.name == "testuser"
 
     @pytest.mark.asyncio
-    async def test_token_version_mismatch_raises_403(self):
+    async def test_token_version_mismatch_raises_401(self):
         payload = TokenPayload(sub="1", username="testuser", version=0)
         token = create_access_token(payload)
 
@@ -297,25 +297,24 @@ class TestGetJwtUser:
 
         with (
             patch("core.security.get_user", return_value=mock_user),
-            pytest.raises(HTTPException) as exc_info,
+            pytest.raises(InvalidTokenError) as exc_info,
         ):
             await get_jwt_user(request, mock_session)
-        assert exc_info.value.status_code == 403
-        assert "Token invalidated" in exc_info.value.detail
+        assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_missing_token_raises_403(self):
+    async def test_missing_token_raises_401(self):
         request = MagicMock(spec=Request)
         request.cookies = {}
 
         mock_session = MagicMock(spec=AsyncSession)
 
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(InvalidTokenError) as exc_info:
             await get_jwt_user(request, mock_session)
-        assert exc_info.value.status_code == 403
+        assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_refresh_token_as_access_raises_403(self):
+    async def test_refresh_token_as_access_raises_401(self):
         payload = TokenPayload(sub="1", username="testuser")
         token = create_refresh_token(payload)
 
@@ -324,12 +323,12 @@ class TestGetJwtUser:
 
         mock_session = MagicMock(spec=AsyncSession)
 
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(InvalidTokenError) as exc_info:
             await get_jwt_user(request, mock_session)
-        assert exc_info.value.status_code == 403
+        assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_invalid_sub_raises_403(self):
+    async def test_invalid_sub_raises_401(self):
         data = {
             "sub": "not_a_number",
             "username": "testuser",
@@ -345,9 +344,9 @@ class TestGetJwtUser:
 
         mock_session = MagicMock(spec=AsyncSession)
 
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(InvalidTokenError) as exc_info:
             await get_jwt_user(request, mock_session)
-        assert exc_info.value.status_code == 403
+        assert exc_info.value.status_code == 401
 
 
 class TestCheckAdmin:

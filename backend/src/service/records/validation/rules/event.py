@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from schema.records import RecordData
 
 from ..constants import DATE_PRECISIONS
 from ..helpers import (
@@ -8,27 +6,28 @@ from ..helpers import (
     has_cyrillic_in_foreign_text,
     has_range_separator,
 )
-from ..rules import RuleCategory, in_set, register, required
+from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
 
-if TYPE_CHECKING:
-    from schema.records import RecordData
-
-    from ..rules import RuleContext
-
-register(RuleCategory.EVENT, ["verbatim_date"], "required")(
-    required("verbatim_date", "Дата сбора не указана")
+rule(
+    RuleCategory.EVENT,
+    ["verbatim_date"],
+    "required",
+    required("verbatim_date", "Дата сбора не указана"),
 )
-register(RuleCategory.EVENT, ["date_precision"], "invalid")(
+rule(
+    RuleCategory.EVENT,
+    ["date_precision"],
+    "invalid",
     in_set(
         "date_precision",
         DATE_PRECISIONS,
         "Некорректная точность указания даты. Допустимые значения: "
         + ", ".join(DATE_PRECISIONS),
-    )
+    ),
 )
 
 
-@register(RuleCategory.EVENT, ["verbatim_date"], "conflict")
+@rule(RuleCategory.EVENT, ["verbatim_date"], "conflict")
 def rule_interval_no_separator(data: RecordData, ctx: RuleContext) -> str | None:
     if (
         data.is_interval is True
@@ -39,7 +38,7 @@ def rule_interval_no_separator(data: RecordData, ctx: RuleContext) -> str | None
     return None
 
 
-@register(RuleCategory.EVENT, ["date_precision"], "conflict")
+@rule(RuleCategory.EVENT, ["date_precision"], "conflict")
 def rule_date_precision_no_date(data: RecordData, ctx: RuleContext) -> str | None:
     if data.date_precision is not None and (
         data.verbatim_date is None or data.verbatim_date.strip() == ""
@@ -48,7 +47,7 @@ def rule_date_precision_no_date(data: RecordData, ctx: RuleContext) -> str | Non
     return None
 
 
-@register(RuleCategory.EVENT, ["recorded_by"], "required")
+@rule(RuleCategory.EVENT, ["recorded_by"], "required")
 def rule_recorded_by_required(data: RecordData, ctx: RuleContext) -> str | None:
     rb = data.recorded_by
     if rb is None or rb.strip() == "" or len(rb.strip()) < 4:
@@ -59,7 +58,7 @@ def rule_recorded_by_required(data: RecordData, ctx: RuleContext) -> str | None:
     return None
 
 
-@register(
+@rule(
     RuleCategory.EVENT,
     [
         "habitat",
@@ -86,7 +85,7 @@ def rule_forbidden_chars_event(data: RecordData, ctx: RuleContext) -> str | None
     return None
 
 
-@register(
+@rule(
     RuleCategory.EVENT,
     [
         "habitat",

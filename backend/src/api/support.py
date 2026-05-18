@@ -1,5 +1,6 @@
 import logging
 
+import aiohttp
 from fastapi import APIRouter, HTTPException, Request, status
 
 from core.dependencies import DBSession, HTTPClient
@@ -29,8 +30,8 @@ async def submit_support(
 
     try:
         await telegram.support_message(client, data, user.user_id if user else None)
-    except Exception as e:
-        logger.error(f"Failed to process support request: {e}", exc_info=True)
+    except (aiohttp.ClientError, OSError) as e:
+        logger.error("Failed to process support request: %s", e, exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"failed to process support request: {str(e)}"
         ) from e

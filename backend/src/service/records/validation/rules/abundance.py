@@ -1,15 +1,16 @@
 from schema.records import RecordData
-from service.records.validation.rules.base import RuleCategory
 
 from ..constants import LIFE_STAGES, QUANTITY_MAX, QUANTITY_TYPES, SEX_VALUES
 from ..helpers import contains_forbidden_chars
-from ..rules import RuleContext, in_range, in_set, register
+from ..rules.base import RuleCategory, RuleContext, in_set, rule
 
 
-@register(RuleCategory.ABUNDANCE, ["quantity"], "out_of_range")
-def rule_quantity_max(data: RecordData, ctx: RuleContext) -> str | None:
-    qty = data.quantity
-    if qty is not None and qty > QUANTITY_MAX:
+@rule(RuleCategory.ABUNDANCE, ["specimens"], "out_of_range")
+def rule_total_quantity_max(data: RecordData, ctx: RuleContext) -> str | None:
+    if data.specimens is None:
+        return None
+    total = sum(s.count for s in data.specimens)
+    if total > QUANTITY_MAX:
         return (
             "Недопустимо большое число особей. "
             "Если их действительно 300 и более, то укажите 299, "
@@ -18,41 +19,62 @@ def rule_quantity_max(data: RecordData, ctx: RuleContext) -> str | None:
     return None
 
 
-register(RuleCategory.ABUNDANCE, ["quantity"], "too_low")(
-    in_range("quantity", 0.001, None, "Слишком мало особей")
-)
-register(RuleCategory.ABUNDANCE, ["quantity_type"], "invalid")(
-    in_set("quantity_type", QUANTITY_TYPES, "Некорректный тип единицы измерения обилия")
-)
-register(RuleCategory.ABUNDANCE, ["sex"], "invalid")(
-    in_set(
-        "sex",
-        SEX_VALUES,
-        "Некорректное значение пола. Допустимые значения: " + ", ".join(SEX_VALUES),
-    )
-)
-register(RuleCategory.ABUNDANCE, ["life_stage"], "invalid")(
-    in_set(
-        "life_stage",
-        LIFE_STAGES,
-        "Некорректное значение стадии развития. Допустимые значения: "
-        + ", ".join(LIFE_STAGES),
-    )
-)
-
-
-@register(RuleCategory.ABUNDANCE, ["sex"], "inconsistent")
-def rule_sex_lifestage_consistency(data: RecordData, ctx: RuleContext) -> str | None:
-    if (
-        data.sex is not None
-        and data.sex != "none"
-        and (data.life_stage is None or data.life_stage == "none")
-    ):
-        return "Если указываете пол, укажите и стадию развития"
+@rule(RuleCategory.ABUNDANCE, ["specimens"], "too_low")
+def rule_each_count_min(data: RecordData, ctx: RuleContext) -> str | None:
+    if data.specimens is None:
+        return None
+    for s in data.specimens:
+        if s.count is not None and s.count < 0.001:
+            return "Слишком мало особей"
     return None
 
 
-@register(
+@rule(RuleCategory.ABUNDANCE, ["specimens"], "invalid_sex")
+def rule_specimens_valid_sex(data: RecordData, ctx: RuleContext) -> str | None:
+    if data.specimens is None:
+        return None
+    for s in data.specimens:
+        if s.sex not in SEX_VALUES:
+            return "Некорректное значение пола. Допустимые значения: " + ", ".join(
+                sorted(SEX_VALUES)
+            )
+    return None
+
+
+@rule(RuleCategory.ABUNDANCE, ["specimens"], "invalid_lifestage")
+def rule_specimens_valid_lifestage(data: RecordData, ctx: RuleContext) -> str | None:
+    if data.specimens is None:
+        return None
+    for s in data.specimens:
+        if s.life_stage not in LIFE_STAGES:
+            return (
+                "Некорректное значение стадии развития. Допустимые значения: "
+                + ", ".join(sorted(LIFE_STAGES))
+            )
+    return None
+
+
+@rule(RuleCategory.ABUNDANCE, ["specimens"], "count_negative")
+def rule_each_count_positive(data: RecordData, ctx: RuleContext) -> str | None:
+    if data.specimens is None:
+        return None
+    for s in data.specimens:
+        if s.count < 0:
+            return "Количество не может быть отрицательным"
+    return None
+
+
+rule(
+    RuleCategory.ABUNDANCE,
+    ["quantity_type"],
+    "invalid",
+    in_set(
+        "quantity_type", QUANTITY_TYPES, "Некорректный тип единицы измерения обилия"
+    ),
+)
+
+
+@rule(
     RuleCategory.ABUNDANCE,
     ["occurrence_remarks", "identification_remarks"],
     "forbidden_chars",

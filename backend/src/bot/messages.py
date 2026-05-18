@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 from schema.common import Publication
 
 
@@ -248,7 +250,10 @@ class Messages:
     # ========== STATS MESSAGE ========== #
 
     @staticmethod
-    def statistics(general_stats: dict, personal_stats: dict | None = None) -> str:
+    def statistics(
+        general_stats: Mapping[str, object],
+        personal_stats: Mapping[str, object] | None = None,
+    ) -> str:
         stats_text = (
             "<b>Общая статистика: </b>\n\n"
             f"Всего зарегистрированных участников: {general_stats['total_users']} "
@@ -286,7 +291,7 @@ class Messages:
     # ========== SOCIOLOGY MESSAGE ========== #
 
     @staticmethod
-    def any_question(missing_fields: list) -> str:
+    def any_question(missing_fields: list[str]) -> str:
         return f"Для вас имеется вопросов: <b>{len(missing_fields)}</b>"
 
     @staticmethod
@@ -424,7 +429,7 @@ class Messages:
         )
 
     @staticmethod
-    def available_log_dates(dates: set) -> str:
+    def available_log_dates(dates: set[str]) -> str:
         return f"🥹 Доступные даты логов:\n{''.join(dates)}"
 
     @staticmethod

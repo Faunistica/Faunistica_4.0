@@ -1,11 +1,6 @@
-from __future__ import annotations
-
 import re
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from schema.records import RecordData
-
+from schema.records import RecordData
 from service.records.validation.constants import CYRILLIC_LANGUAGES
 
 _CYRILLIC_RE = re.compile(r"[А-Яа-яЁё]")

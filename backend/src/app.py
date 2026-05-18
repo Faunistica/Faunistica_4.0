@@ -24,8 +24,8 @@ setup_logging()
 app = FastAPI(lifespan=lifespan)
 
 logger = logging.getLogger(__name__)
-logger.info(f"Running in {'DEVELOPMENT' if settings.DEV_MODE else 'PRODUCTION'} mode")
-logger.info(f"Allowed origins: {settings.ALLOWED_ORIGINS}")
+logger.info("Running in %s mode", "DEVELOPMENT" if settings.DEV_MODE else "PRODUCTION")
+logger.info("Allowed origins: %s", settings.ALLOWED_ORIGINS)
 
 app.state.limiter = limiter
 app.add_middleware(SlowAPIASGIMiddleware)

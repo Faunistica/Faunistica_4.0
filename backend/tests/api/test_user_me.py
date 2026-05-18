@@ -20,7 +20,7 @@ async def test_get_me_with_valid_jwt(
 @pytest.mark.asyncio
 async def test_get_me_without_jwt(async_client: AsyncClient) -> None:
     response = await async_client.get("/api/users/me")
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio

@@ -42,7 +42,7 @@ async def test_fau50_detected(
         action_service = ActionService(session)
 
         user = seed_data["users"][2]
-        publ_id = user.publ_id
+        publ_id = int(user.items.split("|")[0])
         assert publ_id is not None
 
         await _seed_records(session, user.user_id, publ_id, 49)
@@ -122,7 +122,7 @@ async def test_fau50_not_duplicated(
         action_service = ActionService(session)
 
         user = seed_data["users"][2]
-        publ_id = user.publ_id
+        publ_id = int(user.items.split("|")[0])
         assert publ_id is not None
 
         existing_action = Action(

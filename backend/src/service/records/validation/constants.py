@@ -1,11 +1,6 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from core.config import settings
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def _load_short_countries(path: Path) -> frozenset[str]:
@@ -41,15 +36,16 @@ TYPE_STATUSES: frozenset[str] = frozenset(
 
 QUANTITY_TYPES: frozenset[str] = frozenset(
     {
-        "особей",
-        "особей на 10 ловушко-суток",
-        "особей на 100 ловушко-суток",
-        "особей на м2",
-        "балл обилия (по Песенко)",
-        "особей на 10 взмахов сачком",
-        "особей на 20 взмахов сачком",
-        "особей на 100 взмахов сачком",
-        "особей на 200 взмахов сачком",
+        "individuals",
+        "individuals per 10 trap-days",
+        "individuals per 100 trap-days",
+        "individuals per 10 ditch-days",
+        "individuals per 10 net sweps",
+        "individuals per 100 net sweps",
+        "individuals per 20 net sweppings",
+        "individuals per 100 pitfall-traps",
+        "individuals per m2",
+        "Abundance class (Pesenko, 1982)",
     }
 )
 
@@ -58,9 +54,9 @@ SEX_VALUES: frozenset[str] = frozenset({"none", "male", "female"})
 LIFE_STAGES: frozenset[str] = frozenset(
     {
         "none",
-        "взрослые",
-        "субвзрослые",
-        "ювенильные",
+        "adult",
+        "subadult",
+        "juvenile",
     }
 )
 

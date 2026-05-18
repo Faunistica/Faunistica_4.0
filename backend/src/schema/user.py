@@ -15,7 +15,6 @@ class UserMinimal(BaseModel):
 
 
 class UserFull(UserMinimal):
-    publ_id: int | None = None
     tlg_name: str | None = None
     tlg_username: str | None = None
     reg_stat: UserState | None = None
@@ -46,7 +45,6 @@ class UserLookupResponse(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    publ_id: int | None | Unset = UNSET
     tlg_name: str | None | Unset = UNSET
     tlg_username: str | None | Unset = UNSET
     name: str | Unset = UNSET

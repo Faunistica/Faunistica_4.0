@@ -27,16 +27,24 @@ class MsgErr:
 
 class HandlerError(Exception):
     def __init__(self) -> None:
-        super("incorrectly configured handler")
+        super().__init__("incorrectly configured handler")
 
 
 class DBException(Exception):
-    pass
+    def __init__(self, message: str, status_code: int, error_code: str) -> None:
+        self.message = message
+        self.status_code = status_code
+        self.error_code = error_code
+        super().__init__(message)
 
 
 def db_exception_handler(request: Request, exc: Exception) -> Response:
     if isinstance(exc, DBException):
-        logger.error("SQLAlchemyError", exc_info=True)
+        logger.error("DB error: %s", exc, exc_info=True)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": exc.error_code, "message": exc.message},
+        )
     raise exc
 
 
@@ -136,16 +144,29 @@ class RecordStaleError(APIException):
 
 
 class RecordLimitExceededError(APIException):
-    def __init__(self, publ_id: int, current: int, additional: int) -> None:
+    def __init__(
+        self, publ_id: int, current_count: int, additional: int, limit: int
+    ) -> None:
         self.publ_id = publ_id
-        self.current = current
+        self.current_count = current_count
         self.additional = additional
+        self.limit = limit
         super().__init__(
             "RECORD_LIMIT",
-            (
-                f"Publication {publ_id} has {current} records, "
-                f"importing {additional} more would exceed limit"
-            ),
+            f"Publication {publ_id}: adding {additional} more"
+            f" would exceed limit of {limit} (currently {current_count})",
+            400,
+        )
+
+
+class ImportLimitExceededError(APIException):
+    def __init__(self, publ_id: int, batch_size: int, limit: int) -> None:
+        self.publ_id = publ_id
+        self.batch_size = batch_size
+        self.limit = limit
+        super().__init__(
+            "IMPORT_LIMIT",
+            f"Publication {publ_id}: batch size {batch_size} exceeds limit of {limit}",
             400,
         )
 
