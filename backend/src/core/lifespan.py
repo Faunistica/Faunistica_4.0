@@ -67,8 +67,16 @@ def _compare(conn: Connection) -> None:
 
         errors += 1
 
-    if errors > 0:
-        raise RuntimeError("Database schema diff detected")
+    if errors == 0:
+        return
+
+    if settings.DEV_MODE:
+        logger.fatal(
+            "Database schema diff detected, as DEV_MODE is set, "
+            "resetting database is advised"
+        )
+
+    raise RuntimeError("Database schema diff detected")
 
 
 async def _check_migrations() -> None:
