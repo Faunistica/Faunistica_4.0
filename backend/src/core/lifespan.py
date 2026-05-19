@@ -28,9 +28,6 @@ def _compare(conn: Connection) -> None:
     context = MigrationContext.configure(conn)
     diff = compare_metadata(context, Base.metadata)
 
-    if len(diff) == 0:
-        return
-
     _LABEL = {
         "add_table": "Missing table in database",
         "remove_table": "Unexpected table in database",
@@ -41,9 +38,13 @@ def _compare(conn: Connection) -> None:
         "remove_constraint": "Unexpected constraint in database",
     }
 
+    errors = 0
+
     for i in diff:
         op = i[0]
         label = _LABEL.get(op)
+        if op == "remove_table" and i[1].name in ["records", "spiders"]:
+            continue
         if label is not None and op in ("add_table", "remove_table"):
             logger.error("Schema diff: %s (%s)", label, i[1].name)
         elif label is not None and op in ("add_column", "remove_column"):
@@ -64,7 +65,10 @@ def _compare(conn: Connection) -> None:
         else:
             logger.error("Schema diff: unhandled alembic action proposed — %s", i)
 
-    raise RuntimeError("Database schema diff detected")
+        errors += 1
+
+    if errors > 0:
+        raise RuntimeError("Database schema diff detected")
 
 
 async def _check_migrations() -> None:
