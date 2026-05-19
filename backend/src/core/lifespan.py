@@ -24,7 +24,7 @@ _ALEMBIC_CFG_PATH = Path(__file__).resolve().parent.parent.parent / "alembic.ini
 logger = logging.getLogger(__name__)
 
 
-def _compare(conn: Connection) -> None:
+def _compare_schema(conn: Connection) -> None:
     context = MigrationContext.configure(conn)
     diff = compare_metadata(context, Base.metadata)
 
@@ -79,7 +79,7 @@ def _compare(conn: Connection) -> None:
     raise RuntimeError("Database schema diff detected")
 
 
-async def _check_migrations() -> None:
+async def _check_alembic_version() -> None:
     """Verify DB schema matches Alembic head revision."""
     cfg = Config(str(_ALEMBIC_CFG_PATH))
     script = ScriptDirectory.from_config(cfg)
@@ -103,7 +103,7 @@ async def _check_migrations() -> None:
         raise RuntimeError(msg)
 
     async with _engine.connect() as conn:
-        await conn.run_sync(_compare)
+        await conn.run_sync(_compare_schema)
 
     logger.info("Alembic migrations are up to date (head: %s)", head_rev)
 
@@ -111,7 +111,7 @@ async def _check_migrations() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     await init_db()
-    await _check_migrations()
+    await _check_alembic_version()
 
     if not await ping_db():
         logger.critical("Database is not available. Application cannot start.")
