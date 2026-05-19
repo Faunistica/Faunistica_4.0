@@ -92,6 +92,7 @@ def rule_forbidden_chars_event(data: RecordData, ctx: RuleContext) -> str | None
         "sampling_protocol",
         "sampling_effort",
         "sample_size_unit",
+        "event_remarks",
         "recorded_by",
     ],
     "cyrillic",
@@ -103,7 +104,16 @@ def rule_cyrillic_event(data: RecordData, ctx: RuleContext) -> str | None:
         data.sampling_protocol,
         data.sampling_effort,
         data.sample_size_unit,
+        data.event_remarks,
         data.recorded_by,
     ):
         return "Кириллица в блоке Сбор материала для публикации не на русском языке"
+    return None
+
+
+@rule(RuleCategory.EVENT, ["sample_size_value"], "out_of_range")
+def rule_sample_size_positive(data: RecordData, ctx: RuleContext) -> str | None:
+    v = data.sample_size_value
+    if v is not None and v <= 0:
+        return "Объём выборки должен быть положительным числом"
     return None

@@ -1,5 +1,6 @@
 from schema.records import RecordData
 
+from ..constants import SHORT_COUNTRY_ALLOWLIST
 from ..helpers import contains_forbidden_chars, has_cyrillic_in_foreign_text
 from ..rules.base import RuleCategory, RuleContext, min_length, rule
 
@@ -23,7 +24,7 @@ def rule_forbidden_chars_location(data: RecordData, ctx: RuleContext) -> str | N
 
 @rule(
     RuleCategory.LOCATION,
-    ["country", "region", "district", "locality"],
+    ["country", "region", "district", "locality", "location_remarks"],
     "cyrillic",
 )
 def rule_cyrillic_location(data: RecordData, ctx: RuleContext) -> str | None:
@@ -33,6 +34,7 @@ def rule_cyrillic_location(data: RecordData, ctx: RuleContext) -> str | None:
         data.region,
         data.district,
         data.locality,
+        data.location_remarks,
     ):
         return (
             "Кириллица в блоке Административное расположение "
@@ -41,12 +43,16 @@ def rule_cyrillic_location(data: RecordData, ctx: RuleContext) -> str | None:
     return None
 
 
-rule(
-    RuleCategory.LOCATION,
-    ["country"],
-    "too_short",
-    min_length("country", 4, "Страна указана некорректно"),
-)
+@rule(RuleCategory.LOCATION, ["country"], "too_short")
+def rule_country_min_length(data: RecordData, ctx: RuleContext) -> str | None:
+    v = data.country
+    if v is None:
+        return None
+    if v.strip() in SHORT_COUNTRY_ALLOWLIST:
+        return None
+    if len(v.strip()) < 4:
+        return "Страна указана некорректно"
+    return None
 rule(
     RuleCategory.LOCATION,
     ["region"],

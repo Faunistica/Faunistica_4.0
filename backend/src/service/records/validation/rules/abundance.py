@@ -1,6 +1,6 @@
 from schema.records import RecordData
 
-from ..constants import LIFE_STAGES, QUANTITY_MAX, QUANTITY_TYPES, SEX_VALUES
+from ..constants import QUANTITY_MAX, QUANTITY_TYPES
 from ..helpers import contains_forbidden_chars
 from ..rules.base import RuleCategory, RuleContext, in_set, rule
 
@@ -24,33 +24,8 @@ def rule_each_count_min(data: RecordData, ctx: RuleContext) -> str | None:
     if data.specimens is None:
         return None
     for s in data.specimens:
-        if s.count is not None and s.count < 0.001:
+        if s.count is not None and 0 < s.count < 0.001:
             return "Слишком мало особей"
-    return None
-
-
-@rule(RuleCategory.ABUNDANCE, ["specimens"], "invalid_sex")
-def rule_specimens_valid_sex(data: RecordData, ctx: RuleContext) -> str | None:
-    if data.specimens is None:
-        return None
-    for s in data.specimens:
-        if s.sex not in SEX_VALUES:
-            return "Некорректное значение пола. Допустимые значения: " + ", ".join(
-                sorted(SEX_VALUES)
-            )
-    return None
-
-
-@rule(RuleCategory.ABUNDANCE, ["specimens"], "invalid_lifestage")
-def rule_specimens_valid_lifestage(data: RecordData, ctx: RuleContext) -> str | None:
-    if data.specimens is None:
-        return None
-    for s in data.specimens:
-        if s.life_stage not in LIFE_STAGES:
-            return (
-                "Некорректное значение стадии развития. Допустимые значения: "
-                + ", ".join(sorted(LIFE_STAGES))
-            )
     return None
 
 
