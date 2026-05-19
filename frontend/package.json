@@ -14,7 +14,7 @@
         "format:check": "oxfmt . --check",
         "eslint": "eslint",
         "eslint:fix": "eslint --fix",
-        "typecheck": "tsc --noEmit"
+        "knip": "knip"
     },
     "dependencies": {
         "@fontsource-variable/geist": "^5.2.8",
