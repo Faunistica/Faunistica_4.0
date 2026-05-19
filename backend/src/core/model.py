@@ -1,9 +1,7 @@
 from datetime import datetime as datetime_type
-from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import (
-    REAL,
     BigInteger,
     Boolean,
     Double,
