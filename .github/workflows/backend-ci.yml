@@ -34,8 +34,6 @@ jobs:
       - run: uv run ruff check src/ alembic/ tests/
       - run: uv run ruff format --check src/ alembic/ tests/
       - run: uv run ty check src/ alembic/ tests/
-      - name: Minimize uv cache
-        run: uv cache prune --ci
 
   test:
     runs-on: ubuntu-latest
@@ -73,5 +71,3 @@ jobs:
         with:
           name: coverage-report
           path: backend/htmlcov/
-      - name: Minimize uv cache
-        run: uv cache prune --ci
