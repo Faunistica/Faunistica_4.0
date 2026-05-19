@@ -52,6 +52,8 @@ def rule_country_min_length(data: RecordData, ctx: RuleContext) -> str | None:
     if len(v.strip()) < 4:
         return "Страна указана некорректно"
     return None
+
+
 rule(
     RuleCategory.LOCATION,
     ["region"],
