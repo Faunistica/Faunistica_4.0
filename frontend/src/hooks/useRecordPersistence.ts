@@ -59,16 +59,22 @@ export function useRecordPersistence({
                         }).unwrap();
                     } else {
                         // Создаем новую запись, если её еще нет (хотя обычно она создается при добавлении карточки)
-                        const created = await createRecord({ publ_id }).unwrap();
+                        const created = await createRecord({
+                            publ_id,
+                        }).unwrap();
                         await editRecord({
                             record_id: created.id,
                             data: payload,
                         }).unwrap();
 
-                        setValue(`samples.${i}.record_ids` as any, { base: created.id }, {
-                            shouldDirty: false,
-                            shouldValidate: false,
-                        });
+                        setValue(
+                            `samples.${i}.record_ids` as any,
+                            { base: created.id },
+                            {
+                                shouldDirty: false,
+                                shouldValidate: false,
+                            },
+                        );
                     }
                 }
                 if (isManual) toast.success('Данные успешно сохранены');

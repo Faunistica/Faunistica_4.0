@@ -42,7 +42,9 @@ const STATUS_CONFIG = {
 
 export const RecordStatusIndicator: FC<Props> = ({ index, sample, validationErrors }) => {
     const status = useRecordStatus(index, sample, validationErrors);
-    const { formState: { errors } } = useFormContext<FormSchema>();
+    const {
+        formState: { errors },
+    } = useFormContext<FormSchema>();
     const config = STATUS_CONFIG[status];
 
     // Для тултипа: какие именно поля не заполнены
@@ -54,14 +56,16 @@ export const RecordStatusIndicator: FC<Props> = ({ index, sample, validationErro
         if (externalErrors && externalErrors.length > 0) {
             missingFields = externalErrors;
         } else if (sampleErrors) {
-            missingFields = BLOCKING_FIELDS.filter(f => sampleErrors[f as keyof typeof sampleErrors])
-                .map(f => getFieldLabel(f));
+            missingFields = BLOCKING_FIELDS.filter(
+                (f) => sampleErrors[f as keyof typeof sampleErrors],
+            ).map((f) => getFieldLabel(f));
         }
     }
 
-    const tooltipContent = status === 'error' && missingFields.length > 0
-        ? `Заполните: ${missingFields.join(', ')}`
-        : config.label;
+    const tooltipContent =
+        status === 'error' && missingFields.length > 0
+            ? `Заполните: ${missingFields.join(', ')}`
+            : config.label;
 
     return (
         <TooltipProvider>

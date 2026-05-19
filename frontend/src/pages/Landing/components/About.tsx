@@ -1,5 +1,5 @@
 import { Search, Network, Globe, Database } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function About() {
     return (
@@ -10,7 +10,8 @@ export default function About() {
                         Почему это важно?
                     </h2>
                     <p className="max-w-[800px] text-slate-600 md:text-lg">
-                        О находках живых организмов существуют тысячи публикаций, и их число растет лавинообразно. Традиционный поиск тормозит научный прогресс.
+                        О находках живых организмов существуют тысячи публикаций, и их число растет
+                        лавинообразно. Традиционный поиск тормозит научный прогресс.
                     </p>
                 </div>
 
@@ -24,7 +25,9 @@ export default function About() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-slate-600 leading-relaxed">
-                                Традиционный подход требует тотального просмотра всех публикаций. Это отнимает колоссальное количество времени, сил и ресурсов исследователей.
+                                Традиционный подход требует тотального просмотра всех публикаций.
+                                Это отнимает колоссальное количество времени, сил и ресурсов
+                                исследователей.
                             </p>
                         </CardContent>
                     </Card>
@@ -38,7 +41,9 @@ export default function About() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-slate-600 leading-relaxed">
-                                Данные из старых статей почти не представлены в современных агрегаторах. Каждый специалист ищет их заново, выполняя двойную работу.
+                                Данные из старых статей почти не представлены в современных
+                                агрегаторах. Каждый специалист ищет их заново, выполняя двойную
+                                работу.
                             </p>
                         </CardContent>
                     </Card>
@@ -55,7 +60,12 @@ export default function About() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-slate-600 leading-relaxed relative z-10">
-                                Мы создаем платформу, чтобы перевести литературные данные в цифровую форму. Это сделает их доступными для глобальных баз, таких как <a href="https://www.gbif.org/"><strong>GBIF</strong></a>.
+                                Мы создаем платформу, чтобы перевести литературные данные в цифровую
+                                форму. Это сделает их доступными для глобальных баз, таких как{' '}
+                                <a href="https://www.gbif.org/">
+                                    <strong>GBIF</strong>
+                                </a>
+                                .
                             </p>
                         </CardContent>
                     </Card>

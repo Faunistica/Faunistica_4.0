@@ -25,13 +25,14 @@ interface MapProps {
 }
 
 // Компонент для обработки кликов по карте
-const MapClickHandler = ({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) => {
+const MapClickHandler = ({
+    onLocationSelect,
+}: {
+    onLocationSelect: (lat: number, lng: number) => void;
+}) => {
     useMapEvents({
         click(e) {
-            onLocationSelect(
-                Number(e.latlng.lat.toFixed(6)),
-                Number(e.latlng.lng.toFixed(6))
-            );
+            onLocationSelect(Number(e.latlng.lat.toFixed(6)), Number(e.latlng.lng.toFixed(6)));
         },
     });
     return null;
@@ -50,7 +51,6 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
     const [results, setResults] = useState<SearchResult[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
-
 
     const skipNextSearchRef = useRef(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,8 +76,8 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
         try {
             const res = await fetch(
                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-                    searchQuery
-                )}&limit=5&accept-language=ru`
+                    searchQuery,
+                )}&limit=5&accept-language=ru`,
             );
             const data: SearchResult[] = await res.json();
             setResults(data);
@@ -157,7 +157,10 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
 
         if (map && item.boundingbox) {
             const [latMin, latMax, lonMin, lonMax] = item.boundingbox.map(parseFloat);
-            map.flyToBounds(L.latLngBounds([latMin, lonMin], [latMax, lonMax]), { padding: [50, 50], maxZoom: 16 });
+            map.flyToBounds(L.latLngBounds([latMin, lonMin], [latMax, lonMax]), {
+                padding: [50, 50],
+                maxZoom: 16,
+            });
         } else if (map) {
             map.flyTo([lat, lng], 14);
         }
@@ -191,11 +194,10 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
         // Навигация стрелками
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setSelectedIndex(prev => (prev < results.length - 1 ? prev + 1 : 0));
-        }
-        else if (e.key === 'ArrowUp') {
+            setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+        } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setSelectedIndex(prev => (prev > 0 ? prev - 1 : results.length - 1));
+            setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
         }
         // Enter → выбор выделенного (или первого, если ничего не выделено)
         else if (e.key === 'Enter') {
@@ -244,10 +246,11 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
                                 onMouseEnter={() => setSelectedIndex(index)} // Синхронизация мыши и клавиатуры
                                 className={`
                     px-4 py-2 text-sm cursor-pointer border-b border-slate-100 last:border-b-0 transition-colors duration-150
-                    ${index === selectedIndex
-                                        ? 'bg-blue-500 text-white font-medium'
-                                        : 'hover:bg-slate-100'
-                                    }
+                    ${
+                        index === selectedIndex
+                            ? 'bg-blue-500 text-white font-medium'
+                            : 'hover:bg-slate-100'
+                    }
                 `}
                             >
                                 {item.display_name}

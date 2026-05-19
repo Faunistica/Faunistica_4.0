@@ -1,4 +1,4 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
+import { createApi } from '@reduxjs/toolkit/query/react';
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
 
@@ -11,7 +11,12 @@ export const utilAPI = createApi({
             query: ({ field, text, family, genus }) => ({
                 url: '/taxonomy/suggest',
                 method: 'GET',
-                params: { field, text, ...(family ? { family } : {}), ...(genus ? { genus } : {}) },
+                params: {
+                    field,
+                    text,
+                    ...(family ? { family } : {}),
+                    ...(genus ? { genus } : {}),
+                },
             }),
         }),
         autofillTaxon: build.query<Types.AutofillTaxonResponse, Types.AutofillTaxonRequest>({

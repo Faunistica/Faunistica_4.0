@@ -15,7 +15,10 @@ interface Props {
 }
 
 const CollectionEventCard: FC<Props> = ({ index }) => {
-    const { register, formState: { errors } } = useFormContext<FormSchema>();
+    const {
+        register,
+        formState: { errors },
+    } = useFormContext<FormSchema>();
     const prefix = `samples.${index}` as const;
     const err = errors.samples?.[index];
 
@@ -26,7 +29,9 @@ const CollectionEventCard: FC<Props> = ({ index }) => {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
                         <CalendarDays className="h-4 w-4" />
                     </div>
-                    <CardTitle className="text-lg font-semibold">Параметры сбора материала</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                        Параметры сбора материала
+                    </CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -38,14 +43,16 @@ const CollectionEventCard: FC<Props> = ({ index }) => {
                     <TooltipProvider>
                         <div className="space-y-2">
                             <div className="flex items-center gap-1">
-                                <Label htmlFor={`${prefix}.verbatim_date`}>Дата сбора (как в статье)</Label>
+                                <Label htmlFor={`${prefix}.verbatim_date`}>
+                                    Дата сбора (как в статье)
+                                </Label>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Info className="h-3.5 w-3.5 text-slate-400 cursor-help" />
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="max-w-xs text-xs">
-                                        Укажите дату точно так, как она приведена в статье.
-                                        Примеры: «19.08.2018», «19.08–02.09.2018», «лето 2017», «VIII.2019».
+                                        Укажите дату точно так, как она приведена в статье. Примеры:
+                                        «19.08.2018», «19.08–02.09.2018», «лето 2017», «VIII.2019».
                                     </TooltipContent>
                                 </Tooltip>
                             </div>

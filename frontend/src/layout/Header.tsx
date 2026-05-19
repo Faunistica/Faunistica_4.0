@@ -1,8 +1,8 @@
-import { type FC, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Menu, X, PanelLeft } from "lucide-react";
-import { Link } from "react-router";
-import { useRouteHandle } from "@/hooks/useRouteMeta";
+import { type FC, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Menu, X, PanelLeft } from 'lucide-react';
+import { Link } from 'react-router';
+import { useRouteHandle } from '@/hooks/useRouteMeta';
 
 interface HeaderProps {
     isSidebarEnabled?: boolean;
@@ -36,7 +36,11 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             className="md:hidden rounded-md text-slate-600 h-9 w-9"
                             onClick={() => setIsMobileMenuOpen((v) => !v)}
                         >
-                            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                            {isMobileMenuOpen ? (
+                                <X className="h-5 w-5" />
+                            ) : (
+                                <Menu className="h-5 w-5" />
+                            )}
                         </Button>
                     )}
                     <Link to="/">
@@ -51,22 +55,61 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
                             {isLanding ? (
                                 <>
-                                    <a href="#about" className="hover:text-slate-900 transition-colors">О проекте</a>
-                                    <a href="#volunteers" className="hover:text-slate-900 transition-colors">Волонтерам</a>
-                                    <a href="#science" className="hover:text-slate-900 transition-colors">Научная база</a>
+                                    <a
+                                        href="#about"
+                                        className="hover:text-slate-900 transition-colors"
+                                    >
+                                        О проекте
+                                    </a>
+                                    <a
+                                        href="#volunteers"
+                                        className="hover:text-slate-900 transition-colors"
+                                    >
+                                        Волонтерам
+                                    </a>
+                                    <a
+                                        href="#science"
+                                        className="hover:text-slate-900 transition-colors"
+                                    >
+                                        Научная база
+                                    </a>
                                 </>
                             ) : (
                                 <>
-                                    <Link to="/dashboard" className="hover:text-slate-900 transition-colors">Публикации</Link>
-                                    <Link to="/instructions" className="hover:text-slate-900 transition-colors">Инструкция</Link>
-                                    <Link to="/statistics" className="hover:text-slate-900 transition-colors">Статистика</Link>
-                                    <Link to="/support" className="hover:text-slate-900 transition-colors">Поддержка</Link>
+                                    <Link
+                                        to="/dashboard"
+                                        className="hover:text-slate-900 transition-colors"
+                                    >
+                                        Публикации
+                                    </Link>
+                                    <Link
+                                        to="/instructions"
+                                        className="hover:text-slate-900 transition-colors"
+                                    >
+                                        Инструкция
+                                    </Link>
+                                    <Link
+                                        to="/statistics"
+                                        className="hover:text-slate-900 transition-colors"
+                                    >
+                                        Статистика
+                                    </Link>
+                                    <Link
+                                        to="/support"
+                                        className="hover:text-slate-900 transition-colors"
+                                    >
+                                        Поддержка
+                                    </Link>
                                 </>
                             )}
                         </nav>
                         <div className="flex items-center gap-3">
                             {isLanding ? (
-                                <Button asChild variant="default" className="bg-[#229ED9] text-white hover:bg-[#1E8CC0] shadow-sm">
+                                <Button
+                                    asChild
+                                    variant="default"
+                                    className="bg-[#229ED9] text-white hover:bg-[#1E8CC0] shadow-sm"
+                                >
                                     <Link to="/auth/login">Личный кабинет</Link>
                                 </Button>
                             ) : (
@@ -84,16 +127,58 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                     <nav className="flex flex-col gap-2 text-base font-medium text-slate-700">
                         {isLanding ? (
                             <>
-                                <a href="#about" className="p-3 hover:bg-slate-50 rounded-md transition-colors" onClick={() => setIsMobileMenuOpen(false)}>О проекте</a>
-                                <a href="#volunteers" className="p-3 hover:bg-slate-50 rounded-md transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Волонтерам</a>
-                                <a href="#science" className="p-3 hover:bg-slate-50 rounded-md transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Научная база</a>
+                                <a
+                                    href="#about"
+                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    О проекте
+                                </a>
+                                <a
+                                    href="#volunteers"
+                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Волонтерам
+                                </a>
+                                <a
+                                    href="#science"
+                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Научная база
+                                </a>
                             </>
                         ) : (
                             <>
-                                <Link to="/dashboard" className="p-3 hover:bg-slate-50 rounded-md transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Публикации</Link>
-                                <Link to="/instructions" className="p-3 hover:bg-slate-50 rounded-md transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Инструкция</Link>
-                                <Link to="/statistics" className="p-3 hover:bg-slate-50 rounded-md transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Статистика</Link>
-                                <Link to="/support" className="p-3 hover:bg-slate-50 rounded-md transition-colors" onClick={() => setIsMobileMenuOpen(false)}>Поддержка</Link>
+                                <Link
+                                    to="/dashboard"
+                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Публикации
+                                </Link>
+                                <Link
+                                    to="/instructions"
+                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Инструкция
+                                </Link>
+                                <Link
+                                    to="/statistics"
+                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Статистика
+                                </Link>
+                                <Link
+                                    to="/support"
+                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Поддержка
+                                </Link>
                             </>
                         )}
                     </nav>

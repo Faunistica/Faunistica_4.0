@@ -16,7 +16,9 @@ export function useRecordStatus(
     sample: Record<string, any>,
     validationErrors?: Map<number, string[]>,
 ): RecordStatus {
-    const { formState: { errors } } = useFormContext<FormSchema>();
+    const {
+        formState: { errors },
+    } = useFormContext<FormSchema>();
 
     const sampleErrors = errors.samples?.[index] as Record<string, any> | undefined;
 
@@ -27,24 +29,20 @@ export function useRecordStatus(
         }
 
         // 🟡 Пустая запись
-        const hasAnyValue = BLOCKING_FIELDS.some(
-            (field: BlockingFieldName) => {
-                const val = sample?.[field];
-                return val !== undefined && val !== null && val !== '';
-            }
-        );
+        const hasAnyValue = BLOCKING_FIELDS.some((field: BlockingFieldName) => {
+            const val = sample?.[field];
+            return val !== undefined && val !== null && val !== '';
+        });
 
         if (!hasAnyValue) {
             return 'empty';
         }
 
         // 🟢 Все блокирующие поля заполнены и не имеют ошибок
-        const allBlockingFilled = BLOCKING_FIELDS.every(
-            (field: BlockingFieldName) => {
-                const val = sample?.[field];
-                return val !== undefined && val !== null && val !== '';
-            }
-        );
+        const allBlockingFilled = BLOCKING_FIELDS.every((field: BlockingFieldName) => {
+            const val = sample?.[field];
+            return val !== undefined && val !== null && val !== '';
+        });
         if (allBlockingFilled) return 'valid';
 
         // 🔵 В процессе заполнения

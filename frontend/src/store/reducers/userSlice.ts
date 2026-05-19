@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 interface UserState {
     auth: boolean | null;
@@ -17,7 +17,7 @@ const initialState: UserState = {
     auth: getInitialAuth(),
     username: localStorage.getItem('username'),
     user_id: localStorage.getItem('user_id') ? Number(localStorage.getItem('user_id')) : null,
-}
+};
 
 export const userSlice = createSlice({
     name: 'user',
@@ -40,7 +40,7 @@ export const userSlice = createSlice({
             localStorage.removeItem('user_id');
         },
     },
-})
+});
 
-export const { login, logout } = userSlice.actions
-export default userSlice.reducer
+export const { login, logout } = userSlice.actions;
+export default userSlice.reducer;
