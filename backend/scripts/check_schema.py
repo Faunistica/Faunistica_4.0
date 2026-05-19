@@ -1,11 +1,8 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env -S uv run
 
 import asyncio
 import logging
-import os
 import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from core.database import get_session
 from core.lifespan import _compare_schema

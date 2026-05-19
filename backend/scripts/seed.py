@@ -1,16 +1,13 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env -S uv run
 
 import asyncio
 import logging
 import os
-import sys
 from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from core.database import get_session, init_db
 from core.model import EventRecord, Publication, User
