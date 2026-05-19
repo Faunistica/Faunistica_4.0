@@ -101,10 +101,7 @@ def rule_forbidden_chars_taxon(data: RecordData, ctx: RuleContext) -> str | None
 
 @rule(
     RuleCategory.TAXONOMY,
-    [
-        "family", "genus", "species", "accepted_name",
-        "taxon_remarks", "identification_remarks",
-    ],
+    ["family", "genus", "species", "accepted_name", "identification_remarks"],
     "cyrillic",
 )
 def rule_cyrillic_taxon(data: RecordData, ctx: RuleContext) -> str | None:
@@ -114,7 +111,6 @@ def rule_cyrillic_taxon(data: RecordData, ctx: RuleContext) -> str | None:
         data.genus,
         data.species,
         data.accepted_name,
-        data.taxon_remarks,
         data.identification_remarks,
     ):
         return "Кириллица в блоке Таксономия для публикации не на русском языке"

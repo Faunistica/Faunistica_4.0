@@ -92,7 +92,6 @@ def rule_forbidden_chars_event(data: RecordData, ctx: RuleContext) -> str | None
         "sampling_protocol",
         "sampling_effort",
         "sample_size_unit",
-        "event_remarks",
         "recorded_by",
     ],
     "cyrillic",
@@ -104,7 +103,6 @@ def rule_cyrillic_event(data: RecordData, ctx: RuleContext) -> str | None:
         data.sampling_protocol,
         data.sampling_effort,
         data.sample_size_unit,
-        data.event_remarks,
         data.recorded_by,
     ):
         return "Кириллица в блоке Сбор материала для публикации не на русском языке"

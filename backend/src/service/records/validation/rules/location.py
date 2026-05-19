@@ -24,7 +24,7 @@ def rule_forbidden_chars_location(data: RecordData, ctx: RuleContext) -> str | N
 
 @rule(
     RuleCategory.LOCATION,
-    ["country", "region", "district", "locality", "location_remarks"],
+    ["country", "region", "district", "locality"],
     "cyrillic",
 )
 def rule_cyrillic_location(data: RecordData, ctx: RuleContext) -> str | None:
@@ -34,7 +34,6 @@ def rule_cyrillic_location(data: RecordData, ctx: RuleContext) -> str | None:
         data.region,
         data.district,
         data.locality,
-        data.location_remarks,
     ):
         return (
             "Кириллица в блоке Административное расположение "
