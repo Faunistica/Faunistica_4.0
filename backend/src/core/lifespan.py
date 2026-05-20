@@ -71,7 +71,7 @@ def _compare_schema(conn: Connection) -> None:
         return
 
     if settings.DEV_MODE:
-        logger.fatal(
+        logger.critical(
             "Database schema diff detected, as DEV_MODE is set, "
             "resetting database is advised"
         )
