@@ -5,17 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi[standard]",
-    "geopy",
-    "pygbif",
-    "sqlalchemy",
-    "asyncpg",
-    "aiogram",
-    "cryptography",
-    "argon2-cffi",
     "pyjwt[crypto]>=2.8.0",
-    "pandas",
-    "aiohttp",
     "aiohttp-socks>=0.11.0",
     "greenlet>=3.3.2",
     "alembic>=1.18.4",
@@ -23,11 +13,23 @@ dependencies = [
     "slowapi>=0.1.9",
     "openpyxl>=3.1.5",
     "asyncstdlib>=3.14.0",
+    "geopy>=2.4.1",
+    "pygbif>=0.6.6",
+    "sqlalchemy>=2.0.48",
+    "asyncpg>=0.31.0",
+    "aiogram>=3.28.2",
+    "cryptography>=46.0.5",
+    "argon2-cffi>=25.1.0",
+    "pandas>=3.0.3",
+    "aiohttp>=3.13.3",
 ]
 
 [build-system]
 requires = ["setuptools>=82.0.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.uv]
+exclude-newer = "7d"
 
 [tool.setuptools.packages.find]
 where = ["src"]
