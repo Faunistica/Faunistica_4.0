@@ -130,4 +130,4 @@ async def test_refresh_token_flow(
 async def test_refresh_invalid_token(async_client: AsyncClient) -> None:
     """Test refresh with invalid token returns 403."""
     response = await async_client.post("/api/auth/refresh")
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED

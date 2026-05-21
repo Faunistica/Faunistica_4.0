@@ -14,7 +14,7 @@
 - [Docker](https://docs.docker.com/engine/install) + [Docker Compose](https://docs.docker.com/compose/install)
 - [Python 3.11+](https://www.python.org/)
 - [uv](https://github.com/astral-sh/uv) - Менеджер пакетов Python
-- [Node.js 20+](https://nodejs.org/)
+- [Node.js 22+](https://nodejs.org/)
 - [pnpm](https://pnpm.io)
 - [Git](https://git-scm.com)
 - make - опционально, без него запускайте линтеры вручную

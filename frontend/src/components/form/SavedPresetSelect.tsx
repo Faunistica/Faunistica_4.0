@@ -1,13 +1,16 @@
 import { type FC, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { History, Check, X } from 'lucide-react';
 import type { FormSchema, RecordSchema } from '@/types/forms';
-import {
-    LOCATION_FIELDS, EVENT_FIELDS,
-    buildLocationLabel, buildEventLabel,
-} from '@/types/forms';
+import { LOCATION_FIELDS, EVENT_FIELDS, buildLocationLabel, buildEventLabel } from '@/types/forms';
 
 type PresetType = 'location' | 'event';
 
@@ -60,7 +63,7 @@ const SavedPresetSelect: FC<Props> = ({ type, currentIndex }) => {
             if (idx === currentIndex) return;
 
             // Check if the sample has any data for these fields
-            const hasData = fields.some(f => {
+            const hasData = fields.some((f) => {
                 const val = (sample as Record<string, unknown>)[f];
                 return val !== null && val !== undefined && val !== '';
             });
@@ -86,13 +89,15 @@ const SavedPresetSelect: FC<Props> = ({ type, currentIndex }) => {
 
     const handleSelect = (value: string) => {
         const idx = parseInt(value, 10);
-        const preset = presets.find(p => p.sourceIndex === idx);
+        const preset = presets.find((p) => p.sourceIndex === idx);
         if (!preset) return;
 
         const fields = FIELD_KEYS[type];
         for (const f of fields) {
             const val = (preset.data as Record<string, unknown>)[f];
-            setValue(`samples.${currentIndex}.${f}` as any, val ?? null, { shouldDirty: true });
+            setValue(`samples.${currentIndex}.${f}` as any, val ?? null, {
+                shouldDirty: true,
+            });
         }
         // Close and hide after selection
         setIsOpen(false);
@@ -117,7 +122,9 @@ const SavedPresetSelect: FC<Props> = ({ type, currentIndex }) => {
                             {presets.map((p) => (
                                 <SelectItem key={p.sourceIndex} value={String(p.sourceIndex)}>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs font-semibold text-blue-600">#{samples.length - p.sourceIndex}</span>
+                                        <span className="text-xs font-semibold text-blue-600">
+                                            #{samples.length - p.sourceIndex}
+                                        </span>
                                         <span className="text-slate-700">{p.label}</span>
                                     </div>
                                 </SelectItem>

@@ -11,6 +11,16 @@ logger = logging.getLogger(__name__)
 csv_path = settings.SPECIES_CSV_PATH
 df = pd.read_csv(csv_path, usecols=["family", "genus", "species"])
 
+FAMILY_GENUS_KNOWN: set[tuple[str, str]] = set(
+    df[["family", "genus"]].drop_duplicates().itertuples(index=False, name=None)
+)
+GENUS_SPECIES_KNOWN: set[tuple[str, str]] = set(
+    df[["genus", "species"]]
+    .dropna()
+    .drop_duplicates()
+    .itertuples(index=False, name=None)
+)
+
 
 def suggest(
     field: TaxonomyField, text: str, filters: TaxonomyFilters | None
@@ -52,3 +62,13 @@ def autofill(field: TaxonomyField, text: str) -> AutofillTaxonResponse:
     row = match_df.iloc[0]
 
     return AutofillTaxonResponse(family=row["family"], genus=row["genus"])
+
+
+def family_genus_known(family: str, genus: str) -> bool:
+    """Check if (family, genus) pair exists in WSC reference."""
+    return (family, genus) in FAMILY_GENUS_KNOWN
+
+
+def genus_species_known(genus: str, species: str) -> bool:
+    """Check if (genus, species) pair exists in WSC reference."""
+    return (genus, species) in GENUS_SPECIES_KNOWN

@@ -1,5 +1,5 @@
-import { type FC, useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { type FC, useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -7,9 +7,9 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { motion, useScroll, useMotionValueEvent } from "framer-motion";
-import { CheckCheck, ShieldCheck } from "lucide-react";
+} from '@/components/ui/alert-dialog';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { CheckCheck, ShieldCheck } from 'lucide-react';
 
 interface FooterProps {
     isAutoSaving: boolean;
@@ -24,7 +24,13 @@ interface FooterProps {
 const ENABLE_MOTION_ON_DESKTOP = true;
 
 const Footer: FC<FooterProps> = ({
-    isAutoSaving, lastSavedTime, onSaveAll, onValidateAll, onSubmit, isValid, isValidating,
+    isAutoSaving,
+    lastSavedTime,
+    onSaveAll,
+    onValidateAll,
+    onSubmit,
+    isValid,
+    isValidating,
 }) => {
     const [isHidden, setIsHidden] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
@@ -36,13 +42,13 @@ const Footer: FC<FooterProps> = ({
     useEffect(() => {
         const check = () => setIsDesktop(window.innerWidth >= 1024);
         check();
-        window.addEventListener("resize", check);
-        return () => window.removeEventListener("resize", check);
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
     }, []);
 
     const { scrollY } = useScroll();
 
-    useMotionValueEvent(scrollY, "change", (latest) => {
+    useMotionValueEvent(scrollY, 'change', (latest) => {
         if (!ENABLE_MOTION_ON_DESKTOP && isDesktop) {
             setIsHidden(false);
             return;
@@ -77,27 +83,29 @@ const Footer: FC<FooterProps> = ({
         }
     };
 
-    const shouldAnimate = ENABLE_MOTION_ON_DESKTOP ? isHidden : (!isDesktop && isHidden);
+    const shouldAnimate = ENABLE_MOTION_ON_DESKTOP ? isHidden : !isDesktop && isHidden;
 
     return (
         <>
             <motion.footer
                 variants={{
                     visible: { y: 0, opacity: 1 },
-                    hidden: { y: "100%", opacity: 0 },
+                    hidden: { y: '100%', opacity: 0 },
                 }}
-                animate={shouldAnimate ? "hidden" : "visible"}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                animate={shouldAnimate ? 'hidden' : 'visible'}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
                 className="fixed bottom-0 left-0 right-0 md:left-64 bg-white/95 backdrop-blur-md px-4 md:px-10 py-4 border-t border-slate-200 z-[90] flex flex-col md:flex-row items-center justify-between gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
             >
                 <div className="flex items-center gap-3 text-sm text-slate-500 order-2 md:order-1 w-full md:w-auto justify-center md:justify-start">
-                    <span className={`flex h-2.5 w-2.5 rounded-full ${isAutoSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
+                    <span
+                        className={`flex h-2.5 w-2.5 rounded-full ${isAutoSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}
+                    ></span>
                     <span className="font-medium">
                         {isAutoSaving
-                            ? "Сохранение..."
+                            ? 'Сохранение...'
                             : lastSavedTime
-                                ? `Последнее сохранение: ${lastSavedTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`
-                                : "Ожидание изменений..."}
+                              ? `Последнее сохранение: ${lastSavedTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`
+                              : 'Ожидание изменений...'}
                     </span>
                 </div>
 
@@ -110,7 +118,7 @@ const Footer: FC<FooterProps> = ({
                         variant="outline"
                     >
                         <CheckCheck className="h-4 w-4 mr-1.5" />
-                        {isValidating ? "Проверка..." : "Проверить всё"}
+                        {isValidating ? 'Проверка...' : 'Проверить всё'}
                     </Button>
 
                     {/* Сохранить всё */}
@@ -138,7 +146,8 @@ const Footer: FC<FooterProps> = ({
                     <AlertDialogHeader>
                         <AlertDialogTitle>Подтвердить отправку?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Вы уверены, что хотите отправить данные? После подтверждения эти данные уйдут в базу, и это действие нельзя будет отменить.
+                            Вы уверены, что хотите отправить данные? После подтверждения эти данные
+                            уйдут в базу, и это действие нельзя будет отменить.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -154,7 +163,7 @@ const Footer: FC<FooterProps> = ({
                             disabled={isSubmitting || !isValid}
                             className="bg-slate-900 text-white hover:bg-slate-800"
                         >
-                            {isSubmitting ? "Отправка..." : "Отправить"}
+                            {isSubmitting ? 'Отправка...' : 'Отправить'}
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>

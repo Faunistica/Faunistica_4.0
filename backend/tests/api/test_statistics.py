@@ -31,7 +31,7 @@ async def test_get_project_statistics(
         await session.flush()  # Flush to get the user in DB before adding action
 
         publ = Publication(
-            id=test_publ_id,
+            publ_id=test_publ_id,
             author="Test Author",
             name="Test Publication",
             type="A",
@@ -84,7 +84,7 @@ async def test_get_user_statistics_by_id(
     authenticated_client: AsyncClient, session_maker, seed_data
 ):
     async with session_maker() as session:
-        publ_id = seed_data["publs"][0].id
+        publ_id = seed_data["publs"][0].publ_id
 
         user = User(
             user_id=random.randint(10000, 99999),
@@ -130,7 +130,7 @@ async def test_get_user_statistics_by_name(
             user_id=random.randint(10000, 99999),
             name="stats_user_by_name",
             reg_stat=UserState.SUPPORT,
-            items=str(seed_data["publs"][0].id),
+            items=str(seed_data["publs"][0].publ_id),
         )
         session.add(user)
         await session.commit()

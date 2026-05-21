@@ -4,8 +4,12 @@ import { toast } from 'sonner';
 import { Upload, FileSpreadsheet, X, AlertTriangle, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-    AlertDialog, AlertDialogContent, AlertDialogDescription,
-    AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useImportRecordsMutation, useExportRecordsMutation } from '@/api/recordAPI';
 import { useSelector } from 'react-redux';
@@ -95,7 +99,9 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
             const result = await importRecords(formData).unwrap();
 
             // Show success toast
-            toast.success(`Загружено ${result.imported_count} записей`, { duration: 5000 });
+            toast.success(`Загружено ${result.imported_count} записей`, {
+                duration: 5000,
+            });
 
             // Show errors/warnings if any
             if (result.errors && result.errors.length > 0) {
@@ -116,7 +122,9 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
             onImportComplete();
         } catch (error: any) {
             const message = error?.data?.detail || error?.message || 'Неизвестная ошибка';
-            toast.error('Ошибка при загрузке файла', { description: String(message) });
+            toast.error('Ошибка при загрузке файла', {
+                description: String(message),
+            });
         } finally {
             setIsUploading(false);
         }
@@ -132,7 +140,12 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
     const handleExport = async () => {
         if (!user_id) return;
         try {
-            const blob = await exportRecords({ user_id, publ_id, scope: 'user', format: 'xlsx' }).unwrap();
+            const blob = await exportRecords({
+                user_id,
+                publ_id,
+                scope: 'user',
+                format: 'xlsx',
+            }).unwrap();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -174,7 +187,8 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                             </Button>
                         </div>
                         <AlertDialogDescription>
-                            Загрузите файл Excel (.xlsx) или CSV (.csv) с данными записей или скачайте текущие.
+                            Загрузите файл Excel (.xlsx) или CSV (.csv) с данными записей или
+                            скачайте текущие.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
@@ -187,11 +201,12 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                         className={`
                             relative cursor-pointer rounded-xl border-2 border-dashed p-8
                             transition-all duration-200 flex flex-col items-center gap-3
-                            ${isDragging
-                                ? 'border-emerald-400 bg-emerald-50 scale-[1.02]'
-                                : selectedFile
-                                    ? 'border-emerald-300 bg-emerald-50/50'
-                                    : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
+                            ${
+                                isDragging
+                                    ? 'border-emerald-400 bg-emerald-50 scale-[1.02]'
+                                    : selectedFile
+                                      ? 'border-emerald-300 bg-emerald-50/50'
+                                      : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
                             }
                         `}
                     >
@@ -209,7 +224,9 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                                     <FileSpreadsheet className="h-6 w-6 text-emerald-600" />
                                 </div>
                                 <div className="text-center">
-                                    <p className="font-medium text-slate-900">{selectedFile.name}</p>
+                                    <p className="font-medium text-slate-900">
+                                        {selectedFile.name}
+                                    </p>
                                     <p className="text-xs text-slate-500 mt-1">
                                         {(selectedFile.size / 1024).toFixed(1)} КБ
                                     </p>
@@ -246,11 +263,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                     </div>
 
                     <AlertDialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={handleClose}
-                            disabled={isUploading}
-                        >
+                        <Button variant="outline" onClick={handleClose} disabled={isUploading}>
                             Отмена
                         </Button>
                         <Button
@@ -283,14 +296,12 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                             Подтверждение импорта
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            Все текущие записи будут удалены и заменены данными из Excel. Продолжить?
+                            Все текущие записи будут удалены и заменены данными из Excel.
+                            Продолжить?
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setShowConfirm(false)}
-                        >
+                        <Button variant="outline" onClick={() => setShowConfirm(false)}>
                             Отмена
                         </Button>
                         <Button

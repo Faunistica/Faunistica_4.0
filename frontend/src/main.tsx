@@ -1,19 +1,19 @@
-import { StrictMode, useEffect, useMemo, useState } from 'react'
-import { createRoot } from 'react-dom/client'
-import { RouterProvider, createBrowserRouter } from 'react-router'
-import { Provider, useSelector } from 'react-redux'
+import { StrictMode, useEffect, useMemo, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import { RouterProvider, createBrowserRouter } from 'react-router';
+import { Provider, useSelector } from 'react-redux';
 
-import { login, logout } from './store/reducers/userSlice.ts'
-import { store, type RootState } from './store/store.ts'
+import { login, logout } from './store/reducers/userSlice.ts';
+import { store, type RootState } from './store/store.ts';
 
-import { routes } from './router.tsx'
+import { routes } from './router.tsx';
 
-import LoadingScreen from './components/LoadingScreen.tsx'
-import NetworkErrorAlert from './components/alerts/NetworkErrorAlert.tsx'
+import LoadingScreen from './components/LoadingScreen.tsx';
+import NetworkErrorAlert from './components/alerts/NetworkErrorAlert.tsx';
 
 import type * as Types from '@/types/api.dto';
 
-import './index.css'
+import './index.css';
 
 async function verifyAuthInBackground(setNetworkError: (value: boolean) => void) {
     try {
@@ -40,7 +40,6 @@ async function verifyAuthInBackground(setNetworkError: (value: boolean) => void)
         }
 
         store.dispatch(logout());
-
     } catch (error) {
         store.dispatch(logout());
         setNetworkError(true);
@@ -80,4 +79,4 @@ createRoot(document.getElementById('root')!).render(
             <App />
         </Provider>
     </StrictMode>,
-)
+);

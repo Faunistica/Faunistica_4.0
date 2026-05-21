@@ -1,18 +1,18 @@
-import { type FC } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { PublicationRow } from "@/components/articles/PublicationRow";
-import { publAPI } from "@/api/publAPI"; // Замените на актуальный путь до вашего API
+import { type FC } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { PublicationRow } from '@/components/articles/PublicationRow';
+import { publAPI } from '@/api/publAPI'; // Замените на актуальный путь до вашего API
 
 const Dashboard: FC = () => {
     // Получаем текущие (назначенные модератором) публикации
     const {
         data: currentPublications = [],
         isLoading,
-        isError
+        isError,
     } = publAPI.useGetCurrentPublicationQuery({ list: true });
 
-    /* 
+    /*
      * TODO: Функционал "В работе" и "Бронирование" будет добавлен в API в будущем.
      * Моковые данные и компоненты закомментированы, удалять нельзя.
      *
@@ -41,13 +41,14 @@ const Dashboard: FC = () => {
     return (
         <>
             <div className="grid grid-cols-1 gap-8">
-
                 {/* Блок: Назначено модератором (Текущие задачи из API) */}
                 {currentPublications.length > 0 && (
                     <section>
                         <div className="mb-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-sm md:text-base font-bold text-slate-900 uppercase tracking-wide">Назначено модератором</h2>
+                                <h2 className="text-sm md:text-base font-bold text-slate-900 uppercase tracking-wide">
+                                    Назначено модератором
+                                </h2>
                                 <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-none px-2 rounded-md font-bold">
                                     {currentPublications.length}
                                 </Badge>
@@ -55,7 +56,7 @@ const Dashboard: FC = () => {
                         </div>
                         <Card className="border-amber-200 bg-amber-50/30 shadow-sm overflow-hidden rounded-xl">
                             <div className="flex flex-col">
-                                {currentPublications.map(pub => (
+                                {currentPublications.map((pub) => (
                                     <PublicationRow key={pub.publ_id} pub={pub} mode="suggested" />
                                 ))}
                             </div>
@@ -64,7 +65,7 @@ const Dashboard: FC = () => {
                 )}
 
                 {/* Блок: В процессе работы (Закомментировано до обновления API) */}
-                {/* 
+                {/*
                 {MOCK_IN_PROGRESS.length > 0 && (
                     <section>
                         <div className="mb-4 flex items-center justify-between">
@@ -80,7 +81,6 @@ const Dashboard: FC = () => {
                     </section>
                 )}
                 */}
-
             </div>
 
             {/* Общий пул доступных публикаций (Закомментировано до обновления API) */}
