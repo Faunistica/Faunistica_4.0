@@ -5,11 +5,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
-import type { FormSchema } from '@/types/forms';
+import type { FormRecord } from '@/types/api.dto';
 
 interface UseAutoSaveOptions {
-    methods: UseFormReturn<FormSchema>;
-    handleSave: (data: FormSchema, isManual: boolean, targetIndex?: number) => Promise<void>;
+    methods: UseFormReturn<FormRecord>;
+    handleSave: (data: FormRecord, isManual: boolean, targetIndex?: number) => Promise<void>;
     /** Задержка debounce в мс (по умолчанию 2000). */
     delay?: number;
 }

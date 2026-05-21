@@ -15,10 +15,13 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import type { RecordFull } from '@/types/api.dto';
+import type { RecordStatus } from '@/hooks/useRecordStatus';
+import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 
 interface SidebarProps {
     records: RecordFull[];
     activeRecordId: string | null;
+    recordStatuses: Record<string, RecordStatus>;
     onSelectRecord: (id: string) => void;
     onCreateRecord: () => void;
 }
@@ -28,10 +31,12 @@ const SidebarRecordItem = memo(
         record,
         isActive,
         onSelect,
+        status,
     }: {
         record: RecordFull;
         isActive: boolean;
         onSelect: () => void;
+        status: RecordStatus;
     }) => {
         const recordName = record.species || record.genus || record.family || 'Новая запись';
 
@@ -56,6 +61,7 @@ const SidebarRecordItem = memo(
                 >
                     <div className="flex w-full items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
+                            <RecordStatusIndicator status={status} />
                             <span
                                 className={`text-xs font-bold leading-tight truncate ${
                                     isActive ? 'text-slate-900' : 'text-slate-700'
@@ -94,6 +100,7 @@ SidebarRecordItem.displayName = 'SidebarRecordItem';
 const FormSidebar: FC<SidebarProps> = ({
     records,
     activeRecordId,
+    recordStatuses,
     onSelectRecord,
     onCreateRecord,
 }) => {
@@ -153,6 +160,7 @@ const FormSidebar: FC<SidebarProps> = ({
                                     key={record.id}
                                     record={record}
                                     isActive={record.id === activeRecordId}
+                                    status={recordStatuses[record.id] ?? 'draft'}
                                     onSelect={() => {
                                         onSelectRecord(record.id);
                                         if (isMobile) setOpenMobile(false);

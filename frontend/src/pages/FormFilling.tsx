@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState, useCallback } from 'react';
+import { type FC, useEffect, useState, useCallback, useMemo } from 'react';
 import { useOutletContext, useParams } from 'react-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +7,12 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 import type { FormRecord } from '@/types/api.dto';
 import { formRecordSchema } from '@/types/forms';
-import { recordAPI, useRecordsListQuery, useCreateRecordMutation } from '@/api/recordAPI';
+import {
+    recordAPI,
+    useRecordsListQuery,
+    useLazyRecordByIdQuery,
+    useCreateRecordMutation,
+} from '@/api/recordAPI';
 
 import ArticleSourceCard from '@/components/form/ArticleSourceCard';
 import GeographyCard from '@/components/form/GeographyCard';
@@ -22,11 +27,20 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useSaveRecord } from '@/hooks/useSaveRecord';
+import { useRecordStatus, type RecordStatus } from '@/hooks/useRecordStatus';
 
 interface OutletContextType {
     isSidebarOpen: boolean;
     setIsSidebarOpen: (isOpen: boolean) => void;
 }
+
+const SERVER_STATUS_MAP: Record<string, RecordStatus> = {
+    rec_ok: 'valid',
+    check_ok: 'valid',
+    rec_fail: 'error',
+    check_fail: 'error',
+    rec_del: 'error',
+};
 
 const FormFilling: FC = () => {
     const { isSidebarOpen, setIsSidebarOpen } = useOutletContext<OutletContextType>();
@@ -43,6 +57,7 @@ const FormFilling: FC = () => {
     );
 
     const [createRecord] = useCreateRecordMutation();
+    const [fetchRecordById] = useLazyRecordByIdQuery();
 
     const methods = useForm<FormRecord>({
         resolver: zodResolver(formRecordSchema),
@@ -80,9 +95,50 @@ const FormFilling: FC = () => {
         }
     }, [publ_id, createRecord, reset]);
 
-    if (isLoading) return <LoadingScreen />;
+    const switchToRecord = useCallback(
+        async (targetId: string) => {
+            if (targetId === activeRecordId) return;
 
-    const records = recordsData?.items ?? [];
+            await save(getValues());
+
+            const cached = recordAPI.util.getQueryData('recordById', { record_id: targetId });
+            if (cached) {
+                reset(cached);
+            } else {
+                const result = await fetchRecordById({ record_id: targetId }, false);
+                if (result.data) {
+                    reset(result.data);
+                }
+            }
+
+            setActiveRecordId(targetId);
+        },
+        [activeRecordId, save, getValues, reset, fetchRecordById],
+    );
+
+    const records = useMemo(() => recordsData?.items ?? [], [recordsData]);
+
+    const activeStatus = useRecordStatus(
+        activeRecordId ?? '',
+        !!activeRecordId,
+        undefined,
+        methods,
+    );
+
+    const recordStatuses = useMemo(() => {
+        const map: Record<string, RecordStatus> = {};
+        for (const record of records) {
+            if (record.id === activeRecordId) {
+                map[record.id] = activeStatus;
+            } else {
+                const serverType = record.type;
+                map[record.id] = (serverType && SERVER_STATUS_MAP[serverType]) || 'draft';
+            }
+        }
+        return map;
+    }, [records, activeRecordId, activeStatus]);
+
+    if (isLoading) return <LoadingScreen />;
 
     return (
         <FormProvider {...methods}>
@@ -95,7 +151,8 @@ const FormFilling: FC = () => {
                 <FormSidebar
                     records={records}
                     activeRecordId={activeRecordId}
-                    onSelectRecord={setActiveRecordId}
+                    recordStatuses={recordStatuses}
+                    onSelectRecord={switchToRecord}
                     onCreateRecord={handleCreate}
                 />
                 <main className="flex-1 flex flex-col w-full min-w-0 relative">

@@ -10,7 +10,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { convertDMToDD, convertDMSToDD, formatDMVerbatim, formatDMSVerbatim } from '@/lib/geoUtils';
-import type { FormSchema } from '@/types/forms';
+import type { FormRecord } from '@/types/api.dto';
 
 interface Props {
     prefix: string;
@@ -119,7 +119,7 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
         setValue,
         trigger,
         formState: { errors },
-    } = useFormContext<FormSchema>();
+    } = useFormContext<FormRecord>();
 
     const [latDeg, setLatDeg] = useState<number | ''>('');
     const [latMin, setLatMin] = useState<number | ''>('');
@@ -153,22 +153,22 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
         const verbatim = formatDMVerbatim(latDeg, latMin, latDir, lonDeg, lonMin, lonDir);
 
         // Обновляем форму БЕЗ лишних триггеров валидации на каждом чихе
-        setValue(`${prefix}.latitude`, latitude, {
+        setValue(`${prefix}.latitude` as any, latitude, {
             shouldValidate: false,
             shouldDirty: true,
         });
-        setValue(`${prefix}.longitude`, longitude, {
+        setValue(`${prefix}.longitude` as any, longitude, {
             shouldValidate: false,
             shouldDirty: true,
         });
-        setValue(`${prefix}.verbatimcoordinates`, verbatim, {
+        setValue(`${prefix}.verbatimcoordinates` as any, verbatim, {
             shouldValidate: false,
             shouldDirty: true,
         });
 
         // Запускаем валидацию асинхронно, чтобы не блокировать ввод
         setTimeout(() => {
-            trigger([`${prefix}.latitude`, `${prefix}.longitude`]);
+            trigger([`${prefix}.latitude` as any, `${prefix}.longitude` as any]);
         }, 0);
     }, [debouncedValues, prefix, setValue, trigger]);
 
@@ -179,14 +179,14 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
     // Обработчики с мемоизацией
     const handleLatDegChange = useCallback((val: number | '') => setLatDeg(val), []);
     const handleLatMinChange = useCallback((val: number | '') => setLatMin(val), []);
-    const handleLatDirChange = useCallback((val: 'N' | 'S') => setLatDir(val), []);
+    const handleLatDirChange = useCallback((val: string) => setLatDir(val as 'N' | 'S'), []);
     const handleLonDegChange = useCallback((val: number | '') => setLonDeg(val), []);
     const handleLonMinChange = useCallback((val: number | '') => setLonMin(val), []);
-    const handleLonDirChange = useCallback((val: 'E' | 'W') => setLonDir(val), []);
+    const handleLonDirChange = useCallback((val: string) => setLonDir(val as 'E' | 'W'), []);
 
     // Ошибки из react-hook-form
-    const latError = errors[prefix]?.latitude?.message as string | undefined;
-    const lonError = errors[prefix]?.longitude?.message as string | undefined;
+    const latError = (errors as any)[prefix]?.latitude?.message as string | undefined;
+    const lonError = (errors as any)[prefix]?.longitude?.message as string | undefined;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 rounded-lg border border-slate-200">
@@ -273,7 +273,7 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
         setValue,
         trigger,
         formState: { errors },
-    } = useFormContext<FormSchema>();
+    } = useFormContext<FormRecord>();
 
     const [latDeg, setLatDeg] = useState<number | ''>('');
     const [latMin, setLatMin] = useState<number | ''>('');
@@ -333,21 +333,21 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
             lonDir,
         );
 
-        setValue(`${prefix}.latitude`, latitude, {
+        setValue(`${prefix}.latitude` as any, latitude, {
             shouldValidate: false,
             shouldDirty: true,
         });
-        setValue(`${prefix}.longitude`, longitude, {
+        setValue(`${prefix}.longitude` as any, longitude, {
             shouldValidate: false,
             shouldDirty: true,
         });
-        setValue(`${prefix}.verbatimcoordinates`, verbatim, {
+        setValue(`${prefix}.verbatimcoordinates` as any, verbatim, {
             shouldValidate: false,
             shouldDirty: true,
         });
 
         setTimeout(() => {
-            trigger([`${prefix}.latitude`, `${prefix}.longitude`]);
+            trigger([`${prefix}.latitude` as any, `${prefix}.longitude` as any]);
         }, 0);
     }, [debouncedValues, prefix, setValue, trigger]);
 
@@ -358,14 +358,14 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
     const handleLatDegChange = useCallback((val: number | '') => setLatDeg(val), []);
     const handleLatMinChange = useCallback((val: number | '') => setLatMin(val), []);
     const handleLatSecChange = useCallback((val: number | '') => setLatSec(val), []);
-    const handleLatDirChange = useCallback((val: 'N' | 'S') => setLatDir(val), []);
+    const handleLatDirChange = useCallback((val: string) => setLatDir(val as 'N' | 'S'), []);
     const handleLonDegChange = useCallback((val: number | '') => setLonDeg(val), []);
     const handleLonMinChange = useCallback((val: number | '') => setLonMin(val), []);
     const handleLonSecChange = useCallback((val: number | '') => setLonSec(val), []);
-    const handleLonDirChange = useCallback((val: 'E' | 'W') => setLonDir(val), []);
+    const handleLonDirChange = useCallback((val: string) => setLonDir(val as 'E' | 'W'), []);
 
-    const latError = errors[prefix]?.latitude?.message as string | undefined;
-    const lonError = errors[prefix]?.longitude?.message as string | undefined;
+    const latError = (errors as any)[prefix]?.latitude?.message as string | undefined;
+    const lonError = (errors as any)[prefix]?.longitude?.message as string | undefined;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 rounded-lg border border-slate-200">

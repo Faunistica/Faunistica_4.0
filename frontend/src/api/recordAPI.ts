@@ -101,6 +101,7 @@ export const recordAPI = createApi({
 export const {
     useRecordsListQuery,
     useRecordByIdQuery,
+    useLazyRecordByIdQuery,
     useCreateRecordMutation,
     useEditRecordMutation,
     useDeleteRecordMutation,
