@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState, useCallback, useMemo } from 'react';
+import { type FC, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useOutletContext, useParams } from 'react-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -70,6 +70,57 @@ const FormFilling: FC = () => {
 
     const { save, submit, isSaving, nonFieldErrors } = useSaveRecord(activeRecordId, methods);
 
+    const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const lastSnapshotRef = useRef<string>('');
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
+    const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
+
+    const cancelPendingAutoSave = useCallback(() => {
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+            autoSaveTimerRef.current = undefined;
+        }
+    }, []);
+
+    useEffect(() => {
+        const subscription = methods.watch((_value, { type }) => {
+            if (type !== 'change') return;
+
+            cancelPendingAutoSave();
+
+            autoSaveTimerRef.current = setTimeout(async () => {
+                const currentValues = getValues();
+                const currentSnapshot = JSON.stringify(currentValues);
+
+                if (currentSnapshot === lastSnapshotRef.current) {
+                    return;
+                }
+
+                setIsAutoSaving(true);
+                try {
+                    await save(currentValues);
+                    lastSnapshotRef.current = currentSnapshot;
+                    setLastSavedTime(new Date());
+                } catch {
+                    // auto-save errors handled by useSaveRecord
+                } finally {
+                    setIsAutoSaving(false);
+                }
+            }, 2000);
+        });
+
+        return () => {
+            subscription.unsubscribe();
+            cancelPendingAutoSave();
+        };
+    }, [methods, getValues, save, cancelPendingAutoSave]);
+
+    useEffect(() => {
+        if (activeRecordId) {
+            lastSnapshotRef.current = JSON.stringify(getValues());
+        }
+    }, [activeRecordId, getValues]);
+
     useEffect(() => {
         if (recordsData?.items && !hasLoadedInitial) {
             const items = recordsData.items;
@@ -99,6 +150,8 @@ const FormFilling: FC = () => {
         async (targetId: string) => {
             if (targetId === activeRecordId) return;
 
+            cancelPendingAutoSave();
+
             await save(getValues());
 
             const cached = recordAPI.util.getQueryData('recordById', { record_id: targetId });
@@ -113,7 +166,7 @@ const FormFilling: FC = () => {
 
             setActiveRecordId(targetId);
         },
-        [activeRecordId, save, getValues, reset, fetchRecordById],
+        [activeRecordId, save, getValues, reset, fetchRecordById, cancelPendingAutoSave],
     );
 
     const records = useMemo(() => recordsData?.items ?? [], [recordsData]);
@@ -192,6 +245,8 @@ const FormFilling: FC = () => {
                         onSave={() => save(getValues())}
                         onSubmit={() => submit(getValues())}
                         isSaving={isSaving}
+                        isAutoSaving={isAutoSaving}
+                        lastSavedTime={lastSavedTime}
                     />
                 </main>
             </SidebarProvider>
