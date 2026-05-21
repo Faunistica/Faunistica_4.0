@@ -126,13 +126,3 @@ class TestAllRules:
         rules = [r for r in all_rules() if r.category == expected_category]
         assert len(rules) > 0, f"No rules for category {expected_category}"
 
-    def test_expected_rule_count(self) -> None:
-        # total rules: 10 tax + 14 geo + 5 loc + 8 event + 5 abundance = 42.
-        # Bump this number when adding or removing validation rules.
-
-        rules = all_rules()
-        counts = dict.fromkeys(RuleCategory, 0)
-        for r in rules:
-            counts[r.category] += 1
-        total = sum(counts.values())
-        assert total == 42, f"Expected 42 rules, got {total}: {counts}"

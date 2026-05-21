@@ -73,9 +73,7 @@ class TestContainsForbiddenChars:
             (("tab\there", "no_tab"), True),
         ],
     )
-    def test_contains_forbidden_chars(
-        self, fields: tuple, expected: bool
-    ) -> None:
+    def test_contains_forbidden_chars(self, fields: tuple, expected: bool) -> None:
         assert contains_forbidden_chars(*fields) is expected
 
 
@@ -93,9 +91,7 @@ class TestHasRangeSeparator:
             ("01.01.2020", False),
         ],
     )
-    def test_has_range_separator(
-        self, date_str: str | None, expected: bool
-    ) -> None:
+    def test_has_range_separator(self, date_str: str | None, expected: bool) -> None:
         assert has_range_separator(date_str) is expected
 
 

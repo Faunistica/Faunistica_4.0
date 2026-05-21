@@ -139,9 +139,7 @@ class TestAbundanceValidation:
 
     # ── Forbidden chars in occurrence remarks ──────────────────────────
 
-    @pytest.mark.parametrize(
-        "field", ["occurrence_remarks", "identification_remarks"]
-    )
+    @pytest.mark.parametrize("field", ["occurrence_remarks", "identification_remarks"])
     def test_forbidden_chars_in_occurrence(self, field: str) -> None:
         kwargs = {field: "text\twith\ttab"}
         data = _valid_data(**kwargs)

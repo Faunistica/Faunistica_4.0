@@ -52,8 +52,7 @@ class TestTaxonomyValidation:
         data = _valid_data(family=None)
         errors = validate_record(data, language="rus")
         assert any(
-            e.code == "required" and "family" in (e.fields or [])
-            for e in errors.errors
+            e.code == "required" and "family" in (e.fields or []) for e in errors.errors
         )
 
     @patch(f"{TAXONOMY_PATCH}.family_genus_known", return_value=True)
@@ -62,8 +61,7 @@ class TestTaxonomyValidation:
         data = _valid_data(genus=None)
         errors = validate_record(data, language="rus")
         assert any(
-            e.code == "required" and "genus" in (e.fields or [])
-            for e in errors.errors
+            e.code == "required" and "genus" in (e.fields or []) for e in errors.errors
         )
 
     @patch(f"{TAXONOMY_PATCH}.family_genus_known", return_value=True)
@@ -83,10 +81,7 @@ class TestTaxonomyValidation:
     def test_family_genus_unknown(self, _m1, _m2) -> None:
         data = _valid_data()
         errors = validate_record(data, language="rus")
-        assert any(
-            e.code == "unknown" and e.fields == ["genus"]
-            for e in errors.errors
-        )
+        assert any(e.code == "unknown" and e.fields == ["genus"] for e in errors.errors)
 
     @patch(f"{TAXONOMY_PATCH}.family_genus_known", return_value=False)
     @patch(f"{TAXONOMY_PATCH}.genus_species_known", return_value=True)
@@ -101,8 +96,7 @@ class TestTaxonomyValidation:
         data = _valid_data()
         errors = validate_record(data, language="rus")
         assert any(
-            e.code == "unknown" and e.fields == ["species"]
-            for e in errors.errors
+            e.code == "unknown" and e.fields == ["species"] for e in errors.errors
         )
 
     # ── taxon_rank invalid ─────────────────────────────────────────────
@@ -159,8 +153,7 @@ class TestTaxonomyValidation:
         data = _valid_data(type_status="голотип", taxon_rank="genus")
         errors = validate_record(data, language="rus")
         assert any(
-            e.code == "conflict" and e.fields == ["type_status"]
-            for e in errors.errors
+            e.code == "conflict" and e.fields == ["type_status"] for e in errors.errors
         )
 
     @patch(f"{TAXONOMY_PATCH}.family_genus_known", return_value=True)
@@ -169,8 +162,7 @@ class TestTaxonomyValidation:
         data = _valid_data(type_status="none", taxon_rank="genus")
         errors = validate_record(data, language="rus")
         assert not any(
-            e.code == "conflict" and e.fields == ["type_status"]
-            for e in errors.errors
+            e.code == "conflict" and e.fields == ["type_status"] for e in errors.errors
         )
 
     # ── Forbidden chars in taxonomy fields ─────────────────────────────
@@ -179,7 +171,14 @@ class TestTaxonomyValidation:
     @patch(f"{TAXONOMY_PATCH}.genus_species_known", return_value=True)
     @pytest.mark.parametrize(
         "field",
-        ["family", "genus", "species", "accepted_name", "taxon_remarks", "identification_remarks"],
+        [
+            "family",
+            "genus",
+            "species",
+            "accepted_name",
+            "taxon_remarks",
+            "identification_remarks",
+        ],
     )
     def test_forbidden_chars_in_taxonomy_field(self, _m1, _m2, field: str) -> None:
         kwargs = {field: "text\twith\ttab"}
