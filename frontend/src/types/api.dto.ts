@@ -102,15 +102,16 @@ export interface PaginatedResponse<T> {
     pages: number;
 }
 
-export interface DraftRecord extends Omit<RecordData, 'specimens'> {
-    mmm?: number | null;
-    ssm?: number | null;
-    fff?: number | null;
-    ssf?: number | null;
-    adu?: number | null;
-    juv?: number | null;
-    record_ids?: Record<string, string>;
+export interface QuantityFields {
+    males?: number | undefined;
+    subadultMales?: number | undefined;
+    females?: number | undefined;
+    subadultFemales?: number | undefined;
+    adults?: number | undefined;
+    juveniles?: number | undefined;
 }
+
+export type FormRecord = Omit<RecordData, 'specimens'> & QuantityFields;
 
 export interface SuggestTaxonRequest {
     field: 'family' | 'genus' | 'species';

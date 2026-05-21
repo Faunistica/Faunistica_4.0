@@ -11,9 +11,9 @@ export interface ImportRecordsResponse {
 export const recordAPI = createApi({
     reducerPath: 'recordAPI',
     baseQuery: baseQueryWithReauth,
-    tagTypes: ['record'],
+    tagTypes: ['records-list'],
     endpoints: (build) => ({
-        getRecordsData: build.query<
+        recordsList: build.query<
             Types.PaginatedResponse<Types.RecordFull>,
             Types.RecordListRequest
         >({
@@ -22,9 +22,25 @@ export const recordAPI = createApi({
                 method: 'GET',
                 params: params,
             }),
-            providesTags: ['record'],
+            providesTags: ['records-list'],
+            onQueryStarted: async (_params, { dispatch, queryFulfilled }) => {
+                try {
+                    const { data } = await queryFulfilled;
+                    for (const item of data.items) {
+                        void dispatch(
+                            recordAPI.util.upsertQueryData(
+                                'recordById',
+                                { record_id: item.id },
+                                item,
+                            ),
+                        );
+                    }
+                } catch {
+                    // cache warm-up is best-effort
+                }
+            },
         }),
-        getRecordById: build.query<Types.RecordFull, Types.RecordIdRequest>({
+        recordById: build.query<Types.RecordFull, Types.RecordIdRequest>({
             query: ({ record_id }) => ({
                 url: `/records/${record_id}`,
                 method: 'GET',
@@ -36,7 +52,7 @@ export const recordAPI = createApi({
                 method: 'POST',
                 body: record,
             }),
-            invalidatesTags: ['record'],
+            invalidatesTags: ['records-list'],
         }),
         editRecord: build.mutation<Types.UpdateRecordResponse, Types.EditRecordRequest>({
             query: ({ record_id, data }) => ({
@@ -44,21 +60,25 @@ export const recordAPI = createApi({
                 method: 'PUT',
                 body: data,
             }),
+            invalidatesTags: ['records-list'],
         }),
         deleteRecord: build.mutation<void, Types.RecordIdRequest>({
             query: ({ record_id }) => ({
                 url: `/records/${record_id}`,
                 method: 'DELETE',
             }),
+            invalidatesTags: ['records-list'],
+        }),
+        submitRecord: build.mutation<Types.UpdateRecordResponse, Types.RecordIdRequest>({
+            query: ({ record_id }) => ({
+                url: `/records/${record_id}/submit`,
+                method: 'PUT',
+            }),
+            invalidatesTags: ['records-list'],
         }),
         exportRecords: build.mutation<
             Blob,
-            {
-                user_id: number;
-                publ_id?: number;
-                scope?: string;
-                format?: string;
-            }
+            { user_id: number; publ_id?: number; scope?: string; format?: string }
         >({
             query: (params) => ({
                 url: '/records/export',
@@ -67,24 +87,24 @@ export const recordAPI = createApi({
                 responseHandler: (response) => response.blob(),
             }),
         }),
-        // ── Импорт записей из Excel/CSV ──
         importRecords: build.mutation<ImportRecordsResponse, FormData>({
             query: (formData) => ({
                 url: '/records/import',
                 method: 'POST',
                 body: formData,
             }),
-            invalidatesTags: ['record'],
+            invalidatesTags: ['records-list'],
         }),
     }),
 });
 
 export const {
-    useGetRecordsDataQuery,
-    useGetRecordByIdQuery,
+    useRecordsListQuery,
+    useRecordByIdQuery,
     useCreateRecordMutation,
     useEditRecordMutation,
     useDeleteRecordMutation,
+    useSubmitRecordMutation,
     useExportRecordsMutation,
     useImportRecordsMutation,
 } = recordAPI;

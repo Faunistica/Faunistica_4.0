@@ -37,9 +37,12 @@ export const FIELD_LABELS: Record<string, string> = {
     verbatim_date: 'Дата сбора',
     sampling_protocol: 'Метод сбора',
     recorded_by: 'Коллектор',
-    mmm: 'Самцы',
-    ssm: 'Самки',
-    // ...добавь остальные
+    males: 'Самцы',
+    subadultMales: 'Субвзрослые самцы',
+    females: 'Самки',
+    subadultFemales: 'Субвзрослые самки',
+    adults: 'Взрослые',
+    juveniles: 'Ювенильные',
 };
 
 // 🏷️ Хелпер для получения названия поля
@@ -113,16 +116,23 @@ export const QUANTITY_TYPE_OPTIONS = [
     },
 ] as const;
 
-export const QUANTITY_FIELDS = ['mmm', 'ssm', 'fff', 'ssf', 'adu', 'juv'] as const;
+export const QUANTITY_FIELDS = [
+    'males',
+    'subadultMales',
+    'females',
+    'subadultFemales',
+    'adults',
+    'juveniles',
+] as const;
 export type QuantityField = (typeof QUANTITY_FIELDS)[number];
 
 export const QUANTITY_FIELD_LABELS: Record<QuantityField, string> = {
-    mmm: 'Самцов',
-    ssm: 'Субвзрослых самцов',
-    fff: 'Самок',
-    ssf: 'Субвзрослых самок',
-    adu: 'Взрослых (пол не определён)',
-    juv: 'Ювенильных',
+    males: 'Самцов',
+    subadultMales: 'Субвзрослых самцов',
+    females: 'Самок',
+    subadultFemales: 'Субвзрослых самок',
+    adults: 'Взрослых (пол не определён)',
+    juveniles: 'Ювенильных',
 };
 
 export const LOCATION_FIELDS = [
@@ -172,7 +182,7 @@ export function buildEventLabel(data: Record<string, unknown>): string {
 
 import { z } from 'zod';
 
-export const recordSchema = z.object({
+export const formRecordSchema = z.object({
     // ═══ LOCATION ═══
     georef_source: z.enum(['lit', 'vol', 'none']).nullish(),
     country: z.string().min(1, 'Обязательное поле'),
@@ -225,20 +235,12 @@ export const recordSchema = z.object({
     // ═══ QUANTITIES ═══
     quantity_type: z.string().nullish(),
     occurrence_remarks: z.string().nullish(),
-    mmm: z.number().min(0).nullish(),
-    ssm: z.number().min(0).nullish(),
-    fff: z.number().min(0).nullish(),
-    ssf: z.number().min(0).nullish(),
-    adu: z.number().min(0).nullish(),
-    juv: z.number().min(0).nullish(),
-
-    // ═══ INTERNAL ═══
-    record_ids: z.record(z.string(), z.string()).optional(),
+    males: z.number().min(0).nullish(),
+    subadultMales: z.number().min(0).nullish(),
+    females: z.number().min(0).nullish(),
+    subadultFemales: z.number().min(0).nullish(),
+    adults: z.number().min(0).nullish(),
+    juveniles: z.number().min(0).nullish(),
 });
 
-export const formSchema = z.object({
-    samples: z.array(recordSchema),
-});
-
-export type FormSchema = z.infer<typeof formSchema>;
-export type RecordSchema = z.infer<typeof recordSchema>;
+export type FormRecord = z.infer<typeof formRecordSchema>;

@@ -1,70 +1,26 @@
-import type { RecordData, DraftRecord, RecordFull } from '@/types/api.dto';
-import type { RecordSchema, QuantityField } from '@/types/forms';
-
-export const getFieldFromSexAndLifestage = (
-    sex?: string | null,
-    life_stage?: string | null,
-): QuantityField | null => {
-    if (sex === 'male' && life_stage === 'adult') return 'mmm';
-    if (sex === 'male' && life_stage === 'subadult') return 'ssm';
-    if (sex === 'female' && life_stage === 'adult') return 'fff';
-    if (sex === 'female' && life_stage === 'subadult') return 'ssf';
-    if ((sex === 'none' || !sex) && life_stage === 'adult') return 'adu';
-    if ((sex === 'none' || !sex) && life_stage === 'juvenile') return 'juv';
-    return null;
-};
+import type { RecordData, FormRecord } from '@/types/api.dto';
 
 export const getSexAndLifestageFromField = (field: string): { sex: string; life_stage: string } => {
     switch (field) {
-        case 'mmm':
+        case 'males':
             return { sex: 'male', life_stage: 'adult' };
-        case 'ssm':
+        case 'subadultMales':
             return { sex: 'male', life_stage: 'subadult' };
-        case 'fff':
+        case 'females':
             return { sex: 'female', life_stage: 'adult' };
-        case 'ssf':
+        case 'subadultFemales':
             return { sex: 'female', life_stage: 'subadult' };
-        case 'adu':
+        case 'adults':
             return { sex: 'none', life_stage: 'adult' };
-        case 'juv':
+        case 'juveniles':
             return { sex: 'none', life_stage: 'juvenile' };
         default:
             return { sex: 'none', life_stage: 'none' };
     }
 };
 
-/**
- * Groups flat API records (one per sex/lifestage) into DraftRecords
- * where each draft represents a single sample with multiple quantity fields.
- */
-export const groupRecordsIntoDrafts = (records: RecordFull[]): DraftRecord[] => {
-    return records.map((record) => {
-        const draft: DraftRecord = {
-            ...record,
-            record_ids: { base: record.id },
-        };
-
-        if (record.specimens) {
-            record.specimens.forEach((spec) => {
-                const field = getFieldFromSexAndLifestage(spec.sex, spec.life_stage);
-                if (field) {
-                    (draft as any)[field] = spec.count;
-                }
-            });
-        }
-
-        return draft;
-    });
-};
-
-/**
- * Convert a form DraftRecord back to the flat RecordData shape expected by the API.
- * Strips quantity fields and record_ids – caller handles those separately.
- */
-export const draftToRecordData = (draft: Partial<RecordSchema>): RecordData => {
+export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
     const data: RecordData = {};
-
-    // Copy all string/number/boolean fields that exist in RecordData
     const fieldsToCopy: (keyof RecordData)[] = [
         'country',
         'region',
@@ -102,7 +58,6 @@ export const draftToRecordData = (draft: Partial<RecordSchema>): RecordData => {
         'occurrence_remarks',
         'identification_remarks',
     ];
-
     for (const key of fieldsToCopy) {
         const val = (draft as any)[key];
         if (val !== undefined) {
@@ -113,11 +68,15 @@ export const draftToRecordData = (draft: Partial<RecordSchema>): RecordData => {
             }
         }
     }
-
-    // Process specimens
     const specimens: any[] = [];
-    const quantityFields = ['mmm', 'ssm', 'fff', 'ssf', 'adu', 'juv'] as const;
-
+    const quantityFields = [
+        'males',
+        'subadultMales',
+        'females',
+        'subadultFemales',
+        'adults',
+        'juveniles',
+    ] as const;
     for (const field of quantityFields) {
         const count = (draft as any)[field];
         if (count !== undefined && count !== null && count > 0) {
@@ -125,10 +84,8 @@ export const draftToRecordData = (draft: Partial<RecordSchema>): RecordData => {
             specimens.push({ sex, life_stage, count });
         }
     }
-
     if (specimens.length > 0) {
         data.specimens = specimens;
     }
-
     return data;
 };
