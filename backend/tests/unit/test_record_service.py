@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from openpyxl import Workbook
 
-from core.exceptions import NoPublicationsAssignedError, RecordLimitExceededError
-from schema.records import RecordData
+from core.config import settings
+from core.exceptions import ImportLimitExceededError, NoPublicationsAssignedError
+from schema.records import RecordData, Specimen
 from service.export import COLUMN_MAPPING, ParseResult
 from service.records import ImportResult, RecordService
 
@@ -25,6 +26,7 @@ def mock_publication_service():
     """Create a mock publication service."""
     service = AsyncMock()
     service.validate_access = AsyncMock()
+    service.get_current = AsyncMock(return_value=[])
     return service
 
 
@@ -59,12 +61,17 @@ class TestImportRecords:
 
         # Mock user with publication
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
             patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
@@ -74,16 +81,12 @@ class TestImportRecords:
                 RecordData(family="Formicidae", genus="Lasius", species="niger"),
             ]
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 for record_data in records_data:
-                    yield {
-                        "success": True,
-                        "record": record_data,
-                        "error": None,
-                    }
+                    yield (record_data, None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1"
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=2
             )
 
             assert isinstance(result, ImportResult)
@@ -106,38 +109,36 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
+            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             # Create a mock ValidationError
             mock_error = MagicMock(spec=ValidationError)
             mock_error.json.return_value = '[{"msg": "Validation failed"}]'
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 # Valid record
-                yield {
-                    "success": True,
-                    "record": RecordData(family="Formicidae", genus="Camponotus"),
-                    "error": None,
-                }
-                # Invalid record (simulate validation error)
-                yield {"success": False, "record": None, "error": mock_error}
+                yield (RecordData(family="Formicidae", genus="Camponotus"), None)
+                # Invalid record (simulate validation error with partial data)
+                yield (RecordData(family="Formicidae"), mock_error)
                 # Valid record
-                yield {
-                    "success": True,
-                    "record": RecordData(family="Formicidae", genus="Lasius"),
-                    "error": None,
-                }
+                yield (RecordData(family="Formicidae", genus="Lasius"), None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1"
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=3
             )
 
-            assert result.imported == 2
+            assert result.imported == 3
             assert result.failed == 1
             assert len(result.errors) == 1
             assert result.errors[0].row == 2
@@ -153,24 +154,25 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
         ):
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 # Empty row (will be caught by is_row_empty)
-                yield {
-                    "success": True,
-                    "record": RecordData(family=None, genus=None, species=None),
-                    "error": None,
-                }
+                yield (RecordData(family=None, genus=None, species=None), None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1"
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=1
             )
 
             assert result.imported == 0
@@ -186,23 +188,19 @@ class TestImportRecords:
         user_id = 12345
 
         mock_user = MagicMock()
-        mock_user.publ_id = None
+        mock_user.items = ""
         mock_user.user_id = user_id
 
         with patch(
             "service.records.get_user_expect", AsyncMock(return_value=mock_user)
         ):
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
-                yield {
-                    "success": True,
-                    "record": RecordData(family="Formicidae"),
-                    "error": None,
-                }
+            async def gen() -> AsyncGenerator[ParseResult]:
+                yield (RecordData(family="Formicidae"), None)
 
             with pytest.raises(NoPublicationsAssignedError):
                 await record_service.import_records(
-                    gen(), user_id=user_id, ip="127.0.0.1"
+                    gen(), user_id=user_id, ip="127.0.0.1", total_count=1
                 )
 
     async def test_import_limit_exceeded(
@@ -216,27 +214,26 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            # Simulate already at limit
-            patch(
-                "service.records.count_records_by_publ", AsyncMock(return_value=1000)
-            ),
         ):
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
-                yield {
-                    "success": True,
-                    "record": RecordData(family="Formicidae"),
-                    "error": None,
-                }
+            async def gen() -> AsyncGenerator[ParseResult]:
+                for _ in range(settings.MAX_USER_RECORDS_PER_PUBLICATION + 1):
+                    yield (RecordData(family="Formicidae"), None)
 
-            with pytest.raises(RecordLimitExceededError):
+            with pytest.raises(ImportLimitExceededError):
                 await record_service.import_records(
-                    gen(), user_id=user_id, ip="127.0.0.1"
+                    gen(),
+                    user_id=user_id,
+                    ip="127.0.0.1",
+                    total_count=settings.MAX_USER_RECORDS_PER_PUBLICATION + 1,
                 )
 
     async def test_boolean_fields_parsing(
@@ -250,12 +247,17 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
             patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
@@ -266,16 +268,12 @@ class TestImportRecords:
                 ),
             ]
 
-            async def gen() -> AsyncGenerator[ParseResult, None]:
+            async def gen() -> AsyncGenerator[ParseResult]:
                 for record_data in records_data:
-                    yield {
-                        "success": True,
-                        "record": record_data,
-                        "error": None,
-                    }
+                    yield (record_data, None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1"
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=1
             )
 
             assert result.imported == 1
@@ -299,8 +297,11 @@ class TestImportRecords:
         publ_id = 67890
 
         mock_user = MagicMock()
-        mock_user.publ_id = publ_id
+        mock_user.items = str(publ_id)
         mock_user.user_id = user_id
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
 
         # Create a minimal Excel file
         wb = Workbook()
@@ -318,12 +319,56 @@ class TestImportRecords:
 
         with (
             patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
-            patch("service.records.count_records_by_publ", AsyncMock(return_value=0)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
             patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
+            records, total = await read_excel(excel_content)
             result = await record_service.import_records(
-                read_excel(excel_content), user_id=user_id, ip="127.0.0.1"
+                records, user_id=user_id, ip="127.0.0.1", total_count=total
             )
 
             assert result.imported >= 1
             assert result.failed == 0
+
+    async def test_import_with_specimens(
+        self,
+        record_service: RecordService,
+        mock_session: MagicMock,
+        mock_publication_service: MagicMock,
+    ) -> None:
+        user_id = 12345
+        publ_id = 67890
+        mock_user = MagicMock()
+        mock_user.items = str(publ_id)
+        mock_user.user_id = user_id
+
+        mock_publication_service.get_current.return_value = [
+            MagicMock(publ_id=publ_id, language="eng")
+        ]
+
+        with (
+            patch("service.records.get_user_expect", AsyncMock(return_value=mock_user)),
+            patch(
+                "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
+            ),
+            patch("service.records.check_and_log_milestone", AsyncMock()),
+        ):
+            records_data = [
+                RecordData(
+                    family="Formicidae",
+                    genus="Camponotus",
+                    species="herculeanus",
+                    specimens=[Specimen(sex="male", life_stage="adult", count=3)],
+                ),
+            ]
+
+            async def gen() -> AsyncGenerator[ParseResult]:
+                for record_data in records_data:
+                    yield (record_data, None)
+
+            result = await record_service.import_records(
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=1
+            )
+            assert result.imported == 1

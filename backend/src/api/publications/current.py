@@ -17,4 +17,4 @@ async def list_publications(
         bool, Query(description="Return all assigned publications")
     ] = False,
 ) -> list[Publication]:
-    return await pub_service.get_current(token, list_all)
+    return await pub_service.get_current(user_id=token.user_id, with_queue=list_all)

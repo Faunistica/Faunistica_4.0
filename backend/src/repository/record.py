@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
@@ -8,7 +9,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import EventRecord
-from schema.records import RecordData, RecordMetadata
+from schema.records import RecordMetadata, SpecimenDbRow
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,6 @@ async def create_record(
 ) -> EventRecord:
     stmt = pg_insert(EventRecord).values(**metadata.model_dump()).returning(EventRecord)
     result = await session.execute(stmt)
-    await session.commit()
 
     return result.scalar_one()
 
@@ -34,21 +34,22 @@ async def get_record(session: AsyncSession, record_id: UUID) -> EventRecord | No
 async def update_record(
     session: AsyncSession,
     record_id: UUID,
-    data: RecordData,
+    data: SpecimenDbRow,
     metadata: RecordMetadata,
+    previous_update: datetime,
 ) -> EventRecord | None:
     """
     Update a record with optimistic locking via updated_at.
     Returns None if record not found or updated_at doesn't match (stale).
     """
-    update_data = {**metadata.dump_for_update(), **data.model_dump(exclude_unset=True)}
+    update_data = {**metadata.dump_for_update(), **data}
 
     stmt = (
         update(EventRecord)
         .where(
             and_(
                 EventRecord.id == record_id,
-                EventRecord.updated_at == metadata.updated_at,
+                EventRecord.updated_at == previous_update,
             )
         )
         .values(update_data)
@@ -56,7 +57,6 @@ async def update_record(
     )
 
     result = await session.execute(stmt)
-    await session.commit()
 
     return result.scalar_one_or_none()
 
@@ -68,7 +68,6 @@ async def delete_record(session: AsyncSession, record_id: UUID) -> EventRecord |
     """
     stmt = delete(EventRecord).where(EventRecord.id == record_id).returning(EventRecord)
     result = await session.execute(stmt)
-    await session.commit()
 
     return result.scalar_one_or_none()
 
@@ -109,8 +108,22 @@ async def get_records_paginated(
     return result.scalars().all(), total
 
 
-async def count_records_by_publ(session: AsyncSession, publ_id: int) -> int:
+async def count_records_by_user_publ(
+    session: AsyncSession, user_id: int, publ_id: int
+) -> int:
     """Count total records for a publication."""
-    stmt = select(func.count()).where(EventRecord.publ_id == publ_id)
+    stmt = select(func.count()).where(
+        EventRecord.user_id == user_id, EventRecord.publ_id == publ_id
+    )
     result = await session.execute(stmt)
     return result.scalar_one()
+
+
+async def delete_records_by_user_and_publ(
+    session: AsyncSession, user_id: int, publ_id: int
+) -> None:
+    """Delete all records for a given user and publication."""
+    stmt = delete(EventRecord).where(
+        and_(EventRecord.user_id == user_id, EventRecord.publ_id == publ_id)
+    )
+    await session.execute(stmt)

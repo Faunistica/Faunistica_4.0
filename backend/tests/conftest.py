@@ -2,11 +2,10 @@ import hashlib
 import os
 import random
 from collections.abc import AsyncGenerator, Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import TypedDict, cast
 from uuid import uuid4
 
-import jwt as pyjwt
 import pytest
 import pytest_asyncio
 from aiohttp import ClientSession
@@ -25,9 +24,11 @@ from app import app
 from core.config import settings
 from core.database import get_session
 from core.dependencies import get_http_session
+from core.enums import UserState
 from core.model import Base, EventRecord, Publication, User
 from core.rate_limiter import limiter
-from schema.jwt import Token
+from core.security import create_access_token, create_refresh_token
+from schema.jwt import TokenPayload
 
 
 def md5_hash(password: str) -> str:
@@ -111,12 +112,12 @@ async def seed_data(
     def from_test(d: dict) -> User:
         return User(
             user_id=d["user_id"],
+            reg_stat=UserState.REG_COMPLETED,
             name=d["username"],
             tlg_name=d["username"],
             tlg_username=d["username"],
             hash=md5_hash(d["password"]),
             items=d.get("items", ""),
-            publ_id=d.get("publ_id"),
         )
 
     def id() -> int:
@@ -136,7 +137,7 @@ async def seed_data(
         publ_id_2 = id()
 
     publ1 = Publication(
-        id=publ_id_1,
+        publ_id=publ_id_1,
         name="Test Publ",
         type="A",
         year=2000,
@@ -145,7 +146,7 @@ async def seed_data(
     )
     session.add(publ1)
     publ2 = Publication(
-        id=publ_id_2,
+        publ_id=publ_id_2,
         name="Test Publ 2",
         type="A",
         year=2000,
@@ -159,20 +160,19 @@ async def seed_data(
             "user_id": user_id_1,
             "username": "testuser1",
             "password": "password1",
-            "publ_id": publ_id_1,
-            "items": str(publ_id_2),
+            "items": f"{publ_id_1}|{publ_id_2}",
         },
         {
             "user_id": user_id_2,
             "username": "testuser2",
             "password": "password2",
-            "publ_id": None,
+            "items": "",
         },
         {
             "user_id": user_id_3,
             "username": "testuser3",
             "password": "password3",
-            "publ_id": publ_id_2,
+            "items": str(publ_id_2),
         },
     ]
 
@@ -191,8 +191,8 @@ async def seed_data(
             publ_id=publ_id_1,
             type="rec_ok",
             genus="Testus",
-            latitude=55.5,
-            longitude=37.5,
+            latitude="55.5",
+            longitude="37.5",
             created_at=now,
             updated_at=now,
         ),
@@ -202,8 +202,8 @@ async def seed_data(
             publ_id=publ_id_1,
             type="rec_ok",
             genus="Testus",
-            latitude=55.6,
-            longitude=37.6,
+            latitude="55.6",
+            longitude="37.6",
             created_at=now,
             updated_at=now,
         ),
@@ -239,6 +239,7 @@ async def async_client(session_maker: Callable[[], AsyncSession]):
     async def _maker():
         async with session_maker() as session:
             yield session
+            await session.commit()
 
     app.dependency_overrides[get_session] = _maker
 
@@ -267,7 +268,7 @@ def authenticated_client(
     async_client: AsyncClient,
     seed_data: SeedData,
 ) -> AsyncClient:
-    """Return async_client with testuser1's access token (user_id=1, has publ_id=1)."""
+    """Return async_client with testuser1's access token (user_id=1, has current publication publ_id_1)."""
     tokens = auth_tokens(seed_data["users"][0])
 
     async_client.cookies.set("access_token", tokens["access_token"])
@@ -279,31 +280,18 @@ def authenticated_client_user2(
     async_client: AsyncClient,
     seed_data: SeedData,
 ) -> AsyncClient:
-    """Return async_client with testuser2's access token (user_id=2, no publ_id)."""
+    """Return async_client with testuser2's access token (user_id=2, no publications)."""
     tokens = auth_tokens(seed_data["users"][1])
 
     async_client.cookies.set("access_token", tokens["access_token"])
     return async_client
 
 
-def create_test_token(user_id: int, username: str, token_type: str) -> str:
-    if token_type == "access":
-        expires = datetime.now(UTC) + timedelta(minutes=30)
-    else:
-        expires = datetime.now(UTC) + timedelta(days=30)
-
-    payload = Token(sub=str(user_id), username=username, type=token_type, exp=expires)
-    return pyjwt.encode(
-        payload.model_dump(),
-        settings.JWT_SECRET.get_secret_value(),
-        algorithm="HS256",
-    )
-
-
 def auth_tokens(user: User):
+    payload = TokenPayload(sub=str(user.user_id), username=user.name or "")
     return {
-        "access_token": create_test_token(user.user_id, user.name or "", "access"),
-        "refresh_token": create_test_token(user.user_id, user.name or "", "refresh"),
+        "access_token": create_access_token(payload),
+        "refresh_token": create_refresh_token(payload),
     }
 
 
