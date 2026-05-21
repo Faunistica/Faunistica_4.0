@@ -3,6 +3,7 @@ import { useOutletContext, useParams } from 'react-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 
 import type { RootState } from '@/store/store';
 import type { FormRecord } from '@/types/api.dto';
@@ -12,7 +13,9 @@ import {
     useRecordsListQuery,
     useLazyRecordByIdQuery,
     useCreateRecordMutation,
+    useDeleteRecordMutation,
 } from '@/api/recordAPI';
+import { useAppDispatch } from '@/store/store';
 
 import ArticleSourceCard from '@/components/form/ArticleSourceCard';
 import GeographyCard from '@/components/form/GeographyCard';
@@ -58,6 +61,8 @@ const FormFilling: FC = () => {
 
     const [createRecord] = useCreateRecordMutation();
     const [fetchRecordById] = useLazyRecordByIdQuery();
+    const [deleteRecord] = useDeleteRecordMutation();
+    const dispatch = useAppDispatch();
 
     const methods = useForm<FormRecord>({
         resolver: zodResolver(formRecordSchema),
@@ -171,6 +176,56 @@ const FormFilling: FC = () => {
 
     const records = useMemo(() => recordsData?.items ?? [], [recordsData]);
 
+    const listArgs = useMemo(() => ({ publ_id, user_id: user_id! }) as const, [publ_id, user_id]);
+
+    const deleteActiveRecord = useCallback(async () => {
+        if (!activeRecordId) return;
+
+        cancelPendingAutoSave();
+
+        const snapshot = recordAPI.util.getQueryData('recordsList', listArgs) as any;
+
+        dispatch(
+            recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
+                draft.items = draft.items.filter((item) => item.id !== activeRecordId);
+                draft.total = Math.max(0, draft.total - 1);
+            }),
+        );
+
+        const currentIdx = records.findIndex((r) => r.id === activeRecordId);
+        const remaining = records.filter((r) => r.id !== activeRecordId);
+        const nextRecord = remaining[currentIdx] ?? remaining[currentIdx - 1] ?? null;
+
+        try {
+            await deleteRecord({ record_id: activeRecordId }).unwrap();
+
+            if (nextRecord) {
+                const cached = recordAPI.util.getQueryData('recordById', {
+                    record_id: nextRecord.id,
+                });
+                setActiveRecordId(nextRecord.id);
+                if (cached) {
+                    reset(cached);
+                } else {
+                    reset(undefined as any);
+                }
+            } else {
+                setActiveRecordId(null);
+                reset(undefined as any);
+            }
+        } catch {
+            if (snapshot) {
+                dispatch(
+                    recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
+                        draft.items = snapshot.items;
+                        draft.total = snapshot.total;
+                    }),
+                );
+            }
+            toast.error('Ошибка при удалении записи');
+        }
+    }, [activeRecordId, listArgs, records, dispatch, deleteRecord, cancelPendingAutoSave, reset]);
+
     const activeStatus = useRecordStatus(
         activeRecordId ?? '',
         !!activeRecordId,
@@ -244,6 +299,7 @@ const FormFilling: FC = () => {
                     <Footer
                         onSave={() => save(getValues())}
                         onSubmit={() => submit(getValues())}
+                        onDelete={deleteActiveRecord}
                         isSaving={isSaving}
                         isAutoSaving={isAutoSaving}
                         lastSavedTime={lastSavedTime}
