@@ -14,12 +14,14 @@ import GeographyCard from '@/components/form/GeographyCard';
 import CollectionEventCard from '@/components/form/CollectionEventCard';
 import TaxonomyCard from '@/components/form/TaxonomyCard';
 import QuantitiesCard from '@/components/form/QuantitiesCard';
+import ServerErrorDisplay from '@/components/form/ServerErrorDisplay';
 import FormSidebar from '@/components/form/FormSidebar';
 import Footer from '@/components/form/FormFooter';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { useSaveRecord } from '@/hooks/useSaveRecord';
 
 interface OutletContextType {
     isSidebarOpen: boolean;
@@ -49,7 +51,9 @@ const FormFilling: FC = () => {
         reValidateMode: 'onChange',
     });
 
-    const { reset } = methods;
+    const { reset, getValues } = methods;
+
+    const { save, submit, isSaving, nonFieldErrors } = useSaveRecord(activeRecordId, methods);
 
     useEffect(() => {
         if (recordsData?.items && !hasLoadedInitial) {
@@ -114,6 +118,7 @@ const FormFilling: FC = () => {
                                     <div className="relative z-0 focus-within:z-50 transition-all duration-200">
                                         <QuantitiesCard />
                                     </div>
+                                    <ServerErrorDisplay errors={nonFieldErrors} />
                                 </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-24 gap-6">
@@ -126,7 +131,11 @@ const FormFilling: FC = () => {
                             )}
                         </div>
                     </div>
-                    <Footer />
+                    <Footer
+                        onSave={() => save(getValues())}
+                        onSubmit={() => submit(getValues())}
+                        isSaving={isSaving}
+                    />
                 </main>
             </SidebarProvider>
         </FormProvider>
