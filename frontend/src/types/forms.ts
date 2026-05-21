@@ -1,9 +1,9 @@
-export const LAT_MIN = -90;
-export const LAT_MAX = 90;
-export const LNG_MIN = -180;
-export const LNG_MAX = 180;
-export const UNCERTAINTY_MIN = 30;
-export const UNCERTAINTY_MAX = 15000;
+const LAT_MIN = -90;
+const LAT_MAX = 90;
+const LNG_MIN = -180;
+const LNG_MAX = 180;
+const UNCERTAINTY_MIN = 30;
+const UNCERTAINTY_MAX = 15000;
 
 // src/types/forms.ts
 
@@ -22,33 +22,6 @@ export const BLOCKING_FIELDS = [
 ] as const;
 
 export type BlockingFieldName = (typeof BLOCKING_FIELDS)[number];
-
-// 📋 Человеко-читаемые названия полей для ошибок
-export const FIELD_LABELS: Record<string, string> = {
-    country: 'Страна',
-    region: 'Регион',
-    district: 'Район',
-    locality: 'Локалитет',
-    family: 'Семейство',
-    genus: 'Род',
-    latitude: 'Широта',
-    longitude: 'Долгота',
-    species: 'Вид',
-    verbatim_date: 'Дата сбора',
-    sampling_protocol: 'Метод сбора',
-    recorded_by: 'Коллектор',
-    males: 'Самцы',
-    subadultMales: 'Субвзрослые самцы',
-    females: 'Самки',
-    subadultFemales: 'Субвзрослые самки',
-    adults: 'Взрослые',
-    juveniles: 'Ювенильные',
-};
-
-// 🏷️ Хелпер для получения названия поля
-export const getFieldLabel = (fieldName: string): string => {
-    return FIELD_LABELS[fieldName] || fieldName.replace(/_/g, ' ');
-};
 
 export const COUNTRY_OPTIONS = [
     { value: 'RU', label: 'Россия' },
@@ -116,7 +89,7 @@ export const QUANTITY_TYPE_OPTIONS = [
     },
 ] as const;
 
-export const QUANTITY_FIELDS = [
+const QUANTITY_FIELDS = [
     'males',
     'subadultMales',
     'females',
@@ -134,51 +107,6 @@ export const QUANTITY_FIELD_LABELS: Record<QuantityField, string> = {
     adults: 'Взрослых (пол не определён)',
     juveniles: 'Ювенильных',
 };
-
-export const LOCATION_FIELDS = [
-    'country',
-    'region',
-    'district',
-    'locality',
-    'is_manual_location',
-    'latitude',
-    'longitude',
-    'verbatimcoordinates',
-    'coordinate_uncertainty',
-    'georef_source',
-    'location_remarks',
-] as const;
-
-// ── Event field keys (for preset extraction) ──
-export const EVENT_FIELDS = [
-    'verbatim_date',
-    'habitat',
-    'recorded_by',
-    'sampling_protocol',
-    'sampling_effort',
-    'event_remarks',
-    'field_number',
-    'catalog_number',
-    'collection_code',
-] as const;
-
-export function buildLocationLabel(data: Record<string, unknown>): string {
-    const parts = [data.country, data.region, data.district, data.locality].filter(
-        Boolean,
-    ) as string[];
-    return parts.length > 0 ? parts.join(', ') : 'Без названия';
-}
-
-/**
- * Build a human-readable label for an event preset.
- */
-export function buildEventLabel(data: Record<string, unknown>): string {
-    const parts: string[] = [];
-    if (data.verbatim_date) parts.push(String(data.verbatim_date));
-    if (data.habitat) parts.push(String(data.habitat).slice(0, 30));
-    if (data.recorded_by) parts.push(String(data.recorded_by));
-    return parts.length > 0 ? parts.join(' · ') : 'Без данных';
-}
 
 import { z } from 'zod';
 
