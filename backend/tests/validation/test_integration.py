@@ -125,4 +125,3 @@ class TestAllRules:
     def test_each_category_has_rules(self, expected_category: RuleCategory) -> None:
         rules = [r for r in all_rules() if r.category == expected_category]
         assert len(rules) > 0, f"No rules for category {expected_category}"
-
