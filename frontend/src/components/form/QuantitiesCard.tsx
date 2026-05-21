@@ -13,60 +13,52 @@ import {
 } from '@/components/ui/select';
 import { Hash } from 'lucide-react';
 import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/types/forms';
-import type { FormSchema } from '@/types/forms';
+import type { FormRecord } from '@/types/api.dto';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-interface Props {
-    index: number;
-}
+const QuantitiesCard: FC = () => {
+    const { register, control } = useFormContext<FormRecord>();
 
-const QuantitiesCard: FC<Props> = ({ index }) => {
-    const { register, control } = useFormContext<FormSchema>();
-    const prefix = `samples.${index}` as const;
+    const males = useWatch<FormRecord>({ name: 'males' }) as number | null | undefined;
+    const subadultMales = useWatch<FormRecord>({ name: 'subadultMales' }) as
+        | number
+        | null
+        | undefined;
+    const females = useWatch<FormRecord>({ name: 'females' }) as number | null | undefined;
+    const subadultFemales = useWatch<FormRecord>({ name: 'subadultFemales' }) as
+        | number
+        | null
+        | undefined;
+    const adults = useWatch<FormRecord>({ name: 'adults' }) as number | null | undefined;
+    const juveniles = useWatch<FormRecord>({ name: 'juveniles' }) as number | null | undefined;
 
-    // Watch all quantity fields to compute total
-    const mmm = useWatch<FormSchema>({ name: `${prefix}.mmm` as any }) as number | null | undefined;
-    const ssm = useWatch<FormSchema>({ name: `${prefix}.ssm` as any }) as number | null | undefined;
-    const fff = useWatch<FormSchema>({ name: `${prefix}.fff` as any }) as number | null | undefined;
-    const ssf = useWatch<FormSchema>({ name: `${prefix}.ssf` as any }) as number | null | undefined;
-    const adu = useWatch<FormSchema>({ name: `${prefix}.adu` as any }) as number | null | undefined;
-    const juv = useWatch<FormSchema>({ name: `${prefix}.juv` as any }) as number | null | undefined;
-
-    const total: number = [mmm, ssm, fff, ssf, adu, juv].reduce<number>(
-        (sum, v) => sum + (typeof v === 'number' && v > 0 ? v : 0),
-        0,
-    );
+    const total: number = [
+        males,
+        subadultMales,
+        females,
+        subadultFemales,
+        adults,
+        juveniles,
+    ].reduce<number>((sum, v) => sum + (typeof v === 'number' && v > 0 ? v : 0), 0);
 
     const quantityFields = [
+        { key: 'males' as const, label: QUANTITY_FIELD_LABELS.males, color: 'text-blue-600' },
         {
-            key: 'mmm' as const,
-            label: QUANTITY_FIELD_LABELS.mmm,
-            color: 'text-blue-600',
-        },
-        {
-            key: 'ssm' as const,
-            label: QUANTITY_FIELD_LABELS.ssm,
+            key: 'subadultMales' as const,
+            label: QUANTITY_FIELD_LABELS.subadultMales,
             color: 'text-blue-400',
         },
+        { key: 'females' as const, label: QUANTITY_FIELD_LABELS.females, color: 'text-pink-600' },
         {
-            key: 'fff' as const,
-            label: QUANTITY_FIELD_LABELS.fff,
-            color: 'text-pink-600',
-        },
-        {
-            key: 'ssf' as const,
-            label: QUANTITY_FIELD_LABELS.ssf,
+            key: 'subadultFemales' as const,
+            label: QUANTITY_FIELD_LABELS.subadultFemales,
             color: 'text-pink-400',
         },
+        { key: 'adults' as const, label: QUANTITY_FIELD_LABELS.adults, color: 'text-slate-600' },
         {
-            key: 'adu' as const,
-            label: QUANTITY_FIELD_LABELS.adu,
-            color: 'text-slate-600',
-        },
-        {
-            key: 'juv' as const,
-            label: QUANTITY_FIELD_LABELS.juv,
+            key: 'juveniles' as const,
+            label: QUANTITY_FIELD_LABELS.juveniles,
             color: 'text-amber-600',
         },
     ];
@@ -84,7 +76,6 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-                {/* ── Quantity fields grid ── */}
                 <TooltipProvider>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                         {quantityFields.map(({ key, label, color }) => (
@@ -92,7 +83,7 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Label
-                                            htmlFor={`${prefix}.${key}`}
+                                            htmlFor={key}
                                             className={`text-[10px] uppercase tracking-wider font-semibold ${color} truncate block cursor-help`}
                                         >
                                             {label}
@@ -103,12 +94,12 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                                     </TooltipContent>
                                 </Tooltip>
                                 <Input
-                                    id={`${prefix}.${key}`}
+                                    id={key}
                                     type="number"
                                     min={0}
                                     placeholder="0"
                                     className="text-center h-9 focus-visible:ring-1 focus-visible:ring-slate-300"
-                                    {...register(`${prefix}.${key}` as any, {
+                                    {...register(key as any, {
                                         valueAsNumber: true,
                                     })}
                                 />
@@ -117,12 +108,11 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                     </div>
                 </TooltipProvider>
 
-                {/* ── Unit type + Total ── */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-5">
                     <div className="space-y-2">
                         <Label>Единицы измерения</Label>
                         <Controller
-                            name={`${prefix}.quantity_type` as any}
+                            name="quantity_type"
                             control={control}
                             render={({ field }) => (
                                 <Select
@@ -151,14 +141,13 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                     </div>
                 </div>
 
-                {/* ── Occurrence remarks ── */}
                 <div className="space-y-2">
-                    <Label htmlFor={`${prefix}.occurrence_remarks`}>Примечания к образцам</Label>
+                    <Label htmlFor="occurrence_remarks">Примечания к образцам</Label>
                     <Textarea
-                        id={`${prefix}.occurrence_remarks`}
+                        id="occurrence_remarks"
                         className="min-h-[72px] resize-none"
                         placeholder="Укажите специфические детали экземпляра…"
-                        {...register(`${prefix}.occurrence_remarks` as any)}
+                        {...register('occurrence_remarks')}
                     />
                 </div>
             </CardContent>

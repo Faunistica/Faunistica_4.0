@@ -17,27 +17,20 @@ import { Bug } from 'lucide-react';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useLazySuggestTaxonQuery } from '@/api/utilAPI';
 import { TYPE_STATUS_OPTIONS, TAXON_RANK_OPTIONS } from '@/types/forms';
-import type { FormSchema } from '@/types/forms';
+import type { FormRecord } from '@/types/api.dto';
 
-interface Props {
-    index: number;
-}
-
-const TaxonomyCard: FC<Props> = ({ index }) => {
+const TaxonomyCard: FC = () => {
     const {
         register,
         control,
         watch,
         setValue,
         formState: { errors },
-    } = useFormContext<FormSchema>();
-    const prefix = `samples.${index}` as const;
-    const err = errors.samples?.[index];
+    } = useFormContext<FormRecord>();
 
-    const familyValue = watch(`${prefix}.family`);
-    const genusValue = watch(`${prefix}.genus`);
+    const familyValue = watch('family');
+    const genusValue = watch('genus');
 
-    // ── Taxonomy suggestion queries ──
     const [searchFamily] = useLazySuggestTaxonQuery();
     const [searchGenus] = useLazySuggestTaxonQuery();
     const [searchSpecies] = useLazySuggestTaxonQuery();
@@ -101,25 +94,24 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-                {/* ── Row 1: Family / Genus / Species ── */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                         <Label>Семейство (Familia)</Label>
                         <Controller
-                            name={`${prefix}.family`}
+                            name="family"
                             control={control}
                             render={({ field }) => (
                                 <Autocomplete
                                     value={field.value ?? ''}
                                     onChange={(val) => {
                                         field.onChange(val);
-                                        setValue(`${prefix}.tax_verbatim`, false);
+                                        setValue('tax_verbatim', false);
                                     }}
                                     onSearch={handleFamilySearch}
                                     suggestions={familySuggestions}
                                     isLoading={famLoading}
                                     placeholder="Начните вводить…"
-                                    ariaInvalid={!!err?.family}
+                                    ariaInvalid={!!errors?.family}
                                 />
                             )}
                         />
@@ -127,20 +119,20 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                     <div className="space-y-2">
                         <Label>Род (Genus)</Label>
                         <Controller
-                            name={`${prefix}.genus`}
+                            name="genus"
                             control={control}
                             render={({ field }) => (
                                 <Autocomplete
                                     value={field.value ?? ''}
                                     onChange={(val) => {
                                         field.onChange(val);
-                                        setValue(`${prefix}.tax_verbatim`, false);
+                                        setValue('tax_verbatim', false);
                                     }}
                                     onSearch={handleGenusSearch}
                                     suggestions={genusSuggestions}
                                     isLoading={genLoading}
                                     placeholder="Название рода"
-                                    ariaInvalid={!!err?.genus}
+                                    ariaInvalid={!!errors?.genus}
                                 />
                             )}
                         />
@@ -148,39 +140,38 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                     <div className="space-y-2">
                         <Label>Видовое название (эпитет)</Label>
                         <Controller
-                            name={`${prefix}.species`}
+                            name="species"
                             control={control}
                             render={({ field }) => (
                                 <Autocomplete
                                     value={field.value ?? ''}
                                     onChange={(val) => {
                                         field.onChange(val);
-                                        setValue(`${prefix}.tax_verbatim`, false);
+                                        setValue('tax_verbatim', false);
                                     }}
                                     onSearch={handleSpeciesSearch}
                                     suggestions={speciesSuggestions}
                                     isLoading={spLoading}
                                     placeholder="Только эпитет, без рода"
-                                    ariaInvalid={!!err?.species}
+                                    ariaInvalid={!!errors?.species}
                                 />
                             )}
                         />
                     </div>
                 </div>
 
-                {/* ── Row 2: Rank, Type status, Accepted name ── */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-5">
                     <div className="space-y-2">
                         <Label>Ранг таксона</Label>
                         <Controller
-                            name={`${prefix}.taxon_rank`}
+                            name="taxon_rank"
                             control={control}
                             render={({ field }) => (
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
-                                    <SelectTrigger aria-invalid={!!err?.taxon_rank}>
+                                    <SelectTrigger aria-invalid={!!errors?.taxon_rank}>
                                         <SelectValue placeholder="Выберите ранг" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -197,7 +188,7 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                     <div className="space-y-2">
                         <Label>Типовой статус</Label>
                         <Controller
-                            name={`${prefix}.type_status`}
+                            name="type_status"
                             control={control}
                             render={({ field }) => (
                                 <Select
@@ -219,29 +210,28 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor={`${prefix}.accepted_name`}>Валидное название</Label>
+                        <Label htmlFor="accepted_name">Валидное название</Label>
                         <Input
-                            id={`${prefix}.accepted_name`}
+                            id="accepted_name"
                             placeholder="Если приведённое в статье устарело"
-                            {...register(`${prefix}.accepted_name`)}
+                            {...register('accepted_name')}
                         />
                     </div>
                 </div>
 
-                {/* ── Row 3: Checkboxes ── */}
                 <div className="flex flex-wrap gap-6 border-t border-slate-100 pt-4">
                     <Controller
-                        name={`${prefix}.tax_verbatim`}
+                        name="tax_verbatim"
                         control={control}
                         render={({ field }) => (
                             <div className="flex items-center space-x-2">
                                 <Checkbox
-                                    id={`${prefix}_tax_verbatim`}
+                                    id="tax_verbatim"
                                     checked={field.value ?? false}
                                     onCheckedChange={field.onChange}
                                 />
                                 <Label
-                                    htmlFor={`${prefix}_tax_verbatim`}
+                                    htmlFor="tax_verbatim"
                                     className="font-normal cursor-pointer"
                                 >
                                     Латинское название введено вручную
@@ -251,28 +241,23 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                     />
                 </div>
 
-                {/* ── Row 4: Remarks ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor={`${prefix}.taxon_remarks`}>
-                            Таксономические примечания
-                        </Label>
+                        <Label htmlFor="taxon_remarks">Таксономические примечания</Label>
                         <Textarea
-                            id={`${prefix}.taxon_remarks`}
+                            id="taxon_remarks"
                             className="min-h-[72px] resize-none"
                             placeholder="Примечания ко всему таксону…"
-                            {...register(`${prefix}.taxon_remarks`)}
+                            {...register('taxon_remarks')}
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor={`${prefix}.identification_remarks`}>
-                            Примечания к идентификации
-                        </Label>
+                        <Label htmlFor="identification_remarks">Примечания к идентификации</Label>
                         <Textarea
-                            id={`${prefix}.identification_remarks`}
+                            id="identification_remarks"
                             className="min-h-[72px] resize-none"
                             placeholder="Примечания к определению…"
-                            {...register(`${prefix}.identification_remarks`)}
+                            {...register('identification_remarks')}
                         />
                     </div>
                 </div>

@@ -1,31 +1,13 @@
-// src/pages/FormFilling.tsx
-//
-// ── FIX LOG ──────────────────────────────────────────────────────────────
-// 1. BLOCKING_FIELDS: prepend НЕ вызывается до завершения валидации.
-// 2. «Исправить сейчас» — скролл по ключу поля, а не по label.
-// 3. Автосохранение — snapshot-сравнение; пропуск если данные не менялись.
-// 4. Renamed: Sample → Record.
-// 5. Массовая валидация (handleValidateAll) с validationErrors map.
-// 6. Excel-импорт: onImportComplete перезагружает данные через refetch.
-// 7. Логика вынесена в хуки: useRecordPersistence, useRecordValidation,
-//    useAutoSave — страница стала тонким оркестратором.
-// ─────────────────────────────────────────────────────────────────────────
-
-import { type FC, useEffect, useState, useCallback, memo } from 'react';
-import { useOutletContext, useParams, useNavigate } from 'react-router';
-import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
+import { type FC, useEffect, useState, useCallback } from 'react';
+import { useOutletContext, useParams } from 'react-router';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSelector } from 'react-redux';
-import { toast } from 'sonner';
 
 import type { RootState } from '@/store/store';
-import { useGetRecordsDataQuery } from '@/api/recordAPI';
-import { formSchema, type FormSchema } from '@/types/forms';
-import { groupRecordsIntoDrafts } from '@/lib/recordUtils';
-
-import { useRecordPersistence } from '@/hooks/useRecordPersistence';
-import { useRecordValidation } from '@/hooks/useRecordValidation';
-import { useAutoSave } from '@/hooks/useAutoSave';
+import type { FormRecord } from '@/types/api.dto';
+import { formRecordSchema } from '@/types/forms';
+import { recordAPI, useRecordsListQuery, useCreateRecordMutation } from '@/api/recordAPI';
 
 import ArticleSourceCard from '@/components/form/ArticleSourceCard';
 import GeographyCard from '@/components/form/GeographyCard';
@@ -36,170 +18,68 @@ import FormSidebar from '@/components/form/FormSidebar';
 import Footer from '@/components/form/FormFooter';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import LoadingScreen from '@/components/LoadingScreen';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
-// ── Layout context ──
 interface OutletContextType {
     isSidebarOpen: boolean;
     setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
-// ═════════════════════════════════════════════════════════════════════════
-// FormFilling — тонкий оркестратор
-// ═════════════════════════════════════════════════════════════════════════
 const FormFilling: FC = () => {
     const { isSidebarOpen, setIsSidebarOpen } = useOutletContext<OutletContextType>();
     const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
     const publ_id = Number(id);
     const user_id = useSelector((state: RootState) => state.user.user_id);
 
-    const [activeRecordIndex, setActiveRecordIndex] = useState(0);
+    const [activeRecordId, setActiveRecordId] = useState<string | null>(null);
     const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
 
-    // ── RTK Query ──
-    const {
-        data: recordsData,
-        isLoading,
-        refetch,
-    } = useGetRecordsDataQuery({ publ_id, user_id: user_id! }, { skip: !user_id || !publ_id });
+    const { data: recordsData, isLoading } = useRecordsListQuery(
+        { publ_id, user_id: user_id! },
+        { skip: !user_id || !publ_id },
+    );
 
-    // ── React Hook Form ──
-    const methods = useForm<FormSchema>({
-        resolver: zodResolver(formSchema),
-        defaultValues: { samples: [{}] },
+    const [createRecord] = useCreateRecordMutation();
+
+    const methods = useForm<FormRecord>({
+        resolver: zodResolver(formRecordSchema),
+        defaultValues: undefined,
         mode: 'onTouched',
         reValidateMode: 'onChange',
     });
 
-    const {
-        control,
-        reset,
-        getValues,
-        trigger,
-        formState: { isValid },
-    } = methods;
-    const fieldArray = useFieldArray({ control, name: 'samples' });
-    const { fields, remove } = fieldArray;
+    const { reset } = methods;
 
-    // ── РЕГИСТРАЦИЯ СКРЫТЫХ ПОЛЕЙ ──
-    // Это критически важно: RHF игнорирует в update/getValues объекты, которые не зарегистрированы.
-    // Если record_ids потеряются, автосохранение будет плодить клоны.
-    useEffect(() => {
-        fields.forEach((_, index) => {
-            methods.register(`samples.${index}.record_ids` as any);
-        });
-    }, [fields, methods]);
-
-    // ── Хук: серверная персистенция ──
-    const { handleSave, handleManualSave, deleteServerRecords, createRecord } =
-        useRecordPersistence({
-            publ_id,
-            user_id: user_id!,
-            methods,
-            fieldArray,
-        });
-
-    // ── Хук: валидация (блокировка + массовая) ──
-    const {
-        addRecord,
-        handleValidateAll,
-        validationErrors,
-        isValidating,
-        clearValidationError,
-        resetValidationErrors,
-    } = useRecordValidation({
-        methods,
-        fieldArray,
-        activeRecordIndex,
-        setActiveRecordIndex,
-        createServerRecord: createRecord,
-        publ_id,
-        user_id: user_id!,
-    });
-
-    // ── Хук: автосохранение ──
-    const { isAutoSaving, lastSavedTime } = useAutoSave({
-        methods,
-        handleSave,
-    });
-
-    // ── Загрузка данных (только при первоначальной загрузке) ──
     useEffect(() => {
         if (recordsData?.items && !hasLoadedInitial) {
-            const drafts = groupRecordsIntoDrafts(recordsData.items);
-            reset({ samples: drafts.length > 0 ? (drafts as any) : [{}] });
+            const items = recordsData.items;
+            if (items.length > 0) {
+                const firstId = items[0].id;
+                setActiveRecordId(firstId);
+                const cached = recordAPI.util.getQueryData('recordById', { record_id: firstId });
+                if (cached) {
+                    reset(cached);
+                }
+            }
             setHasLoadedInitial(true);
         }
     }, [recordsData, reset, hasLoadedInitial]);
 
-    // ── Удаление записи ──
-    const removeRecord = useCallback(
-        async (index: number) => {
-            await deleteServerRecords(index);
-
-            const currentValues = getValues();
-            const newSamples = (currentValues.samples || []).filter((_, i) => i !== index);
-
-            reset({
-                ...currentValues,
-                samples: newSamples,
-            }); // Убрали keepDirty, чтобы избежать багов RHF с коррупцией стейта и дублированием записей
-
-            setActiveRecordIndex((prev) => {
-                const newLength = newSamples.length;
-                if (newLength === 0) return 0;
-                if (prev === index) return 0;
-                if (index < prev) return prev - 1;
-                return prev;
-            });
-            clearValidationError(index);
-        },
-        [deleteServerRecords, getValues, reset, clearValidationError],
-    );
-
-    // ── Импорт завершён — перезагрузить данные ──
-    const handleImportComplete = useCallback(async () => {
-        const { data } = await refetch();
-        if (data?.items) {
-            const drafts = groupRecordsIntoDrafts(data.items);
-            reset({ samples: drafts.length > 0 ? (drafts as any) : [{}] });
+    const handleCreate = useCallback(async () => {
+        try {
+            const created = await createRecord({ publ_id }).unwrap();
+            setActiveRecordId(created.id);
+            reset(created);
+        } catch {
+            // error handled by RTK
         }
-        setActiveRecordIndex(0);
-        resetValidationErrors();
-    }, [refetch, resetValidationErrors, reset]);
+    }, [publ_id, createRecord, reset]);
 
-    // ── Финальная отправка ──
-    const handleFinalSubmit = useCallback(async () => {
-        const valid = await trigger();
-        if (valid) {
-            try {
-                await handleSave(getValues(), false);
-                toast.success('Успех!', {
-                    description: 'Ваши данные были успешно отправлены.',
-                    duration: 3000,
-                });
-                navigate('/dashboard');
-                return true;
-            } catch (error) {
-                toast.error('Ошибка при отправке данных');
-                console.error(error);
-                return false;
-            }
-        } else {
-            toast.error('Пожалуйста, заполните все обязательные поля');
-            const firstErrorField = document.querySelector('[aria-invalid="true"]');
-            firstErrorField?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-            });
-            return false;
-        }
-    }, [trigger, getValues, handleSave, navigate]);
-
-    // ── Loading ──
     if (isLoading) return <LoadingScreen />;
 
-    // ── Render ──
+    const records = recordsData?.items ?? [];
+
     return (
         <FormProvider {...methods}>
             <SidebarProvider
@@ -209,60 +89,44 @@ const FormFilling: FC = () => {
                 className="flex-1"
             >
                 <FormSidebar
-                    samplesCount={fields.length}
-                    activeRecordIndex={activeRecordIndex}
-                    setActiveRecordIndex={setActiveRecordIndex}
-                    addRecord={addRecord}
-                    removeRecord={removeRecord}
-                    validationErrors={validationErrors}
-                    onImportComplete={handleImportComplete}
+                    records={records}
+                    activeRecordId={activeRecordId}
+                    onSelectRecord={setActiveRecordId}
+                    onCreateRecord={handleCreate}
                 />
-
                 <main className="flex-1 flex flex-col w-full min-w-0 relative">
                     <div className="flex-1 w-full p-4 md:p-8 pb-[180px] md:pb-[120px]">
                         <div className="max-w-6xl mx-auto space-y-6">
-                            {fields.length > 0 && (
+                            {activeRecordId ? (
                                 <>
                                     <div className="relative z-20 focus-within:z-50 transition-all duration-200 mb-6">
                                         <ArticleSourceCard publ_id={publ_id} />
                                     </div>
-                                    <div
-                                        key={fields[activeRecordIndex]?.id || activeRecordIndex}
-                                        className="space-y-6"
-                                    >
-                                        <div className="relative z-15 focus-within:z-50 transition-all duration-200">
-                                            <GeographyCard
-                                                index={activeRecordIndex}
-                                                publ_id={publ_id}
-                                            />
-                                        </div>
-                                        <div className="relative z-10 focus-within:z-50 transition-all duration-200">
-                                            <CollectionEventCard
-                                                index={activeRecordIndex}
-                                                publ_id={publ_id}
-                                            />
-                                        </div>
-                                        <div className="relative z-5 focus-within:z-50 transition-all duration-200">
-                                            <TaxonomyCard index={activeRecordIndex} />
-                                        </div>
-                                        <div className="relative z-0 focus-within:z-50 transition-all duration-200">
-                                            <QuantitiesCard index={activeRecordIndex} />
-                                        </div>
+                                    <div className="relative z-15 focus-within:z-50 transition-all duration-200">
+                                        <GeographyCard publ_id={publ_id} />
+                                    </div>
+                                    <div className="relative z-10 focus-within:z-50 transition-all duration-200">
+                                        <CollectionEventCard publ_id={publ_id} />
+                                    </div>
+                                    <div className="relative z-5 focus-within:z-50 transition-all duration-200">
+                                        <TaxonomyCard />
+                                    </div>
+                                    <div className="relative z-0 focus-within:z-50 transition-all duration-200">
+                                        <QuantitiesCard />
                                     </div>
                                 </>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-24 gap-6">
+                                    <p className="text-lg text-slate-500">Нет записей</p>
+                                    <Button onClick={handleCreate} className="gap-2">
+                                        <Plus className="h-4 w-4" />
+                                        Создать запись
+                                    </Button>
+                                </div>
                             )}
                         </div>
                     </div>
-
-                    <Footer
-                        isAutoSaving={isAutoSaving}
-                        lastSavedTime={lastSavedTime}
-                        onSaveAll={handleManualSave}
-                        onValidateAll={handleValidateAll}
-                        onSubmit={handleFinalSubmit}
-                        isValid={isValid}
-                        isValidating={isValidating}
-                    />
+                    <Footer />
                 </main>
             </SidebarProvider>
         </FormProvider>
