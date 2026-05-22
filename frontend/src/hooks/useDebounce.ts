@@ -4,10 +4,10 @@ import { useRef, useCallback } from 'react';
  * Returns a debounced version of the callback.
  * The callback is delayed by `delay` ms; each new call resets the timer.
  */
-export function useDebouncedCallback<T extends (...args: any[]) => void>(
+export function useDebouncedCallback<T extends (...args: any[]) => any>(
     callback: T,
     delay: number,
-): T {
+): (...args: Parameters<T>) => void {
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     return useCallback(
@@ -16,5 +16,5 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
             timerRef.current = setTimeout(() => callback(...args), delay);
         },
         [callback, delay],
-    ) as unknown as T;
+    );
 }
