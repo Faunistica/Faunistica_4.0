@@ -20,22 +20,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const QuantitiesCard: FC = () => {
     const { register, control } = useFormContext<FormRecord>();
-
-    const males = useWatch<FormRecord>({ name: 'males' });
-    const subadultMales = useWatch<FormRecord>({ name: 'subadultMales' });
-    const females = useWatch<FormRecord>({ name: 'females' });
-    const subadultFemales = useWatch<FormRecord>({ name: 'subadultFemales' });
-    const adults = useWatch<FormRecord>({ name: 'adults' });
-    const juveniles = useWatch<FormRecord>({ name: 'juveniles' });
-
-    const total: number = [
-        males,
-        subadultMales,
-        females,
-        subadultFemales,
-        adults,
-        juveniles,
-    ].reduce<number>((sum, v) => sum + (typeof v === 'number' && v > 0 ? v : 0), 0);
+    const total = useWatch<FormRecord>({
+        name: ['males', 'subadultMales', 'females', 'subadultFemales', 'adults', 'juveniles'],
+        // v is actually always a number
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+        compute: (data) => data.reduce<number>((sum, v) => sum + ((v as number) || 0), 0),
+    });
 
     const quantityFields = [
         { key: 'males' as const, label: QUANTITY_FIELD_LABELS.males, color: 'text-blue-600' },
@@ -79,7 +69,11 @@ const QuantitiesCard: FC = () => {
                                     <TooltipTrigger asChild>
                                         <Label
                                             htmlFor={key}
-                                            className={cn('text-[10px] font-semibold tracking-wider uppercase', color, 'block cursor-help truncate')}
+                                            className={cn(
+                                                'text-[10px] font-semibold tracking-wider uppercase',
+                                                color,
+                                                'block cursor-help truncate',
+                                            )}
                                         >
                                             {label}
                                         </Label>
