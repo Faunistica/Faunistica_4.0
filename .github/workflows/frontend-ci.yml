@@ -24,6 +24,8 @@ jobs:
             display: check-lint
           - task: knip
             display: check-knip
+          - task: test
+            display: check-test
     name: ${{ matrix.display }}
     runs-on: ubuntu-latest
     steps:

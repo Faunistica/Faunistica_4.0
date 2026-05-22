@@ -29,6 +29,10 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
+function isRecord(val: unknown): val is Record<string, unknown> {
+    return typeof val === 'object' && val !== null;
+}
+
 // Вспомогательный компонент для ввода градусов/минут/секунд
 const CoordinateInput = memo(
     ({
@@ -128,65 +132,75 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
     const [lonMin, setLonMin] = useState<number | ''>('');
     const [lonDir, setLonDir] = useState<'E' | 'W'>('E');
 
-    // Дебаунсим значения перед записью в форму (300ms)
     const debouncedValues = useDebounce({ latDeg, latMin, latDir, lonDeg, lonMin, lonDir }, 300);
     const prevValuesRef = useRef<string>('');
 
     const updateFormValues = useCallback(() => {
-        const { latDeg, latMin, latDir, lonDeg, lonMin, lonDir } = debouncedValues;
+        const {
+            latDeg: dLatDeg, latMin: dLatMin, latDir: dLatDir,
+            lonDeg: dLonDeg, lonMin: dLonMin, lonDir: dLonDir,
+        } = debouncedValues;
 
-        // Пропускаем, если не все поля заполнены
-        if (latDeg === '' || latMin === '' || lonDeg === '' || lonMin === '') {
+        if (dLatDeg === '' || dLatMin === '' || dLonDeg === '' || dLonMin === '') {
             return;
         }
 
-        // Создаем уникальный ключ для отслеживания изменений
-        const currentKey = `${latDeg}-${latMin}-${latDir}-${lonDeg}-${lonMin}-${lonDir}`;
+        const currentKey = `${dLatDeg}-${dLatMin}-${dLatDir}-${dLonDeg}-${dLonMin}-${dLonDir}`;
         if (prevValuesRef.current === currentKey) {
             return;
         }
         prevValuesRef.current = currentKey;
 
-        // Вычисляем значения
-        const latitude = convertDMToDD(latDeg, latMin, latDir);
-        const longitude = convertDMToDD(lonDeg, lonMin, lonDir);
-        const verbatim = formatDMVerbatim(latDeg, latMin, latDir, lonDeg, lonMin, lonDir);
+        const latitude = convertDMToDD(dLatDeg, dLatMin, dLatDir);
+        const longitude = convertDMToDD(dLonDeg, dLonMin, dLonDir);
+        const verbatim = formatDMVerbatim(dLatDeg, dLatMin, dLatDir, dLonDeg, dLonMin, dLonDir);
 
-        // Обновляем форму БЕЗ лишних триггеров валидации на каждом чихе
-        setValue(`${prefix}.latitude` as any, latitude, {
+        const latField = 'latitude' as const;
+        const lonField = 'longitude' as const;
+        const verbField = 'verbatimcoordinates' as const;
+
+        setValue(latField, latitude, {
             shouldValidate: false,
             shouldDirty: true,
         });
-        setValue(`${prefix}.longitude` as any, longitude, {
+        setValue(lonField, longitude, {
             shouldValidate: false,
             shouldDirty: true,
         });
-        setValue(`${prefix}.verbatimcoordinates` as any, verbatim, {
+        setValue(verbField, verbatim, {
             shouldValidate: false,
             shouldDirty: true,
         });
 
-        // Запускаем валидацию асинхронно, чтобы не блокировать ввод
         setTimeout(() => {
-            trigger([`${prefix}.latitude` as any, `${prefix}.longitude` as any]);
+            void trigger([latField, lonField]);
         }, 0);
-    }, [debouncedValues, prefix, setValue, trigger]);
+    }, [debouncedValues, setValue, trigger]);
 
     useEffect(() => {
         updateFormValues();
     }, [updateFormValues]);
 
-    // Обработчики с мемоизацией
     const handleLatDegChange = useCallback((val: number | '') => setLatDeg(val), []);
     const handleLatMinChange = useCallback((val: number | '') => setLatMin(val), []);
-    const handleLatDirChange = useCallback((val: string) => setLatDir(val as 'N' | 'S'), []);
+    const handleLatDirChange = useCallback((val: string) => {
+        if (val === 'N' || val === 'S') setLatDir(val);
+    }, []);
     const handleLonDegChange = useCallback((val: number | '') => setLonDeg(val), []);
     const handleLonMinChange = useCallback((val: number | '') => setLonMin(val), []);
-    const handleLonDirChange = useCallback((val: string) => setLonDir(val as 'E' | 'W'), []);
+    const handleLonDirChange = useCallback((val: string) => {
+        if (val === 'E' || val === 'W') setLonDir(val);
+    }, []);
 
-    // Ошибки из react-hook-form
-    const latError = (errors as any)[prefix]?.latitude?.message as string | undefined;
-    const lonError = (errors as any)[prefix]?.longitude?.message as string | undefined;
+    const errorsAny = errors as Record<string, unknown>;
+    const errVal = errorsAny[prefix];
+    const errPrefix = isRecord(errVal) ? errVal : undefined;
+    const latError = errPrefix && isRecord(errPrefix.latitude)
+        ? (errPrefix.latitude as { message?: string }).message
+        : undefined;
+    const lonError = errPrefix && isRecord(errPrefix.longitude)
+        ? (errPrefix.longitude as { message?: string }).message
+        : undefined;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 rounded-lg border border-slate-200">
@@ -300,56 +314,62 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
     const prevValuesRef = useRef<string>('');
 
     const updateFormValues = useCallback(() => {
-        const { latDeg, latMin, latSec, latDir, lonDeg, lonMin, lonSec, lonDir } = debouncedValues;
+        const {
+            latDeg: dLatDeg, latMin: dLatMin, latSec: dLatSec, latDir: dLatDir,
+            lonDeg: dLonDeg, lonMin: dLonMin, lonSec: dLonSec, lonDir: dLonDir,
+        } = debouncedValues;
 
         if (
-            latDeg === '' ||
-            latMin === '' ||
-            latSec === '' ||
-            lonDeg === '' ||
-            lonMin === '' ||
-            lonSec === ''
+            dLatDeg === '' ||
+            dLatMin === '' ||
+            dLatSec === '' ||
+            dLonDeg === '' ||
+            dLonMin === '' ||
+            dLonSec === ''
         ) {
             return;
         }
 
-        const currentKey = `${latDeg}-${latMin}-${latSec}-${latDir}-${lonDeg}-${lonMin}-${lonSec}-${lonDir}`;
+        const currentKey = `${dLatDeg}-${dLatMin}-${dLatSec}-${dLatDir}-${dLonDeg}-${dLonMin}-${dLonSec}-${dLonDir}`;
         if (prevValuesRef.current === currentKey) {
             return;
         }
         prevValuesRef.current = currentKey;
 
-        const latitude = convertDMSToDD(latDeg, latMin, latSec, latDir);
-        const longitude = convertDMSToDD(lonDeg, lonMin, lonSec, lonDir);
-        // Verbatim рассчитывает    ся и сохраняется, но НИГДЕ не рендерится
+        const latitude = convertDMSToDD(dLatDeg, dLatMin, dLatSec, dLatDir);
+        const longitude = convertDMSToDD(dLonDeg, dLonMin, dLonSec, dLonDir);
         const verbatim = formatDMSVerbatim(
-            latDeg,
-            latMin,
-            latSec,
-            latDir,
-            lonDeg,
-            lonMin,
-            lonSec,
-            lonDir,
+            dLatDeg,
+            dLatMin,
+            dLatSec,
+            dLatDir,
+            dLonDeg,
+            dLonMin,
+            dLonSec,
+            dLonDir,
         );
 
-        setValue(`${prefix}.latitude` as any, latitude, {
+        const latField = 'latitude' as const;
+        const lonField = 'longitude' as const;
+        const verbField = 'verbatimcoordinates' as const;
+
+        setValue(latField, latitude, {
             shouldValidate: false,
             shouldDirty: true,
         });
-        setValue(`${prefix}.longitude` as any, longitude, {
+        setValue(lonField, longitude, {
             shouldValidate: false,
             shouldDirty: true,
         });
-        setValue(`${prefix}.verbatimcoordinates` as any, verbatim, {
+        setValue(verbField, verbatim, {
             shouldValidate: false,
             shouldDirty: true,
         });
 
         setTimeout(() => {
-            trigger([`${prefix}.latitude` as any, `${prefix}.longitude` as any]);
+            void trigger([latField, lonField]);
         }, 0);
-    }, [debouncedValues, prefix, setValue, trigger]);
+    }, [debouncedValues, setValue, trigger]);
 
     useEffect(() => {
         updateFormValues();
@@ -358,14 +378,25 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
     const handleLatDegChange = useCallback((val: number | '') => setLatDeg(val), []);
     const handleLatMinChange = useCallback((val: number | '') => setLatMin(val), []);
     const handleLatSecChange = useCallback((val: number | '') => setLatSec(val), []);
-    const handleLatDirChange = useCallback((val: string) => setLatDir(val as 'N' | 'S'), []);
+    const handleLatDirChange = useCallback((val: string) => {
+        if (val === 'N' || val === 'S') setLatDir(val);
+    }, []);
     const handleLonDegChange = useCallback((val: number | '') => setLonDeg(val), []);
     const handleLonMinChange = useCallback((val: number | '') => setLonMin(val), []);
     const handleLonSecChange = useCallback((val: number | '') => setLonSec(val), []);
-    const handleLonDirChange = useCallback((val: string) => setLonDir(val as 'E' | 'W'), []);
+    const handleLonDirChange = useCallback((val: string) => {
+        if (val === 'E' || val === 'W') setLonDir(val);
+    }, []);
 
-    const latError = (errors as any)[prefix]?.latitude?.message as string | undefined;
-    const lonError = (errors as any)[prefix]?.longitude?.message as string | undefined;
+    const dmsErrorsAny = errors as Record<string, unknown>;
+    const dmsErrVal = dmsErrorsAny[prefix];
+    const dmsErrPrefix = isRecord(dmsErrVal) ? dmsErrVal : undefined;
+    const latError = dmsErrPrefix && isRecord(dmsErrPrefix.latitude)
+        ? (dmsErrPrefix.latitude as { message?: string }).message
+        : undefined;
+    const lonError = dmsErrPrefix && isRecord(dmsErrPrefix.longitude)
+        ? (dmsErrPrefix.longitude as { message?: string }).message
+        : undefined;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 rounded-lg border border-slate-200">

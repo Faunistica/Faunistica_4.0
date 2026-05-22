@@ -20,18 +20,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 const QuantitiesCard: FC = () => {
     const { register, control } = useFormContext<FormRecord>();
 
-    const males = useWatch<FormRecord>({ name: 'males' }) as number | null | undefined;
-    const subadultMales = useWatch<FormRecord>({ name: 'subadultMales' }) as
-        | number
-        | null
-        | undefined;
-    const females = useWatch<FormRecord>({ name: 'females' }) as number | null | undefined;
-    const subadultFemales = useWatch<FormRecord>({ name: 'subadultFemales' }) as
-        | number
-        | null
-        | undefined;
-    const adults = useWatch<FormRecord>({ name: 'adults' }) as number | null | undefined;
-    const juveniles = useWatch<FormRecord>({ name: 'juveniles' }) as number | null | undefined;
+    const males = useWatch<FormRecord>({ name: 'males' });
+    const subadultMales = useWatch<FormRecord>({ name: 'subadultMales' });
+    const females = useWatch<FormRecord>({ name: 'females' });
+    const subadultFemales = useWatch<FormRecord>({ name: 'subadultFemales' });
+    const adults = useWatch<FormRecord>({ name: 'adults' });
+    const juveniles = useWatch<FormRecord>({ name: 'juveniles' });
 
     const total: number = [
         males,
@@ -99,7 +93,7 @@ const QuantitiesCard: FC = () => {
                                     min={0}
                                     placeholder="0"
                                     className="text-center h-9 focus-visible:ring-1 focus-visible:ring-slate-300"
-                                    {...register(key as any, {
+                                    {...register(key, {
                                         valueAsNumber: true,
                                     })}
                                 />

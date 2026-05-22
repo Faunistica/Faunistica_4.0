@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormRecord, RecordFull } from '@/types/api.dto';
 import { BLOCKING_FIELDS } from '@/types/forms';
+import { toFormPartial } from '@/lib/recordUtils';
 
 export type RecordStatus = 'empty' | 'draft' | 'valid' | 'error';
 
@@ -55,7 +56,7 @@ export function useRecordStatus(
                 return SERVER_STATUS_MAP[serverType];
             }
 
-            return computeFromFormValues(record);
+            return computeFromFormValues(toFormPartial(record));
         }
 
         return 'draft';

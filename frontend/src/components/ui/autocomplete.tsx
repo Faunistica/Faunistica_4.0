@@ -40,6 +40,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
+            // oxlint-disable-next-line typescript/no-unsafe-type-assertion
             if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
                 setIsOpen(false);
             }

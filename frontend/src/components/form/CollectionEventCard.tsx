@@ -92,7 +92,7 @@ const CollectionEventCard: FC<Props> = () => {
                             </div>
                             <Input
                                 id="habitat"
-                                className="min-h-[32px] resize-none"
+                                className="min-h-8 resize-none"
                                 placeholder="Описание местообитания; второе местообитание"
                                 {...register('habitat')}
                             />
@@ -113,7 +113,7 @@ const CollectionEventCard: FC<Props> = () => {
                     <Label htmlFor="event_remarks">Примечания к событию</Label>
                     <Textarea
                         id="event_remarks"
-                        className="min-h-[80px] resize-none"
+                        className="min-h-20 resize-none"
                         placeholder="Погодные условия, методика и т.п."
                         {...register('event_remarks')}
                     />

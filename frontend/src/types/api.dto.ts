@@ -111,7 +111,7 @@ export interface QuantityFields {
     juveniles?: number | undefined;
 }
 
-export type FormRecord = Omit<RecordData, 'specimens'> & QuantityFields;
+export type { FormRecord } from '@/types/forms';
 
 export interface SuggestTaxonRequest {
     field: 'family' | 'genus' | 'species';

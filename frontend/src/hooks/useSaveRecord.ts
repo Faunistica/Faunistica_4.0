@@ -51,8 +51,8 @@ const FORM_RECORD_FIELDS: (keyof FormRecord)[] = [
 ];
 
 interface UseSaveRecordReturn {
-    save: (data: FormRecord) => Promise<void>;
-    submit: (data: FormRecord) => Promise<void>;
+    save: (data: Partial<FormRecord>) => Promise<void>;
+    submit: (data: Partial<FormRecord>) => Promise<void>;
     isSaving: boolean;
     nonFieldErrors: string[];
 }
@@ -74,19 +74,19 @@ export function useSaveRecord(
     }, [methods]);
 
     const handleResponse = useCallback(
-        (data: FormRecord, response: { errors?: { fields: string[]; message: string }[] }) => {
+        (_data: Partial<FormRecord>, response: { errors?: { fields: string[]; message: string }[] }) => {
             clearServerErrors();
 
             if (!response.errors || response.errors.length === 0) return;
 
             const nonField: string[] = [];
 
-            const formFields = FORM_RECORD_FIELDS as readonly string[];
             for (const err of response.errors) {
                 if (err.fields && err.fields.length > 0) {
                     for (const field of err.fields) {
-                        if (formFields.includes(field)) {
-                            methods.setError(field as keyof FormRecord, {
+                        const match = FORM_RECORD_FIELDS.find((f) => f === field);
+                        if (match) {
+                            methods.setError(match, {
                                 type: 'server',
                                 message: err.message,
                             });
@@ -105,7 +105,7 @@ export function useSaveRecord(
     );
 
     const save = useCallback(
-        async (data: FormRecord) => {
+        async (data: Partial<FormRecord>) => {
             if (!activeRecordId) return;
 
             setIsSaving(true);
@@ -127,7 +127,7 @@ export function useSaveRecord(
     );
 
     const submit = useCallback(
-        async (data: FormRecord) => {
+        async (data: Partial<FormRecord>) => {
             if (!activeRecordId) return;
 
             setIsSaving(true);

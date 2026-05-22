@@ -13,6 +13,7 @@ import {
 import Autocomplete from '@/components/ui/autocomplete';
 import { Button } from '@/components/ui/button';
 
+// oxlint-disable-next-line import/no-unassigned-import
 import 'leaflet/dist/leaflet.css';
 import { type FC, useState, useEffect } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
@@ -53,15 +54,15 @@ const GeographyCard: FC<Props> = () => {
 
     useEffect(() => {
         if (isCustom) {
-            setValue('verbatimcoordinates' as any, null, {
+            setValue('verbatimcoordinates' as const, null, {
                 shouldValidate: true,
             });
         }
     }, [isCustom, setValue]);
 
     const handleMapSelect = (lat: number, lng: number) => {
-        setValue('latitude' as any, lat, { shouldValidate: true });
-        setValue('longitude' as any, lng, { shouldValidate: true });
+        setValue('latitude' as const, lat, { shouldValidate: true });
+        setValue('longitude' as const, lng, { shouldValidate: true });
     };
 
     const [searchRegion, { isFetching: regionLoading }] = useLazyGeoSearchQuery();
@@ -300,7 +301,7 @@ const GeographyCard: FC<Props> = () => {
                                             : ''
                                     }
                                     aria-invalid={!!err?.latitude}
-                                    {...register('latitude' as any, {
+                                    {...register('latitude' as const, {
                                         valueAsNumber: true,
                                     })}
                                 />
@@ -318,7 +319,7 @@ const GeographyCard: FC<Props> = () => {
                                             : ''
                                     }
                                     aria-invalid={!!err?.longitude}
-                                    {...register('longitude' as any, {
+                                    {...register('longitude' as const, {
                                         valueAsNumber: true,
                                     })}
                                 />
@@ -328,7 +329,7 @@ const GeographyCard: FC<Props> = () => {
                                 <Input
                                     id="coordinate_uncertainty"
                                     type="number"
-                                    {...register('coordinate_uncertainty' as any, {
+                                    {...register('coordinate_uncertainty' as const, {
                                         valueAsNumber: true,
                                     })}
                                 />

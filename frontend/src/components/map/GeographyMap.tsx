@@ -108,7 +108,7 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
         debounceRef.current = setTimeout(() => {
-            performSearch(query);
+            void performSearch(query);
         }, 500);
 
         return () => {
@@ -186,7 +186,7 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
         if (!showDropdown || results.length === 0) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                performSearch(query);
+                void performSearch(query);
             }
             return;
         }

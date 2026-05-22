@@ -30,6 +30,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useSaveRecord } from '@/hooks/useSaveRecord';
+import { toFormPartial } from '@/lib/recordUtils';
 import { useRecordStatus, type RecordStatus } from '@/hooks/useRecordStatus';
 
 interface OutletContextType {
@@ -132,9 +133,9 @@ const FormFilling: FC = () => {
             if (items.length > 0) {
                 const firstId = items[0].id;
                 setActiveRecordId(firstId);
-                const cached = recordAPI.util.getQueryData('recordById', { record_id: firstId });
+                const cached = items[0];
                 if (cached) {
-                    reset(cached);
+                    reset(toFormPartial(cached));
                 }
             }
             setHasLoadedInitial(true);
@@ -145,11 +146,13 @@ const FormFilling: FC = () => {
         try {
             const created = await createRecord({ publ_id }).unwrap();
             setActiveRecordId(created.id);
-            reset(created);
+            reset(toFormPartial(created));
         } catch {
             // error handled by RTK
         }
     }, [publ_id, createRecord, reset]);
+
+    const records = useMemo(() => recordsData?.items ?? [], [recordsData]);
 
     const switchToRecord = useCallback(
         async (targetId: string) => {
@@ -159,22 +162,20 @@ const FormFilling: FC = () => {
 
             await save(getValues());
 
-            const cached = recordAPI.util.getQueryData('recordById', { record_id: targetId });
+            const cached = records.find((r) => r.id === targetId);
             if (cached) {
-                reset(cached);
+                reset(toFormPartial(cached));
             } else {
                 const result = await fetchRecordById({ record_id: targetId }, false);
                 if (result.data) {
-                    reset(result.data);
+                    reset(toFormPartial(result.data));
                 }
             }
 
             setActiveRecordId(targetId);
         },
-        [activeRecordId, save, getValues, reset, fetchRecordById, cancelPendingAutoSave],
+        [activeRecordId, save, getValues, reset, fetchRecordById, cancelPendingAutoSave, records],
     );
-
-    const records = useMemo(() => recordsData?.items ?? [], [recordsData]);
 
     const listArgs = useMemo(() => ({ publ_id, user_id: user_id! }) as const, [publ_id, user_id]);
 
@@ -183,7 +184,7 @@ const FormFilling: FC = () => {
 
         cancelPendingAutoSave();
 
-        const snapshot = recordAPI.util.getQueryData('recordsList', listArgs) as any;
+        const snapshot = recordsData;
 
         dispatch(
             recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
@@ -200,18 +201,16 @@ const FormFilling: FC = () => {
             await deleteRecord({ record_id: activeRecordId }).unwrap();
 
             if (nextRecord) {
-                const cached = recordAPI.util.getQueryData('recordById', {
-                    record_id: nextRecord.id,
-                });
+                const cached = nextRecord;
                 setActiveRecordId(nextRecord.id);
                 if (cached) {
-                    reset(cached);
+                    reset(toFormPartial(cached));
                 } else {
-                    reset(undefined as any);
+                    reset();
                 }
             } else {
                 setActiveRecordId(null);
-                reset(undefined as any);
+                reset();
             }
         } catch {
             if (snapshot) {
@@ -224,7 +223,16 @@ const FormFilling: FC = () => {
             }
             toast.error('Ошибка при удалении записи');
         }
-    }, [activeRecordId, listArgs, records, dispatch, deleteRecord, cancelPendingAutoSave, reset]);
+    }, [
+        activeRecordId,
+        listArgs,
+        records,
+        recordsData,
+        dispatch,
+        deleteRecord,
+        cancelPendingAutoSave,
+        reset,
+    ]);
 
     const activeStatus = useRecordStatus(
         activeRecordId ?? '',
@@ -264,7 +272,7 @@ const FormFilling: FC = () => {
                     onCreateRecord={handleCreate}
                 />
                 <main className="flex-1 flex flex-col w-full min-w-0 relative">
-                    <div className="flex-1 w-full p-4 md:p-8 pb-[180px] md:pb-[120px]">
+                    <div className="flex-1 w-full p-4 md:p-8 pb-45 md:pb-30">
                         <div className="max-w-6xl mx-auto space-y-6">
                             {activeRecordId ? (
                                 <>

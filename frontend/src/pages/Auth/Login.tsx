@@ -34,7 +34,7 @@ const Login: FC = () => {
         const result = await login(data);
         if (!result.error) {
             const redirectTo = searchParams.get('redirectTo');
-            navigate(redirectTo || '/dashboard', { replace: true });
+            void navigate(redirectTo || '/dashboard', { replace: true });
         }
     };
 

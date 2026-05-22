@@ -1,4 +1,4 @@
-import type { RecordData, FormRecord } from '@/types/api.dto';
+import type { RecordData, RecordFull, FormRecord, Specimen } from '@/types/api.dto';
 
 export const getSexAndLifestageFromField = (field: string): { sex: string; life_stage: string } => {
     switch (field) {
@@ -58,17 +58,18 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
         'occurrence_remarks',
         'identification_remarks',
     ];
+    const d = draft as Record<string, unknown>;
     for (const key of fieldsToCopy) {
-        const val = (draft as any)[key];
+        const val = d[key];
         if (val !== undefined) {
-            if ((key === 'latitude' || key === 'longitude') && val !== null) {
-                (data as any)[key] = String(val);
+            if ((key === 'latitude' || key === 'longitude') && typeof val === 'number') {
+                Object.assign(data, { [key]: String(val) });
             } else {
-                (data as any)[key] = val;
+                Object.assign(data, { [key]: val });
             }
         }
     }
-    const specimens: any[] = [];
+    const specimens: Specimen[] = [];
     const quantityFields = [
         'males',
         'subadultMales',
@@ -77,9 +78,10 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
         'adults',
         'juveniles',
     ] as const;
+    const d3 = draft as Record<string, unknown>;
     for (const field of quantityFields) {
-        const count = (draft as any)[field];
-        if (count !== undefined && count !== null && count > 0) {
+        const count = d3[field];
+        if (typeof count === 'number' && count > 0) {
             const { sex, life_stage } = getSexAndLifestageFromField(field);
             specimens.push({ sex, life_stage, count });
         }
@@ -89,3 +91,30 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
     }
     return data;
 };
+
+export function toFormPartial(record: RecordFull): Partial<FormRecord> {
+    const result: Record<string, unknown> = {};
+    const keys: (keyof RecordData)[] = [
+        'country', 'region', 'district', 'locality', 'is_manual_location',
+        'latitude', 'longitude', 'verbatimcoordinates', 'coordinate_uncertainty',
+        'georef_source', 'location_remarks', 'verbatim_date', 'date_precision',
+        'is_interval', 'habitat', 'sampling_protocol', 'sampling_effort',
+        'sample_size_value', 'sample_size_unit', 'event_remarks', 'field_number',
+        'catalog_number', 'collection_code', 'recorded_by', 'family', 'genus',
+        'species', 'tax_verbatim', 'taxon_rank', 'type_status', 'accepted_name',
+        'taxon_remarks', 'identification_remarks', 'quantity_type',
+        'occurrence_remarks',
+    ];
+    for (const key of keys) {
+        const val = record[key];
+        if (val !== undefined && val !== null) {
+            if (key === 'latitude' || key === 'longitude') {
+                result[key] = Number(val);
+            } else {
+                result[key] = val;
+            }
+        }
+    }
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+    return result as Partial<FormRecord>;
+}

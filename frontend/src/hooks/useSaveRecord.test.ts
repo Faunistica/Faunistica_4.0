@@ -1,3 +1,5 @@
+/* oxlint-disable typescript/no-unsafe-type-assertion */
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useSaveRecord } from '@/hooks/useSaveRecord';

@@ -1,5 +1,8 @@
 'use client';
 
+/* oxlint-disable eslint/no-shadow */
+/* oxlint-disable typescript/no-unsafe-type-assertion */
+
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from 'radix-ui';
@@ -197,6 +200,7 @@ function Sidebar({
                     data-mobile="true"
                     className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
                     style={
+                        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
                         {
                             '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
                         } as React.CSSProperties
@@ -598,6 +602,7 @@ function SidebarMenuSkeleton({
             <Skeleton
                 className="h-4 max-w-(--skeleton-width) flex-1"
                 data-sidebar="menu-skeleton-text"
+                // oxlint-disable-next-line typescript/no-unsafe-type-assertion
                 style={
                     {
                         '--skeleton-width': width,

@@ -89,15 +89,13 @@ export const QUANTITY_TYPE_OPTIONS = [
     },
 ] as const;
 
-const QUANTITY_FIELDS = [
-    'males',
-    'subadultMales',
-    'females',
-    'subadultFemales',
-    'adults',
-    'juveniles',
-] as const;
-export type QuantityField = (typeof QUANTITY_FIELDS)[number];
+export type QuantityField =
+    | 'males'
+    | 'subadultMales'
+    | 'females'
+    | 'subadultFemales'
+    | 'adults'
+    | 'juveniles';
 
 export const QUANTITY_FIELD_LABELS: Record<QuantityField, string> = {
     males: 'Самцов',
@@ -119,14 +117,8 @@ export const formRecordSchema = z.object({
     locality: z.string().min(1, 'Обязательное поле'),
     is_manual_location: z.boolean().nullish(),
     verbatimcoordinates: z.string().nullish(),
-    latitude: z
-        .number({ invalid_type_error: 'Число' })
-        .min(LAT_MIN, `Мин. ${LAT_MIN}`)
-        .max(LAT_MAX, `Макс. ${LAT_MAX}`),
-    longitude: z
-        .number({ invalid_type_error: 'Число' })
-        .min(LNG_MIN, `Мин. ${LNG_MIN}`)
-        .max(LNG_MAX, `Макс. ${LNG_MAX}`),
+    latitude: z.number('Число').min(LAT_MIN, `Мин. ${LAT_MIN}`).max(LAT_MAX, `Макс. ${LAT_MAX}`),
+    longitude: z.number('Число').min(LNG_MIN, `Мин. ${LNG_MIN}`).max(LNG_MAX, `Макс. ${LNG_MAX}`),
     coordinate_uncertainty: z
         .number()
         .min(UNCERTAINTY_MIN, `Мин. ${UNCERTAINTY_MIN}`)

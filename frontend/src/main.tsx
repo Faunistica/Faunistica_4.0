@@ -40,16 +40,14 @@ async function verifyAuthInBackground(setNetworkError: (value: boolean) => void)
         }
 
         store.dispatch(logout());
-    } catch (error) {
+    } catch {
         store.dispatch(logout());
         setNetworkError(true);
     }
 }
 
 const AppRouter = () => {
-    const auth = useSelector((state: RootState) => state.user.auth);
-
-    const router = useMemo(() => createBrowserRouter(routes), [auth]);
+    const router = useMemo(() => createBrowserRouter(routes), []);
     return <RouterProvider router={router} />;
 };
 
@@ -58,7 +56,7 @@ const App = () => {
     const [networkError, setNetworkError] = useState(false);
 
     useEffect(() => {
-        verifyAuthInBackground(setNetworkError);
+        void verifyAuthInBackground(setNetworkError);
     }, []);
 
     if (auth === null) {
