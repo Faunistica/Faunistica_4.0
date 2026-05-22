@@ -15,14 +15,14 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
     const { isLanding, isNavigateEnabled } = useRouteHandle();
 
     return (
-        <header className="sticky top-0 z-[100] w-full overflow-x-clip bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-            <div className="relative h-16 flex items-center justify-between px-4 md:px-8">
+        <header className="sticky top-0 z-[100] w-full overflow-x-clip border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+            <div className="relative flex h-16 items-center justify-between px-4 md:px-8">
                 <div className="flex items-center gap-4">
                     {isSidebarEnabled && setSidebarOpen && (
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="lg:hidden rounded-md text-slate-600 h-9 w-9"
+                            className="h-9 w-9 rounded-md text-slate-600 lg:hidden"
                             onClick={() => setSidebarOpen(true)}
                         >
                             <PanelLeft className="h-5 w-5" />
@@ -33,7 +33,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="md:hidden rounded-md text-slate-600 h-9 w-9"
+                            className="h-9 w-9 rounded-md text-slate-600 md:hidden"
                             onClick={() => setIsMobileMenuOpen((v) => !v)}
                         >
                             {isMobileMenuOpen ? (
@@ -52,24 +52,24 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
 
                 {isNavigateEnabled && (
                     <>
-                        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+                        <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
                             {isLanding ? (
                                 <>
                                     <a
                                         href="#about"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         О проекте
                                     </a>
                                     <a
                                         href="#volunteers"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Волонтерам
                                     </a>
                                     <a
                                         href="#science"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Научная база
                                     </a>
@@ -78,25 +78,25 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                 <>
                                     <Link
                                         to="/dashboard"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Публикации
                                     </Link>
                                     <Link
                                         to="/instructions"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Инструкция
                                     </Link>
                                     <Link
                                         to="/statistics"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Статистика
                                     </Link>
                                     <Link
                                         to="/support"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Поддержка
                                     </Link>
@@ -108,12 +108,12 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                 <Button
                                     asChild
                                     variant="default"
-                                    className="bg-[#229ED9] text-white hover:bg-[#1E8CC0] shadow-sm"
+                                    className="bg-[#229ED9] text-white shadow-sm hover:bg-[#1E8CC0]"
                                 >
                                     <Link to="/auth/login">Личный кабинет</Link>
                                 </Button>
                             ) : (
-                                <div className="h-9 w-9 rounded-full bg-slate-900 flex items-center justify-center text-xs font-bold text-white shadow-sm cursor-pointer hover:bg-slate-800 transition-transform hover:scale-105">
+                                <div className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white shadow-sm transition-transform hover:scale-105 hover:bg-slate-800">
                                     Yu
                                 </div>
                             )}
@@ -123,27 +123,27 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
             </div>
 
             {isMobileMenuOpen && isNavigateEnabled && (
-                <div className="md:hidden absolute inset-x-0 top-full z-50 bg-white border-b border-slate-200 p-4 shadow-xl animate-in slide-in-from-top-2 overflow-x-clip">
+                <div className="absolute inset-x-0 top-full z-50 animate-in overflow-x-clip border-b border-slate-200 bg-white p-4 shadow-xl slide-in-from-top-2 md:hidden">
                     <nav className="flex flex-col gap-2 text-base font-medium text-slate-700">
                         {isLanding ? (
                             <>
                                 <a
                                     href="#about"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     О проекте
                                 </a>
                                 <a
                                     href="#volunteers"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Волонтерам
                                 </a>
                                 <a
                                     href="#science"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Научная база
@@ -153,28 +153,28 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             <>
                                 <Link
                                     to="/dashboard"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Публикации
                                 </Link>
                                 <Link
                                     to="/instructions"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Инструкция
                                 </Link>
                                 <Link
                                     to="/statistics"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Статистика
                                 </Link>
                                 <Link
                                     to="/support"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Поддержка

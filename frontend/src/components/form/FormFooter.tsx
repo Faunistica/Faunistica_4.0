@@ -40,14 +40,14 @@ const Footer: FC<FooterProps> = ({
 
     return (
         <>
-            <footer className="fixed bottom-0 left-0 right-0 md:left-64 bg-white/95 backdrop-blur-md px-4 md:px-10 py-4 border-t border-slate-200 z-[90] flex flex-row items-center justify-between gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <footer className="fixed right-0 bottom-0 left-0 z-[90] flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10">
                 <div className="flex items-center gap-4">
                     <Button
                         onClick={() => setIsDeleteDialogOpen(true)}
                         disabled={isSaving}
                         variant="ghost"
                         size="sm"
-                        className="gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        className="gap-1.5 text-red-500 hover:bg-red-50 hover:text-red-700"
                     >
                         <Trash2 className="h-3.5 w-3.5" />
                         <span className="text-xs font-medium">Удалить</span>
@@ -86,7 +86,7 @@ const Footer: FC<FooterProps> = ({
                     <Button
                         onClick={() => setIsSubmitDialogOpen(true)}
                         disabled={isSaving}
-                        className="gap-2 bg-slate-900 text-white hover:bg-slate-800 font-semibold"
+                        className="gap-2 bg-slate-900 font-semibold text-white hover:bg-slate-800"
                     >
                         <Send className="h-4 w-4" />
                         Отправить

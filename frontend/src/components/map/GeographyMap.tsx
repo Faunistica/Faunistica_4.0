@@ -223,35 +223,32 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={handleInputKeyDown}
                     placeholder="Введите адрес или место..."
-                    className="w-full px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    className="w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
 
                 {/* 🔄 Индикатор загрузки */}
                 {isSearching && (
-                    <div className="absolute right-3 top-2.5">
-                        <span className="flex h-4 w-4 relative">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-4 w-4 bg-blue-500"></span>
+                    <div className="absolute top-2.5 right-3">
+                        <span className="relative flex h-4 w-4">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+                            <span className="relative inline-flex h-4 w-4 rounded-full bg-blue-500"></span>
                         </span>
                     </div>
                 )}
 
                 {/* 📋 Выпадающий список результатов */}
                 {showDropdown && results.length > 0 && (
-                    <ul className="search-dropdown absolute top-full mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-auto z-[1001]">
+                    <ul className="search-dropdown absolute top-full z-[1001] mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
                         {results.map((item, index) => (
                             <li
                                 key={index}
                                 onClick={() => handleSelect(item)}
                                 onMouseEnter={() => setSelectedIndex(index)} // Синхронизация мыши и клавиатуры
-                                className={`
-                    px-4 py-2 text-sm cursor-pointer border-b border-slate-100 last:border-b-0 transition-colors duration-150
-                    ${
-                        index === selectedIndex
-                            ? 'bg-blue-500 text-white font-medium'
-                            : 'hover:bg-slate-100'
-                    }
-                `}
+                                className={`cursor-pointer border-b border-slate-100 px-4 py-2 text-sm transition-colors duration-150 last:border-b-0 ${
+                                    index === selectedIndex
+                                        ? 'bg-blue-500 font-medium text-white'
+                                        : 'hover:bg-slate-100'
+                                } `}
                             >
                                 {item.display_name}
                                 {index === selectedIndex && (
@@ -264,7 +261,7 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
             </div>
 
             {/* 🗺️ Карта */}
-            <div className="h-[350px] w-full border border-slate-200 rounded-md overflow-hidden z-0">
+            <div className="z-0 h-[350px] w-full overflow-hidden rounded-md border border-slate-200">
                 <MapContainer
                     center={center}
                     zoom={10}

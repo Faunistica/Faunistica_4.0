@@ -271,30 +271,30 @@ const FormFilling: FC = () => {
                     onSelectRecord={switchToRecord}
                     onCreateRecord={handleCreate}
                 />
-                <main className="flex-1 flex flex-col w-full min-w-0 relative">
-                    <div className="flex-1 w-full p-4 md:p-8 pb-45 md:pb-30">
-                        <div className="max-w-6xl mx-auto space-y-6">
+                <main className="relative flex w-full min-w-0 flex-1 flex-col">
+                    <div className="w-full flex-1 p-4 pb-45 md:p-8 md:pb-30">
+                        <div className="mx-auto max-w-6xl space-y-6">
                             {activeRecordId ? (
                                 <>
-                                    <div className="relative z-20 focus-within:z-50 transition-all duration-200 mb-6">
+                                    <div className="relative z-20 mb-6 transition-all duration-200 focus-within:z-50">
                                         <ArticleSourceCard publ_id={publ_id} />
                                     </div>
-                                    <div className="relative z-15 focus-within:z-50 transition-all duration-200">
+                                    <div className="relative z-15 transition-all duration-200 focus-within:z-50">
                                         <GeographyCard publ_id={publ_id} />
                                     </div>
-                                    <div className="relative z-10 focus-within:z-50 transition-all duration-200">
+                                    <div className="relative z-10 transition-all duration-200 focus-within:z-50">
                                         <CollectionEventCard publ_id={publ_id} />
                                     </div>
-                                    <div className="relative z-5 focus-within:z-50 transition-all duration-200">
+                                    <div className="relative z-5 transition-all duration-200 focus-within:z-50">
                                         <TaxonomyCard />
                                     </div>
-                                    <div className="relative z-0 focus-within:z-50 transition-all duration-200">
+                                    <div className="relative z-0 transition-all duration-200 focus-within:z-50">
                                         <QuantitiesCard />
                                     </div>
                                     <ServerErrorDisplay errors={nonFieldErrors} />
                                 </>
                             ) : (
-                                <div className="flex flex-col items-center justify-center py-24 gap-6">
+                                <div className="flex flex-col items-center justify-center gap-6 py-24">
                                     <p className="text-lg text-slate-500">Нет записей</p>
                                     <Button onClick={handleCreate} className="gap-2">
                                         <Plus className="h-4 w-4" />

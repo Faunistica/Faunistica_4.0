@@ -78,7 +78,7 @@ const CoordinateInput = memo(
                     disabled={disabled}
                     className={error ? 'border-red-500' : ''}
                 />
-                {error && <span className="text-xs text-red-500 mt-0.5 block">{error}</span>}
+                {error && <span className="mt-0.5 block text-xs text-red-500">{error}</span>}
             </div>
         );
     },
@@ -137,8 +137,12 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
 
     const updateFormValues = useCallback(() => {
         const {
-            latDeg: dLatDeg, latMin: dLatMin, latDir: dLatDir,
-            lonDeg: dLonDeg, lonMin: dLonMin, lonDir: dLonDir,
+            latDeg: dLatDeg,
+            latMin: dLatMin,
+            latDir: dLatDir,
+            lonDeg: dLonDeg,
+            lonMin: dLonMin,
+            lonDir: dLonDir,
         } = debouncedValues;
 
         if (dLatDeg === '' || dLatMin === '' || dLonDeg === '' || dLonMin === '') {
@@ -195,19 +199,21 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
     const errorsAny = errors as Record<string, unknown>;
     const errVal = errorsAny[prefix];
     const errPrefix = isRecord(errVal) ? errVal : undefined;
-    const latError = errPrefix && isRecord(errPrefix.latitude)
-        ? (errPrefix.latitude as { message?: string }).message
-        : undefined;
-    const lonError = errPrefix && isRecord(errPrefix.longitude)
-        ? (errPrefix.longitude as { message?: string }).message
-        : undefined;
+    const latError =
+        errPrefix && isRecord(errPrefix.latitude)
+            ? (errPrefix.latitude as { message?: string }).message
+            : undefined;
+    const lonError =
+        errPrefix && isRecord(errPrefix.longitude)
+            ? (errPrefix.longitude as { message?: string }).message
+            : undefined;
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 rounded-lg border border-slate-200">
+        <div className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 p-4 lg:grid-cols-2">
             {/* Широта */}
             <div className="space-y-2">
                 <Label htmlFor={`lat-deg-${prefix}`}>Широта (градусы° минуты')</Label>
-                <div className="flex gap-2 items-start">
+                <div className="flex items-start gap-2">
                     <CoordinateInput
                         id={`lat-deg-${prefix}`}
                         value={latDeg}
@@ -244,7 +250,7 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
             {/* Долгота */}
             <div className="space-y-2">
                 <Label htmlFor={`lon-deg-${prefix}`}>Долгота (градусы° минуты')</Label>
-                <div className="flex gap-2 items-start">
+                <div className="flex items-start gap-2">
                     <CoordinateInput
                         id={`lon-deg-${prefix}`}
                         value={lonDeg}
@@ -315,8 +321,14 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
 
     const updateFormValues = useCallback(() => {
         const {
-            latDeg: dLatDeg, latMin: dLatMin, latSec: dLatSec, latDir: dLatDir,
-            lonDeg: dLonDeg, lonMin: dLonMin, lonSec: dLonSec, lonDir: dLonDir,
+            latDeg: dLatDeg,
+            latMin: dLatMin,
+            latSec: dLatSec,
+            latDir: dLatDir,
+            lonDeg: dLonDeg,
+            lonMin: dLonMin,
+            lonSec: dLonSec,
+            lonDir: dLonDir,
         } = debouncedValues;
 
         if (
@@ -391,19 +403,21 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
     const dmsErrorsAny = errors as Record<string, unknown>;
     const dmsErrVal = dmsErrorsAny[prefix];
     const dmsErrPrefix = isRecord(dmsErrVal) ? dmsErrVal : undefined;
-    const latError = dmsErrPrefix && isRecord(dmsErrPrefix.latitude)
-        ? (dmsErrPrefix.latitude as { message?: string }).message
-        : undefined;
-    const lonError = dmsErrPrefix && isRecord(dmsErrPrefix.longitude)
-        ? (dmsErrPrefix.longitude as { message?: string }).message
-        : undefined;
+    const latError =
+        dmsErrPrefix && isRecord(dmsErrPrefix.latitude)
+            ? (dmsErrPrefix.latitude as { message?: string }).message
+            : undefined;
+    const lonError =
+        dmsErrPrefix && isRecord(dmsErrPrefix.longitude)
+            ? (dmsErrPrefix.longitude as { message?: string }).message
+            : undefined;
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 rounded-lg border border-slate-200">
+        <div className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 p-4 lg:grid-cols-2">
             {/* Широта */}
             <div className="space-y-2">
                 <Label htmlFor={`lat-deg-dms-${prefix}`}>Широта (градусы° минуты' секунды'')</Label>
-                <div className="flex gap-2 items-start flex-wrap">
+                <div className="flex flex-wrap items-start gap-2">
                     <CoordinateInput
                         id={`lat-deg-dms-${prefix}`}
                         value={latDeg}
@@ -451,7 +465,7 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
                 <Label htmlFor={`lon-deg-dms-${prefix}`}>
                     Долгота (градусы° минуты' секунды'')
                 </Label>
-                <div className="flex gap-2 items-start flex-wrap">
+                <div className="flex flex-wrap items-start gap-2">
                     <CoordinateInput
                         id={`lon-deg-dms-${prefix}`}
                         value={lonDeg}

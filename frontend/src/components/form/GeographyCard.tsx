@@ -101,7 +101,7 @@ const GeographyCard: FC<Props> = () => {
             </CardHeader>
 
             <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 border-b border-slate-100 pb-6">
+                <div className="grid grid-cols-1 gap-6 border-b border-slate-100 pb-6 lg:grid-cols-2">
                     <div className="space-y-3">
                         <Label className="font-medium">Происхождение координат</Label>
                         <Controller
@@ -125,7 +125,7 @@ const GeographyCard: FC<Props> = () => {
                                             />
                                             <Label
                                                 htmlFor={`geo_${opt.value}`}
-                                                className="font-normal text-slate-700 cursor-pointer"
+                                                className="cursor-pointer font-normal text-slate-700"
                                             >
                                                 {opt.label}
                                             </Label>
@@ -146,7 +146,7 @@ const GeographyCard: FC<Props> = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div className="space-y-2">
                         <Label htmlFor="country">Страна</Label>
                         <Controller
@@ -231,10 +231,10 @@ const GeographyCard: FC<Props> = () => {
                 </div>
 
                 {!isNone && (
-                    <div className="border-t border-slate-100 pt-5 space-y-6">
+                    <div className="space-y-6 border-t border-slate-100 pt-5">
                         {isArticle && (
                             <div className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label>Формат ввода координат</Label>
                                         <Select
@@ -273,7 +273,7 @@ const GeographyCard: FC<Props> = () => {
                                     variant="outline"
                                     onClick={() => setShowMap(!showMap)}
                                 >
-                                    <MapIcon className="w-4 h-4 mr-2" />
+                                    <MapIcon className="mr-2 h-4 w-4" />
                                     {showMap ? 'Скрыть карту' : 'Выбрать на карте'}
                                 </Button>
 
@@ -287,7 +287,7 @@ const GeographyCard: FC<Props> = () => {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                             <div className="space-y-2">
                                 <Label htmlFor="latitude">Широта (DD)</Label>
                                 <Input
@@ -297,7 +297,7 @@ const GeographyCard: FC<Props> = () => {
                                     readOnly={isArticle && coordFormat !== 'DD'}
                                     className={
                                         isArticle && coordFormat !== 'DD'
-                                            ? 'bg-slate-100 cursor-not-allowed'
+                                            ? 'cursor-not-allowed bg-slate-100'
                                             : ''
                                     }
                                     aria-invalid={!!err?.latitude}
@@ -315,7 +315,7 @@ const GeographyCard: FC<Props> = () => {
                                     readOnly={isArticle && coordFormat !== 'DD'}
                                     className={
                                         isArticle && coordFormat !== 'DD'
-                                            ? 'bg-slate-100 cursor-not-allowed'
+                                            ? 'cursor-not-allowed bg-slate-100'
                                             : ''
                                     }
                                     aria-invalid={!!err?.longitude}

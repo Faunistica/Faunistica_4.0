@@ -47,7 +47,7 @@ const Login: FC = () => {
               : null;
 
     return (
-        <div className="w-full max-w-[400px] space-y-6 mx-auto">
+        <div className="mx-auto w-full max-w-[400px] space-y-6">
             <Card className="border-slate-200 shadow-sm">
                 <CardHeader className="space-y-1 text-center">
                     <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
@@ -61,7 +61,7 @@ const Login: FC = () => {
                     <div className="grid grid-cols-1 gap-3">
                         <Button
                             variant="outline"
-                            className="w-full bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                            className="w-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
                             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                                 <path
@@ -86,7 +86,7 @@ const Login: FC = () => {
                         <Button
                             asChild
                             variant="outline"
-                            className="w-full bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                            className="w-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
                             <Link to="/auth/telegram">
                                 <Send className="mr-2 h-4 w-4 text-[#229ED9]" />
@@ -100,7 +100,7 @@ const Login: FC = () => {
                             <span className="w-full border-t border-slate-200" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-slate-500 font-medium">
+                            <span className="bg-white px-2 font-medium text-slate-500">
                                 Или войдите с помощью
                             </span>
                         </div>
@@ -144,24 +144,24 @@ const Login: FC = () => {
                         </div>
 
                         {apiErrorMessage && (
-                            <p className="text-sm text-red-500 text-center">{apiErrorMessage}</p>
+                            <p className="text-center text-sm text-red-500">{apiErrorMessage}</p>
                         )}
 
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold shadow-sm"
+                            className="w-full bg-slate-900 font-semibold text-white shadow-sm hover:bg-slate-800"
                         >
                             {isLoading ? 'Вход...' : 'Войти'}
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex flex-col justify-center bg-white border-t border-slate-100 p-4">
+                <CardFooter className="flex flex-col justify-center border-t border-slate-100 bg-white p-4">
                     <div className="text-sm text-slate-600">
                         Нет аккаунта?{' '}
                         <Link
                             to="/auth/register"
-                            className="text-slate-900 font-semibold hover:underline"
+                            className="font-semibold text-slate-900 hover:underline"
                         >
                             Зарегистрироваться
                         </Link>
@@ -169,18 +169,18 @@ const Login: FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm text-slate-500 leading-relaxed">
+            <p className="px-4 text-center text-sm leading-relaxed text-slate-500">
                 {'Продолжая, вы соглашаетесь с нашими '}
                 <Link
                     to="/terms-of-service"
-                    className="underline underline-offset-4 hover:text-slate-900 transition-colors"
+                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
                 >
                     Условиями обслуживания
                 </Link>
                 {' и '}
                 <Link
                     to="/privacy-policy"
-                    className="underline underline-offset-4 hover:text-slate-900 transition-colors"
+                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
                 >
                     Политикой конфиденциальности
                 </Link>

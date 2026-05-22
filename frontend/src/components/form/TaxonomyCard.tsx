@@ -94,7 +94,7 @@ const TaxonomyCard: FC = () => {
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div className="space-y-2">
                         <Label>Семейство (Familia)</Label>
                         <Controller
@@ -160,7 +160,7 @@ const TaxonomyCard: FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-5">
+                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-3">
                     <div className="space-y-2">
                         <Label>Ранг таксона</Label>
                         <Controller
@@ -232,7 +232,7 @@ const TaxonomyCard: FC = () => {
                                 />
                                 <Label
                                     htmlFor="tax_verbatim"
-                                    className="font-normal cursor-pointer"
+                                    className="cursor-pointer font-normal"
                                 >
                                     Латинское название введено вручную
                                 </Label>
@@ -241,7 +241,7 @@ const TaxonomyCard: FC = () => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="taxon_remarks">Таксономические примечания</Label>
                         <Textarea

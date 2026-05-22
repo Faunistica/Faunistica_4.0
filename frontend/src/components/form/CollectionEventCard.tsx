@@ -31,14 +31,14 @@ const CollectionEventCard: FC<Props> = () => {
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <TooltipProvider>
                         <div className="space-y-2">
                             <div className="flex items-center gap-1">
                                 <Label htmlFor="verbatim_date">Дата сбора (как в статье)</Label>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Info className="h-3.5 w-3.5 text-slate-400 cursor-help" />
+                                        <Info className="h-3.5 w-3.5 cursor-help text-slate-400" />
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="max-w-xs text-xs">
                                         Укажите дату точно так, как она приведена в статье. Примеры:
@@ -76,14 +76,14 @@ const CollectionEventCard: FC<Props> = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <TooltipProvider>
                         <div className="space-y-2">
                             <div className="flex items-center gap-1">
                                 <Label htmlFor="habitat">Биотоп</Label>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Info className="h-3.5 w-3.5 text-slate-400 cursor-help" />
+                                        <Info className="h-3.5 w-3.5 cursor-help text-slate-400" />
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="max-w-xs text-xs">
                                         Если биотопов несколько, разделяйте их точкой с запятой «;».
@@ -119,7 +119,7 @@ const CollectionEventCard: FC<Props> = () => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-5">
+                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-3">
                     <div className="space-y-2">
                         <Label htmlFor="field_number">Полевой номер</Label>
                         <Input

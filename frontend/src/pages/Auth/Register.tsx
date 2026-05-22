@@ -15,7 +15,7 @@ import { Link } from 'react-router';
 
 const Register: FC = () => {
     return (
-        <div className="w-full max-w-[400px] space-y-6 mx-auto">
+        <div className="mx-auto w-full max-w-[400px] space-y-6">
             <Card className="border-slate-200 shadow-sm">
                 <CardHeader className="space-y-1 text-center">
                     <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
@@ -48,7 +48,7 @@ const Register: FC = () => {
                             <Input id="confirm-password" type="password" />
                         </div>
 
-                        <Button className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold shadow-sm mt-2">
+                        <Button className="mt-2 w-full bg-slate-900 font-semibold text-white shadow-sm hover:bg-slate-800">
                             Create Account
                         </Button>
                     </div>
@@ -58,7 +58,7 @@ const Register: FC = () => {
                             <span className="w-full border-t border-slate-200" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-slate-500 font-medium">
+                            <span className="bg-white px-2 font-medium text-slate-500">
                                 Or continue with
                             </span>
                         </div>
@@ -67,7 +67,7 @@ const Register: FC = () => {
                     <div className="space-y-3">
                         <Button
                             variant="outline"
-                            className="w-full bg-white border-slate-300 text-slate-700 hover:bg-slate-50 gap-2"
+                            className="w-full gap-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
                             <svg className="h-4 w-4" viewBox="0 0 24 24">
                                 <path
@@ -92,7 +92,7 @@ const Register: FC = () => {
 
                         <Button
                             variant="outline"
-                            className="w-full bg-white border-slate-300 text-slate-700 hover:bg-slate-50 gap-2"
+                            className="w-full gap-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
                             <Send className="h-4 w-4 text-telegram" />
                             Sign up with Telegram
@@ -100,12 +100,12 @@ const Register: FC = () => {
                     </div>
                 </CardContent>
 
-                <CardFooter className="flex flex-col justify-center bg-white border-t border-slate-100 p-4">
+                <CardFooter className="flex flex-col justify-center border-t border-slate-100 bg-white p-4">
                     <div className="text-sm text-slate-600">
                         Already have an account?{' '}
                         <Link
                             to="/auth/login"
-                            className="text-slate-900 font-semibold hover:underline"
+                            className="font-semibold text-slate-900 hover:underline"
                         >
                             Log in
                         </Link>
@@ -113,18 +113,18 @@ const Register: FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm text-slate-500 leading-relaxed">
+            <p className="px-4 text-center text-sm leading-relaxed text-slate-500">
                 By clicking continue, you agree to our{' '}
                 <Link
                     to="#"
-                    className="underline underline-offset-4 hover:text-slate-900 transition-colors"
+                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
                 >
                     Terms of Service
                 </Link>{' '}
                 and{' '}
                 <Link
                     to="#"
-                    className="underline underline-offset-4 hover:text-slate-900 transition-colors"
+                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
                 >
                     Privacy Policy
                 </Link>

@@ -5,4 +5,7 @@ export default defineConfig({
     tabWidth: 4,
     singleQuote: true,
     ignorePatterns: [],
+    sortTailwindcss: {
+        stylesheet: './src/index.css',
+    },
 });

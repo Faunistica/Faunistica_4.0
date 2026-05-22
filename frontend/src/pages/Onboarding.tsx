@@ -17,20 +17,20 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function Onboarding() {
     return (
-        <main className="flex-1 flex flex-col items-center py-8 px-4 md:py-12">
+        <main className="flex flex-1 flex-col items-center px-4 py-8 md:py-12">
             <div className="w-full max-w-2xl space-y-8">
-                <Card className="border-slate-200 shadow-sm overflow-hidden">
+                <Card className="overflow-hidden border-slate-200 shadow-sm">
                     <CardHeader className="space-y-4">
                         <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
                             Анкета участника
                         </CardTitle>
-                        <div className="space-y-4 text-slate-900 leading-relaxed">
+                        <div className="space-y-4 leading-relaxed text-slate-900">
                             <p>
                                 Благодарим вас за регистрацию в системе. Перед началом работы нам
                                 необходимо уточнить несколько организационных вопросов для
                                 оптимизации вашего взаимодействия с проектом.
                             </p>
-                            <div className="bg-slate-100 p-4 rounded-lg border-l-4 border-slate-400 text-sm">
+                            <div className="rounded-lg border-l-4 border-slate-400 bg-slate-100 p-4 text-sm">
                                 Напоминаем, что регистрироваться и участвовать в нашем проекте могут{' '}
                                 <strong>совершеннолетние лица</strong>. Несовершеннолетние в
                                 возрасте от 14 до 18 лет также могут принимать участие, однако
@@ -44,12 +44,12 @@ export default function Onboarding() {
                     <CardContent className="space-y-10">
                         {/* Секция 1: Подтверждение соглашения */}
                         <div className="space-y-4">
-                            <div className="flex items-start space-x-3 p-4 border border-slate-200 rounded-lg bg-slate-50/50">
+                            <div className="flex items-start space-x-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
                                 <Checkbox id="agreement" className="mt-1" />
                                 <div className="grid gap-1.5 leading-none">
                                     <Label
                                         htmlFor="agreement"
-                                        className="text-sm font-semibold leading-snug cursor-pointer"
+                                        className="cursor-pointer text-sm leading-snug font-semibold"
                                     >
                                         Я подтверждаю, что соблюдаю условия пользовательского
                                         соглашения и соответствую возрастным критериям проекта
@@ -60,11 +60,11 @@ export default function Onboarding() {
 
                         {/* Секция 2: Демография */}
                         <div className="space-y-6">
-                            <div className="flex items-center gap-2 text-slate-900 font-bold border-b border-slate-100 pb-2">
+                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                 <UserCheck className="h-5 w-5" />
                                 <h3>Личные данные</h3>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="age">Ваш возраст</Label>
                                     <Input
@@ -95,7 +95,7 @@ export default function Onboarding() {
 
                         {/* Секция 3: Языки */}
                         <div className="space-y-4">
-                            <div className="flex items-center gap-2 text-slate-900 font-bold border-b border-slate-100 pb-2">
+                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                 <Languages className="h-5 w-5" />
                                 <h3>Языковые компетенции</h3>
                             </div>
@@ -106,13 +106,13 @@ export default function Onboarding() {
                             <div className="flex flex-wrap gap-6 pt-2">
                                 <div className="flex items-center space-x-2">
                                     <Checkbox id="lang-ru" />
-                                    <Label htmlFor="lang-ru" className="font-medium cursor-pointer">
+                                    <Label htmlFor="lang-ru" className="cursor-pointer font-medium">
                                         Русский
                                     </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <Checkbox id="lang-en" />
-                                    <Label htmlFor="lang-en" className="font-medium cursor-pointer">
+                                    <Label htmlFor="lang-en" className="cursor-pointer font-medium">
                                         Английский
                                     </Label>
                                 </div>
@@ -121,11 +121,11 @@ export default function Onboarding() {
 
                         {/* Секция 4: Предпочтения */}
                         <div className="space-y-4">
-                            <div className="flex items-center gap-2 text-slate-900 font-bold border-b border-slate-100 pb-2">
+                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                 <Settings2 className="h-5 w-5" />
                                 <h3>Профессиональные предпочтения</h3>
                             </div>
-                            <div className="space-y-3 text-sm text-slate-900 leading-relaxed">
+                            <div className="space-y-3 text-sm leading-relaxed text-slate-900">
                                 <p>
                                     Какие публикации вы хотели бы получать и в каком порядке?
                                     Возможно, у вас имеются предпочтения по{' '}
@@ -143,7 +143,7 @@ export default function Onboarding() {
                             <div className="pt-2">
                                 <Label
                                     htmlFor="preferences"
-                                    className="text-slate-400 mb-2 block text-xs uppercase tracking-wider font-bold"
+                                    className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
                                 >
                                     Дополнительная информация (по желанию)
                                 </Label>
@@ -157,7 +157,7 @@ export default function Onboarding() {
 
                         {/* Секция 5: Публичный рейтинг */}
                         <div className="space-y-4 pt-4">
-                            <div className="flex items-center gap-2 text-slate-900 font-bold border-b border-slate-100 pb-2">
+                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                 <FileText className="h-5 w-5" />
                                 <h3>Публичность данных</h3>
                             </div>
@@ -171,7 +171,7 @@ export default function Onboarding() {
                                         <RadioGroupItem value="yes" id="rating-yes" />
                                         <Label
                                             htmlFor="rating-yes"
-                                            className="font-normal cursor-pointer"
+                                            className="cursor-pointer font-normal"
                                         >
                                             Да, я согласен на публичное отображение
                                         </Label>
@@ -180,7 +180,7 @@ export default function Onboarding() {
                                         <RadioGroupItem value="no" id="rating-no" />
                                         <Label
                                             htmlFor="rating-no"
-                                            className="font-normal cursor-pointer"
+                                            className="cursor-pointer font-normal"
                                         >
                                             Нет, использовать анонимный идентификатор
                                         </Label>
@@ -190,8 +190,8 @@ export default function Onboarding() {
                         </div>
                     </CardContent>
 
-                    <CardFooter className="bg-white border-t border-slate-100 p-6 flex flex-col sm:flex-row gap-4">
-                        <Button className="w-full sm:w-auto bg-slate-900 text-white hover:bg-slate-800 font-bold px-10 shadow-md">
+                    <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-white p-6 sm:flex-row">
+                        <Button className="w-full bg-slate-900 px-10 font-bold text-white shadow-md hover:bg-slate-800 sm:w-auto">
                             Завершить регистрацию
                         </Button>
                         {/* <Button variant="destructive" className="w-full sm:w-auto font-bold px-10 shadow-md">

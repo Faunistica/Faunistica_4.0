@@ -71,14 +71,14 @@ const QuantitiesCard: FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
                 <TooltipProvider>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
                         {quantityFields.map(({ key, label, color }) => (
-                            <div key={key} className="space-y-1.5 min-w-0">
+                            <div key={key} className="min-w-0 space-y-1.5">
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Label
                                             htmlFor={key}
-                                            className={`text-[10px] uppercase tracking-wider font-semibold ${color} truncate block cursor-help`}
+                                            className={`text-[10px] font-semibold tracking-wider uppercase ${color} block cursor-help truncate`}
                                         >
                                             {label}
                                         </Label>
@@ -92,7 +92,7 @@ const QuantitiesCard: FC = () => {
                                     type="number"
                                     min={0}
                                     placeholder="0"
-                                    className="text-center h-9 focus-visible:ring-1 focus-visible:ring-slate-300"
+                                    className="h-9 text-center focus-visible:ring-1 focus-visible:ring-slate-300"
                                     {...register(key, {
                                         valueAsNumber: true,
                                     })}
@@ -102,7 +102,7 @@ const QuantitiesCard: FC = () => {
                     </div>
                 </TooltipProvider>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-5">
+                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label>Единицы измерения</Label>
                         <Controller
@@ -129,7 +129,7 @@ const QuantitiesCard: FC = () => {
                     </div>
                     <div className="space-y-2">
                         <Label>Общее количество (вычислено)</Label>
-                        <div className="flex items-center h-9 px-3 rounded-md border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700">
+                        <div className="flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700">
                             {total > 0 ? total : '—'}
                         </div>
                     </div>
@@ -139,7 +139,7 @@ const QuantitiesCard: FC = () => {
                     <Label htmlFor="occurrence_remarks">Примечания к образцам</Label>
                     <Textarea
                         id="occurrence_remarks"
-                        className="min-h-[72px] resize-none"
+                        className="min-h-18 resize-none"
                         placeholder="Укажите специфические детали экземпляра…"
                         {...register('occurrence_remarks')}
                     />

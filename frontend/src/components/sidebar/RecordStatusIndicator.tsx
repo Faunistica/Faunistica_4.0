@@ -37,7 +37,7 @@ export const RecordStatusIndicator: FC<Props> = ({ status }) => {
 
     return (
         <span className={`inline-flex items-center gap-1 ${color}`} title={label}>
-            <Icon className="w-3.5 h-3.5" />
+            <Icon className="h-3.5 w-3.5" />
         </span>
     );
 };

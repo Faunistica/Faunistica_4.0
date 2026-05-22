@@ -9,8 +9,8 @@ interface NetworkErrorAlertProps {
 
 const NetworkErrorAlert: FC<NetworkErrorAlertProps> = ({ onClose }) => {
     return (
-        <div className="fixed bottom-4 right-4 z-[100] max-w-md animate-in fade-in slide-in-from-bottom-4">
-            <Alert variant="destructive" className="bg-white border-destructive shadow-lg">
+        <div className="fixed right-4 bottom-4 z-[100] max-w-md animate-in fade-in slide-in-from-bottom-4">
+            <Alert variant="destructive" className="border-destructive bg-white shadow-lg">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle className="font-bold text-destructive">
                     Нет доступа к серверу
@@ -22,7 +22,7 @@ const NetworkErrorAlert: FC<NetworkErrorAlertProps> = ({ onClose }) => {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-2 right-2 h-8 w-8 hover:bg-slate-100 rounded-full"
+                    className="absolute top-2 right-2 h-8 w-8 rounded-full hover:bg-slate-100"
                     onClick={onClose}
                 >
                     <X className="h-4 w-4 text-slate-400" />

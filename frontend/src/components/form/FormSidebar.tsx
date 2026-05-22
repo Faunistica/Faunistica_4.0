@@ -60,10 +60,10 @@ const SidebarRecordItem = memo(
                     }`}
                 >
                     <div className="flex w-full items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex min-w-0 items-center gap-2">
                             <RecordStatusIndicator status={status} />
                             <span
-                                className={`text-xs font-bold leading-tight truncate ${
+                                className={`truncate text-xs leading-tight font-bold ${
                                     isActive ? 'text-slate-900' : 'text-slate-700'
                                 }`}
                             >
@@ -115,10 +115,10 @@ const FormSidebar: FC<SidebarProps> = ({
                             <FileText className="h-4 w-4" />
                         </div>
                         <div>
-                            <div className="text-sm font-bold leading-tight text-slate-900">
+                            <div className="text-sm leading-tight font-bold text-slate-900">
                                 Менеджер
                             </div>
-                            <div className="text-[10px] font-medium leading-tight text-slate-500">
+                            <div className="text-[10px] leading-tight font-medium text-slate-500">
                                 Записи данных
                             </div>
                         </div>
@@ -137,7 +137,7 @@ const FormSidebar: FC<SidebarProps> = ({
             </SidebarHeader>
 
             <SidebarContent>
-                <div className="p-4 pb-0 space-y-2">
+                <div className="space-y-2 p-4 pb-0">
                     <Button
                         type="button"
                         onClick={onCreateRecord}
@@ -150,7 +150,7 @@ const FormSidebar: FC<SidebarProps> = ({
                 </div>
 
                 <SidebarGroup className="mt-2">
-                    <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <SidebarGroupLabel className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                         Список записей
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
@@ -176,7 +176,7 @@ const FormSidebar: FC<SidebarProps> = ({
                 <Button
                     asChild
                     variant="outline"
-                    className="w-full justify-start gap-2 shadow-sm font-medium"
+                    className="w-full justify-start gap-2 font-medium shadow-sm"
                 >
                     <Link to="/dashboard">
                         <LogOut className="h-4 w-4 text-slate-500" />

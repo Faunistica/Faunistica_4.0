@@ -10,10 +10,10 @@ const ServerErrorDisplay: FC<Props> = ({ errors }) => {
     if (errors.length === 0) return null;
 
     return (
-        <Card className="border-red-200 shadow-sm bg-red-50">
+        <Card className="border-red-200 bg-red-50 shadow-sm">
             <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
                     <div className="space-y-1.5">
                         <p className="text-sm font-semibold text-red-700">Ошибки при сохранении</p>
                         {errors.map((msg, i) => (

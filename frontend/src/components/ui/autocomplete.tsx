@@ -107,7 +107,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
                     autoComplete="off"
                 />
                 {isLoading && (
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                    <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
                         <Spinner className="h-4 w-4" />
                     </div>
                 )}
@@ -115,7 +115,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
 
             {isOpen && suggestions.length > 0 && (
                 <ul
-                    className="absolute z-[150] mt-2 w-full max-h-60 overflow-y-auto overflow-x-hidden rounded-xl border border-slate-200 bg-white/95 backdrop-blur-md py-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-200"
+                    className="absolute z-[150] mt-2 max-h-60 w-full animate-in overflow-x-hidden overflow-y-auto rounded-xl border border-slate-200 bg-white/95 py-1.5 shadow-xl backdrop-blur-md duration-200 zoom-in-95 fade-in"
                     role="listbox"
                 >
                     {suggestions.map((item, i) => (
