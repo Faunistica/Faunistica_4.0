@@ -1,5 +1,5 @@
 import { type FC, memo } from 'react';
-import { cn } from '@/lib/utils';
+import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Plus, LogOut, FileText, MapPin, X } from 'lucide-react';
 import { Link } from 'react-router';
@@ -39,7 +39,9 @@ const SidebarRecordItem = memo(
         onSelect: () => void;
         status: RecordStatus;
     }) => {
-        const recordName = record.species || record.genus || record.family || 'Новая запись';
+        const recordName = capitalizeFirstLetter(
+            record.species || record.genus || record.family || 'Новая запись',
+        );
 
         return (
             <SidebarMenuItem>
