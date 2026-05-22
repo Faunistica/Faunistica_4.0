@@ -5,7 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import Autocomplete from '@/components/ui/autocomplete';
 import { Bug } from 'lucide-react';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
@@ -18,7 +24,13 @@ interface Props {
 }
 
 const TaxonomyCard: FC<Props> = ({ index }) => {
-    const { register, control, watch, setValue, formState: { errors } } = useFormContext<FormSchema>();
+    const {
+        register,
+        control,
+        watch,
+        setValue,
+        formState: { errors },
+    } = useFormContext<FormSchema>();
     const prefix = `samples.${index}` as const;
     const err = errors.samples?.[index];
 
@@ -42,7 +54,9 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
         try {
             const r = await searchFamily({ field: 'family', text }).unwrap();
             setFamilySuggestions(r.suggestions ?? []);
-        } finally { setFamLoading(false); }
+        } finally {
+            setFamLoading(false);
+        }
     }, 300);
 
     const handleGenusSearch = useDebouncedCallback(async (text: string) => {
@@ -50,15 +64,24 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
         try {
             const r = await searchGenus({ field: 'genus', text, family: familyValue }).unwrap();
             setGenusSuggestions(r.suggestions ?? []);
-        } finally { setGenLoading(false); }
+        } finally {
+            setGenLoading(false);
+        }
     }, 300);
 
     const handleSpeciesSearch = useDebouncedCallback(async (text: string) => {
         setSpLoading(true);
         try {
-            const r = await searchSpecies({ field: 'species', text, family: familyValue, genus: genusValue }).unwrap();
+            const r = await searchSpecies({
+                field: 'species',
+                text,
+                family: familyValue,
+                genus: genusValue,
+            }).unwrap();
             setSpeciesSuggestions(r.suggestions ?? []);
-        } finally { setSpLoading(false); }
+        } finally {
+            setSpLoading(false);
+        }
     }, 300);
 
     return (
@@ -68,7 +91,9 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
                         <Bug className="h-4 w-4" />
                     </div>
-                    <CardTitle className="text-lg font-semibold">Таксономическая принадлежность</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                        Таксономическая принадлежность
+                    </CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -147,11 +172,18 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                             name={`${prefix}.taxon_rank`}
                             control={control}
                             render={({ field }) => (
-                                <Select value={field.value || undefined} onValueChange={field.onChange}>
-                                    <SelectTrigger aria-invalid={!!err?.taxon_rank}><SelectValue placeholder="Выберите ранг" /></SelectTrigger>
+                                <Select
+                                    value={field.value || undefined}
+                                    onValueChange={field.onChange}
+                                >
+                                    <SelectTrigger aria-invalid={!!err?.taxon_rank}>
+                                        <SelectValue placeholder="Выберите ранг" />
+                                    </SelectTrigger>
                                     <SelectContent>
-                                        {TAXON_RANK_OPTIONS.map(opt => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        {TAXON_RANK_OPTIONS.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -164,11 +196,18 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                             name={`${prefix}.type_status`}
                             control={control}
                             render={({ field }) => (
-                                <Select value={field.value || undefined} onValueChange={field.onChange}>
-                                    <SelectTrigger><SelectValue placeholder="Выберите статус" /></SelectTrigger>
+                                <Select
+                                    value={field.value || undefined}
+                                    onValueChange={field.onChange}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Выберите статус" />
+                                    </SelectTrigger>
                                     <SelectContent>
-                                        {TYPE_STATUS_OPTIONS.map(opt => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        {TYPE_STATUS_OPTIONS.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -197,7 +236,10 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                                     checked={field.value ?? false}
                                     onCheckedChange={field.onChange}
                                 />
-                                <Label htmlFor={`${prefix}_tax_verbatim`} className="font-normal cursor-pointer">
+                                <Label
+                                    htmlFor={`${prefix}_tax_verbatim`}
+                                    className="font-normal cursor-pointer"
+                                >
                                     Латинское название введено вручную
                                 </Label>
                             </div>
@@ -208,7 +250,9 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                 {/* ── Row 4: Remarks ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor={`${prefix}.taxon_remarks`}>Таксономические примечания</Label>
+                        <Label htmlFor={`${prefix}.taxon_remarks`}>
+                            Таксономические примечания
+                        </Label>
                         <Textarea
                             id={`${prefix}.taxon_remarks`}
                             className="min-h-[72px] resize-none"
@@ -217,7 +261,9 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor={`${prefix}.identification_remarks`}>Примечания к идентификации</Label>
+                        <Label htmlFor={`${prefix}.identification_remarks`}>
+                            Примечания к идентификации
+                        </Label>
                         <Textarea
                             id={`${prefix}.identification_remarks`}
                             className="min-h-[72px] resize-none"

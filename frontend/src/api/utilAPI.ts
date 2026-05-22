@@ -1,4 +1,4 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
+import { createApi } from '@reduxjs/toolkit/query/react';
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
 

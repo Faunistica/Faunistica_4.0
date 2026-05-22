@@ -2,7 +2,13 @@ import { type FC, useState, useEffect, useCallback, useRef, memo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { convertDMToDD, convertDMSToDD, formatDMVerbatim, formatDMSVerbatim } from '@/lib/geoUtils';
 import type { FormSchema } from '@/types/forms';
 
@@ -24,89 +30,96 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 // Вспомогательный компонент для ввода градусов/минут/секунд
-const CoordinateInput = memo(({
-    value,
-    onChange,
-    min,
-    max,
-    step,
-    placeholder,
-    id,
-    error,
-    disabled
-}: {
-    value: number | '';
-    onChange: (val: number | '') => void;
-    min: number;
-    max: number;
-    step?: number;
-    placeholder: string;
-    id: string;
-    error?: string;
-    disabled?: boolean;
-}) => {
-    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        onChange(val ? Number(val) : '');
-    }, [onChange]);
+const CoordinateInput = memo(
+    ({
+        value,
+        onChange,
+        min,
+        max,
+        step,
+        placeholder,
+        id,
+        error,
+        disabled,
+    }: {
+        value: number | '';
+        onChange: (val: number | '') => void;
+        min: number;
+        max: number;
+        step?: number;
+        placeholder: string;
+        id: string;
+        error?: string;
+        disabled?: boolean;
+    }) => {
+        const handleChange = useCallback(
+            (e: React.ChangeEvent<HTMLInputElement>) => {
+                const val = e.target.value;
+                onChange(val ? Number(val) : '');
+            },
+            [onChange],
+        );
 
-    return (
-        <div className="flex-1">
-            <Input
-                id={id}
-                type="number"
-                min={min}
-                max={max}
-                step={step}
-                value={value}
-                onChange={handleChange}
-                placeholder={placeholder}
-                disabled={disabled}
-                className={error ? 'border-red-500' : ''}
-            />
-            {error && <span className="text-xs text-red-500 mt-0.5 block">{error}</span>}
-        </div>
-    );
-});
+        return (
+            <div className="flex-1">
+                <Input
+                    id={id}
+                    type="number"
+                    min={min}
+                    max={max}
+                    step={step}
+                    value={value}
+                    onChange={handleChange}
+                    placeholder={placeholder}
+                    disabled={disabled}
+                    className={error ? 'border-red-500' : ''}
+                />
+                {error && <span className="text-xs text-red-500 mt-0.5 block">{error}</span>}
+            </div>
+        );
+    },
+);
 CoordinateInput.displayName = 'CoordinateInput';
 
 // Вспомогательный компонент для выбора направления
-const DirectionSelect = memo(({
-    value,
-    onChange,
-    options,
-    id,
-    disabled
-}: {
-    value: string;
-    onChange: (val: string) => void;
-    options: { value: string; label: string }[];
-    id: string;
-    disabled?: boolean;
-}) => {
-    return (
-        <Select
-            value={value}
-            onValueChange={onChange}
-            disabled={disabled}
-        >
-            <SelectTrigger id={id} className="w-[80px] shrink-0">
-                <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-                {options.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                    </SelectItem>
-                ))}
-            </SelectContent>
-        </Select>
-    );
-});
+const DirectionSelect = memo(
+    ({
+        value,
+        onChange,
+        options,
+        id,
+        disabled,
+    }: {
+        value: string;
+        onChange: (val: string) => void;
+        options: { value: string; label: string }[];
+        id: string;
+        disabled?: boolean;
+    }) => {
+        return (
+            <Select value={value} onValueChange={onChange} disabled={disabled}>
+                <SelectTrigger id={id} className="w-[80px] shrink-0">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    {options.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        );
+    },
+);
 DirectionSelect.displayName = 'DirectionSelect';
 
 export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
-    const { setValue, trigger, formState: { errors } } = useFormContext<FormSchema>();
+    const {
+        setValue,
+        trigger,
+        formState: { errors },
+    } = useFormContext<FormSchema>();
 
     const [latDeg, setLatDeg] = useState<number | ''>('');
     const [latMin, setLatMin] = useState<number | ''>('');
@@ -142,7 +155,10 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
         // Обновляем форму БЕЗ лишних триггеров валидации на каждом чихе
         setValue(`${prefix}.latitude`, latitude, { shouldValidate: false, shouldDirty: true });
         setValue(`${prefix}.longitude`, longitude, { shouldValidate: false, shouldDirty: true });
-        setValue(`${prefix}.verbatimcoordinates`, verbatim, { shouldValidate: false, shouldDirty: true });
+        setValue(`${prefix}.verbatimcoordinates`, verbatim, {
+            shouldValidate: false,
+            shouldDirty: true,
+        });
 
         // Запускаем валидацию асинхронно, чтобы не блокировать ввод
         setTimeout(() => {
@@ -198,7 +214,7 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
                         onChange={handleLatDirChange}
                         options={[
                             { value: 'N', label: 'N (С.Ш.)' },
-                            { value: 'S', label: 'S (Ю.Ш.)' }
+                            { value: 'S', label: 'S (Ю.Ш.)' },
                         ]}
                         disabled={disabled}
                     />
@@ -235,7 +251,7 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
                         onChange={handleLonDirChange}
                         options={[
                             { value: 'E', label: 'E (В.Д.)' },
-                            { value: 'W', label: 'W (З.Д.)' }
+                            { value: 'W', label: 'W (З.Д.)' },
                         ]}
                         disabled={disabled}
                     />
@@ -247,7 +263,11 @@ export const DMInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
 DMInputGroup.displayName = 'DMInputGroup';
 
 export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
-    const { setValue, trigger, formState: { errors } } = useFormContext<FormSchema>();
+    const {
+        setValue,
+        trigger,
+        formState: { errors },
+    } = useFormContext<FormSchema>();
 
     const [latDeg, setLatDeg] = useState<number | ''>('');
     const [latMin, setLatMin] = useState<number | ''>('');
@@ -258,16 +278,32 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
     const [lonSec, setLonSec] = useState<number | ''>('');
     const [lonDir, setLonDir] = useState<'E' | 'W'>('E');
 
-    const debouncedValues = useDebounce({
-        latDeg, latMin, latSec, latDir,
-        lonDeg, lonMin, lonSec, lonDir
-    }, 300);
+    const debouncedValues = useDebounce(
+        {
+            latDeg,
+            latMin,
+            latSec,
+            latDir,
+            lonDeg,
+            lonMin,
+            lonSec,
+            lonDir,
+        },
+        300,
+    );
     const prevValuesRef = useRef<string>('');
 
     const updateFormValues = useCallback(() => {
         const { latDeg, latMin, latSec, latDir, lonDeg, lonMin, lonSec, lonDir } = debouncedValues;
 
-        if (latDeg === '' || latMin === '' || latSec === '' || lonDeg === '' || lonMin === '' || lonSec === '') {
+        if (
+            latDeg === '' ||
+            latMin === '' ||
+            latSec === '' ||
+            lonDeg === '' ||
+            lonMin === '' ||
+            lonSec === ''
+        ) {
             return;
         }
 
@@ -280,11 +316,23 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
         const latitude = convertDMSToDD(latDeg, latMin, latSec, latDir);
         const longitude = convertDMSToDD(lonDeg, lonMin, lonSec, lonDir);
         // Verbatim рассчитывает    ся и сохраняется, но НИГДЕ не рендерится
-        const verbatim = formatDMSVerbatim(latDeg, latMin, latSec, latDir, lonDeg, lonMin, lonSec, lonDir);
+        const verbatim = formatDMSVerbatim(
+            latDeg,
+            latMin,
+            latSec,
+            latDir,
+            lonDeg,
+            lonMin,
+            lonSec,
+            lonDir,
+        );
 
         setValue(`${prefix}.latitude`, latitude, { shouldValidate: false, shouldDirty: true });
         setValue(`${prefix}.longitude`, longitude, { shouldValidate: false, shouldDirty: true });
-        setValue(`${prefix}.verbatimcoordinates`, verbatim, { shouldValidate: false, shouldDirty: true });
+        setValue(`${prefix}.verbatimcoordinates`, verbatim, {
+            shouldValidate: false,
+            shouldDirty: true,
+        });
 
         setTimeout(() => {
             trigger([`${prefix}.latitude`, `${prefix}.longitude`]);
@@ -348,7 +396,7 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
                         onChange={handleLatDirChange}
                         options={[
                             { value: 'N', label: 'N (С.Ш.)' },
-                            { value: 'S', label: 'S (Ю.Ш.)' }
+                            { value: 'S', label: 'S (Ю.Ш.)' },
                         ]}
                         disabled={disabled}
                     />
@@ -357,7 +405,9 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
 
             {/* Долгота */}
             <div className="space-y-2">
-                <Label htmlFor={`lon-deg-dms-${prefix}`}>Долгота (градусы° минуты' секунды'')</Label>
+                <Label htmlFor={`lon-deg-dms-${prefix}`}>
+                    Долгота (градусы° минуты' секунды'')
+                </Label>
                 <div className="flex gap-2 items-start flex-wrap">
                     <CoordinateInput
                         id={`lon-deg-dms-${prefix}`}
@@ -394,7 +444,7 @@ export const DMSInputGroup: FC<Props> = memo(({ prefix, disabled }) => {
                         onChange={handleLonDirChange}
                         options={[
                             { value: 'E', label: 'E (В.Д.)' },
-                            { value: 'W', label: 'W (З.Д.)' }
+                            { value: 'W', label: 'W (З.Д.)' },
                         ]}
                         disabled={disabled}
                     />

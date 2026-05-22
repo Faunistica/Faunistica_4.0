@@ -5,16 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Plus, LogOut, FileText, Trash2, MapPin, X, FileSpreadsheet } from 'lucide-react';
 import { Link } from 'react-router';
 import {
-    Sidebar, SidebarContent, SidebarFooter, SidebarHeader,
-    SidebarMenu, SidebarMenuItem, SidebarGroup,
-    SidebarGroupLabel, SidebarGroupContent,
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarGroup,
+    SidebarGroupLabel,
+    SidebarGroupContent,
     useSidebar,
 } from '@/components/ui/sidebar';
 import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription,
-    AlertDialogFooter, AlertDialogHeader,
-    AlertDialogTitle, AlertDialogTrigger,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 import ExcelUploadModal from '@/components/form/ExcelUploadModal';
@@ -31,116 +42,134 @@ interface SidebarProps {
 }
 
 // 🔒 Memoized list item — обновляется только при изменении своего индекса
-const SidebarRecordItem = memo(({
-    index,
-    isActive,
-    onSelect,
-    onDelete,
-    validationErrors,
-}: {
-    index: number;
-    isActive: boolean;
-    onSelect: () => void;
-    onDelete: () => void;
-    validationErrors?: Map<number, string[]>;
-}) => {
-    const { control } = useFormContext<FormSchema>();
-    const sample = useWatch({ control, name: `samples.${index}` as any });
-    
-    const recordName = sample?.species || sample?.genus || sample?.family || 'Новая запись';
+const SidebarRecordItem = memo(
+    ({
+        index,
+        isActive,
+        onSelect,
+        onDelete,
+        validationErrors,
+    }: {
+        index: number;
+        isActive: boolean;
+        onSelect: () => void;
+        onDelete: () => void;
+        validationErrors?: Map<number, string[]>;
+    }) => {
+        const { control } = useFormContext<FormSchema>();
+        const sample = useWatch({ control, name: `samples.${index}` as any });
 
+        const recordName = sample?.species || sample?.genus || sample?.family || 'Новая запись';
 
-    return (
-        <SidebarMenuItem>
-            <div
-                role="button"
-                tabIndex={0}
-                data-active={isActive}
-                onClick={onSelect}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        onSelect();
-                    }
-                }}
-                className={`group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-3 text-left transition-all duration-200 ${isActive
-                    ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200'
-                    : 'hover:bg-slate-50'
+        return (
+            <SidebarMenuItem>
+                <div
+                    role="button"
+                    tabIndex={0}
+                    data-active={isActive}
+                    onClick={onSelect}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onSelect();
+                        }
+                    }}
+                    className={`group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-3 text-left transition-all duration-200 ${
+                        isActive
+                            ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200'
+                            : 'hover:bg-slate-50'
                     }`}
-            >
-                {/* Заголовок: номер + название + статус + удалить */}
-                <div className="flex w-full items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <RecordStatusIndicator index={index} validationErrors={validationErrors} sample={sample} />
-                        <span className={`text-xs font-bold leading-tight truncate ${isActive ? 'text-slate-900' : 'text-slate-700'
-                            }`}>
-                            {recordName}
-                        </span>
+                >
+                    {/* Заголовок: номер + название + статус + удалить */}
+                    <div className="flex w-full items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <RecordStatusIndicator
+                                index={index}
+                                validationErrors={validationErrors}
+                                sample={sample}
+                            />
+                            <span
+                                className={`text-xs font-bold leading-tight truncate ${
+                                    isActive ? 'text-slate-900' : 'text-slate-700'
+                                }`}
+                            >
+                                {recordName}
+                            </span>
+                        </div>
+
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 shrink-0 rounded-md text-slate-400 opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 md:opacity-0 md:group-hover/menu-button:opacity-100 md:data-[active=true]:opacity-100 data-[active=true]:opacity-100"
+                                    onClick={(e) => e.stopPropagation()}
+                                    aria-label="Удалить запись"
+                                >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Вы абсолютно уверены?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Это действие нельзя отменить. Запись будет безвозвратно
+                                        удалена.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                                        Отмена
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        variant="destructive"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete();
+                                        }}
+                                    >
+                                        Удалить
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
 
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 shrink-0 rounded-md text-slate-400 opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 md:opacity-0 md:group-hover/menu-button:opacity-100 md:data-[active=true]:opacity-100 data-[active=true]:opacity-100"
-                                onClick={(e) => e.stopPropagation()}
-                                aria-label="Удалить запись"
-                            >
-                                <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Вы абсолютно уверены?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Это действие нельзя отменить. Запись будет безвозвратно удалена.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Отмена</AlertDialogCancel>
-                                <AlertDialogAction
-                                    variant="destructive"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDelete();
-                                    }}
-                                >
-                                    Удалить
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                    {/* Подпись: локация или статус редактирования */}
+                    <div className="flex w-full items-center gap-1.5 text-[10px] text-slate-500">
+                        {isActive ? (
+                            <>
+                                <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
+                                </span>
+                                <span className="font-semibold text-blue-600">Редактируется</span>
+                            </>
+                        ) : (
+                            <>
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                <span className="truncate">
+                                    {sample?.locality || sample?.region || 'Нет данных о месте'}
+                                </span>
+                            </>
+                        )}
+                    </div>
                 </div>
-
-                {/* Подпись: локация или статус редактирования */}
-                <div className="flex w-full items-center gap-1.5 text-[10px] text-slate-500">
-                    {isActive ? (
-                        <>
-                            <span className="relative flex h-2 w-2">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-                                <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
-                            </span>
-                            <span className="font-semibold text-blue-600">Редактируется</span>
-                        </>
-                    ) : (
-                        <>
-                            <MapPin className="h-3 w-3 shrink-0" />
-                            <span className="truncate">
-                                {sample?.locality || sample?.region || 'Нет данных о месте'}
-                            </span>
-                        </>
-                    )}
-                </div>
-            </div>
-        </SidebarMenuItem>
-    );
-});
+            </SidebarMenuItem>
+        );
+    },
+);
 SidebarRecordItem.displayName = 'SidebarRecordItem';
 
 const FormSidebar: FC<SidebarProps> = ({
-    activeRecordIndex, setActiveRecordIndex, addRecord, removeRecord, validationErrors, onImportComplete, samplesCount
+    activeRecordIndex,
+    setActiveRecordIndex,
+    addRecord,
+    removeRecord,
+    validationErrors,
+    onImportComplete,
+    samplesCount,
 }) => {
     const { isMobile, setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -155,8 +184,12 @@ const FormSidebar: FC<SidebarProps> = ({
                                 <FileText className="h-4 w-4" />
                             </div>
                             <div>
-                                <div className="text-sm font-bold leading-tight text-slate-900">Менеджер</div>
-                                <div className="text-[10px] font-medium leading-tight text-slate-500">Записи данных</div>
+                                <div className="text-sm font-bold leading-tight text-slate-900">
+                                    Менеджер
+                                </div>
+                                <div className="text-[10px] font-medium leading-tight text-slate-500">
+                                    Записи данных
+                                </div>
                             </div>
                         </div>
                         <Button

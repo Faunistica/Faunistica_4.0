@@ -1,7 +1,7 @@
 import { Trophy, BookOpen, Users, ShieldCheck, FileText } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function Volunteers() {
     return (
@@ -16,7 +16,9 @@ export default function Volunteers() {
                             Ваш вклад в большую науку
                         </h2>
                         <p className="text-slate-400 md:text-lg leading-relaxed">
-                            Нам нужна помощь в распознавании и структурировании сведений из предложенных научных статей. Мы постарались сделать так, чтобы участие в проекте было для вас не только полезным, но и захватывающим.
+                            Нам нужна помощь в распознавании и структурировании сведений из
+                            предложенных научных статей. Мы постарались сделать так, чтобы участие в
+                            проекте было для вас не только полезным, но и захватывающим.
                         </p>
 
                         <div className="pt-4 grid sm:grid-cols-2 gap-4">
@@ -24,28 +26,42 @@ export default function Volunteers() {
                                 <Trophy className="h-6 w-6 text-amber-400 shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-white">Рейтинг и сувениры</h4>
-                                    <p className="text-sm text-slate-400">Грамоты, звания и мерч с символикой проекта для самых активных.</p>
+                                    <p className="text-sm text-slate-400">
+                                        Грамоты, звания и мерч с символикой проекта для самых
+                                        активных.
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
                                 <BookOpen className="h-6 w-6 text-blue-400 shrink-0" />
                                 <div>
-                                    <h4 className="font-semibold text-white">Эксклюзивные знания</h4>
-                                    <p className="text-sm text-slate-400">Доступ к закрытым материалам по биологии, экологии и биоразнообразию.</p>
+                                    <h4 className="font-semibold text-white">
+                                        Эксклюзивные знания
+                                    </h4>
+                                    <p className="text-sm text-slate-400">
+                                        Доступ к закрытым материалам по биологии, экологии и
+                                        биоразнообразию.
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
                                 <Users className="h-6 w-6 text-emerald-400 shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-white">Сообщество</h4>
-                                    <p className="text-sm text-slate-400">Офлайн-встречи, лекции и энтомологические экскурсии на Урале.</p>
+                                    <p className="text-sm text-slate-400">
+                                        Офлайн-встречи, лекции и энтомологические экскурсии на
+                                        Урале.
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
                                 <ShieldCheck className="h-6 w-6 text-purple-400 shrink-0" />
                                 <div>
                                     <h4 className="font-semibold text-white">Терапия фобий</h4>
-                                    <p className="text-sm text-slate-400">Отличный (и безопасный!) способ узнать больше и побороть свою арахнофобию.</p>
+                                    <p className="text-sm text-slate-400">
+                                        Отличный (и безопасный!) способ узнать больше и побороть
+                                        свою арахнофобию.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -60,16 +76,21 @@ export default function Volunteers() {
                     <div className="relative">
                         <Card className="bg-slate-800 border-slate-700 shadow-2xl relative z-10">
                             <CardHeader>
-                                <CardTitle className="text-xl text-white">Студентам и школьникам</CardTitle>
+                                <CardTitle className="text-xl text-white">
+                                    Студентам и школьникам
+                                </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4 text-slate-300">
                                 <p>
-                                    Платформа предоставляет уникальную возможность выполнить школьную исследовательскую, студенческую курсовую или дипломную работу на базе реальных научных данных.
+                                    Платформа предоставляет уникальную возможность выполнить
+                                    школьную исследовательскую, студенческую курсовую или дипломную
+                                    работу на базе реальных научных данных.
                                 </p>
                                 <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700 flex items-center gap-4">
                                     <FileText className="h-8 w-8 text-[#229ED9]" />
                                     <p className="text-sm">
-                                        Наиболее активные и продуктивные волонтеры могут рассчитывать на соавторство в научных публикациях.
+                                        Наиболее активные и продуктивные волонтеры могут
+                                        рассчитывать на соавторство в научных публикациях.
                                     </p>
                                 </div>
                             </CardContent>

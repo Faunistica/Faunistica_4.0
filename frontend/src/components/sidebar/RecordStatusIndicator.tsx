@@ -4,7 +4,7 @@ import { CheckCircle2, AlertCircle, CircleDashed, Circle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useRecordStatus } from '@/hooks/useRecordStatus';
 import { BLOCKING_FIELDS, getFieldLabel } from '@/types/forms';
-import { useFormContext } from 'react-hook-form';
+import { useFormState } from 'react-hook-form';
 import type { FormSchema } from '@/types/forms';
 
 interface Props {
@@ -41,27 +41,28 @@ const STATUS_CONFIG = {
 } as const;
 
 export const RecordStatusIndicator: FC<Props> = ({ index, sample, validationErrors }) => {
-    const status = useRecordStatus(index, sample, validationErrors);
-    const { formState: { errors } } = useFormContext<FormSchema>();
+    const { errors } = useFormState({ name: `samples.${index}` as any });
+    const sampleErrors = errors.samples?.[index] as Record<string, any> | undefined;
+    const status = useRecordStatus(index, sample, validationErrors, sampleErrors);
     const config = STATUS_CONFIG[status];
 
-    // Для тултипа: какие именно поля не заполнены
     const externalErrors = validationErrors?.get(index);
-    const sampleErrors = errors.samples?.[index] as Record<string, any> | undefined;
 
     let missingFields: string[] = [];
     if (status === 'error') {
         if (externalErrors && externalErrors.length > 0) {
             missingFields = externalErrors;
         } else if (sampleErrors) {
-            missingFields = BLOCKING_FIELDS.filter(f => sampleErrors[f as keyof typeof sampleErrors])
-                .map(f => getFieldLabel(f));
+            missingFields = BLOCKING_FIELDS.filter(
+                (f) => sampleErrors[f as keyof typeof sampleErrors],
+            ).map((f) => getFieldLabel(f));
         }
     }
 
-    const tooltipContent = status === 'error' && missingFields.length > 0
-        ? `Заполните: ${missingFields.join(', ')}`
-        : config.label;
+    const tooltipContent =
+        status === 'error' && missingFields.length > 0
+            ? `Заполните: ${missingFields.join(', ')}`
+            : config.label;
 
     return (
         <TooltipProvider>

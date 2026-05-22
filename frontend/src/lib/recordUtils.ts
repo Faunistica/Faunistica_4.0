@@ -1,7 +1,14 @@
-import type { RecordData, DraftRecord, RecordFull } from '@/types/api.dto';
+import type { RecordData, RecordFull } from '@/types/api.dto';
 import type { RecordSchema, QuantityField } from '@/types/forms';
 
-export const getFieldFromSexAndLifestage = (sex?: string | null, life_stage?: string | null): QuantityField | null => {
+export interface DraftRecord extends RecordFull {
+    record_ids?: Record<string, string>;
+    [key: string]: any;
+}
+export const getFieldFromSexAndLifestage = (
+    sex?: string | null,
+    life_stage?: string | null,
+): QuantityField | null => {
     if (sex === 'male' && life_stage === 'adult') return 'mmm';
     if (sex === 'male' && life_stage === 'subadult') return 'ssm';
     if (sex === 'female' && life_stage === 'adult') return 'fff';
@@ -13,13 +20,20 @@ export const getFieldFromSexAndLifestage = (sex?: string | null, life_stage?: st
 
 export const getSexAndLifestageFromField = (field: string): { sex: string; life_stage: string } => {
     switch (field) {
-        case 'mmm': return { sex: 'male', life_stage: 'adult' };
-        case 'ssm': return { sex: 'male', life_stage: 'subadult' };
-        case 'fff': return { sex: 'female', life_stage: 'adult' };
-        case 'ssf': return { sex: 'female', life_stage: 'subadult' };
-        case 'adu': return { sex: 'none', life_stage: 'adult' };
-        case 'juv': return { sex: 'none', life_stage: 'juvenile' };
-        default: return { sex: 'none', life_stage: 'none' };
+        case 'mmm':
+            return { sex: 'male', life_stage: 'adult' };
+        case 'ssm':
+            return { sex: 'male', life_stage: 'subadult' };
+        case 'fff':
+            return { sex: 'female', life_stage: 'adult' };
+        case 'ssf':
+            return { sex: 'female', life_stage: 'subadult' };
+        case 'adu':
+            return { sex: 'none', life_stage: 'adult' };
+        case 'juv':
+            return { sex: 'none', life_stage: 'juvenile' };
+        default:
+            return { sex: 'none', life_stage: 'none' };
     }
 };
 
@@ -28,14 +42,14 @@ export const getSexAndLifestageFromField = (field: string): { sex: string; life_
  * where each draft represents a single sample with multiple quantity fields.
  */
 export const groupRecordsIntoDrafts = (records: RecordFull[]): DraftRecord[] => {
-    return records.map(record => {
+    return records.map((record) => {
         const draft: DraftRecord = {
             ...record,
-            record_ids: { 'base': record.id },
+            record_ids: { base: record.id },
         };
 
         if (record.specimens) {
-            record.specimens.forEach(spec => {
+            record.specimens.forEach((spec) => {
                 const field = getFieldFromSexAndLifestage(spec.sex, spec.life_stage);
                 if (field) {
                     (draft as any)[field] = spec.count;
@@ -56,17 +70,41 @@ export const draftToRecordData = (draft: Partial<RecordSchema>): RecordData => {
 
     // Copy all string/number/boolean fields that exist in RecordData
     const fieldsToCopy: (keyof RecordData)[] = [
-        'country', 'region', 'district', 'locality', 'is_manual_location',
-        'latitude', 'longitude', 'verbatimcoordinates', 'coordinate_uncertainty',
-        'georef_source', 'location_remarks',
-        'verbatim_date', 'date_precision', 'is_interval',
-        'habitat', 'sampling_protocol', 'sampling_effort',
-        'sample_size_value', 'sample_size_unit',
-        'event_remarks', 'field_number', 'catalog_number', 'collection_code',
+        'country',
+        'region',
+        'district',
+        'locality',
+        'is_manual_location',
+        'latitude',
+        'longitude',
+        'verbatimcoordinates',
+        'coordinate_uncertainty',
+        'georef_source',
+        'location_remarks',
+        'verbatim_date',
+        'date_precision',
+        'is_interval',
+        'habitat',
+        'sampling_protocol',
+        'sampling_effort',
+        'sample_size_value',
+        'sample_size_unit',
+        'event_remarks',
+        'field_number',
+        'catalog_number',
+        'collection_code',
         'recorded_by',
-        'family', 'genus', 'species', 'tax_verbatim', 'taxon_rank',
-        'type_status', 'accepted_name', 'taxon_remarks',
-        'quantity_type', 'occurrence_remarks', 'identification_remarks',
+        'family',
+        'genus',
+        'species',
+        'tax_verbatim',
+        'taxon_rank',
+        'type_status',
+        'accepted_name',
+        'taxon_remarks',
+        'quantity_type',
+        'occurrence_remarks',
+        'identification_remarks',
     ];
 
     for (const key of fieldsToCopy) {

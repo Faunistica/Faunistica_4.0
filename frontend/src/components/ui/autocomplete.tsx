@@ -76,10 +76,10 @@ const Autocomplete: FC<AutocompleteProps> = ({
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setHighlightIndex(prev => (prev + 1) % suggestions.length);
+            setHighlightIndex((prev) => (prev + 1) % suggestions.length);
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setHighlightIndex(prev => (prev <= 0 ? suggestions.length - 1 : prev - 1));
+            setHighlightIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
         } else if (e.key === 'Enter' && highlightIndex >= 0) {
             e.preventDefault();
             handleSelect(suggestions[highlightIndex]);
@@ -95,8 +95,10 @@ const Autocomplete: FC<AutocompleteProps> = ({
                     ref={inputRef}
                     id={id}
                     value={value ?? ''}
-                    onChange={e => handleInputChange(e.target.value)}
-                    onFocus={() => { if (suggestions.length > 0 && value && value.length >= 2) setIsOpen(true); }}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    onFocus={() => {
+                        if (suggestions.length > 0 && value && value.length >= 2) setIsOpen(true);
+                    }}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
                     disabled={disabled}
@@ -120,7 +122,10 @@ const Autocomplete: FC<AutocompleteProps> = ({
                             key={item}
                             role="option"
                             aria-selected={i === highlightIndex}
-                            onMouseDown={(e) => { e.preventDefault(); handleSelect(item); }}
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSelect(item);
+                            }}
                             onMouseEnter={() => setHighlightIndex(i)}
                             className={cn(
                                 'cursor-pointer px-4 py-2 text-sm transition-all duration-150',

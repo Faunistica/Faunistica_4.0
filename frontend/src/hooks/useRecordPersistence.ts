@@ -65,10 +65,14 @@ export function useRecordPersistence({
                             data: payload,
                         }).unwrap();
 
-                        setValue(`samples.${i}.record_ids` as any, { base: created.id }, {
-                            shouldDirty: false,
-                            shouldValidate: false,
-                        });
+                        setValue(
+                            `samples.${i}.record_ids` as any,
+                            { base: created.id },
+                            {
+                                shouldDirty: false,
+                                shouldValidate: false,
+                            },
+                        );
                     }
                 }
                 if (isManual) toast.success('Данные успешно сохранены');

@@ -4,7 +4,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Hash } from 'lucide-react';
 import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/types/forms';
 import type { FormSchema } from '@/types/forms';
@@ -27,8 +33,10 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
     const adu = useWatch<FormSchema>({ name: `${prefix}.adu` as any }) as number | null | undefined;
     const juv = useWatch<FormSchema>({ name: `${prefix}.juv` as any }) as number | null | undefined;
 
-    const total: number = [mmm, ssm, fff, ssf, adu, juv]
-        .reduce<number>((sum, v) => sum + (typeof v === 'number' && v > 0 ? v : 0), 0);
+    const total: number = [mmm, ssm, fff, ssf, adu, juv].reduce<number>(
+        (sum, v) => sum + (typeof v === 'number' && v > 0 ? v : 0),
+        0,
+    );
 
     const quantityFields = [
         { key: 'mmm' as const, label: QUANTITY_FIELD_LABELS.mmm, color: 'text-blue-600' },
@@ -46,7 +54,9 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
                         <Hash className="h-4 w-4" />
                     </div>
-                    <CardTitle className="text-lg font-semibold">Количественные характеристики</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                        Количественные характеристики
+                    </CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -74,7 +84,9 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                                     min={0}
                                     placeholder="0"
                                     className="text-center h-9 focus-visible:ring-1 focus-visible:ring-slate-300"
-                                    {...register(`${prefix}.${key}` as any, { valueAsNumber: true })}
+                                    {...register(`${prefix}.${key}` as any, {
+                                        valueAsNumber: true,
+                                    })}
                                 />
                             </div>
                         ))}
@@ -89,11 +101,18 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                             name={`${prefix}.quantity_type` as any}
                             control={control}
                             render={({ field }) => (
-                                <Select value={field.value || undefined} onValueChange={field.onChange}>
-                                    <SelectTrigger><SelectValue placeholder="Выберите единицы" /></SelectTrigger>
+                                <Select
+                                    value={field.value || undefined}
+                                    onValueChange={field.onChange}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Выберите единицы" />
+                                    </SelectTrigger>
                                     <SelectContent>
-                                        {QUANTITY_TYPE_OPTIONS.map(opt => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        {QUANTITY_TYPE_OPTIONS.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>

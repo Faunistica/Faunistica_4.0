@@ -19,8 +19,8 @@ export interface RecordBelonging {
 }
 
 export interface Specimen {
-    sex: string;
-    life_stage: string;
+    sex: 'male' | 'female' | 'none';
+    life_stage: 'adult' | 'subadult' | 'juvenile' | 'none';
     count: number;
 }
 
@@ -102,14 +102,15 @@ export interface PaginatedResponse<T> {
     pages: number;
 }
 
-export interface DraftRecord extends Omit<RecordData, 'specimens'> {
-    mmm?: number | null;
-    ssm?: number | null;
-    fff?: number | null;
-    ssf?: number | null;
-    adu?: number | null;
-    juv?: number | null;
-    record_ids?: Record<string, string>;
+export interface ImportError {
+    row: number;
+    error: any;
+}
+
+export interface ImportResult {
+    imported: number;
+    failed: number;
+    errors: ImportError[];
 }
 
 export interface SuggestTaxonRequest {

@@ -1,16 +1,21 @@
-import { type FC } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { type FC } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { FileText, Loader2 } from 'lucide-react';
-import { useGetPublicationByIdQuery } from "@/api/publAPI";
+import { useGetCurrentPublicationQuery } from '@/api/publAPI';
+import { useMemo } from 'react';
 
 interface Props {
     publ_id: number;
 }
 
 const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
-    const { data: publication, isLoading, error } = useGetPublicationByIdQuery(publ_id);
+    const { data: publications, isLoading, error } = useGetCurrentPublicationQuery({ list: true });
+
+    const publication = useMemo(() => {
+        return publications?.find((p) => p.publ_id === publ_id);
+    }, [publications, publ_id]);
 
     if (isLoading) {
         return (
@@ -41,14 +46,19 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                     <div className="space-y-1.5 flex-1">
                         <div className="flex items-center gap-2">
-                            <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200 border-none">Источник данных</Badge>
-                            <span className="text-xs text-slate-500 font-mono">ID: PUB-{publication.id}</span>
+                            <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200 border-none">
+                                Источник данных
+                            </Badge>
+                            <span className="text-xs text-slate-500 font-mono">
+                                ID: PUB-{publication.publ_id}
+                            </span>
                         </div>
                         <CardTitle className="text-lg md:text-xl leading-tight text-slate-900">
-                            {publication.name || "Без названия"}
+                            {publication.name || 'Без названия'}
                         </CardTitle>
                         <CardDescription className="text-sm">
-                            {publication.author}{publication.year ? ` (${publication.year})` : ""}
+                            {publication.author}
+                            {publication.year ? ` (${publication.year})` : ''}
                         </CardDescription>
                     </div>
                     {publication.pdf_file && (

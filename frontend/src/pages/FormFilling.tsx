@@ -43,8 +43,6 @@ interface OutletContextType {
     setIsSidebarOpen: (isOpen: boolean) => void;
 }
 
-
-
 // ═════════════════════════════════════════════════════════════════════════
 // FormFilling — тонкий оркестратор
 // ═════════════════════════════════════════════════════════════════════════
@@ -59,10 +57,11 @@ const FormFilling: FC = () => {
     const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
 
     // ── RTK Query ──
-    const { data: recordsData, isLoading, refetch } = useGetRecordsDataQuery(
-        { publ_id, user_id: user_id! },
-        { skip: !user_id || !publ_id },
-    );
+    const {
+        data: recordsData,
+        isLoading,
+        refetch,
+    } = useGetRecordsDataQuery({ publ_id, user_id: user_id! }, { skip: !user_id || !publ_id });
 
     // ── React Hook Form ──
     const methods = useForm<FormSchema>({
@@ -72,7 +71,7 @@ const FormFilling: FC = () => {
         reValidateMode: 'onChange',
     });
 
-    const { control, reset, getValues, trigger, formState: { isValid } } = methods;
+    const { control, reset, getValues, trigger } = methods;
     const fieldArray = useFieldArray({ control, name: 'samples' });
     const { fields, remove } = fieldArray;
 
@@ -132,7 +131,7 @@ const FormFilling: FC = () => {
 
             reset({
                 ...currentValues,
-                samples: newSamples
+                samples: newSamples,
             }); // Убрали keepDirty, чтобы избежать багов RHF с коррупцией стейта и дублированием записей
 
             setActiveRecordIndex((prev) => {
@@ -213,7 +212,10 @@ const FormFilling: FC = () => {
                                     <div className="relative z-20 focus-within:z-50 transition-all duration-200 mb-6">
                                         <ArticleSourceCard publ_id={publ_id} />
                                     </div>
-                                    <div key={fields[activeRecordIndex]?.id || activeRecordIndex} className="space-y-6">
+                                    <div
+                                        key={fields[activeRecordIndex]?.id || activeRecordIndex}
+                                        className="space-y-6"
+                                    >
                                         <div className="relative z-15 focus-within:z-50 transition-all duration-200">
                                             <GeographyCard
                                                 index={activeRecordIndex}
@@ -227,14 +229,10 @@ const FormFilling: FC = () => {
                                             />
                                         </div>
                                         <div className="relative z-5 focus-within:z-50 transition-all duration-200">
-                                            <TaxonomyCard
-                                                index={activeRecordIndex}
-                                            />
+                                            <TaxonomyCard index={activeRecordIndex} />
                                         </div>
                                         <div className="relative z-0 focus-within:z-50 transition-all duration-200">
-                                            <QuantitiesCard
-                                                index={activeRecordIndex}
-                                            />
+                                            <QuantitiesCard index={activeRecordIndex} />
                                         </div>
                                     </div>
                                 </>
@@ -248,7 +246,6 @@ const FormFilling: FC = () => {
                         onSaveAll={handleManualSave}
                         onValidateAll={handleValidateAll}
                         onSubmit={handleFinalSubmit}
-                        isValid={isValid}
                         isValidating={isValidating}
                     />
                 </main>

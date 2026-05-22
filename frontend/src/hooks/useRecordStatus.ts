@@ -1,5 +1,5 @@
 // src/hooks/useRecordStatus.ts
-import { useFormContext } from 'react-hook-form';
+
 import { useMemo } from 'react';
 import type { FormSchema } from '@/types/forms';
 import { BLOCKING_FIELDS, type BlockingFieldName } from '@/types/forms';
@@ -15,11 +15,8 @@ export function useRecordStatus(
     index: number,
     sample: Record<string, any>,
     validationErrors?: Map<number, string[]>,
+    sampleErrors?: Record<string, any>,
 ): RecordStatus {
-    const { formState: { errors } } = useFormContext<FormSchema>();
-
-    const sampleErrors = errors.samples?.[index] as Record<string, any> | undefined;
-
     return useMemo(() => {
         // If mass-validation found errors for this record — always show error
         if (validationErrors?.has(index) && (validationErrors.get(index)?.length ?? 0) > 0) {
@@ -27,24 +24,20 @@ export function useRecordStatus(
         }
 
         // 🟡 Пустая запись
-        const hasAnyValue = BLOCKING_FIELDS.some(
-            (field: BlockingFieldName) => {
-                const val = sample?.[field];
-                return val !== undefined && val !== null && val !== '';
-            }
-        );
+        const hasAnyValue = BLOCKING_FIELDS.some((field: BlockingFieldName) => {
+            const val = sample?.[field];
+            return val !== undefined && val !== null && val !== '';
+        });
 
         if (!hasAnyValue) {
             return 'empty';
         }
 
         // 🟢 Все блокирующие поля заполнены и не имеют ошибок
-        const allBlockingFilled = BLOCKING_FIELDS.every(
-            (field: BlockingFieldName) => {
-                const val = sample?.[field];
-                return val !== undefined && val !== null && val !== '';
-            }
-        );
+        const allBlockingFilled = BLOCKING_FIELDS.every((field: BlockingFieldName) => {
+            const val = sample?.[field];
+            return val !== undefined && val !== null && val !== '';
+        });
         if (allBlockingFilled) return 'valid';
 
         // 🔵 В процессе заполнения

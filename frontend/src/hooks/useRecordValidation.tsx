@@ -44,17 +44,14 @@ export function useRecordValidation({
         try {
             const created = await createServerRecord({ publ_id }).unwrap();
             const currentValues = getValues();
-            
+
             // Исключаем баг RHF с "залипанием" данных (shifting unmounted fields)
             // через полную перезапись состояния всей формы:
             reset({
                 ...currentValues,
-                samples: [
-                    { record_ids: { base: created.id } },
-                    ...(currentValues.samples || [])
-                ]
+                samples: [{ record_ids: { base: created.id } }, ...(currentValues.samples || [])],
             });
-            
+
             setActiveRecordIndex(0);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch {
@@ -74,9 +71,9 @@ export function useRecordValidation({
                 BLOCKING_FIELDS.map((field) => trigger(`${prefix}.${field}` as any)),
             );
 
-            const invalidLabels = BLOCKING_FIELDS
-                .filter((_, fi) => !results[fi])
-                .map((f) => getFieldLabel(f));
+            const invalidLabels = BLOCKING_FIELDS.filter((_, fi) => !results[fi]).map((f) =>
+                getFieldLabel(f),
+            );
 
             if (invalidLabels.length > 0) {
                 errorsMap.set(i, invalidLabels);

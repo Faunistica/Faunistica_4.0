@@ -1,7 +1,7 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
+import { createApi } from '@reduxjs/toolkit/query/react';
 import * as Types from '../types/api.dto.ts';
-import { login, logout } from "../store/reducers/userSlice.ts";
-import { baseQueryWithReauth } from "./baseQuery.ts";
+import { login, logout } from '../store/reducers/userSlice.ts';
+import { baseQueryWithReauth } from './baseQuery.ts';
 
 export const authAPI = createApi({
     reducerPath: 'authAPI',
@@ -22,7 +22,7 @@ export const authAPI = createApi({
                 } catch {
                     dispatch(logout());
                 }
-            }
+            },
         }),
         refreshToken: build.mutation<void, void>({
             query: () => ({
@@ -48,7 +48,7 @@ export const authAPI = createApi({
                 } catch {
                     dispatch(logout());
                 }
-            }
+            },
         }),
         logout: build.mutation<void, void>({
             query: () => ({
@@ -62,14 +62,10 @@ export const authAPI = createApi({
                 } finally {
                     dispatch(logout());
                 }
-            }
+            },
         }),
     }),
-})
+});
 
-export const {
-    useLoginMutation,
-    useRefreshTokenMutation,
-    useCheckAuthQuery,
-    useLogoutMutation,
-} = authAPI;
+export const { useLoginMutation, useRefreshTokenMutation, useCheckAuthQuery, useLogoutMutation } =
+    authAPI;
