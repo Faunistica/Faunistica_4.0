@@ -24,12 +24,9 @@ _ALEMBIC_CFG_PATH = Path(__file__).resolve().parent.parent.parent / "alembic.ini
 logger = logging.getLogger(__name__)
 
 
-def _compare(conn: Connection) -> None:
+def _compare_schema(conn: Connection) -> None:
     context = MigrationContext.configure(conn)
     diff = compare_metadata(context, Base.metadata)
-
-    if len(diff) == 0:
-        return
 
     _LABEL = {
         "add_table": "Missing table in database",
@@ -41,9 +38,13 @@ def _compare(conn: Connection) -> None:
         "remove_constraint": "Unexpected constraint in database",
     }
 
+    errors = 0
+
     for i in diff:
         op = i[0]
         label = _LABEL.get(op)
+        if op == "remove_table" and i[1].name in ["records", "spiders"]:
+            continue
         if label is not None and op in ("add_table", "remove_table"):
             logger.error("Schema diff: %s (%s)", label, i[1].name)
         elif label is not None and op in ("add_column", "remove_column"):
@@ -64,10 +65,21 @@ def _compare(conn: Connection) -> None:
         else:
             logger.error("Schema diff: unhandled alembic action proposed — %s", i)
 
+        errors += 1
+
+    if errors == 0:
+        return
+
+    if settings.DEV_MODE:
+        logger.critical(
+            "Database schema diff detected, as DEV_MODE is set, "
+            "resetting database is advised"
+        )
+
     raise RuntimeError("Database schema diff detected")
 
 
-async def _check_migrations() -> None:
+async def _check_alembic_version() -> None:
     """Verify DB schema matches Alembic head revision."""
     cfg = Config(str(_ALEMBIC_CFG_PATH))
     script = ScriptDirectory.from_config(cfg)
@@ -91,7 +103,7 @@ async def _check_migrations() -> None:
         raise RuntimeError(msg)
 
     async with _engine.connect() as conn:
-        await conn.run_sync(_compare)
+        await conn.run_sync(_compare_schema)
 
     logger.info("Alembic migrations are up to date (head: %s)", head_rev)
 
@@ -99,7 +111,7 @@ async def _check_migrations() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     await init_db()
-    await _check_migrations()
+    await _check_alembic_version()
 
     if not await ping_db():
         logger.critical("Database is not available. Application cannot start.")

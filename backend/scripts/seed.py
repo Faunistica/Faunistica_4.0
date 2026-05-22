@@ -1,16 +1,13 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env -S uv run
 
 import asyncio
 import logging
 import os
-import sys
 from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from core.database import get_session, init_db
 from core.model import EventRecord, Publication, User
@@ -36,22 +33,92 @@ _SEED_UUIDS: list[UUID] = [
     UUID("64c6ca7a-7d3f-468b-a857-17d29bf8f034"),
 ]
 
+PUBL_DATA: list[dict] = [
+    {
+        "publ_id": 1,
+        "type": "A",
+        "author": "Сидоров И.И.",
+        "year": 2000,
+        "name": "Сидоров о паукообразных",
+        "external": "Альтернативное название",
+        "language": "rus",
+        "resume": "eng",
+        "ural": True,
+        "coords": True,
+        "occs": True,
+        "spec": True,
+        "pdf_file": "sidorov.pdf",
+    },
+    {
+        "publ_id": 2,
+        "type": "B",
+        "author": "Петров П.П.",
+        "year": 2015,
+        "name": "Фауна Урала: жесткокрылые",
+        "external": None,
+        "language": "rus",
+        "resume": None,
+        "ural": True,
+        "coords": True,
+        "occs": False,
+        "spec": True,
+        "pdf_file": "petrov.pdf",
+    },
+    {
+        "publ_id": 3,
+        "type": "A",
+        "author": "Иванов И.И.",
+        "year": 2020,
+        "name": "Насекомые Южного Урала",
+        "external": None,
+        "language": "rus",
+        "resume": None,
+        "ural": True,
+        "coords": True,
+        "occs": True,
+        "spec": False,
+        "pdf_file": "ivanov.pdf",
+    },
+]
 
-def build_record(i: int, data: dict) -> EventRecord:
-    record_data = RecordData.model_validate(data)
-    metadata, _ = _create_record_metadata(
-        record_data,
-        data["user_id"],
-        data["publ_id"],
-        language=data.get("language", "rus"),
-        submission_type="submit",
-    )
-    metadata.id = _SEED_UUIDS[i]
-    metadata.created_at = SEED_DT
-    metadata.updated_at = SEED_DT
+PASSWORDS = ["dev", "test"]
 
-    flat = _flatten_for_db(record_data)
-    return EventRecord(**flat, **metadata.model_dump())
+USER_DATA: list[dict] = [
+    {
+        "user_id": 0,  # placeholder, filled at runtime
+        "name": "DEV",
+        "tlg_username": "dev_user",
+        "tlg_name": "Dev User",
+        "reg_stat": 1,
+        "age": 30,
+        "lng": "rus",
+        "rating": 5,
+        "items": "2|3",
+        "reg_run": SEED_DT,
+        "reg_end": SEED_DT,
+        "sex": "M",
+        "email": "dev@example.com",
+        "region": "Екатеринбург",
+        "comm": "Основной тестовый пользователь",
+    },
+    {
+        "user_id": 1,
+        "name": "TEST",
+        "tlg_username": "test_user",
+        "tlg_name": "Test User",
+        "reg_stat": 1,
+        "age": 25,
+        "lng": "eng",
+        "rating": 3,
+        "items": "1",
+        "reg_run": SEED_DT,
+        "reg_end": SEED_DT,
+        "sex": "F",
+        "email": "test@example.com",
+        "region": "Москва",
+        "comm": "Второй тестовый пользователь",
+    },
+]
 
 
 RECORDS_DATA: list[dict] = [
@@ -74,6 +141,8 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-05-15",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "Собран под корой сосны",
         "specimens": [Specimen(sex="male", life_stage="adult", count=3)],
@@ -97,6 +166,8 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-06-20",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На липе",
         "specimens": [Specimen(sex="male", life_stage="adult", count=5)],
@@ -120,6 +191,8 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-07-10",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На падали",
         "specimens": [
@@ -147,6 +220,8 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-08-05",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "Под камнями у ручья",
         "specimens": [Specimen(sex="female", life_stage="adult", count=3)],
@@ -170,6 +245,8 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-09-12",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На свежеспиленных соснах",
         "specimens": [Specimen(sex="male", life_stage="adult", count=2)],
@@ -193,6 +270,8 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-06-18",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "В траве",
         "specimens": [Specimen(sex="female", life_stage="adult", count=1)],
@@ -216,11 +295,13 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-07-25",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На каменной кладке",
         "specimens": [Specimen(sex="male", life_stage="adult", count=4)],
     },
-    # User DEV_TG, Publication 2 — Scarabaeidae (failed record)
+    # User DEV_TG, Publication 2 — Scarabaeidae
     {
         "user_id": 0,
         "publ_id": 2,
@@ -239,6 +320,8 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-10-05",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На цветах бодяка",
         "specimens": [Specimen(sex="male", life_stage="adult", count=1)],
@@ -262,6 +345,8 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-08-30",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На кустах шиповника",
         "specimens": [Specimen(sex="male", life_stage="adult", count=2)],
@@ -285,11 +370,39 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-09-28",
         "date_precision": "day",
         "is_interval": False,
+        "georef_source": "vol",
+        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На пастбище",
         "specimens": [Specimen(sex="male", life_stage="adult", count=6)],
     },
 ]
+
+
+def build_user(data: dict, password: str, dev_tg_id: int) -> dict:
+    data = {**data}
+    if data["user_id"] == 0:
+        data["user_id"] = dev_tg_id
+    data["hash"] = get_password_hash(password)
+    data["hash_date"] = datetime.now()
+    return data
+
+
+def build_record(i: int, data: dict) -> EventRecord:
+    record_data = RecordData.model_validate(data)
+    metadata, _ = _create_record_metadata(
+        record_data,
+        data["user_id"],
+        data["publ_id"],
+        language=data.get("language", "rus"),
+        submission_type="submit",
+    )
+    metadata.id = _SEED_UUIDS[i]
+    metadata.created_at = SEED_DT
+    metadata.updated_at = SEED_DT
+
+    flat = _flatten_for_db(record_data)
+    return EventRecord(**flat, **metadata.model_dump())
 
 
 async def seed() -> None:
@@ -307,55 +420,7 @@ async def seed() -> None:
                 data["user_id"] = dev_tg_id
 
         # Publications
-        publ_data = [
-            {
-                "publ_id": 1,
-                "type": "A",
-                "author": "Сидоров И.И.",
-                "year": 2000,
-                "name": "Сидоров о паукообразных",
-                "external": "Альтернативное название",
-                "language": "rus",
-                "resume": "eng",
-                "ural": True,
-                "coords": True,
-                "occs": True,
-                "spec": True,
-                "pdf_file": "sidorov.pdf",
-            },
-            {
-                "publ_id": 2,
-                "type": "B",
-                "author": "Петров П.П.",
-                "year": 2015,
-                "name": "Фауна Урала: жесткокрылые",
-                "external": None,
-                "language": "rus",
-                "resume": None,
-                "ural": True,
-                "coords": True,
-                "occs": False,
-                "spec": True,
-                "pdf_file": "petrov.pdf",
-            },
-            {
-                "publ_id": 3,
-                "type": "A",
-                "author": "Иванов И.И.",
-                "year": 2020,
-                "name": "Насекомые Южного Урала",
-                "external": None,
-                "language": "rus",
-                "resume": None,
-                "ural": True,
-                "coords": True,
-                "occs": True,
-                "spec": False,
-                "pdf_file": "ivanov.pdf",
-            },
-        ]
-
-        for p in publ_data:
+        for p in PUBL_DATA:
             stmt = (
                 insert(Publication)
                 .values(**p)
@@ -365,61 +430,19 @@ async def seed() -> None:
         logger.info("Publications inserted")
 
         # Users
-        passwords = ["dev", "test"]
-
-        user_data = [
-            {
-                "user_id": dev_tg_id,
-                "name": "DEV",
-                "tlg_username": "dev_user",
-                "tlg_name": "Dev User",
-                "hash": get_password_hash(passwords[0]),
-                "hash_date": datetime.now(),
-                "reg_stat": 1,
-                "age": 30,
-                "lng": "ru",
-                "rating": 5,
-                "items": "2|3",
-                "reg_run": SEED_DT,
-                "reg_end": SEED_DT,
-                "sex": "M",
-                "email": "dev@example.com",
-                "region": "Екатеринбург",
-                "comm": "Основной тестовый пользователь",
-            },
-            {
-                "user_id": 1,
-                "name": "TEST",
-                "tlg_username": "test_user",
-                "tlg_name": "Test User",
-                "hash": get_password_hash(passwords[1]),
-                "hash_date": datetime.now(),
-                "reg_stat": 1,
-                "age": 25,
-                "lng": "en",
-                "rating": 3,
-                "items": "1",
-                "reg_run": SEED_DT,
-                "reg_end": SEED_DT,
-                "sex": "F",
-                "email": "test@example.com",
-                "region": "Москва",
-                "comm": "Второй тестовый пользователь",
-            },
-        ]
-
-        for i, u in enumerate(user_data):
+        for i, u in enumerate(USER_DATA):
+            user_dict = build_user(u, PASSWORDS[i], dev_tg_id)
             stmt = (
                 insert(User)
-                .values(**u)
+                .values(**user_dict)
                 .on_conflict_do_nothing(index_elements=["user_id"])
             )
             await session.execute(stmt)
             logger.info(
                 "User inserted: name: %s; password: %s; publications: %s",
-                u["name"],
-                passwords[i],
-                u["items"],
+                user_dict["name"],
+                PASSWORDS[i],
+                user_dict["items"],
             )
 
         # Check if records already exist
