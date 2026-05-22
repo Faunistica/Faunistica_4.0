@@ -1,4 +1,5 @@
 import { type FC } from 'react';
+import { cn } from '@/lib/utils';
 import { CheckCircle2, AlertCircle, CircleDashed, Circle } from 'lucide-react';
 import type { RecordStatus } from '@/hooks/useRecordStatus';
 
@@ -36,7 +37,7 @@ export const RecordStatusIndicator: FC<Props> = ({ status }) => {
     const { Icon, color, label } = STATUS_CONFIG[status];
 
     return (
-        <span className={`inline-flex items-center gap-1 ${color}`} title={label}>
+        <span className={cn('inline-flex items-center gap-1', color)} title={label}>
             <Icon className="h-3.5 w-3.5" />
         </span>
     );

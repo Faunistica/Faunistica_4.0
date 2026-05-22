@@ -131,7 +131,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
                             className={cn(
                                 'cursor-pointer px-4 py-2 text-sm transition-all duration-150',
                                 i === highlightIndex
-                                    ? 'bg-slate-100 text-slate-900 font-medium pl-5'
+                                    ? 'bg-slate-100 pl-5 font-medium text-slate-900'
                                     : 'text-slate-700 hover:bg-slate-50',
                             )}
                         >

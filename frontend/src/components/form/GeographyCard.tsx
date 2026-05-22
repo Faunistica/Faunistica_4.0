@@ -287,7 +287,9 @@ const GeographyCard: FC<Props> = () => {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div
+                            className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                        >
                             <div className="space-y-2">
                                 <Label htmlFor="latitude">Широта (DD)</Label>
                                 <Input

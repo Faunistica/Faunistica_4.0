@@ -1,5 +1,6 @@
 import { type FC } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
+import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -78,7 +79,7 @@ const QuantitiesCard: FC = () => {
                                     <TooltipTrigger asChild>
                                         <Label
                                             htmlFor={key}
-                                            className={`text-[10px] font-semibold tracking-wider uppercase ${color} block cursor-help truncate`}
+                                            className={cn('text-[10px] font-semibold tracking-wider uppercase', color, 'block cursor-help truncate')}
                                         >
                                             {label}
                                         </Label>

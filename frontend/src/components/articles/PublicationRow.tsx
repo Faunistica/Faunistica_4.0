@@ -1,5 +1,6 @@
 import { type FC } from 'react';
 import { FileText, XCircle, FileSearch, FileDown, Calendar, User, Hash } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router';
@@ -13,11 +14,11 @@ interface PublicationRowProps {
 export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
     return (
         <div
-            className={`group relative flex flex-col gap-4 rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row ${mode === 'suggested' ? 'bg-amber-50/30 hover:bg-amber-50/50' : ''} `}
+            className={cn('group relative flex flex-col gap-4 rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row', mode === 'suggested' && 'bg-amber-50/30 hover:bg-amber-50/50')}
         >
             {/* Левая цветная полоса-индикатор (опционально для разграничения режимов) */}
             <div
-                className={`absolute top-0 bottom-0 left-0 w-1 rounded-l-xl transition-colors ${mode === 'suggested' ? 'bg-amber-400' : ''} ${mode === 'progress' ? 'bg-blue-400' : ''} ${mode === 'available' ? 'bg-emerald-400' : ''} `}
+                className={cn('absolute top-0 bottom-0 left-0 w-1 rounded-l-xl transition-colors', mode === 'suggested' && 'bg-amber-400', mode === 'progress' && 'bg-blue-400', mode === 'available' && 'bg-emerald-400')}
             />
 
             {/* Блок с метаданными */}
@@ -78,11 +79,12 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                 <Button
                     variant="outline"
                     size="sm"
-                    className={`h-9 w-full justify-center gap-2 rounded-lg border transition-all sm:w-auto ${
+                    className={cn(
+                        'h-9 w-full justify-center gap-2 rounded-lg border transition-all sm:w-auto',
                         pub.pdf_file
                             ? 'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-100'
-                            : 'cursor-not-allowed border-slate-200 bg-slate-50/50 text-slate-400'
-                    } `}
+                            : 'cursor-not-allowed border-slate-200 bg-slate-50/50 text-slate-400',
+                    )}
                     disabled={!pub.pdf_file}
                     asChild={!!pub.pdf_file}
                 >

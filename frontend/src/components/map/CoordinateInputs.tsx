@@ -1,5 +1,6 @@
 import { type FC, useState, useEffect, useCallback, useRef, memo } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -76,7 +77,7 @@ const CoordinateInput = memo(
                     onChange={handleChange}
                     placeholder={placeholder}
                     disabled={disabled}
-                    className={error ? 'border-red-500' : ''}
+                    className={cn(error && 'border-red-500')}
                 />
                 {error && <span className="mt-0.5 block text-xs text-red-500">{error}</span>}
             </div>
