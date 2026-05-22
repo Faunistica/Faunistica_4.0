@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useFormState } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,11 +15,9 @@ interface Props {
 }
 
 const CollectionEventCard: FC<Props> = ({ index }) => {
-    const {
-        register,
-        formState: { errors },
-    } = useFormContext<FormSchema>();
+    const { register } = useFormContext<FormSchema>();
     const prefix = `samples.${index}` as const;
+    const { errors } = useFormState({ name: prefix });
     const err = errors.samples?.[index];
 
     return (
@@ -60,7 +58,7 @@ const CollectionEventCard: FC<Props> = ({ index }) => {
                                 id={`${prefix}.verbatim_date`}
                                 placeholder="19.08-02.09.2018"
                                 aria-invalid={!!err?.verbatim_date}
-                                {...register(`${prefix}.verbatim_date`)}
+                                {...register(`${prefix}.verbatim_date`, { required: 'Обязательное поле' })}
                             />
                         </div>
                     </TooltipProvider>
@@ -71,7 +69,7 @@ const CollectionEventCard: FC<Props> = ({ index }) => {
                             id={`${prefix}.recorded_by`}
                             placeholder="Фамилия И.О."
                             aria-invalid={!!err?.recorded_by}
-                            {...register(`${prefix}.recorded_by`)}
+                            {...register(`${prefix}.recorded_by`, { required: 'Обязательное поле' })}
                         />
                     </div>
 
@@ -80,7 +78,6 @@ const CollectionEventCard: FC<Props> = ({ index }) => {
                         <Input
                             id={`${prefix}.sampling_protocol`}
                             placeholder="ловушки Барбера, кошение сачком…"
-                            aria-invalid={!!err?.sampling_protocol}
                             {...register(`${prefix}.sampling_protocol`)}
                         />
                     </div>

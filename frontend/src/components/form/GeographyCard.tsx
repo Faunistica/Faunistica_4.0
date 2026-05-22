@@ -17,12 +17,12 @@ import SavedPresetSelect from './SavedPresetSelect';
 
 import 'leaflet/dist/leaflet.css';
 import { type FC, useState, useEffect } from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
+import { useFormContext, Controller, useFormState, useWatch } from 'react-hook-form';
 import { Map as MapIcon, MapPin } from 'lucide-react';
 
 import { GeographyMap } from '@/components/map/GeographyMap';
 import { DMInputGroup, DMSInputGroup } from '@/components/map/CoordinateInputs';
-import { GEOREF_OPTIONS, COUNTRY_OPTIONS, type FormSchema } from '@/types/forms';
+import { GEOREF_OPTIONS, COUNTRY_OPTIONS, LAT_MIN, LAT_MAX, LNG_MIN, LNG_MAX, UNCERTAINTY_MIN, UNCERTAINTY_MAX, type FormSchema } from '@/types/forms';
 
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useLazyGeoSearchQuery } from '@/api/utilAPI';
@@ -32,20 +32,31 @@ interface Props {
     publ_id: number;
 }
 
+const MapViewer: FC<{ prefix: string; handleMapSelect: (lat: number, lng: number) => void }> = ({ prefix, handleMapSelect }) => {
+    const latValue = useWatch({ name: `${prefix}.latitude` as any }) as number | undefined;
+    const lonValue = useWatch({ name: `${prefix}.longitude` as any }) as number | undefined;
+
+    return (
+        <GeographyMap
+            latitude={latValue}
+            longitude={lonValue}
+            onLocationSelect={handleMapSelect}
+        />
+    );
+};
+
 const GeographyCard: FC<Props> = ({ index }) => {
     const {
         register,
         control,
-        watch,
         setValue,
-        formState: { errors },
+        getValues,
     } = useFormContext<FormSchema>();
     const prefix = `samples.${index}` as const;
+    const { errors } = useFormState({ name: prefix });
     const err = errors.samples?.[index];
 
-    const georefSource = watch(`${prefix}.georef_source`);
-    const latValue = watch(`${prefix}.latitude`);
-    const lonValue = watch(`${prefix}.longitude`);
+    const georefSource = useWatch({ name: `${prefix}.georef_source` as any });
 
     const isNone = !georefSource || georefSource === 'none';
     const isArticle = georefSource === 'lit';
@@ -83,9 +94,8 @@ const GeographyCard: FC<Props> = ({ index }) => {
         setRegionSuggestions(result.suggestions ?? []);
     }, 300);
 
-    const regionValue = watch(`${prefix}.region`);
-
     const handleDistrictSearch = useDebouncedCallback(async (text: string) => {
+        const regionValue = getValues(`${prefix}.region`);
         const result = await searchDistrict({
             field: 'district',
             text,
@@ -239,7 +249,6 @@ const GeographyCard: FC<Props> = ({ index }) => {
                         <Input
                             id={`${prefix}.locality`}
                             placeholder="Исходное название места из статьи"
-                            aria-invalid={!!err?.locality}
                             {...register(`${prefix}.locality`)}
                         />
                     </div>
@@ -307,10 +316,9 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                 </Button>
 
                                 {showMap && (
-                                    <GeographyMap
-                                        latitude={latValue}
-                                        longitude={lonValue}
-                                        onLocationSelect={handleMapSelect}
+                                    <MapViewer
+                                        prefix={prefix}
+                                        handleMapSelect={handleMapSelect}
                                     />
                                 )}
                             </div>
@@ -332,7 +340,10 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                     }
                                     aria-invalid={!!err?.latitude}
                                     {...register(`${prefix}.latitude` as any, {
+                                        required: 'Обязательное поле',
                                         valueAsNumber: true,
+                                        min: { value: LAT_MIN, message: `Минимум ${LAT_MIN}` },
+                                        max: { value: LAT_MAX, message: `Максимум ${LAT_MAX}` }
                                     })}
                                 />
                             </div>
@@ -350,7 +361,10 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                     }
                                     aria-invalid={!!err?.longitude}
                                     {...register(`${prefix}.longitude` as any, {
+                                        required: 'Обязательное поле',
                                         valueAsNumber: true,
+                                        min: { value: LNG_MIN, message: `Минимум ${LNG_MIN}` },
+                                        max: { value: LNG_MAX, message: `Максимум ${LNG_MAX}` }
                                     })}
                                 />
                             </div>
@@ -361,8 +375,11 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                 <Input
                                     id={`${prefix}.coordinate_uncertainty`}
                                     type="number"
+                                    aria-invalid={!!err?.coordinate_uncertainty}
                                     {...register(`${prefix}.coordinate_uncertainty` as any, {
                                         valueAsNumber: true,
+                                        min: { value: UNCERTAINTY_MIN, message: `Минимум ${UNCERTAINTY_MIN}` },
+                                        max: { value: UNCERTAINTY_MAX, message: `Максимум ${UNCERTAINTY_MAX}` }
                                     })}
                                 />
                             </div>

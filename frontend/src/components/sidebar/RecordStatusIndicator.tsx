@@ -1,11 +1,15 @@
 // src/components/sidebar/RecordStatusIndicator.tsx
+//
+// Показывает иконку статуса записи в сайдбаре.
+// НЕ использует useFormState — это критично для производительности,
+// т.к. useFormState подписывается на ВСЕ изменения ошибок формы
+// и вызывает ререндер КАЖДОГО индикатора при изменении ЛЮБОГО поля.
+
 import { type FC } from 'react';
 import { CheckCircle2, AlertCircle, CircleDashed, Circle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useRecordStatus } from '@/hooks/useRecordStatus';
-import { BLOCKING_FIELDS, getFieldLabel } from '@/types/forms';
-import { useFormState } from 'react-hook-form';
-import type { FormSchema } from '@/types/forms';
+import { getFieldLabel } from '@/types/forms';
 
 interface Props {
     index: number;
@@ -18,44 +22,49 @@ const STATUS_CONFIG = {
         Icon: Circle,
         color: 'text-slate-300',
         label: 'Не заполнено',
-        pulse: false,
     },
     draft: {
         Icon: CircleDashed,
         color: 'text-blue-400',
         label: 'Заполняется...',
-        pulse: false,
     },
     valid: {
         Icon: CheckCircle2,
         color: 'text-emerald-500',
         label: 'Готово',
-        pulse: false,
     },
     error: {
         Icon: AlertCircle,
         color: 'text-red-500 animate-pulse',
         label: 'Есть обязательные поля',
-        pulse: true,
     },
 } as const;
 
 export const RecordStatusIndicator: FC<Props> = ({ index, sample, validationErrors }) => {
-    const { errors } = useFormState({ name: `samples.${index}` as any });
-    const sampleErrors = errors.samples?.[index] as Record<string, any> | undefined;
-    const status = useRecordStatus(index, sample, validationErrors, sampleErrors);
+    // Статус определяется через:
+    // 1) validationErrors Map (от кнопки «Проверить всё»)
+    // 2) sample.type (от бекенда, проставляется при сохранении)
+    // 3) Наличие заполненных required-полей (empty / draft)
+    const status = useRecordStatus(index, sample, validationErrors);
     const config = STATUS_CONFIG[status];
 
-    const externalErrors = validationErrors?.get(index);
-
+    // Собираем список проблемных полей для тултипа
     let missingFields: string[] = [];
     if (status === 'error') {
+        const externalErrors = validationErrors?.get(index);
         if (externalErrors && externalErrors.length > 0) {
+            // Из «Проверить всё»
             missingFields = externalErrors;
-        } else if (sampleErrors) {
-            missingFields = BLOCKING_FIELDS.filter(
-                (f) => sampleErrors[f as keyof typeof sampleErrors],
-            ).map((f) => getFieldLabel(f));
+        } else if (sample?.errors) {
+            // Из ответа бекенда (JSON-строка)
+            try {
+                const apiErrors = JSON.parse(sample.errors);
+                missingFields = apiErrors
+                    .flatMap((e: any) => e.fields || [])
+                    .map((f: string) => getFieldLabel(f));
+            } catch {
+                missingFields = [sample.errors];
+            }
         }
     }
 

@@ -14,13 +14,12 @@
 import { type FC, useEffect, useState, useCallback, memo } from 'react';
 import { useOutletContext, useParams, useNavigate } from 'react-router';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { type FormSchema } from '@/types/forms';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 
 import type { RootState } from '@/store/store';
 import { useGetRecordsDataQuery } from '@/api/recordAPI';
-import { formSchema, type FormSchema } from '@/types/forms';
 import { groupRecordsIntoDrafts } from '@/lib/recordUtils';
 
 import { useRecordPersistence } from '@/hooks/useRecordPersistence';
@@ -65,10 +64,8 @@ const FormFilling: FC = () => {
 
     // ── React Hook Form ──
     const methods = useForm<FormSchema>({
-        resolver: zodResolver(formSchema),
         defaultValues: { samples: [{}] },
-        mode: 'onTouched',
-        reValidateMode: 'onChange',
+        mode: 'onBlur', // native validation is fast, but onBlur avoids re-rendering on every keystroke
     });
 
     const { control, reset, getValues, trigger } = methods;
@@ -76,13 +73,20 @@ const FormFilling: FC = () => {
     const { fields, remove } = fieldArray;
 
     // ── РЕГИСТРАЦИЯ СКРЫТЫХ ПОЛЕЙ ──
-    // Это критически важно: RHF игнорирует в update/getValues объекты, которые не зарегистрированы.
-    // Если record_ids потеряются, автосохранение будет плодить клоны.
     useEffect(() => {
         fields.forEach((_, index) => {
             methods.register(`samples.${index}.record_ids` as any);
         });
     }, [fields, methods]);
+
+    // ── Валидация старых записей при переходе ──
+    useEffect(() => {
+        const sample = getValues(`samples.${activeRecordIndex}`);
+        // Триггерим клиентскую валидацию только если запись уже имеет статус ошибки от бекенда
+        if (sample?.type === 'rec_fail' || sample?.type === 'check_fail') {
+            trigger(`samples.${activeRecordIndex}` as any);
+        }
+    }, [activeRecordIndex, getValues, trigger]);
 
     // ── Хук: серверная персистенция ──
     const { handleSave, handleManualSave, deleteServerRecords, createRecord } =
@@ -92,10 +96,8 @@ const FormFilling: FC = () => {
     const {
         addRecord,
         handleValidateAll,
-        validationErrors,
         isValidating,
-        clearValidationError,
-        resetValidationErrors,
+        validationErrors,
     } = useRecordValidation({
         methods,
         fieldArray,
@@ -141,9 +143,8 @@ const FormFilling: FC = () => {
                 if (index < prev) return prev - 1;
                 return prev;
             });
-            clearValidationError(index);
         },
-        [deleteServerRecords, getValues, reset, clearValidationError],
+        [deleteServerRecords, getValues, reset],
     );
 
     // ── Импорт завершён — перезагрузить данные ──
@@ -154,33 +155,35 @@ const FormFilling: FC = () => {
             reset({ samples: drafts.length > 0 ? (drafts as any) : [{}] });
         }
         setActiveRecordIndex(0);
-        resetValidationErrors();
-    }, [refetch, resetValidationErrors, reset]);
+    }, [refetch, reset]);
 
     // ── Финальная отправка ──
     const handleFinalSubmit = useCallback(async () => {
-        const valid = await trigger();
-        if (valid) {
-            try {
-                await handleSave(getValues(), false);
-                toast.success('Успех!', {
-                    description: 'Ваши данные были успешно отправлены.',
-                    duration: 3000,
-                });
-                navigate('/dashboard');
-                return true;
-            } catch (error) {
-                toast.error('Ошибка при отправке данных');
-                console.error(error);
-                return false;
-            }
+        // Сначала сохраняем всё, чтобы получить свежие статусы от бекенда
+        await handleManualSave();
+        
+        const samples = getValues('samples');
+        const firstErrorIndex = samples.findIndex(
+            (s) => s.type === 'rec_fail' || s.type === 'check_fail' || !s.type
+        );
+
+        if (firstErrorIndex === -1) {
+            toast.success('Успех!', {
+                description: 'Ваши данные были успешно отправлены.',
+                duration: 3000,
+            });
+            navigate('/dashboard');
+            return true;
         } else {
-            toast.error('Пожалуйста, заполните все обязательные поля');
-            const firstErrorField = document.querySelector('[aria-invalid="true"]');
-            firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            toast.error('Пожалуйста, исправьте ошибки во всех записях перед отправкой');
+            setActiveRecordIndex(firstErrorIndex);
+            // Даем UI время переключить вкладку, затем триггерим клиентскую валидацию для подсветки полей
+            setTimeout(() => {
+                trigger(`samples.${firstErrorIndex}` as any);
+            }, 100);
             return false;
         }
-    }, [trigger, getValues, handleSave, navigate]);
+    }, [getValues, handleManualSave, navigate, trigger]);
 
     // ── Loading ──
     if (isLoading) return <LoadingScreen />;
@@ -200,8 +203,8 @@ const FormFilling: FC = () => {
                     setActiveRecordIndex={setActiveRecordIndex}
                     addRecord={addRecord}
                     removeRecord={removeRecord}
-                    validationErrors={validationErrors}
                     onImportComplete={handleImportComplete}
+                    validationErrors={validationErrors}
                 />
 
                 <main className="flex-1 flex flex-col w-full min-w-0 relative">

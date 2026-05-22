@@ -36,9 +36,9 @@ interface SidebarProps {
     setActiveRecordIndex: (index: number) => void;
     addRecord: () => void;
     removeRecord: (index: number) => void;
-    validationErrors?: Map<number, string[]>;
     onImportComplete: () => void;
     samplesCount: number;
+    validationErrors: Map<number, string[]>;
 }
 
 // 🔒 Memoized list item — обновляется только при изменении своего индекса
@@ -54,7 +54,7 @@ const SidebarRecordItem = memo(
         isActive: boolean;
         onSelect: () => void;
         onDelete: () => void;
-        validationErrors?: Map<number, string[]>;
+        validationErrors: Map<number, string[]>;
     }) => {
         const { control } = useFormContext<FormSchema>();
         const sample = useWatch({ control, name: `samples.${index}` as any });
@@ -85,8 +85,8 @@ const SidebarRecordItem = memo(
                         <div className="flex items-center gap-2 min-w-0">
                             <RecordStatusIndicator
                                 index={index}
-                                validationErrors={validationErrors}
                                 sample={sample}
+                                validationErrors={validationErrors}
                             />
                             <span
                                 className={`text-xs font-bold leading-tight truncate ${
@@ -167,9 +167,9 @@ const FormSidebar: FC<SidebarProps> = ({
     setActiveRecordIndex,
     addRecord,
     removeRecord,
-    validationErrors,
     onImportComplete,
     samplesCount,
+    validationErrors,
 }) => {
     const { isMobile, setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -240,12 +240,12 @@ const FormSidebar: FC<SidebarProps> = ({
                                             key={index}
                                             index={index}
                                             isActive={index === activeRecordIndex}
-                                            validationErrors={validationErrors}
                                             onSelect={() => {
                                                 setActiveRecordIndex(index);
                                                 if (isMobile) setOpenMobile(false);
                                             }}
                                             onDelete={() => removeRecord(index)}
+                                            validationErrors={validationErrors}
                                         />
                                     );
                                 })}

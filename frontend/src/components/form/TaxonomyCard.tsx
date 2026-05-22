@@ -1,5 +1,5 @@
 import { type FC, useState } from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
+import { useFormContext, Controller, useFormState } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,15 +27,12 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
     const {
         register,
         control,
-        watch,
         setValue,
-        formState: { errors },
+        getValues,
     } = useFormContext<FormSchema>();
     const prefix = `samples.${index}` as const;
+    const { errors } = useFormState({ name: prefix });
     const err = errors.samples?.[index];
-
-    const familyValue = watch(`${prefix}.family`);
-    const genusValue = watch(`${prefix}.genus`);
 
     // ── Taxonomy suggestion queries ──
     const [searchFamily] = useLazySuggestTaxonQuery();
@@ -62,6 +59,7 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
     const handleGenusSearch = useDebouncedCallback(async (text: string) => {
         setGenLoading(true);
         try {
+            const familyValue = getValues(`${prefix}.family` as any);
             const r = await searchGenus({ field: 'genus', text, family: familyValue }).unwrap();
             setGenusSuggestions(r.suggestions ?? []);
         } finally {
@@ -72,6 +70,8 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
     const handleSpeciesSearch = useDebouncedCallback(async (text: string) => {
         setSpLoading(true);
         try {
+            const familyValue = getValues(`${prefix}.family` as any);
+            const genusValue = getValues(`${prefix}.genus` as any);
             const r = await searchSpecies({
                 field: 'species',
                 text,
@@ -104,6 +104,10 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                         <Controller
                             name={`${prefix}.family`}
                             control={control}
+                            rules={{ 
+                                required: 'Обязательное поле',
+                                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
+                            }}
                             render={({ field }) => (
                                 <Autocomplete
                                     value={field.value ?? ''}
@@ -125,6 +129,10 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                         <Controller
                             name={`${prefix}.genus`}
                             control={control}
+                            rules={{ 
+                                required: 'Обязательное поле',
+                                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
+                            }}
                             render={({ field }) => (
                                 <Autocomplete
                                     value={field.value ?? ''}
@@ -146,6 +154,10 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                         <Controller
                             name={`${prefix}.species`}
                             control={control}
+                            rules={{ 
+                                required: 'Обязательное поле',
+                                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
+                            }}
                             render={({ field }) => (
                                 <Autocomplete
                                     value={field.value ?? ''}

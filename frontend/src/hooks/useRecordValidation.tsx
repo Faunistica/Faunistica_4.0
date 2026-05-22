@@ -1,18 +1,16 @@
 // src/hooks/useRecordValidation.ts
 //
 // Вся логика валидации записей:
-// — мягкая блокировка при добавлении новой записи (BLOCKING_FIELDS)
-// — массовая проверка всех записей («Проверить всё»)
+// — создание новой записи на сервере
+// — массовая проверка всех записей («Проверить всё») через trigger()
 // Вынесено из FormFilling для разгрузки страницы.
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { AlertTriangle } from 'lucide-react';
 import type { UseFormReturn, UseFieldArrayReturn } from 'react-hook-form';
 
 import type { FormSchema } from '@/types/forms';
-import { BLOCKING_FIELDS, getFieldLabel } from '@/types/forms';
-import { Button } from '@/components/ui/button';
+import { getFieldLabel } from '@/types/forms';
 
 interface UseRecordValidationOptions {
     methods: UseFormReturn<FormSchema>;
@@ -45,8 +43,7 @@ export function useRecordValidation({
             const created = await createServerRecord({ publ_id }).unwrap();
             const currentValues = getValues();
 
-            // Исключаем баг RHF с "залипанием" данных (shifting unmounted fields)
-            // через полную перезапись состояния всей формы:
+            // Полная перезапись — исключаем баг RHF с «залипанием» данных
             reset({
                 ...currentValues,
                 samples: [{ record_ids: { base: created.id } }, ...(currentValues.samples || [])],
@@ -62,21 +59,29 @@ export function useRecordValidation({
     // ── Массовая проверка всех записей ──
     const handleValidateAll = useCallback(async () => {
         setIsValidating(true);
-        const data = getValues();
+
+        // trigger() без аргументов валидирует всю форму разом.
+        // С mode:'onBlur' это НЕ вызывает повторных ререндеров при обычном вводе.
+        const isValid = await trigger();
+
         const errorsMap = new Map<number, string[]>();
 
-        for (let i = 0; i < data.samples.length; i++) {
-            const prefix = `samples.${i}`;
-            const results = await Promise.all(
-                BLOCKING_FIELDS.map((field) => trigger(`${prefix}.${field}` as any)),
-            );
+        if (!isValid) {
+            // Читаем из внутреннего мутабельного объекта RHF сразу после trigger()
+            const currentErrors = methods.control._formState.errors;
 
-            const invalidLabels = BLOCKING_FIELDS.filter((_, fi) => !results[fi]).map((f) =>
-                getFieldLabel(f),
-            );
-
-            if (invalidLabels.length > 0) {
-                errorsMap.set(i, invalidLabels);
+            if (Array.isArray(currentErrors.samples)) {
+                currentErrors.samples.forEach((sampleErr: any, i: number) => {
+                    if (sampleErr) {
+                        const invalidLabels: string[] = [];
+                        for (const key of Object.keys(sampleErr)) {
+                            invalidLabels.push(getFieldLabel(key));
+                        }
+                        if (invalidLabels.length > 0) {
+                            errorsMap.set(i, invalidLabels);
+                        }
+                    }
+                });
             }
         }
 
@@ -91,7 +96,7 @@ export function useRecordValidation({
         } else {
             toast.success('Все записи заполнены корректно!', { duration: 3000 });
         }
-    }, [getValues, trigger]);
+    }, [trigger, methods.control]);
 
     /** Убрать ошибки для конкретного индекса (при удалении записи). */
     const clearValidationError = useCallback((index: number) => {

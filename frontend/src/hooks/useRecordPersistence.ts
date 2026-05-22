@@ -52,15 +52,19 @@ export function useRecordPersistence({
                     const baseId = sample.record_ids?.base;
 
                     if (baseId) {
-                        // Обновляем единственную запись (сервер сам разберется с массивом specimens)
-                        await editRecord({
+                        // Обновляем единственную запись
+                        const result = await editRecord({
                             record_id: baseId,
                             data: payload,
                         }).unwrap();
+                        
+                        // Сохраняем статус валидации с бекенда в форму
+                        setValue(`samples.${i}.type` as any, result.record.type, { shouldDirty: false });
+                        setValue(`samples.${i}.errors` as any, result.record.errors, { shouldDirty: false });
                     } else {
                         // Создаем новую запись, если её еще нет (хотя обычно она создается при добавлении карточки)
                         const created = await createRecord({ publ_id }).unwrap();
-                        await editRecord({
+                        const result = await editRecord({
                             record_id: created.id,
                             data: payload,
                         }).unwrap();
@@ -73,9 +77,11 @@ export function useRecordPersistence({
                                 shouldValidate: false,
                             },
                         );
+                        setValue(`samples.${i}.type` as any, result.record.type, { shouldDirty: false });
+                        setValue(`samples.${i}.errors` as any, result.record.errors, { shouldDirty: false });
                     }
                 }
-                if (isManual) toast.success('Данные успешно сохранены');
+                if (isManual) toast.success('Данные успешно сохранены и проверены сервером');
             } catch (error) {
                 if (isManual) {
                     toast.error('Ошибка при сохранении данных');

@@ -1,20 +1,19 @@
 // src/hooks/useRecordStatus.ts
 
 import { useMemo } from 'react';
-import type { FormSchema } from '@/types/forms';
-import { BLOCKING_FIELDS, type BlockingFieldName } from '@/types/forms';
+import { REQUIRED_FIELDS, type RequiredFieldName } from '@/types/forms';
 
 export type RecordStatus = 'empty' | 'draft' | 'valid' | 'error';
 
 /**
  * Determines the visual status of a single record in the sidebar.
- * Also accepts an external `validationErrors` map populated by the
- * "Проверить всё" mass-validation pass — these override local form state.
+ * Relies strictly on the backend `type` field, but overrides to 'empty'/'draft' 
+ * if the record has not been filled out yet, so we don't annoy the user.
  */
 export function useRecordStatus(
     index: number,
     sample: Record<string, any>,
-    validationErrors?: Map<number, string[]>,
+    validationErrors?: Map<number, string[]>, // Left for backward compatibility, but won't be heavily used
     sampleErrors?: Record<string, any>,
 ): RecordStatus {
     return useMemo(() => {
@@ -23,24 +22,26 @@ export function useRecordStatus(
             return 'error';
         }
 
-        // 🟡 Пустая запись
-        const hasAnyValue = BLOCKING_FIELDS.some((field: BlockingFieldName) => {
+        // 🟡 Check if record is completely empty (no required fields filled)
+        const hasAnyValue = REQUIRED_FIELDS.some((field: RequiredFieldName) => {
             const val = sample?.[field];
             return val !== undefined && val !== null && val !== '';
         });
 
         if (!hasAnyValue) {
-            return 'empty';
+            return 'empty'; // Visually don't yell at the user for a fresh record
         }
 
-        // 🟢 Все блокирующие поля заполнены и не имеют ошибок
-        const allBlockingFilled = BLOCKING_FIELDS.every((field: BlockingFieldName) => {
-            const val = sample?.[field];
-            return val !== undefined && val !== null && val !== '';
-        });
-        if (allBlockingFilled) return 'valid';
+        // Use API status directly for everything else
+        if (sample?.type === 'rec_ok' || sample?.type === 'check_ok') {
+            return 'valid';
+        }
+        if (sample?.type === 'rec_fail' || sample?.type === 'check_fail') {
+            return 'error';
+        }
 
-        // 🔵 В процессе заполнения
+        // 🔵 В процессе заполнения (fallback, если type ещё не проставлен с бэка)
         return 'draft';
-    }, [sampleErrors, sample, validationErrors, index]);
+    }, [sample?.type, validationErrors, index, sample]);
 }
+

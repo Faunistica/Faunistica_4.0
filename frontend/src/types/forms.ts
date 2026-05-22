@@ -5,23 +5,21 @@ export const LNG_MAX = 180;
 export const UNCERTAINTY_MIN = 30;
 export const UNCERTAINTY_MAX = 15000;
 
-// src/types/forms.ts
+import type { RecordFull } from './api.dto';
 
-// 🔒 Поля, обязательные для перехода к следующему образцу
-export const BLOCKING_FIELDS = [
-    'country',
-    'region',
-    'district',
-    'locality',
+// 🔒 Поля, обязательные для заполнения
+export const REQUIRED_FIELDS = [
+    'latitude',
+    'longitude',
+    'georef_source',
     'verbatim_date',
-    'sampling_protocol',
     'recorded_by',
     'family',
     'genus',
     'species',
 ] as const;
 
-export type BlockingFieldName = (typeof BLOCKING_FIELDS)[number];
+export type RequiredFieldName = (typeof REQUIRED_FIELDS)[number];
 
 // 📋 Человеко-читаемые названия полей для ошибок
 export const FIELD_LABELS: Record<string, string> = {
@@ -152,75 +150,14 @@ export function buildEventLabel(data: Record<string, unknown>): string {
     return parts.length > 0 ? parts.join(' · ') : 'Без данных';
 }
 
-import { z } from 'zod';
-
-export const recordSchema = z.object({
-    // ═══ LOCATION ═══
-    georef_source: z.enum(['lit', 'vol', 'none']).nullish(),
-    country: z.string().min(1, 'Обязательное поле'),
-    region: z.string().min(1, 'Обязательное поле'),
-    district: z.string().min(1, 'Обязательное поле'),
-    locality: z.string().min(1, 'Обязательное поле'),
-    is_manual_location: z.boolean().nullish(),
-    verbatimcoordinates: z.string().nullish(),
-    latitude: z
-        .number({ invalid_type_error: 'Число' })
-        .min(LAT_MIN, `Мин. ${LAT_MIN}`)
-        .max(LAT_MAX, `Макс. ${LAT_MAX}`),
-    longitude: z
-        .number({ invalid_type_error: 'Число' })
-        .min(LNG_MIN, `Мин. ${LNG_MIN}`)
-        .max(LNG_MAX, `Макс. ${LNG_MAX}`),
-    coordinate_uncertainty: z
-        .number()
-        .min(UNCERTAINTY_MIN, `Мин. ${UNCERTAINTY_MIN}`)
-        .max(UNCERTAINTY_MAX, `Макс. ${UNCERTAINTY_MAX}`)
-        .nullish(),
-    location_remarks: z.string().nullish(),
-
-    // ═══ EVENT + OCCURRENCE ═══
-    verbatim_date: z.string().min(1, 'Обязательное поле'),
-    date_precision: z.string().nullish(),
-    is_interval: z.boolean().nullish(),
-    habitat: z.string().nullish(),
-    sampling_protocol: z.string().min(1, 'Обязательное поле'),
-    sampling_effort: z.string().nullish(),
-    sample_size_value: z.number().nullish(),
-    sample_size_unit: z.string().nullish(),
-    event_remarks: z.string().nullish(),
-    field_number: z.string().nullish(),
-    catalog_number: z.string().nullish(),
-    collection_code: z.string().nullish(),
-    recorded_by: z.string().min(1, 'Обязательное поле'),
-
-    // ═══ TAXONOMY ═══
-    family: z.string().min(1, 'Обязательное поле'),
-    genus: z.string().min(1, 'Обязательное поле'),
-    species: z.string().min(1, 'Обязательное поле'),
-    tax_verbatim: z.boolean().nullish(),
-    taxon_rank: z.enum(['genus', 'species', 'subspecies']).nullish(),
-    type_status: z.string().nullish(),
-    accepted_name: z.string().nullish(),
-    taxon_remarks: z.string().nullish(),
-    identification_remarks: z.string().nullish(),
-
-    // ═══ QUANTITIES ═══
-    quantity_type: z.string().nullish(),
-    occurrence_remarks: z.string().nullish(),
-    mmm: z.number().min(0).nullish(),
-    ssm: z.number().min(0).nullish(),
-    fff: z.number().min(0).nullish(),
-    ssf: z.number().min(0).nullish(),
-    adu: z.number().min(0).nullish(),
-    juv: z.number().min(0).nullish(),
-
-    // ═══ INTERNAL ═══
-    record_ids: z.record(z.string(), z.string()).optional(),
-});
-
-export const formSchema = z.object({
-    samples: z.array(recordSchema),
-});
-
-export type FormSchema = z.infer<typeof formSchema>;
-export type RecordSchema = z.infer<typeof recordSchema>;
+export interface FormSchema {
+    samples: (RecordFull & { 
+        mmm?: number | null;
+        ssm?: number | null;
+        fff?: number | null;
+        ssf?: number | null;
+        adu?: number | null;
+        juv?: number | null;
+        record_ids?: { base: string };
+    })[];
+}
