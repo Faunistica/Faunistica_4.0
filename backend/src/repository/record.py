@@ -99,7 +99,7 @@ async def get_records_paginated(
     stmt = (
         select(EventRecord)
         .where(where_condition)
-        .order_by(order_col.desc())
+        .order_by(order_col.desc(), EventRecord.id)
         .offset(offset)
         .limit(page_size)
     )
