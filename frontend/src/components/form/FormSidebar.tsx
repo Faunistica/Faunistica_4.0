@@ -65,26 +65,31 @@ const SidebarRecordItem = memo(
                         <div className="flex min-w-0 items-center gap-2">
                             <RecordStatusIndicator status={status} />
                             <span
-                                className={cn('truncate text-xs leading-tight font-bold', isActive ? 'text-slate-900' : 'text-slate-700')}
+                                className={cn(
+                                    'truncate text-xs leading-tight font-bold',
+                                    isActive ? 'text-slate-900' : 'text-slate-700',
+                                )}
                             >
                                 {recordName}
                             </span>
                         </div>
                     </div>
 
-                    <div className="flex w-full items-center gap-1.5 text-[10px] text-slate-500">
+                    <div className="flex w-full items-center gap-1.5 pl-0.5 text-[10px] text-slate-500">
                         {isActive ? (
                             <>
-                                <span className="relative flex h-2 w-2">
+                                <span className="relative flex h-2 pl-px">
                                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
+                                    <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
                                 </span>
-                                <span className="font-semibold text-blue-600">Редактируется</span>
+                                <span className="pl-1 font-semibold text-blue-600">
+                                    Редактируется
+                                </span>
                             </>
                         ) : (
                             <>
-                                <MapPin className="h-3 w-3 shrink-0" />
-                                <span className="truncate">
+                                <MapPin className="size-2.5 shrink-0" />
+                                <span className="truncate pl-1">
                                     {record.locality || record.region || 'Нет данных о месте'}
                                 </span>
                             </>
