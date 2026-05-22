@@ -160,7 +160,10 @@ const FormFilling: FC = () => {
 
             cancelPendingAutoSave();
 
-            await save(getValues());
+            const currentSnapshot = JSON.stringify(getValues());
+            if (currentSnapshot !== lastSnapshotRef.current) {
+                await save(getValues());
+            }
 
             const cached = records.find((r) => r.id === targetId);
             if (cached) {
