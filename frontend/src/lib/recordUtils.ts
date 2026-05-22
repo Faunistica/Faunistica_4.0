@@ -1,7 +1,11 @@
 import type { RecordData, RecordFull, FormRecord, Specimen } from '@/types/api.dto';
 import type { QuantityField } from '@/types/forms';
 
-const SPECIMEN_FIELD_MAP: Array<{ sex: Specimen['sex']; life_stage: Specimen['life_stage']; formField: QuantityField }> = [
+const SPECIMEN_FIELD_MAP: Array<{
+    sex: Specimen['sex'];
+    life_stage: Specimen['life_stage'];
+    formField: QuantityField;
+}> = [
     { sex: 'male', life_stage: 'adult', formField: 'males' },
     { sex: 'male', life_stage: 'subadult', formField: 'subadultMales' },
     { sex: 'female', life_stage: 'adult', formField: 'females' },
@@ -10,7 +14,9 @@ const SPECIMEN_FIELD_MAP: Array<{ sex: Specimen['sex']; life_stage: Specimen['li
     { sex: 'none', life_stage: 'juvenile', formField: 'juveniles' },
 ];
 
-export const getSexAndLifestageFromField = (field: string): { sex: Specimen['sex']; life_stage: Specimen['life_stage'] } => {
+export const getSexAndLifestageFromField = (
+    field: string,
+): { sex: Specimen['sex']; life_stage: Specimen['life_stage'] } => {
     switch (field) {
         case 'males':
             return { sex: 'male', life_stage: 'adult' };

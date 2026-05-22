@@ -14,11 +14,19 @@ interface PublicationRowProps {
 export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
     return (
         <div
-            className={cn('group relative flex flex-col gap-4 rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row', mode === 'suggested' && 'bg-amber-50/30 hover:bg-amber-50/50')}
+            className={cn(
+                'group relative flex flex-col gap-4 rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row',
+                mode === 'suggested' && 'bg-amber-50/30 hover:bg-amber-50/50',
+            )}
         >
             {/* Левая цветная полоса-индикатор (опционально для разграничения режимов) */}
             <div
-                className={cn('absolute top-0 bottom-0 left-0 w-1 rounded-l-xl transition-colors', mode === 'suggested' && 'bg-amber-400', mode === 'progress' && 'bg-blue-400', mode === 'available' && 'bg-emerald-400')}
+                className={cn(
+                    'absolute top-0 bottom-0 left-0 w-1 rounded-l-xl transition-colors',
+                    mode === 'suggested' && 'bg-amber-400',
+                    mode === 'progress' && 'bg-blue-400',
+                    mode === 'available' && 'bg-emerald-400',
+                )}
             />
 
             {/* Блок с метаданными */}

@@ -14,7 +14,10 @@ const Layout: FC = () => {
             <Header isSidebarEnabled={isSidebarEnabled} setSidebarOpen={setIsSidebarOpen} />
 
             <div
-                className={cn('relative flex w-full flex-1 overflow-x-clip', isLanding && 'bg-white')}
+                className={cn(
+                    'relative flex w-full flex-1 overflow-x-clip',
+                    isLanding && 'bg-white',
+                )}
             >
                 {isSidebarEnabled ? (
                     <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
