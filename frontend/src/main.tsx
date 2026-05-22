@@ -13,8 +13,6 @@ import NetworkErrorAlert from './components/alerts/NetworkErrorAlert.tsx';
 
 import type * as Types from '@/types/api.dto';
 
-import './index.css';
-
 async function verifyAuthInBackground(setNetworkError: (value: boolean) => void) {
     try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {

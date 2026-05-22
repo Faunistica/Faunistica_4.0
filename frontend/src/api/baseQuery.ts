@@ -1,6 +1,6 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { login, logout } from '../store/reducers/userSlice';
+import { logout } from '../store/reducers/userSlice';
 
 export const baseQuery = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_URL,
@@ -25,7 +25,6 @@ export const baseQueryWithReauth: BaseQueryFn<
     );
 
     if (refreshResult.data) {
-        api.dispatch(login());
         result = await baseQuery(args, api, extraOptions);
     } else {
         api.dispatch(logout());

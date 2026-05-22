@@ -203,3 +203,13 @@ export interface Publication {
     e_author?: string | null;
     e_name?: string | null;
 }
+
+export interface StatisticsResponse {
+    total_volunteers: number;
+    total_records: number;
+    species_count: number;
+    processed_publications_count: number;
+    most_common_family: string | null;
+    most_common_genus: string | null;
+    most_common_species: string | null;
+}

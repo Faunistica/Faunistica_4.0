@@ -74,7 +74,10 @@ export function useSaveRecord(
     }, [methods]);
 
     const handleResponse = useCallback(
-        (_data: Partial<FormRecord>, response: { errors?: { fields: string[]; message: string }[] }) => {
+        (
+            _data: Partial<FormRecord>,
+            response: { errors?: { fields: string[]; message: string }[] },
+        ) => {
             clearServerErrors();
 
             if (!response.errors || response.errors.length === 0) return;

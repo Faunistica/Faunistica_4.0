@@ -96,13 +96,13 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
         // 🔑 Если стоит флаг от handleSelect → сбрасываем его и выходим
         if (skipNextSearchRef.current) {
             skipNextSearchRef.current = false;
-            return;
+            return () => {};
         }
 
         if (query.trim().length < 3) {
             setResults([]);
             setShowDropdown(false);
-            return;
+            return () => {};
         }
 
         if (debounceRef.current) clearTimeout(debounceRef.current);
