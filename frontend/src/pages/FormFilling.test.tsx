@@ -1,7 +1,7 @@
 /* oxlint-disable typescript/no-unsafe-type-assertion */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import FormFilling from './FormFilling';
 
 const mockSave = vi.fn();
@@ -119,7 +119,9 @@ describe('FormFilling switchToRecord', () => {
             screen.getByTestId('record-2');
         });
 
-        screen.getByTestId('record-2').click();
+        await act(async () => {
+            screen.getByTestId('record-2').click();
+        });
 
         await waitFor(() => {
             expect(mockSave).not.toHaveBeenCalled();
@@ -138,7 +140,9 @@ describe('FormFilling switchToRecord', () => {
             screen.getByTestId('record-2');
         });
 
-        screen.getByTestId('record-2').click();
+        await act(async () => {
+            screen.getByTestId('record-2').click();
+        });
 
         await waitFor(() => {
             expect(mockSave).toHaveBeenCalledTimes(1);

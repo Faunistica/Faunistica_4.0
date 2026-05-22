@@ -1,6 +1,16 @@
 import type { RecordData, RecordFull, FormRecord, Specimen } from '@/types/api.dto';
+import type { QuantityField } from '@/types/forms';
 
-export const getSexAndLifestageFromField = (field: string): { sex: string; life_stage: string } => {
+const SPECIMEN_FIELD_MAP: Array<{ sex: Specimen['sex']; life_stage: Specimen['life_stage']; formField: QuantityField }> = [
+    { sex: 'male', life_stage: 'adult', formField: 'males' },
+    { sex: 'male', life_stage: 'subadult', formField: 'subadultMales' },
+    { sex: 'female', life_stage: 'adult', formField: 'females' },
+    { sex: 'female', life_stage: 'subadult', formField: 'subadultFemales' },
+    { sex: 'none', life_stage: 'adult', formField: 'adults' },
+    { sex: 'none', life_stage: 'juvenile', formField: 'juveniles' },
+];
+
+export const getSexAndLifestageFromField = (field: string): { sex: Specimen['sex']; life_stage: Specimen['life_stage'] } => {
     switch (field) {
         case 'males':
             return { sex: 'male', life_stage: 'adult' };
@@ -133,11 +143,19 @@ export function toFormPartial(record: RecordFull): Partial<FormRecord> {
     ];
     for (const key of keys) {
         const val = record[key];
-        if (val !== undefined && val !== null) {
-            if (key === 'latitude' || key === 'longitude') {
-                result[key] = Number(val);
-            } else {
-                result[key] = val;
+        if (key === 'latitude' || key === 'longitude') {
+            result[key] = val != null ? Number(val) : null;
+        } else {
+            result[key] = val ?? null;
+        }
+    }
+    if (record.specimens) {
+        for (const spec of record.specimens) {
+            const mapping = SPECIMEN_FIELD_MAP.find(
+                (m) => m.sex === spec.sex && m.life_stage === spec.life_stage,
+            );
+            if (mapping) {
+                result[mapping.formField] = spec.count;
             }
         }
     }

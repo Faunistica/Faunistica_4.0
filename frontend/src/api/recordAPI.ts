@@ -69,10 +69,11 @@ export const recordAPI = createApi({
             }),
             invalidatesTags: ['records-list'],
         }),
-        submitRecord: build.mutation<Types.UpdateRecordResponse, Types.RecordIdRequest>({
-            query: ({ record_id }) => ({
+        submitRecord: build.mutation<Types.UpdateRecordResponse, Types.EditRecordRequest>({
+            query: ({ record_id, data }) => ({
                 url: `/records/${record_id}/submit`,
                 method: 'PUT',
+                body: data,
             }),
             invalidatesTags: ['records-list'],
         }),

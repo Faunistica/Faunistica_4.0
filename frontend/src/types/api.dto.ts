@@ -13,14 +13,9 @@ export interface UserInfo {
     username: string;
 }
 
-export interface RecordBelonging {
-    publ_id: number;
-    user_id: number;
-}
-
 export interface Specimen {
-    sex: string;
-    life_stage: string;
+    sex: 'male' | 'female' | 'none';
+    life_stage: 'adult' | 'subadult' | 'juvenile' | 'none';
     count: number;
 }
 
@@ -70,7 +65,7 @@ export interface RecordFull extends RecordData {
     errors?: string | null;
     type?: string | null;
     created_at: string;
-    updated_at?: string | null;
+    updated_at: string;
     ip?: string | null;
 }
 
@@ -100,15 +95,6 @@ export interface PaginatedResponse<T> {
     page: number;
     page_size: number;
     pages: number;
-}
-
-export interface QuantityFields {
-    males?: number | undefined;
-    subadultMales?: number | undefined;
-    females?: number | undefined;
-    subadultFemales?: number | undefined;
-    adults?: number | undefined;
-    juveniles?: number | undefined;
 }
 
 export type { FormRecord } from '@/types/forms';

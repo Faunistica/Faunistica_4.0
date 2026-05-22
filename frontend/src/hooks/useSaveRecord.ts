@@ -142,6 +142,7 @@ export function useSaveRecord(
                 }).unwrap();
                 const response = await submitRecord({
                     record_id: activeRecordId,
+                    data: payload,
                 }).unwrap();
                 handleResponse(data, response);
             } catch (error) {

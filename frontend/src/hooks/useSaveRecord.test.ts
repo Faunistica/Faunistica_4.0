@@ -73,6 +73,7 @@ describe('useSaveRecord', () => {
         });
         expect(mockSubmitRecord).toHaveBeenCalledWith({
             record_id: 'record-1',
+            data: expect.any(Object),
         });
     });
 

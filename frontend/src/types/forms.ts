@@ -60,32 +60,39 @@ export const TAXON_RANK_OPTIONS = [
 ] as const;
 
 export const QUANTITY_TYPE_OPTIONS = [
-    { value: 'особей', label: 'особей' },
+    { value: 'individuals', label: 'особей' },
     {
-        value: 'особей на 10 ловушко-суток',
+        value: 'individuals per 10 trap-days',
         label: 'особей на 10 ловушко-суток',
     },
     {
-        value: 'особей на 100 ловушко-суток',
+        value: 'individuals per 100 trap-days',
         label: 'особей на 100 ловушко-суток',
     },
-    { value: 'особей на м²', label: 'особей на м²' },
-    { value: 'балл обилия (по Песенко)', label: 'балл обилия (по Песенко)' },
+    { value: 'individuals per m2', label: 'особей на м²' },
     {
-        value: 'особей на 10 взмахов сачком',
+        value: 'Abundance class (Pesenko, 1982)',
+        label: 'балл обилия (по Песенко)',
+    },
+    {
+        value: 'individuals per 10 net sweps',
         label: 'особей на 10 взмахов сачком',
     },
     {
-        value: 'особей на 20 взмахов сачком',
+        value: 'individuals per 20 net sweppings',
         label: 'особей на 20 взмахов сачком',
     },
     {
-        value: 'особей на 100 взмахов сачком',
+        value: 'individuals per 100 net sweps',
         label: 'особей на 100 взмахов сачком',
     },
     {
-        value: 'особей на 200 взмахов сачком',
-        label: 'особей на 200 взмахов сачком',
+        value: 'individuals per 10 ditch-days',
+        label: 'особей на 10 канаво-суток',
+    },
+    {
+        value: 'individuals per 100 pitfall-traps',
+        label: 'особей на 100 ловушек',
     },
 ] as const;
 
