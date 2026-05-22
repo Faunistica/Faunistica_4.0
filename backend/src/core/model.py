@@ -6,6 +6,7 @@ from sqlalchemy import (
     Boolean,
     Double,
     ForeignKey,
+    Identity,
     Integer,
     Numeric,
     String,
@@ -26,22 +27,23 @@ class User(Base):
     __tablename__ = "users"
 
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    publ_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("publs.id", ondelete="CASCADE")
-    )
     tlg_name: Mapped[str | None] = mapped_column(String(255))
     tlg_username: Mapped[str | None] = mapped_column(String(255))
     name: Mapped[str | None] = mapped_column(String(255))
     reg_stat: Mapped[UserState] = mapped_column(
-        UserStateType, default=UserState.DATA_CLEARED
+        UserStateType,
+        default=UserState.DATA_CLEARED,
+        server_default="0",
     )
     hash: Mapped[str | None] = mapped_column(String(255))
     hash_date: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
-    items: Mapped[str] = mapped_column(Text, default="")
+    items: Mapped[str] = mapped_column(Text, server_default="")
     age: Mapped[int | None] = mapped_column(Integer)
     lng: Mapped[str | None] = mapped_column(String)
-    comm: Mapped[str | None] = mapped_column(Text)
-    reg_run: Mapped[datetime_type] = mapped_column(TIMESTAMP, server_default=func.now())
+    comm: Mapped[str | None] = mapped_column(String)
+    reg_run: Mapped[datetime_type | None] = mapped_column(
+        TIMESTAMP, server_default=func.now()
+    )
     reg_end: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
     sex: Mapped[str | None] = mapped_column(String(3))
     rating: Mapped[int | None] = mapped_column(Integer)
@@ -53,14 +55,14 @@ class User(Base):
 class Publication(Base):
     __tablename__ = "publs"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    type: Mapped[str] = mapped_column(Text)
+    publ_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    type: Mapped[str | None] = mapped_column(Text)
     author: Mapped[str | None] = mapped_column(Text)
-    year: Mapped[int] = mapped_column(Integer)
-    name: Mapped[str] = mapped_column(Text)
+    year: Mapped[int | None] = mapped_column(Integer)
+    name: Mapped[str | None] = mapped_column(Text)
     external: Mapped[str | None] = mapped_column(Text)
-    language: Mapped[str] = mapped_column(Text)
-    ural: Mapped[int] = mapped_column(Integer)
+    language: Mapped[str | None] = mapped_column(Text)
+    ural: Mapped[int | None] = mapped_column(Integer)
     pdf_file: Mapped[str | None] = mapped_column(Text)
     bib_file: Mapped[str | None] = mapped_column(Text)
     arj_file: Mapped[str | None] = mapped_column(Text)
@@ -77,10 +79,12 @@ class Publication(Base):
 class Action(Base):
     __tablename__ = "actions"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        primary_key=True,
+        server_default=Identity(),
     )
+    user_id: Mapped[int] = mapped_column(BigInteger)
     user_ip: Mapped[str | None] = mapped_column(Text)
     action: Mapped[str] = mapped_column(Text, nullable=False)
     object: Mapped[str | None] = mapped_column(Text)
@@ -94,16 +98,18 @@ class EventRecord(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
     publ_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("publs.id", ondelete="CASCADE")
+        Integer, ForeignKey("publs.publ_id", ondelete="CASCADE"), nullable=False
     )
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.user_id", ondelete="CASCADE")
     )
     created_at: Mapped[datetime_type] = mapped_column(
-        TIMESTAMP(precision=6), server_default=func.now()
+        "datetime", TIMESTAMP(precision=6), server_default=func.now(), nullable=False
     )
-    updated_at: Mapped[datetime_type | None] = mapped_column(
-        TIMESTAMP(precision=6), server_default=func.now(), server_onupdate=func.now()
+    updated_at: Mapped[datetime_type] = mapped_column(
+        TIMESTAMP(precision=6),
+        server_default=func.now(),
+        nullable=False,
     )
     ip: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)
@@ -114,8 +120,8 @@ class EventRecord(Base):
     district: Mapped[str | None] = mapped_column("county", Text)
     locality: Mapped[str | None] = mapped_column("verbatimlocality", Text)
     is_manual_location: Mapped[bool | None] = mapped_column("adm_verbatim", Boolean)
-    latitude: Mapped[float | None] = mapped_column("decimallatitude", Double)
-    longitude: Mapped[float | None] = mapped_column("decimallongitude", Double)
+    latitude: Mapped[str | None] = mapped_column("decimallatitude", Text)
+    longitude: Mapped[str | None] = mapped_column("decimallongitude", Text)
 
     verbatimcoordinates: Mapped[str | None] = mapped_column("verbatimcoordinates", Text)
     coordinate_uncertainty: Mapped[float | None] = mapped_column(
