@@ -203,7 +203,7 @@ describe('FormAutocomplete', () => {
 
         it('clears suggestions after selection', async () => {
             const searchFn = createMockSearch(['Option1', 'Option2']);
-            const { getFormMethods } = renderWithForm(
+            renderWithForm(
                 <FormAutocomplete
                     name="family"
                     label="Семейство"

@@ -24,12 +24,13 @@ const QuantitiesCard: FC = () => {
         control,
         formState: { errors },
     } = useFormContext<FormRecord>();
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const total = useWatch<FormRecord>({
         name: ['males', 'subadultMales', 'females', 'subadultFemales', 'adults', 'juveniles'],
         // v is actually always a number
         // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         compute: (data) => data.reduce<number>((sum, v) => sum + ((v as number) || 0), 0),
-    });
+    }) as number;
 
     const quantityFields = [
         { key: 'males' as const, label: QUANTITY_FIELD_LABELS.males, color: 'text-blue-600' },

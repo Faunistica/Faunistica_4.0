@@ -64,7 +64,7 @@ const TaxonomyCard: FC = () => {
             extra.genus = genus;
         }
 
-        return searchGenus({ field: 'species', text, ...extra })
+        return searchSpecies({ field: 'species', text, ...extra })
             .unwrap()
             .then((r) => r.suggestions ?? []);
     };
