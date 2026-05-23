@@ -22,7 +22,17 @@ import { Map as MapIcon, MapPin } from 'lucide-react';
 
 import { GeographyMap } from '@/components/map/GeographyMap';
 import { DMInputGroup, DMSInputGroup } from '@/components/map/CoordinateInputs';
-import { GEOREF_OPTIONS, COUNTRY_OPTIONS, LAT_MIN, LAT_MAX, LNG_MIN, LNG_MAX, UNCERTAINTY_MIN, UNCERTAINTY_MAX, type FormSchema } from '@/types/forms';
+import {
+    GEOREF_OPTIONS,
+    COUNTRY_OPTIONS,
+    LAT_MIN,
+    LAT_MAX,
+    LNG_MIN,
+    LNG_MAX,
+    UNCERTAINTY_MIN,
+    UNCERTAINTY_MAX,
+    type FormSchema,
+} from '@/types/forms';
 
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useLazyGeoSearchQuery } from '@/api/utilAPI';
@@ -32,16 +42,15 @@ interface Props {
     publ_id: number;
 }
 
-const MapViewer: FC<{ prefix: string; handleMapSelect: (lat: number, lng: number) => void }> = ({ prefix, handleMapSelect }) => {
+const MapViewer: FC<{ prefix: string; handleMapSelect: (lat: number, lng: number) => void }> = ({
+    prefix,
+    handleMapSelect,
+}) => {
     const latValue = useWatch({ name: `${prefix}.latitude` as any }) as number | undefined;
     const lonValue = useWatch({ name: `${prefix}.longitude` as any }) as number | undefined;
 
     return (
-        <GeographyMap
-            latitude={latValue}
-            longitude={lonValue}
-            onLocationSelect={handleMapSelect}
-        />
+        <GeographyMap latitude={latValue} longitude={lonValue} onLocationSelect={handleMapSelect} />
     );
 };
 
@@ -117,12 +126,7 @@ const DistrictAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
 };
 
 const GeographyCard: FC<Props> = ({ index }) => {
-    const {
-        register,
-        control,
-        setValue,
-        getValues,
-    } = useFormContext<FormSchema>();
+    const { register, control, setValue, getValues } = useFormContext<FormSchema>();
     const prefix = `samples.${index}` as const;
 
     const georefSource = useWatch({ name: `${prefix}.georef_source` as any });
@@ -295,8 +299,6 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                             </SelectContent>
                                         </Select>
                                     </div>
-
-
                                 </div>
 
                                 {/* Динамические поля ввода */}
@@ -318,10 +320,7 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                 </Button>
 
                                 {showMap && (
-                                    <MapViewer
-                                        prefix={prefix}
-                                        handleMapSelect={handleMapSelect}
-                                    />
+                                    <MapViewer prefix={prefix} handleMapSelect={handleMapSelect} />
                                 )}
                             </div>
                         )}
@@ -336,7 +335,7 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                     rules={{
                                         required: 'Обязательное поле',
                                         min: { value: LAT_MIN, message: `Минимум ${LAT_MIN}` },
-                                        max: { value: LAT_MAX, message: `Максимум ${LAT_MAX}` }
+                                        max: { value: LAT_MAX, message: `Максимум ${LAT_MAX}` },
                                     }}
                                     render={({ field, fieldState }) => (
                                         <Input
@@ -352,7 +351,13 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                             aria-invalid={!!fieldState.error}
                                             {...field}
                                             value={field.value ?? ''}
-                                            onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                            onChange={(e) =>
+                                                field.onChange(
+                                                    e.target.value === ''
+                                                        ? null
+                                                        : Number(e.target.value),
+                                                )
+                                            }
                                         />
                                     )}
                                 />
@@ -365,7 +370,7 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                     rules={{
                                         required: 'Обязательное поле',
                                         min: { value: LNG_MIN, message: `Минимум ${LNG_MIN}` },
-                                        max: { value: LNG_MAX, message: `Максимум ${LNG_MAX}` }
+                                        max: { value: LNG_MAX, message: `Максимум ${LNG_MAX}` },
                                     }}
                                     render={({ field, fieldState }) => (
                                         <Input
@@ -381,7 +386,13 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                             aria-invalid={!!fieldState.error}
                                             {...field}
                                             value={field.value ?? ''}
-                                            onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                            onChange={(e) =>
+                                                field.onChange(
+                                                    e.target.value === ''
+                                                        ? null
+                                                        : Number(e.target.value),
+                                                )
+                                            }
                                         />
                                     )}
                                 />
@@ -394,8 +405,14 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                     name={`${prefix}.coordinate_uncertainty` as any}
                                     control={control}
                                     rules={{
-                                        min: { value: UNCERTAINTY_MIN, message: `Минимум ${UNCERTAINTY_MIN}` },
-                                        max: { value: UNCERTAINTY_MAX, message: `Максимум ${UNCERTAINTY_MAX}` }
+                                        min: {
+                                            value: UNCERTAINTY_MIN,
+                                            message: `Минимум ${UNCERTAINTY_MIN}`,
+                                        },
+                                        max: {
+                                            value: UNCERTAINTY_MAX,
+                                            message: `Максимум ${UNCERTAINTY_MAX}`,
+                                        },
                                     }}
                                     render={({ field, fieldState }) => (
                                         <Input
@@ -404,7 +421,13 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                             aria-invalid={!!fieldState.error}
                                             {...field}
                                             value={field.value ?? ''}
-                                            onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                            onChange={(e) =>
+                                                field.onChange(
+                                                    e.target.value === ''
+                                                        ? null
+                                                        : Number(e.target.value),
+                                                )
+                                            }
                                         />
                                     )}
                                 />

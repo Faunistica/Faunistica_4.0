@@ -7,7 +7,7 @@ export type RecordStatus = 'empty' | 'draft' | 'valid' | 'error';
 
 /**
  * Determines the visual status of a single record in the sidebar.
- * Relies strictly on the backend `type` field, but overrides to 'empty'/'draft' 
+ * Relies strictly on the backend `type` field, but overrides to 'empty'/'draft'
  * if the record has not been filled out yet, so we don't annoy the user.
  */
 export function useRecordStatus(
@@ -44,4 +44,3 @@ export function useRecordStatus(
         return 'draft';
     }, [sample?.type, validationErrors, index, sample]);
 }
-

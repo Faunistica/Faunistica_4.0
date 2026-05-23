@@ -86,7 +86,7 @@ const QuantitiesCard: FC<Props> = ({ index }) => {
                                     className="text-center h-9 focus-visible:ring-1 focus-visible:ring-slate-300"
                                     {...register(`${prefix}.${key}` as any, {
                                         valueAsNumber: true,
-                                        min: { value: 0, message: 'Отрицательное число' }
+                                        min: { value: 0, message: 'Отрицательное число' },
                                     })}
                                 />
                             </div>

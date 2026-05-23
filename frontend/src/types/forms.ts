@@ -151,7 +151,7 @@ export function buildEventLabel(data: Record<string, unknown>): string {
 }
 
 export interface FormSchema {
-    samples: (RecordFull & { 
+    samples: (RecordFull & {
         mmm?: number | null;
         ssm?: number | null;
         fff?: number | null;

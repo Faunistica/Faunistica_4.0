@@ -92,12 +92,7 @@ const FormFilling: FC = () => {
         useRecordPersistence({ publ_id, user_id: user_id!, methods, fieldArray });
 
     // ── Хук: валидация (блокировка + массовая) ──
-    const {
-        addRecord,
-        handleValidateAll,
-        isValidating,
-        validationErrors,
-    } = useRecordValidation({
+    const { addRecord, handleValidateAll, isValidating, validationErrors } = useRecordValidation({
         methods,
         fieldArray,
         activeRecordIndex,
@@ -160,7 +155,7 @@ const FormFilling: FC = () => {
 
         const samples = getValues('samples');
         const firstErrorIndex = samples.findIndex(
-            (s) => s.type === 'rec_fail' || s.type === 'check_fail' || !s.type
+            (s) => s.type === 'rec_fail' || s.type === 'check_fail' || !s.type,
         );
 
         if (firstErrorIndex === -1) {

@@ -57,15 +57,7 @@ const SidebarRecordItem = memo(
         validationErrors: Map<number, string[]>;
     }) => {
         const { control } = useFormContext<FormSchema>();
-        const [
-            species,
-            genus,
-            family,
-            locality,
-            region,
-            type,
-            sampleErrors
-        ] = useWatch({
+        const [species, genus, family, locality, region, type, sampleErrors] = useWatch({
             control,
             name: [
                 `samples.${index}.species`,
@@ -74,8 +66,8 @@ const SidebarRecordItem = memo(
                 `samples.${index}.locality`,
                 `samples.${index}.region`,
                 `samples.${index}.type`,
-                `samples.${index}.errors`
-            ] as any
+                `samples.${index}.errors`,
+            ] as any,
         });
 
         const recordName = species || genus || family || 'Новая запись';

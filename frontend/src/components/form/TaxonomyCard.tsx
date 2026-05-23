@@ -43,9 +43,9 @@ const FamilyAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
         <Controller
             name={`${prefix}.family`}
             control={control}
-            rules={{ 
+            rules={{
                 required: 'Обязательное поле',
-                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
+                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' },
             }}
             render={({ field, fieldState }) => (
                 <Autocomplete
@@ -86,9 +86,9 @@ const GenusAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
         <Controller
             name={`${prefix}.genus`}
             control={control}
-            rules={{ 
+            rules={{
                 required: 'Обязательное поле',
-                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
+                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' },
             }}
             render={({ field, fieldState }) => (
                 <Autocomplete
@@ -135,9 +135,9 @@ const SpeciesAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
         <Controller
             name={`${prefix}.species`}
             control={control}
-            rules={{ 
+            rules={{
                 required: 'Обязательное поле',
-                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
+                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' },
             }}
             render={({ field, fieldState }) => (
                 <Autocomplete
@@ -158,12 +158,7 @@ const SpeciesAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
 };
 
 const TaxonomyCard: FC<Props> = ({ index }) => {
-    const {
-        register,
-        control,
-        setValue,
-        getValues,
-    } = useFormContext<FormSchema>();
+    const { register, control, setValue, getValues } = useFormContext<FormSchema>();
     const prefix = `samples.${index}` as const;
 
     return (

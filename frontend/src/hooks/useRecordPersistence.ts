@@ -57,10 +57,14 @@ export function useRecordPersistence({
                             record_id: baseId,
                             data: payload,
                         }).unwrap();
-                        
+
                         // Сохраняем статус валидации с бекенда в форму
-                        setValue(`samples.${i}.type` as any, result.record.type, { shouldDirty: false });
-                        setValue(`samples.${i}.errors` as any, result.record.errors, { shouldDirty: false });
+                        setValue(`samples.${i}.type` as any, result.record.type, {
+                            shouldDirty: false,
+                        });
+                        setValue(`samples.${i}.errors` as any, result.record.errors, {
+                            shouldDirty: false,
+                        });
                     } else {
                         // Создаем новую запись, если её еще нет (хотя обычно она создается при добавлении карточки)
                         const created = await createRecord({ publ_id }).unwrap();
@@ -77,8 +81,12 @@ export function useRecordPersistence({
                                 shouldValidate: false,
                             },
                         );
-                        setValue(`samples.${i}.type` as any, result.record.type, { shouldDirty: false });
-                        setValue(`samples.${i}.errors` as any, result.record.errors, { shouldDirty: false });
+                        setValue(`samples.${i}.type` as any, result.record.type, {
+                            shouldDirty: false,
+                        });
+                        setValue(`samples.${i}.errors` as any, result.record.errors, {
+                            shouldDirty: false,
+                        });
                     }
                 }
                 if (isManual) toast.success('Данные успешно сохранены и проверены сервером');
