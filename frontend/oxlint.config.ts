@@ -33,6 +33,14 @@ export default defineConfig({
         // TODO: turn on later
         'better-tailwindcss/enforce-canonical-classes': 'off',
     },
+    overrides: [
+        {
+            files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', '**/tests/**'],
+            rules: {
+                'typescript/no-unsafe-type-assertion': 'off',
+            },
+        },
+    ],
     env: {
         browser: true,
     },
