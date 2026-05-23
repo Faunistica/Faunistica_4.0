@@ -9,12 +9,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Field,
-    FieldLabel,
-    FieldError,
-} from '@/components/ui/field';
-import Autocomplete from '@/components/ui/autocomplete';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
+import { FormAutocomplete } from '@/components/form/FormAutocomplete';
 import { Button } from '@/components/ui/button';
 
 // oxlint-disable-next-line import/no-unassigned-import
@@ -66,6 +62,10 @@ const GeographyCard: FC<Props> = () => {
     const handleMapSelect = (lat: number, lng: number) => {
         setValue('latitude' as const, lat, { shouldValidate: true });
         setValue('longitude' as const, lng, { shouldValidate: true });
+    };
+
+    const handleAutocompleteChange = () => {
+        setValue('is_manual_location', true);
     };
 
     const [searchRegion, { isFetching: regionLoading }] = useLazyGeoSearchQuery();
@@ -141,7 +141,9 @@ const GeographyCard: FC<Props> = () => {
                         )}
                     />
                     <Field data-invalid={!!errors?.location_remarks}>
-                        <FieldLabel htmlFor="location_remarks">Географические примечания</FieldLabel>
+                        <FieldLabel htmlFor="location_remarks">
+                            Географические примечания
+                        </FieldLabel>
                         <Textarea
                             id="location_remarks"
                             className="h-28 resize-none"
@@ -182,51 +184,23 @@ const GeographyCard: FC<Props> = () => {
                             </Field>
                         )}
                     />
-                    <Controller
+                    <FormAutocomplete
                         name="region"
-                        control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="region">Регион (субъект)</FieldLabel>
-                                <Autocomplete
-                                    id="region"
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue('is_manual_location', true);
-                                    }}
-                                    onSearch={handleRegionSearch}
-                                    suggestions={regionSuggestions}
-                                    isLoading={regionLoading}
-                                    placeholder="Начните вводить…"
-                                    ariaInvalid={fieldState.invalid}
-                                />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
+                        label="Регион (субъект)"
+                        onSearch={handleRegionSearch}
+                        suggestions={regionSuggestions}
+                        isLoading={regionLoading}
+                        placeholder="Начните вводить…"
+                        onChangeExtra={handleAutocompleteChange}
                     />
-                    <Controller
+                    <FormAutocomplete
                         name="district"
-                        control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel htmlFor="district">Район</FieldLabel>
-                                <Autocomplete
-                                    id="district"
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue('is_manual_location', true);
-                                    }}
-                                    onSearch={handleDistrictSearch}
-                                    suggestions={districtSuggestions}
-                                    isLoading={districtLoading}
-                                    placeholder="Начните вводить…"
-                                    ariaInvalid={fieldState.invalid}
-                                />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
+                        label="Район"
+                        onSearch={handleDistrictSearch}
+                        suggestions={districtSuggestions}
+                        isLoading={districtLoading}
+                        placeholder="Начните вводить…"
+                        onChangeExtra={handleAutocompleteChange}
                     />
                     <Field data-invalid={!!errors?.locality}>
                         <FieldLabel htmlFor="locality">Локалитет (топоним)</FieldLabel>
@@ -337,7 +311,9 @@ const GeographyCard: FC<Props> = () => {
                                 <FieldError errors={[errors?.longitude]} />
                             </Field>
                             <Field data-invalid={!!errors?.coordinate_uncertainty}>
-                                <FieldLabel htmlFor="coordinate_uncertainty">Неопределённость, м</FieldLabel>
+                                <FieldLabel htmlFor="coordinate_uncertainty">
+                                    Неопределённость, м
+                                </FieldLabel>
                                 <Input
                                     id="coordinate_uncertainty"
                                     type="number"

@@ -3,11 +3,7 @@ import { useFormContext } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import {
-    Field,
-    FieldLabel,
-    FieldError,
-} from '@/components/ui/field';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { CalendarDays, Info } from 'lucide-react';
 import type { FormRecord } from '@/types/api.dto';
@@ -39,7 +35,9 @@ const CollectionEventCard: FC<Props> = () => {
                     <TooltipProvider>
                         <Field data-invalid={!!errors?.verbatim_date}>
                             <div className="flex items-center gap-1">
-                                <FieldLabel htmlFor="verbatim_date">Дата сбора (как в статье)</FieldLabel>
+                                <FieldLabel htmlFor="verbatim_date">
+                                    Дата сбора (как в статье)
+                                </FieldLabel>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Info className="h-3.5 w-3.5 cursor-help text-slate-400" />

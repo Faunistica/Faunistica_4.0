@@ -1,7 +1,5 @@
 import { type FC, useState } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
@@ -11,12 +9,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Field,
-    FieldLabel,
-    FieldError,
-} from '@/components/ui/field';
-import Autocomplete from '@/components/ui/autocomplete';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
+import { FormAutocomplete } from '@/components/form/FormAutocomplete';
+import { FormTextField } from '@/components/form/FormTextField';
 import { Bug } from 'lucide-react';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useLazySuggestTaxonQuery } from '@/api/utilAPI';
@@ -24,13 +19,7 @@ import { TYPE_STATUS_OPTIONS, TAXON_RANK_OPTIONS } from '@/types/forms';
 import type { FormRecord } from '@/types/api.dto';
 
 const TaxonomyCard: FC = () => {
-    const {
-        register,
-        control,
-        watch,
-        setValue,
-        formState: { errors },
-    } = useFormContext<FormRecord>();
+    const { control, watch, setValue } = useFormContext<FormRecord>();
 
     const familyValue = watch('family');
     const genusValue = watch('genus');
@@ -85,6 +74,10 @@ const TaxonomyCard: FC = () => {
         }
     }, 300);
 
+    const handleAutocompleteChange = () => {
+        setValue('tax_verbatim', false);
+    };
+
     return (
         <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-4">
@@ -99,71 +92,32 @@ const TaxonomyCard: FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <Controller
+                    <FormAutocomplete
                         name="family"
-                        control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel>Семейство (Familia)</FieldLabel>
-                                <Autocomplete
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue('tax_verbatim', false);
-                                    }}
-                                    onSearch={handleFamilySearch}
-                                    suggestions={familySuggestions}
-                                    isLoading={famLoading}
-                                    placeholder="Начните вводить…"
-                                    ariaInvalid={fieldState.invalid}
-                                />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
+                        label="Семейство (Familia)"
+                        onSearch={handleFamilySearch}
+                        suggestions={familySuggestions}
+                        isLoading={famLoading}
+                        placeholder="Начните вводить…"
+                        onChangeExtra={handleAutocompleteChange}
                     />
-                    <Controller
+                    <FormAutocomplete
                         name="genus"
-                        control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel>Род (Genus)</FieldLabel>
-                                <Autocomplete
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue('tax_verbatim', false);
-                                    }}
-                                    onSearch={handleGenusSearch}
-                                    suggestions={genusSuggestions}
-                                    isLoading={genLoading}
-                                    placeholder="Название рода"
-                                    ariaInvalid={fieldState.invalid}
-                                />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
+                        label="Род (Genus)"
+                        onSearch={handleGenusSearch}
+                        suggestions={genusSuggestions}
+                        isLoading={genLoading}
+                        placeholder="Название рода"
+                        onChangeExtra={handleAutocompleteChange}
                     />
-                    <Controller
+                    <FormAutocomplete
                         name="species"
-                        control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel>Видовое название (эпитет)</FieldLabel>
-                                <Autocomplete
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue('tax_verbatim', false);
-                                    }}
-                                    onSearch={handleSpeciesSearch}
-                                    suggestions={speciesSuggestions}
-                                    isLoading={spLoading}
-                                    placeholder="Только эпитет, без рода"
-                                    ariaInvalid={fieldState.invalid}
-                                />
-                                <FieldError errors={[fieldState.error]} />
-                            </Field>
-                        )}
+                        label="Видовое название (эпитет)"
+                        onSearch={handleSpeciesSearch}
+                        suggestions={speciesSuggestions}
+                        isLoading={spLoading}
+                        placeholder="Только эпитет, без рода"
+                        onChangeExtra={handleAutocompleteChange}
                     />
                 </div>
 
@@ -218,16 +172,11 @@ const TaxonomyCard: FC = () => {
                             </Field>
                         )}
                     />
-                    <Field data-invalid={!!errors?.accepted_name}>
-                        <FieldLabel htmlFor="accepted_name">Валидное название</FieldLabel>
-                        <Input
-                            id="accepted_name"
-                            placeholder="Если приведённое в статье устарело"
-                            aria-invalid={!!errors?.accepted_name}
-                            {...register('accepted_name')}
-                        />
-                        <FieldError errors={[errors?.accepted_name]} />
-                    </Field>
+                    <FormTextField
+                        name="accepted_name"
+                        label="Валидное название"
+                        placeholder="Если приведённое в статье устарело"
+                    />
                 </div>
 
                 <div className="flex flex-wrap gap-6 border-t border-slate-100 pt-4">
@@ -254,26 +203,18 @@ const TaxonomyCard: FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <Field data-invalid={!!errors?.taxon_remarks}>
-                        <FieldLabel htmlFor="taxon_remarks">Таксономические примечания</FieldLabel>
-                        <Textarea
-                            id="taxon_remarks"
-                            className="min-h-[72px] resize-none"
-                            placeholder="Примечания ко всему таксону…"
-                            {...register('taxon_remarks')}
-                        />
-                        <FieldError errors={[errors?.taxon_remarks]} />
-                    </Field>
-                    <Field data-invalid={!!errors?.identification_remarks}>
-                        <FieldLabel htmlFor="identification_remarks">Примечания к идентификации</FieldLabel>
-                        <Textarea
-                            id="identification_remarks"
-                            className="min-h-[72px] resize-none"
-                            placeholder="Примечания к определению…"
-                            {...register('identification_remarks')}
-                        />
-                        <FieldError errors={[errors?.identification_remarks]} />
-                    </Field>
+                    <FormTextField
+                        name="taxon_remarks"
+                        label="Таксономические примечания"
+                        placeholder="Примечания ко всему таксону…"
+                        inputType="textarea"
+                    />
+                    <FormTextField
+                        name="identification_remarks"
+                        label="Примечания к идентификации"
+                        placeholder="Примечания к определению…"
+                        inputType="textarea"
+                    />
                 </div>
             </CardContent>
         </Card>
