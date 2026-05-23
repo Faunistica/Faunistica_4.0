@@ -6,7 +6,9 @@ import { cn } from '@/lib/utils';
 interface AutocompleteProps {
     value: string;
     onChange: (value: string) => void;
+    onSelect?: (value: string) => void;
     onSearch: (text: string) => void;
+    onBlur?: () => void;
     suggestions: string[];
     placeholder?: string;
     isLoading?: boolean;
@@ -24,7 +26,9 @@ interface AutocompleteProps {
 const Autocomplete: FC<AutocompleteProps> = ({
     value,
     onChange,
+    onSelect,
     onSearch,
+    onBlur,
     suggestions,
     placeholder,
     isLoading = false,
@@ -69,7 +73,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
     };
 
     const handleSelect = (item: string) => {
-        onChange(item);
+        onSelect?.(item);
         setIsOpen(false);
         inputRef.current?.focus();
     };
@@ -97,10 +101,12 @@ const Autocomplete: FC<AutocompleteProps> = ({
                 <Input
                     ref={inputRef}
                     id={id}
-                    value={value ?? ''}
+                    value={value}
                     onChange={(e) => handleInputChange(e.target.value)}
+                    onBlur={onBlur}
                     onFocus={() => {
-                        if (suggestions.length > 0 && value && value.length >= minChars) setIsOpen(true);
+                        if (suggestions.length > 0 && value && value.length >= minChars)
+                            setIsOpen(true);
                     }}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}

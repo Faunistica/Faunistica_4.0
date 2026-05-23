@@ -5,10 +5,9 @@ import { useDebouncedCallback } from './useDebounce';
 describe('useDebouncedCallback', () => {
     it('returns a stable reference when callback changes but delay stays the same', () => {
         const fn = vi.fn();
-        const { result, rerender } = renderHook(
-            ({ cb }) => useDebouncedCallback(cb, 300),
-            { initialProps: { cb: fn } },
-        );
+        const { result, rerender } = renderHook(({ cb }) => useDebouncedCallback(cb, 300), {
+            initialProps: { cb: fn },
+        });
 
         const first = result.current;
 
@@ -19,10 +18,9 @@ describe('useDebouncedCallback', () => {
 
     it('calls the latest callback when invoked', async () => {
         const fn = vi.fn();
-        const { result } = renderHook(
-            ({ cb }) => useDebouncedCallback(cb, 10),
-            { initialProps: { cb: fn } },
-        );
+        const { result } = renderHook(({ cb }) => useDebouncedCallback(cb, 10), {
+            initialProps: { cb: fn },
+        });
 
         result.current('hello');
         await vi.waitFor(() => expect(fn).toHaveBeenCalledWith('hello'));
@@ -30,9 +28,7 @@ describe('useDebouncedCallback', () => {
 
     it('debounces multiple rapid calls', async () => {
         const fn = vi.fn();
-        const { result } = renderHook(
-            () => useDebouncedCallback(fn, 50),
-        );
+        const { result } = renderHook(() => useDebouncedCallback(fn, 50));
 
         result.current('a');
         result.current('b');

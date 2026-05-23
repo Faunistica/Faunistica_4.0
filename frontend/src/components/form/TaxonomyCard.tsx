@@ -25,15 +25,18 @@ const TaxonomyCard: FC = () => {
     const [searchSpecies] = useLazySuggestTaxonQuery();
 
     const familySearchFn = (text: string) =>
-        searchFamily({ field: 'family', text }).unwrap()
+        searchFamily({ field: 'family', text })
+            .unwrap()
             .then((r) => r.suggestions ?? []);
 
     const genusSearchFn = (text: string) =>
-        searchGenus({ field: 'genus', text }).unwrap()
+        searchGenus({ field: 'genus', text })
+            .unwrap()
             .then((r) => r.suggestions ?? []);
 
     const speciesSearchFn = (text: string) =>
-        searchSpecies({ field: 'species', text }).unwrap()
+        searchSpecies({ field: 'species', text })
+            .unwrap()
             .then((r) => r.suggestions ?? []);
 
     const handleAutocompleteChange = () => {

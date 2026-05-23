@@ -71,11 +71,13 @@ const GeographyCard: FC<Props> = () => {
     const [searchDistrict] = useLazyGeoSearchQuery();
 
     const regionSearchFn = (text: string) =>
-        searchRegion({ field: 'region', text }).unwrap()
+        searchRegion({ field: 'region', text })
+            .unwrap()
             .then((r) => r.suggestions ?? []);
 
     const districtSearchFn = (text: string) =>
-        searchDistrict({ field: 'district', text }).unwrap()
+        searchDistrict({ field: 'district', text })
+            .unwrap()
             .then((r) => r.suggestions ?? []);
 
     return (

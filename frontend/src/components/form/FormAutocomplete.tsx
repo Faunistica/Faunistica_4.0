@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
@@ -22,19 +22,25 @@ export function FormAutocomplete({
     debounceMs = 300,
     onChangeExtra,
 }: FormAutocompleteProps) {
-    const { control, watch } = useFormContext();
+    const { control } = useFormContext();
+    const [inputValue, setInputValue] = useState('');
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const searchVersionRef = useRef(0);
+    const lastCommittedRef = useRef('');
 
-    const fieldValue = watch(name);
+    const formValue = useWatch({ control, name });
 
     useEffect(() => {
-        if (!fieldValue) {
-            setSuggestions([]);
-            searchVersionRef.current = 0;
+        if (formValue !== lastCommittedRef.current) {
+            lastCommittedRef.current = formValue ?? '';
+            setInputValue(formValue ?? '');
+            if (!formValue) {
+                setSuggestions([]);
+                searchVersionRef.current = 0;
+            }
         }
-    }, [fieldValue]);
+    }, [formValue]);
 
     const debouncedSearch = useDebouncedCallback(async (text: string, version: number) => {
         setIsLoading(true);
@@ -52,10 +58,13 @@ export function FormAutocomplete({
         }
     }, debounceMs);
 
-    const handleSearch = useCallback((text: string) => {
-        const version = ++searchVersionRef.current;
-        debouncedSearch(text, version);
-    }, [debouncedSearch]);
+    const handleSearch = useCallback(
+        (text: string) => {
+            const version = ++searchVersionRef.current;
+            debouncedSearch(text, version);
+        },
+        [debouncedSearch],
+    );
 
     return (
         <Controller
@@ -65,14 +74,23 @@ export function FormAutocomplete({
                 <Field data-invalid={fieldState.invalid}>
                     <FieldLabel>{label}</FieldLabel>
                     <Autocomplete
-                        value={field.value ?? ''}
-                        onChange={(val) => {
+                        value={inputValue}
+                        onChange={setInputValue}
+                        onSelect={(val) => {
+                            setInputValue(val);
                             field.onChange(val);
-                            if (suggestions.includes(val)) {
-                                setSuggestions([]);
-                                searchVersionRef.current = 0;
-                            }
+                            lastCommittedRef.current = val;
+                            setSuggestions([]);
+                            searchVersionRef.current = 0;
                             onChangeExtra?.(val);
+                        }}
+                        onBlur={() => {
+                            if (inputValue !== lastCommittedRef.current) {
+                                field.onChange(inputValue);
+                                lastCommittedRef.current = inputValue;
+                                onChangeExtra?.(inputValue);
+                            }
+                            field.onBlur();
                         }}
                         onSearch={handleSearch}
                         suggestions={suggestions}
