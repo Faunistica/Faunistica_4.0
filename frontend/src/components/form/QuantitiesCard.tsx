@@ -1,7 +1,6 @@
 import { type FC } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { cn } from '@/lib/utils';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -12,6 +11,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Field,
+    FieldLabel,
+    FieldError,
+} from '@/components/ui/field';
 import { Hash } from 'lucide-react';
 import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/types/forms';
 import type { FormRecord } from '@/types/api.dto';
@@ -19,7 +23,11 @@ import type { FormRecord } from '@/types/api.dto';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const QuantitiesCard: FC = () => {
-    const { register, control } = useFormContext<FormRecord>();
+    const {
+        register,
+        control,
+        formState: { errors },
+    } = useFormContext<FormRecord>();
     const total = useWatch<FormRecord>({
         name: ['males', 'subadultMales', 'females', 'subadultFemales', 'adults', 'juveniles'],
         // v is actually always a number
@@ -64,19 +72,19 @@ const QuantitiesCard: FC = () => {
                 <TooltipProvider>
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
                         {quantityFields.map(({ key, label, color }) => (
-                            <div key={key} className="min-w-0 space-y-1.5">
+                            <Field key={key} data-invalid={!!errors?.[key]} className="gap-1.5">
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Label
+                                        <FieldLabel
                                             htmlFor={key}
                                             className={cn(
                                                 'text-[10px] font-semibold tracking-wider uppercase',
                                                 color,
-                                                'block cursor-help truncate',
+                                                'cursor-help truncate',
                                             )}
                                         >
                                             {label}
-                                        </Label>
+                                        </FieldLabel>
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="text-xs">
                                         {label}
@@ -88,27 +96,29 @@ const QuantitiesCard: FC = () => {
                                     min={0}
                                     placeholder="0"
                                     className="h-9 text-center focus-visible:ring-1 focus-visible:ring-slate-300"
+                                    aria-invalid={!!errors?.[key]}
                                     {...register(key, {
                                         valueAsNumber: true,
                                     })}
                                 />
-                            </div>
+                                <FieldError errors={[errors?.[key]]} />
+                            </Field>
                         ))}
                     </div>
                 </TooltipProvider>
 
                 <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-2">
-                    <div className="space-y-2">
-                        <Label>Единицы измерения</Label>
-                        <Controller
-                            name="quantity_type"
-                            control={control}
-                            render={({ field }) => (
+                    <Controller
+                        name="quantity_type"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Единицы измерения</FieldLabel>
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger aria-invalid={fieldState.invalid}>
                                         <SelectValue placeholder="Выберите единицы" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -119,26 +129,29 @@ const QuantitiesCard: FC = () => {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Общее количество (вычислено)</Label>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Field>
+                        <FieldLabel>Общее количество (вычислено)</FieldLabel>
                         <div className="flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700">
                             {total > 0 ? total : '—'}
                         </div>
-                    </div>
+                    </Field>
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="occurrence_remarks">Примечания к образцам</Label>
+                <Field data-invalid={!!errors?.occurrence_remarks}>
+                    <FieldLabel htmlFor="occurrence_remarks">Примечания к образцам</FieldLabel>
                     <Textarea
                         id="occurrence_remarks"
                         className="min-h-18 resize-none"
                         placeholder="Укажите специфические детали экземпляра…"
+                        aria-invalid={!!errors?.occurrence_remarks}
                         {...register('occurrence_remarks')}
                     />
-                </div>
+                    <FieldError errors={[errors?.occurrence_remarks]} />
+                </Field>
             </CardContent>
         </Card>
     );

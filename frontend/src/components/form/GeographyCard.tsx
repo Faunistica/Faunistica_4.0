@@ -1,4 +1,3 @@
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -10,6 +9,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Field,
+    FieldLabel,
+    FieldError,
+} from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
 import { Button } from '@/components/ui/button';
 
@@ -39,7 +43,6 @@ const GeographyCard: FC<Props> = () => {
         setValue,
         formState: { errors },
     } = useFormContext<FormRecord>();
-    const err = errors;
 
     const georefSource = watch('georef_source');
     const latValue = watch('latitude');
@@ -102,17 +105,18 @@ const GeographyCard: FC<Props> = () => {
 
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 gap-6 border-b border-slate-100 pb-6 lg:grid-cols-2">
-                    <div className="space-y-3">
-                        <Label className="font-medium">Происхождение координат</Label>
-                        <Controller
-                            name="georef_source"
-                            defaultValue={'none'}
-                            control={control}
-                            render={({ field }) => (
+                    <Controller
+                        name="georef_source"
+                        defaultValue={'none'}
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Происхождение координат</FieldLabel>
                                 <RadioGroup
                                     value={field.value ?? 'none'}
                                     onValueChange={field.onChange}
                                     className="space-y-2"
+                                    aria-invalid={fieldState.invalid}
                                 >
                                     {GEOREF_OPTIONS.map((opt) => (
                                         <div
@@ -123,36 +127,38 @@ const GeographyCard: FC<Props> = () => {
                                                 value={opt.value}
                                                 id={`geo_${opt.value}`}
                                             />
-                                            <Label
+                                            <FieldLabel
                                                 htmlFor={`geo_${opt.value}`}
                                                 className="cursor-pointer font-normal text-slate-700"
                                             >
                                                 {opt.label}
-                                            </Label>
+                                            </FieldLabel>
                                         </div>
                                     ))}
                                 </RadioGroup>
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="location_remarks">Географические примечания</Label>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Field data-invalid={!!errors?.location_remarks}>
+                        <FieldLabel htmlFor="location_remarks">Географические примечания</FieldLabel>
                         <Textarea
                             id="location_remarks"
                             className="h-28 resize-none"
                             placeholder="Примечания к местоположению…"
                             {...register('location_remarks')}
                         />
-                    </div>
+                        <FieldError errors={[errors?.location_remarks]} />
+                    </Field>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="country">Страна</Label>
-                        <Controller
-                            name="country"
-                            control={control}
-                            render={({ field }) => (
+                    <Controller
+                        name="country"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="country">Страна</FieldLabel>
                                 <Select
                                     onValueChange={field.onChange}
                                     value={field.value || undefined}
@@ -160,7 +166,7 @@ const GeographyCard: FC<Props> = () => {
                                     <SelectTrigger
                                         id="country"
                                         className="w-full"
-                                        aria-invalid={!!err?.country}
+                                        aria-invalid={fieldState.invalid}
                                     >
                                         <SelectValue placeholder="Выберите страну" />
                                     </SelectTrigger>
@@ -172,15 +178,16 @@ const GeographyCard: FC<Props> = () => {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="region">Регион (субъект)</Label>
-                        <Controller
-                            name="region"
-                            control={control}
-                            render={({ field }) => (
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Controller
+                        name="region"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="region">Регион (субъект)</FieldLabel>
                                 <Autocomplete
                                     id="region"
                                     value={field.value ?? ''}
@@ -192,17 +199,18 @@ const GeographyCard: FC<Props> = () => {
                                     suggestions={regionSuggestions}
                                     isLoading={regionLoading}
                                     placeholder="Начните вводить…"
-                                    ariaInvalid={!!err?.region}
+                                    ariaInvalid={fieldState.invalid}
                                 />
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="district">Район</Label>
-                        <Controller
-                            name="district"
-                            control={control}
-                            render={({ field }) => (
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Controller
+                        name="district"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel htmlFor="district">Район</FieldLabel>
                                 <Autocomplete
                                     id="district"
                                     value={field.value ?? ''}
@@ -214,20 +222,22 @@ const GeographyCard: FC<Props> = () => {
                                     suggestions={districtSuggestions}
                                     isLoading={districtLoading}
                                     placeholder="Начните вводить…"
-                                    ariaInvalid={!!err?.district}
+                                    ariaInvalid={fieldState.invalid}
                                 />
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="locality">Локалитет (топоним)</Label>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Field data-invalid={!!errors?.locality}>
+                        <FieldLabel htmlFor="locality">Локалитет (топоним)</FieldLabel>
                         <Input
                             id="locality"
                             placeholder="Исходное название места из статьи"
-                            aria-invalid={!!err?.locality}
+                            aria-invalid={!!errors?.locality}
                             {...register('locality')}
                         />
-                    </div>
+                        <FieldError errors={[errors?.locality]} />
+                    </Field>
                 </div>
 
                 {!isNone && (
@@ -235,8 +245,8 @@ const GeographyCard: FC<Props> = () => {
                         {isArticle && (
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label>Формат ввода координат</Label>
+                                    <Field>
+                                        <FieldLabel>Формат ввода координат</FieldLabel>
                                         <Select
                                             value={coordFormat || undefined}
                                             onValueChange={(val: 'DD' | 'DM' | 'DMS') =>
@@ -258,7 +268,7 @@ const GeographyCard: FC<Props> = () => {
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>
-                                    </div>
+                                    </Field>
                                 </div>
 
                                 {coordFormat === 'DM' && <DMInputGroup prefix="" />}
@@ -288,8 +298,8 @@ const GeographyCard: FC<Props> = () => {
                         )}
 
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            <div className="space-y-2">
-                                <Label htmlFor="latitude">Широта (DD)</Label>
+                            <Field data-invalid={!!errors?.latitude}>
+                                <FieldLabel htmlFor="latitude">Широта (DD)</FieldLabel>
                                 <Input
                                     id="latitude"
                                     type="number"
@@ -300,14 +310,15 @@ const GeographyCard: FC<Props> = () => {
                                             ? 'cursor-not-allowed bg-slate-100'
                                             : ''
                                     }
-                                    aria-invalid={!!err?.latitude}
+                                    aria-invalid={!!errors?.latitude}
                                     {...register('latitude' as const, {
                                         valueAsNumber: true,
                                     })}
                                 />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="longitude">Долгота (DD)</Label>
+                                <FieldError errors={[errors?.latitude]} />
+                            </Field>
+                            <Field data-invalid={!!errors?.longitude}>
+                                <FieldLabel htmlFor="longitude">Долгота (DD)</FieldLabel>
                                 <Input
                                     id="longitude"
                                     type="number"
@@ -318,14 +329,15 @@ const GeographyCard: FC<Props> = () => {
                                             ? 'cursor-not-allowed bg-slate-100'
                                             : ''
                                     }
-                                    aria-invalid={!!err?.longitude}
+                                    aria-invalid={!!errors?.longitude}
                                     {...register('longitude' as const, {
                                         valueAsNumber: true,
                                     })}
                                 />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="coordinate_uncertainty">Неопределённость, м</Label>
+                                <FieldError errors={[errors?.longitude]} />
+                            </Field>
+                            <Field data-invalid={!!errors?.coordinate_uncertainty}>
+                                <FieldLabel htmlFor="coordinate_uncertainty">Неопределённость, м</FieldLabel>
                                 <Input
                                     id="coordinate_uncertainty"
                                     type="number"
@@ -333,7 +345,8 @@ const GeographyCard: FC<Props> = () => {
                                         valueAsNumber: true,
                                     })}
                                 />
-                            </div>
+                                <FieldError errors={[errors?.coordinate_uncertainty]} />
+                            </Field>
                         </div>
                     </div>
                 )}

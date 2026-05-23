@@ -1,6 +1,5 @@
 import { type FC, useState } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,6 +11,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Field,
+    FieldLabel,
+    FieldError,
+} from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
 import { Bug } from 'lucide-react';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
@@ -95,12 +99,12 @@ const TaxonomyCard: FC = () => {
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                        <Label>Семейство (Familia)</Label>
-                        <Controller
-                            name="family"
-                            control={control}
-                            render={({ field }) => (
+                    <Controller
+                        name="family"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Семейство (Familia)</FieldLabel>
                                 <Autocomplete
                                     value={field.value ?? ''}
                                     onChange={(val) => {
@@ -111,17 +115,18 @@ const TaxonomyCard: FC = () => {
                                     suggestions={familySuggestions}
                                     isLoading={famLoading}
                                     placeholder="Начните вводить…"
-                                    ariaInvalid={!!errors?.family}
+                                    ariaInvalid={fieldState.invalid}
                                 />
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Род (Genus)</Label>
-                        <Controller
-                            name="genus"
-                            control={control}
-                            render={({ field }) => (
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Controller
+                        name="genus"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Род (Genus)</FieldLabel>
                                 <Autocomplete
                                     value={field.value ?? ''}
                                     onChange={(val) => {
@@ -132,17 +137,18 @@ const TaxonomyCard: FC = () => {
                                     suggestions={genusSuggestions}
                                     isLoading={genLoading}
                                     placeholder="Название рода"
-                                    ariaInvalid={!!errors?.genus}
+                                    ariaInvalid={fieldState.invalid}
                                 />
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Видовое название (эпитет)</Label>
-                        <Controller
-                            name="species"
-                            control={control}
-                            render={({ field }) => (
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Controller
+                        name="species"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Видовое название (эпитет)</FieldLabel>
                                 <Autocomplete
                                     value={field.value ?? ''}
                                     onChange={(val) => {
@@ -153,25 +159,26 @@ const TaxonomyCard: FC = () => {
                                     suggestions={speciesSuggestions}
                                     isLoading={spLoading}
                                     placeholder="Только эпитет, без рода"
-                                    ariaInvalid={!!errors?.species}
+                                    ariaInvalid={fieldState.invalid}
                                 />
-                            )}
-                        />
-                    </div>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-3">
-                    <div className="space-y-2">
-                        <Label>Ранг таксона</Label>
-                        <Controller
-                            name="taxon_rank"
-                            control={control}
-                            render={({ field }) => (
+                    <Controller
+                        name="taxon_rank"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Ранг таксона</FieldLabel>
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
-                                    <SelectTrigger aria-invalid={!!errors?.taxon_rank}>
+                                    <SelectTrigger aria-invalid={fieldState.invalid}>
                                         <SelectValue placeholder="Выберите ранг" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -182,20 +189,21 @@ const TaxonomyCard: FC = () => {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Типовой статус</Label>
-                        <Controller
-                            name="type_status"
-                            control={control}
-                            render={({ field }) => (
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Controller
+                        name="type_status"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Типовой статус</FieldLabel>
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger aria-invalid={fieldState.invalid}>
                                         <SelectValue placeholder="Выберите статус" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -206,60 +214,66 @@ const TaxonomyCard: FC = () => {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                            )}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="accepted_name">Валидное название</Label>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                    <Field data-invalid={!!errors?.accepted_name}>
+                        <FieldLabel htmlFor="accepted_name">Валидное название</FieldLabel>
                         <Input
                             id="accepted_name"
                             placeholder="Если приведённое в статье устарело"
+                            aria-invalid={!!errors?.accepted_name}
                             {...register('accepted_name')}
                         />
-                    </div>
+                        <FieldError errors={[errors?.accepted_name]} />
+                    </Field>
                 </div>
 
                 <div className="flex flex-wrap gap-6 border-t border-slate-100 pt-4">
                     <Controller
                         name="tax_verbatim"
                         control={control}
-                        render={({ field }) => (
-                            <div className="flex items-center space-x-2">
+                        render={({ field, fieldState }) => (
+                            <Field orientation="horizontal" data-invalid={fieldState.invalid}>
                                 <Checkbox
                                     id="tax_verbatim"
                                     checked={field.value ?? false}
                                     onCheckedChange={field.onChange}
                                 />
-                                <Label
+                                <FieldLabel
                                     htmlFor="tax_verbatim"
                                     className="cursor-pointer font-normal"
                                 >
                                     Латинское название введено вручную
-                                </Label>
-                            </div>
+                                </FieldLabel>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
                         )}
                     />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="taxon_remarks">Таксономические примечания</Label>
+                    <Field data-invalid={!!errors?.taxon_remarks}>
+                        <FieldLabel htmlFor="taxon_remarks">Таксономические примечания</FieldLabel>
                         <Textarea
                             id="taxon_remarks"
                             className="min-h-[72px] resize-none"
                             placeholder="Примечания ко всему таксону…"
                             {...register('taxon_remarks')}
                         />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="identification_remarks">Примечания к идентификации</Label>
+                        <FieldError errors={[errors?.taxon_remarks]} />
+                    </Field>
+                    <Field data-invalid={!!errors?.identification_remarks}>
+                        <FieldLabel htmlFor="identification_remarks">Примечания к идентификации</FieldLabel>
                         <Textarea
                             id="identification_remarks"
                             className="min-h-[72px] resize-none"
                             placeholder="Примечания к определению…"
                             {...register('identification_remarks')}
                         />
-                    </div>
+                        <FieldError errors={[errors?.identification_remarks]} />
+                    </Field>
                 </div>
             </CardContent>
         </Card>
