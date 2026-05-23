@@ -24,7 +24,6 @@ import { groupRecordsIntoDrafts } from '@/lib/recordUtils';
 
 import { useRecordPersistence } from '@/hooks/useRecordPersistence';
 import { useRecordValidation } from '@/hooks/useRecordValidation';
-import { useAutoSave } from '@/hooks/useAutoSave';
 
 import ArticleSourceCard from '@/components/form/ArticleSourceCard';
 import GeographyCard from '@/components/form/GeographyCard';
@@ -108,11 +107,7 @@ const FormFilling: FC = () => {
         user_id: user_id!,
     });
 
-    // ── Хук: автосохранение ──
-    const { isAutoSaving, lastSavedTime } = useAutoSave({
-        methods,
-        handleSave,
-    });
+    // Хук автосохранения теперь внутри FormFooter, чтобы не ререндерить всю форму
 
     // ── Загрузка данных (только при первоначальной загрузке) ──
     useEffect(() => {
@@ -129,15 +124,16 @@ const FormFilling: FC = () => {
             await deleteServerRecords(index);
 
             const currentValues = getValues();
-            const newSamples = (currentValues.samples || []).filter((_, i) => i !== index);
+            const newSamples = [...(currentValues.samples || [])];
+            newSamples.splice(index, 1);
 
             reset({
                 ...currentValues,
-                samples: newSamples,
-            }); // Убрали keepDirty, чтобы избежать багов RHF с коррупцией стейта и дублированием записей
+                samples: newSamples.length > 0 ? newSamples : [{}],
+            });
 
             setActiveRecordIndex((prev) => {
-                const newLength = newSamples.length;
+                const newLength = fields.length - 1;
                 if (newLength === 0) return 0;
                 if (prev === index) return 0;
                 if (index < prev) return prev - 1;
@@ -161,7 +157,7 @@ const FormFilling: FC = () => {
     const handleFinalSubmit = useCallback(async () => {
         // Сначала сохраняем всё, чтобы получить свежие статусы от бекенда
         await handleManualSave();
-        
+
         const samples = getValues('samples');
         const firstErrorIndex = samples.findIndex(
             (s) => s.type === 'rec_fail' || s.type === 'check_fail' || !s.type
@@ -244,8 +240,7 @@ const FormFilling: FC = () => {
                     </div>
 
                     <Footer
-                        isAutoSaving={isAutoSaving}
-                        lastSavedTime={lastSavedTime}
+                        handleSave={handleSave}
                         onSaveAll={handleManualSave}
                         onValidateAll={handleValidateAll}
                         onSubmit={handleFinalSubmit}

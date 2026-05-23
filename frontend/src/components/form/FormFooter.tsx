@@ -10,11 +10,12 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
-import { CheckCheck, ShieldCheck } from 'lucide-react';
+import { CheckCheck } from 'lucide-react';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import type { FormSchema } from '@/types/forms';
 
 interface FooterProps {
-    isAutoSaving: boolean;
-    lastSavedTime: Date | null;
+    handleSave: (data: FormSchema, isManual: boolean, targetIndex?: number) => Promise<void>;
     onSaveAll: () => void;
     onValidateAll: () => void;
     onSubmit: () => Promise<boolean>;
@@ -24,16 +25,21 @@ interface FooterProps {
 const ENABLE_MOTION_ON_DESKTOP = true;
 
 const Footer: FC<FooterProps> = ({
-    isAutoSaving,
-    lastSavedTime,
+    handleSave,
     onSaveAll,
     onValidateAll,
     onSubmit,
     isValidating,
 }) => {
+    const methods = useFormContext<FormSchema>();
     const {
         formState: { isValid },
-    } = useFormContext();
+    } = methods;
+
+    const { isAutoSaving, lastSavedTime } = useAutoSave({
+        methods,
+        handleSave,
+    });
     const [isHidden, setIsHidden] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
 

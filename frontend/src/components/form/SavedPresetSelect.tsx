@@ -1,5 +1,5 @@
 import { type FC, useMemo, useState } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import {
     Select,
     SelectContent,
@@ -47,12 +47,16 @@ const BUTTON_TEXT: Record<PresetType, string> = {
  * After selection, the component hides again.
  */
 const SavedPresetSelect: FC<Props> = ({ type, currentIndex }) => {
-    const { setValue } = useFormContext<FormSchema>();
-    const samples = useWatch<FormSchema, 'samples'>({ name: 'samples' });
+    const { setValue, getValues } = useFormContext<FormSchema>();
     const [isOpen, setIsOpen] = useState(false);
+    const [presets, setPresets] = useState<Preset[]>([]);
 
-    const presets = useMemo<Preset[]>(() => {
-        if (!samples || samples.length <= 1) return [];
+    const loadPresets = () => {
+        const samples = getValues('samples');
+        if (!samples || samples.length <= 1) {
+            setPresets([]);
+            return;
+        }
 
         const fields = FIELD_KEYS[type];
         const buildLabel = LABEL_BUILDERS[type];
@@ -82,8 +86,13 @@ const SavedPresetSelect: FC<Props> = ({ type, currentIndex }) => {
             result.push({ label, sourceIndex: idx, data });
         });
 
-        return result;
-    }, [samples, currentIndex, type]);
+        setPresets(result);
+    };
+
+    const handleOpen = () => {
+        loadPresets();
+        setIsOpen(true);
+    };
 
     if (presets.length === 0) return null;
 
@@ -150,7 +159,7 @@ const SavedPresetSelect: FC<Props> = ({ type, currentIndex }) => {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setIsOpen(true)}
+                onClick={handleOpen}
                 className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
             >
                 <History className="h-4 w-4" />

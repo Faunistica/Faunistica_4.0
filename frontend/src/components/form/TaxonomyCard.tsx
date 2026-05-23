@@ -1,5 +1,5 @@
 import { type FC, useState } from 'react';
-import { useFormContext, Controller, useFormState } from 'react-hook-form';
+import { useFormContext, Controller } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,52 +23,99 @@ interface Props {
     index: number;
 }
 
-const TaxonomyCard: FC<Props> = ({ index }) => {
-    const {
-        register,
-        control,
-        setValue,
-        getValues,
-    } = useFormContext<FormSchema>();
-    const prefix = `samples.${index}` as const;
-    const { errors } = useFormState({ name: prefix });
-    const err = errors.samples?.[index];
-
-    // ── Taxonomy suggestion queries ──
+const FamilyAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
+    const { control, setValue } = useFormContext<FormSchema>();
     const [searchFamily] = useLazySuggestTaxonQuery();
-    const [searchGenus] = useLazySuggestTaxonQuery();
-    const [searchSpecies] = useLazySuggestTaxonQuery();
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const [familySuggestions, setFamilySuggestions] = useState<string[]>([]);
-    const [genusSuggestions, setGenusSuggestions] = useState<string[]>([]);
-    const [speciesSuggestions, setSpeciesSuggestions] = useState<string[]>([]);
-    const [famLoading, setFamLoading] = useState(false);
-    const [genLoading, setGenLoading] = useState(false);
-    const [spLoading, setSpLoading] = useState(false);
-
-    const handleFamilySearch = useDebouncedCallback(async (text: string) => {
-        setFamLoading(true);
+    const handleSearch = useDebouncedCallback(async (text: string) => {
+        setIsLoading(true);
         try {
             const r = await searchFamily({ field: 'family', text }).unwrap();
-            setFamilySuggestions(r.suggestions ?? []);
+            setSuggestions(r.suggestions ?? []);
         } finally {
-            setFamLoading(false);
+            setIsLoading(false);
         }
     }, 300);
 
-    const handleGenusSearch = useDebouncedCallback(async (text: string) => {
-        setGenLoading(true);
+    return (
+        <Controller
+            name={`${prefix}.family`}
+            control={control}
+            rules={{ 
+                required: 'Обязательное поле',
+                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
+            }}
+            render={({ field, fieldState }) => (
+                <Autocomplete
+                    value={field.value ?? ''}
+                    onChange={(val) => {
+                        field.onChange(val);
+                        setValue(`${prefix}.tax_verbatim`, false);
+                    }}
+                    onSearch={handleSearch}
+                    suggestions={suggestions}
+                    isLoading={isLoading}
+                    placeholder="Начните вводить…"
+                    ariaInvalid={!!fieldState.error}
+                />
+            )}
+        />
+    );
+};
+
+const GenusAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
+    const { control, setValue, getValues } = useFormContext<FormSchema>();
+    const [searchGenus] = useLazySuggestTaxonQuery();
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSearch = useDebouncedCallback(async (text: string) => {
+        setIsLoading(true);
         try {
             const familyValue = getValues(`${prefix}.family` as any);
             const r = await searchGenus({ field: 'genus', text, family: familyValue }).unwrap();
-            setGenusSuggestions(r.suggestions ?? []);
+            setSuggestions(r.suggestions ?? []);
         } finally {
-            setGenLoading(false);
+            setIsLoading(false);
         }
     }, 300);
 
-    const handleSpeciesSearch = useDebouncedCallback(async (text: string) => {
-        setSpLoading(true);
+    return (
+        <Controller
+            name={`${prefix}.genus`}
+            control={control}
+            rules={{ 
+                required: 'Обязательное поле',
+                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
+            }}
+            render={({ field, fieldState }) => (
+                <Autocomplete
+                    value={field.value ?? ''}
+                    onChange={(val) => {
+                        field.onChange(val);
+                        setValue(`${prefix}.tax_verbatim`, false);
+                    }}
+                    onSearch={handleSearch}
+                    suggestions={suggestions}
+                    isLoading={isLoading}
+                    placeholder="Название рода"
+                    ariaInvalid={!!fieldState.error}
+                />
+            )}
+        />
+    );
+};
+
+const SpeciesAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
+    const { control, setValue, getValues } = useFormContext<FormSchema>();
+    const [searchSpecies] = useLazySuggestTaxonQuery();
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSearch = useDebouncedCallback(async (text: string) => {
+        setIsLoading(true);
         try {
             const familyValue = getValues(`${prefix}.family` as any);
             const genusValue = getValues(`${prefix}.genus` as any);
@@ -78,11 +125,46 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                 family: familyValue,
                 genus: genusValue,
             }).unwrap();
-            setSpeciesSuggestions(r.suggestions ?? []);
+            setSuggestions(r.suggestions ?? []);
         } finally {
-            setSpLoading(false);
+            setIsLoading(false);
         }
     }, 300);
+
+    return (
+        <Controller
+            name={`${prefix}.species`}
+            control={control}
+            rules={{ 
+                required: 'Обязательное поле',
+                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
+            }}
+            render={({ field, fieldState }) => (
+                <Autocomplete
+                    value={field.value ?? ''}
+                    onChange={(val) => {
+                        field.onChange(val);
+                        setValue(`${prefix}.tax_verbatim`, false);
+                    }}
+                    onSearch={handleSearch}
+                    suggestions={suggestions}
+                    isLoading={isLoading}
+                    placeholder="Только эпитет, без рода"
+                    ariaInvalid={!!fieldState.error}
+                />
+            )}
+        />
+    );
+};
+
+const TaxonomyCard: FC<Props> = ({ index }) => {
+    const {
+        register,
+        control,
+        setValue,
+        getValues,
+    } = useFormContext<FormSchema>();
+    const prefix = `samples.${index}` as const;
 
     return (
         <Card className="border-slate-200 shadow-sm">
@@ -97,82 +179,18 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-                {/* ── Row 1: Family / Genus / Species ── */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                         <Label>Семейство (Familia)</Label>
-                        <Controller
-                            name={`${prefix}.family`}
-                            control={control}
-                            rules={{ 
-                                required: 'Обязательное поле',
-                                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
-                            }}
-                            render={({ field }) => (
-                                <Autocomplete
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue(`${prefix}.tax_verbatim`, false);
-                                    }}
-                                    onSearch={handleFamilySearch}
-                                    suggestions={familySuggestions}
-                                    isLoading={famLoading}
-                                    placeholder="Начните вводить…"
-                                    ariaInvalid={!!err?.family}
-                                />
-                            )}
-                        />
+                        <FamilyAutocomplete prefix={prefix} />
                     </div>
                     <div className="space-y-2">
                         <Label>Род (Genus)</Label>
-                        <Controller
-                            name={`${prefix}.genus`}
-                            control={control}
-                            rules={{ 
-                                required: 'Обязательное поле',
-                                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
-                            }}
-                            render={({ field }) => (
-                                <Autocomplete
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue(`${prefix}.tax_verbatim`, false);
-                                    }}
-                                    onSearch={handleGenusSearch}
-                                    suggestions={genusSuggestions}
-                                    isLoading={genLoading}
-                                    placeholder="Название рода"
-                                    ariaInvalid={!!err?.genus}
-                                />
-                            )}
-                        />
+                        <GenusAutocomplete prefix={prefix} />
                     </div>
                     <div className="space-y-2">
                         <Label>Видовое название (эпитет)</Label>
-                        <Controller
-                            name={`${prefix}.species`}
-                            control={control}
-                            rules={{ 
-                                required: 'Обязательное поле',
-                                pattern: { value: /^[^А-Яа-яЁё]+$/, message: 'Кириллица запрещена' }
-                            }}
-                            render={({ field }) => (
-                                <Autocomplete
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue(`${prefix}.tax_verbatim`, false);
-                                    }}
-                                    onSearch={handleSpeciesSearch}
-                                    suggestions={speciesSuggestions}
-                                    isLoading={spLoading}
-                                    placeholder="Только эпитет, без рода"
-                                    ariaInvalid={!!err?.species}
-                                />
-                            )}
-                        />
+                        <SpeciesAutocomplete prefix={prefix} />
                     </div>
                 </div>
 
@@ -183,12 +201,12 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                         <Controller
                             name={`${prefix}.taxon_rank`}
                             control={control}
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
-                                    <SelectTrigger aria-invalid={!!err?.taxon_rank}>
+                                    <SelectTrigger aria-invalid={!!fieldState.error}>
                                         <SelectValue placeholder="Выберите ранг" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -227,11 +245,18 @@ const TaxonomyCard: FC<Props> = ({ index }) => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor={`${prefix}.accepted_name`}>Валидное название</Label>
-                        <Input
-                            id={`${prefix}.accepted_name`}
-                            placeholder="Если приведённое в статье устарело"
-                            {...register(`${prefix}.accepted_name`)}
+                        <Controller
+                            name={`${prefix}.accepted_name`}
+                            control={control}
+                            render={({ field, fieldState }) => (
+                                <Input
+                                    id={`${prefix}.accepted_name`}
+                                    placeholder="Если приведённое в статье устарело"
+                                    aria-invalid={!!fieldState.error}
+                                    {...field}
+                                    value={field.value ?? ''}
+                                />
+                            )}
                         />
                     </div>
                 </div>

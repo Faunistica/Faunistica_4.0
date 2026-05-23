@@ -17,7 +17,7 @@ import SavedPresetSelect from './SavedPresetSelect';
 
 import 'leaflet/dist/leaflet.css';
 import { type FC, useState, useEffect } from 'react';
-import { useFormContext, Controller, useFormState, useWatch } from 'react-hook-form';
+import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { Map as MapIcon, MapPin } from 'lucide-react';
 
 import { GeographyMap } from '@/components/map/GeographyMap';
@@ -45,6 +45,77 @@ const MapViewer: FC<{ prefix: string; handleMapSelect: (lat: number, lng: number
     );
 };
 
+const RegionAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
+    const { control, setValue } = useFormContext<FormSchema>();
+    const [searchRegion, { isFetching }] = useLazyGeoSearchQuery();
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+
+    const handleSearch = useDebouncedCallback(async (text: string) => {
+        const result = await searchRegion({ field: 'region', text }).unwrap();
+        setSuggestions(result.suggestions ?? []);
+    }, 300);
+
+    return (
+        <Controller
+            name={`${prefix}.region`}
+            control={control}
+            render={({ field, fieldState }) => (
+                <Autocomplete
+                    id={`${prefix}.region`}
+                    value={field.value ?? ''}
+                    onChange={(val) => {
+                        field.onChange(val);
+                        setValue(`${prefix}.is_manual_location`, true);
+                    }}
+                    onSearch={handleSearch}
+                    suggestions={suggestions}
+                    isLoading={isFetching}
+                    placeholder="Начните вводить…"
+                    ariaInvalid={!!fieldState.error}
+                />
+            )}
+        />
+    );
+};
+
+const DistrictAutocomplete: FC<{ prefix: string }> = ({ prefix }) => {
+    const { control, setValue, getValues } = useFormContext<FormSchema>();
+    const [searchDistrict, { isFetching }] = useLazyGeoSearchQuery();
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+
+    const handleSearch = useDebouncedCallback(async (text: string) => {
+        const regionValue = getValues(`${prefix}.region`);
+        const result = await searchDistrict({
+            field: 'district',
+            text,
+            region: regionValue ?? undefined,
+        }).unwrap();
+        setSuggestions(result.suggestions ?? []);
+    }, 300);
+
+    return (
+        <Controller
+            name={`${prefix}.district`}
+            control={control}
+            render={({ field, fieldState }) => (
+                <Autocomplete
+                    id={`${prefix}.district`}
+                    value={field.value ?? ''}
+                    onChange={(val) => {
+                        field.onChange(val);
+                        setValue(`${prefix}.is_manual_location`, true);
+                    }}
+                    onSearch={handleSearch}
+                    suggestions={suggestions}
+                    isLoading={isFetching}
+                    placeholder="Начните вводить…"
+                    ariaInvalid={!!fieldState.error}
+                />
+            )}
+        />
+    );
+};
+
 const GeographyCard: FC<Props> = ({ index }) => {
     const {
         register,
@@ -53,8 +124,6 @@ const GeographyCard: FC<Props> = ({ index }) => {
         getValues,
     } = useFormContext<FormSchema>();
     const prefix = `samples.${index}` as const;
-    const { errors } = useFormState({ name: prefix });
-    const err = errors.samples?.[index];
 
     const georefSource = useWatch({ name: `${prefix}.georef_source` as any });
 
@@ -81,28 +150,6 @@ const GeographyCard: FC<Props> = ({ index }) => {
         setValue(`${prefix}.latitude` as any, lat, { shouldValidate: true });
         setValue(`${prefix}.longitude` as any, lng, { shouldValidate: true });
     };
-
-    // ── Geo search queries ──
-    const [searchRegion, { isFetching: regionLoading }] = useLazyGeoSearchQuery();
-    const [searchDistrict, { isFetching: districtLoading }] = useLazyGeoSearchQuery();
-
-    const [regionSuggestions, setRegionSuggestions] = useState<string[]>([]);
-    const [districtSuggestions, setDistrictSuggestions] = useState<string[]>([]);
-
-    const handleRegionSearch = useDebouncedCallback(async (text: string) => {
-        const result = await searchRegion({ field: 'region', text }).unwrap();
-        setRegionSuggestions(result.suggestions ?? []);
-    }, 300);
-
-    const handleDistrictSearch = useDebouncedCallback(async (text: string) => {
-        const regionValue = getValues(`${prefix}.region`);
-        const result = await searchDistrict({
-            field: 'district',
-            text,
-            region: regionValue ?? undefined,
-        }).unwrap();
-        setDistrictSuggestions(result.suggestions ?? []);
-    }, 300);
 
     return (
         <Card className="border-slate-200 shadow-sm">
@@ -177,7 +224,7 @@ const GeographyCard: FC<Props> = ({ index }) => {
                         <Controller
                             name={`${prefix}.country`}
                             control={control}
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                                 <Select
                                     onValueChange={field.onChange}
                                     value={field.value || undefined}
@@ -185,7 +232,7 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                     <SelectTrigger
                                         id={`${prefix}.country`}
                                         className="w-full"
-                                        aria-invalid={!!err?.country}
+                                        aria-invalid={!!fieldState.error}
                                     >
                                         <SelectValue placeholder="Выберите страну" />
                                     </SelectTrigger>
@@ -202,47 +249,11 @@ const GeographyCard: FC<Props> = ({ index }) => {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor={`${prefix}.region`}>Регион (субъект)</Label>
-                        <Controller
-                            name={`${prefix}.region`}
-                            control={control}
-                            render={({ field }) => (
-                                <Autocomplete
-                                    id={`${prefix}.region`}
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue(`${prefix}.is_manual_location`, true);
-                                    }}
-                                    onSearch={handleRegionSearch}
-                                    suggestions={regionSuggestions}
-                                    isLoading={regionLoading}
-                                    placeholder="Начните вводить…"
-                                    ariaInvalid={!!err?.region}
-                                />
-                            )}
-                        />
+                        <RegionAutocomplete prefix={prefix} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor={`${prefix}.district`}>Район</Label>
-                        <Controller
-                            name={`${prefix}.district`}
-                            control={control}
-                            render={({ field }) => (
-                                <Autocomplete
-                                    id={`${prefix}.district`}
-                                    value={field.value ?? ''}
-                                    onChange={(val) => {
-                                        field.onChange(val);
-                                        setValue(`${prefix}.is_manual_location`, true);
-                                    }}
-                                    onSearch={handleDistrictSearch}
-                                    suggestions={districtSuggestions}
-                                    isLoading={districtLoading}
-                                    placeholder="Начните вводить…"
-                                    ariaInvalid={!!err?.district}
-                                />
-                            )}
-                        />
+                        <DistrictAutocomplete prefix={prefix} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor={`${prefix}.locality`}>Локалитет (топоним)</Label>
@@ -285,16 +296,7 @@ const GeographyCard: FC<Props> = ({ index }) => {
                                         </Select>
                                     </div>
 
-                                    {/* <div className="space-y-2">
-                                        <Label htmlFor={`${prefix}.verbatimcoordinates`}>Исходная строка (verbatim)</Label>
-                                        <Input
-                                            id={`${prefix}.verbatimcoordinates`}
-                                            placeholder="Соберется автоматически..."
-                                            readOnly={coordFormat !== 'DD'} // Разрешаем ручной ввод только в DD
-                                            className={coordFormat !== 'DD' ? "bg-slate-100 cursor-not-allowed" : ""}
-                                            {...register(`${prefix}.verbatimcoordinates`)}
-                                        />
-                                    </div> */}
+
                                 </div>
 
                                 {/* Динамические поля ввода */}
@@ -328,59 +330,83 @@ const GeographyCard: FC<Props> = ({ index }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor={`${prefix}.latitude`}>Широта (DD)</Label>
-                                <Input
-                                    id={`${prefix}.latitude`}
-                                    type="number"
-                                    step="any"
-                                    readOnly={isArticle && coordFormat !== 'DD'} // Блокируем если введены DM/DMS
-                                    className={
-                                        isArticle && coordFormat !== 'DD'
-                                            ? 'bg-slate-100 cursor-not-allowed'
-                                            : ''
-                                    }
-                                    aria-invalid={!!err?.latitude}
-                                    {...register(`${prefix}.latitude` as any, {
+                                <Controller
+                                    name={`${prefix}.latitude` as any}
+                                    control={control}
+                                    rules={{
                                         required: 'Обязательное поле',
-                                        valueAsNumber: true,
                                         min: { value: LAT_MIN, message: `Минимум ${LAT_MIN}` },
                                         max: { value: LAT_MAX, message: `Максимум ${LAT_MAX}` }
-                                    })}
+                                    }}
+                                    render={({ field, fieldState }) => (
+                                        <Input
+                                            id={`${prefix}.latitude`}
+                                            type="number"
+                                            step="any"
+                                            readOnly={isArticle && coordFormat !== 'DD'}
+                                            className={
+                                                isArticle && coordFormat !== 'DD'
+                                                    ? 'bg-slate-100 cursor-not-allowed'
+                                                    : ''
+                                            }
+                                            aria-invalid={!!fieldState.error}
+                                            {...field}
+                                            value={field.value ?? ''}
+                                            onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                        />
+                                    )}
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor={`${prefix}.longitude`}>Долгота (DD)</Label>
-                                <Input
-                                    id={`${prefix}.longitude`}
-                                    type="number"
-                                    step="any"
-                                    readOnly={isArticle && coordFormat !== 'DD'}
-                                    className={
-                                        isArticle && coordFormat !== 'DD'
-                                            ? 'bg-slate-100 cursor-not-allowed'
-                                            : ''
-                                    }
-                                    aria-invalid={!!err?.longitude}
-                                    {...register(`${prefix}.longitude` as any, {
+                                <Controller
+                                    name={`${prefix}.longitude` as any}
+                                    control={control}
+                                    rules={{
                                         required: 'Обязательное поле',
-                                        valueAsNumber: true,
                                         min: { value: LNG_MIN, message: `Минимум ${LNG_MIN}` },
                                         max: { value: LNG_MAX, message: `Максимум ${LNG_MAX}` }
-                                    })}
+                                    }}
+                                    render={({ field, fieldState }) => (
+                                        <Input
+                                            id={`${prefix}.longitude`}
+                                            type="number"
+                                            step="any"
+                                            readOnly={isArticle && coordFormat !== 'DD'}
+                                            className={
+                                                isArticle && coordFormat !== 'DD'
+                                                    ? 'bg-slate-100 cursor-not-allowed'
+                                                    : ''
+                                            }
+                                            aria-invalid={!!fieldState.error}
+                                            {...field}
+                                            value={field.value ?? ''}
+                                            onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                        />
+                                    )}
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor={`${prefix}.coordinate_uncertainty`}>
                                     Неопределённость, м
                                 </Label>
-                                <Input
-                                    id={`${prefix}.coordinate_uncertainty`}
-                                    type="number"
-                                    aria-invalid={!!err?.coordinate_uncertainty}
-                                    {...register(`${prefix}.coordinate_uncertainty` as any, {
-                                        valueAsNumber: true,
+                                <Controller
+                                    name={`${prefix}.coordinate_uncertainty` as any}
+                                    control={control}
+                                    rules={{
                                         min: { value: UNCERTAINTY_MIN, message: `Минимум ${UNCERTAINTY_MIN}` },
                                         max: { value: UNCERTAINTY_MAX, message: `Максимум ${UNCERTAINTY_MAX}` }
-                                    })}
+                                    }}
+                                    render={({ field, fieldState }) => (
+                                        <Input
+                                            id={`${prefix}.coordinate_uncertainty`}
+                                            type="number"
+                                            aria-invalid={!!fieldState.error}
+                                            {...field}
+                                            value={field.value ?? ''}
+                                            onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
+                                        />
+                                    )}
                                 />
                             </div>
                         </div>

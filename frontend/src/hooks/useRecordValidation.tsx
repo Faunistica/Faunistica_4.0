@@ -32,7 +32,7 @@ export function useRecordValidation({
     user_id,
 }: UseRecordValidationOptions) {
     const { trigger, getValues, reset } = methods;
-    const { remove } = fieldArray;
+    const { remove, prepend } = fieldArray;
 
     const [isValidating, setIsValidating] = useState(false);
     const [validationErrors, setValidationErrors] = useState<Map<number, string[]>>(new Map());
@@ -42,7 +42,6 @@ export function useRecordValidation({
         try {
             const created = await createServerRecord({ publ_id }).unwrap();
             const currentValues = getValues();
-
             // Полная перезапись — исключаем баг RHF с «залипанием» данных
             reset({
                 ...currentValues,
@@ -54,7 +53,7 @@ export function useRecordValidation({
         } catch {
             toast.error('Не удалось создать запись на сервере');
         }
-    }, [getValues, reset, createServerRecord, publ_id, setActiveRecordIndex]);
+    }, [getValues, prepend, createServerRecord, publ_id, setActiveRecordIndex]);
 
     // ── Массовая проверка всех записей ──
     const handleValidateAll = useCallback(async () => {

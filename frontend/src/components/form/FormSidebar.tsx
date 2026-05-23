@@ -57,9 +57,31 @@ const SidebarRecordItem = memo(
         validationErrors: Map<number, string[]>;
     }) => {
         const { control } = useFormContext<FormSchema>();
-        const sample = useWatch({ control, name: `samples.${index}` as any });
+        const [
+            species,
+            genus,
+            family,
+            locality,
+            region,
+            type,
+            sampleErrors
+        ] = useWatch({
+            control,
+            name: [
+                `samples.${index}.species`,
+                `samples.${index}.genus`,
+                `samples.${index}.family`,
+                `samples.${index}.locality`,
+                `samples.${index}.region`,
+                `samples.${index}.type`,
+                `samples.${index}.errors`
+            ] as any
+        });
 
-        const recordName = sample?.species || sample?.genus || sample?.family || 'Новая запись';
+        const recordName = species || genus || family || 'Новая запись';
+
+        // Mock sample object for RecordStatusIndicator which expects a partial sample
+        const sampleMock = { type, errors: sampleErrors };
 
         return (
             <SidebarMenuItem>
@@ -85,7 +107,7 @@ const SidebarRecordItem = memo(
                         <div className="flex items-center gap-2 min-w-0">
                             <RecordStatusIndicator
                                 index={index}
-                                sample={sample}
+                                sample={sampleMock}
                                 validationErrors={validationErrors}
                             />
                             <span
@@ -150,7 +172,7 @@ const SidebarRecordItem = memo(
                             <>
                                 <MapPin className="h-3 w-3 shrink-0" />
                                 <span className="truncate">
-                                    {sample?.locality || sample?.region || 'Нет данных о месте'}
+                                    {locality || region || 'Нет данных о месте'}
                                 </span>
                             </>
                         )}

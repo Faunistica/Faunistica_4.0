@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { useFormContext, useFormState } from 'react-hook-form';
+import { useFormContext, Controller } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,10 +15,8 @@ interface Props {
 }
 
 const CollectionEventCard: FC<Props> = ({ index }) => {
-    const { register } = useFormContext<FormSchema>();
+    const { register, control } = useFormContext<FormSchema>();
     const prefix = `samples.${index}` as const;
-    const { errors } = useFormState({ name: prefix });
-    const err = errors.samples?.[index];
 
     return (
         <Card className="border-slate-200 shadow-sm">
@@ -54,22 +52,38 @@ const CollectionEventCard: FC<Props> = ({ index }) => {
                                     </TooltipContent>
                                 </Tooltip>
                             </div>
-                            <Input
-                                id={`${prefix}.verbatim_date`}
-                                placeholder="19.08-02.09.2018"
-                                aria-invalid={!!err?.verbatim_date}
-                                {...register(`${prefix}.verbatim_date`, { required: 'Обязательное поле' })}
+                            <Controller
+                                name={`${prefix}.verbatim_date`}
+                                control={control}
+                                rules={{ required: 'Обязательное поле' }}
+                                render={({ field, fieldState }) => (
+                                    <Input
+                                        id={`${prefix}.verbatim_date`}
+                                        placeholder="19.08-02.09.2018"
+                                        aria-invalid={!!fieldState.error}
+                                        {...field}
+                                        value={field.value ?? ''}
+                                    />
+                                )}
                             />
                         </div>
                     </TooltipProvider>
 
                     <div className="space-y-2">
                         <Label htmlFor={`${prefix}.recorded_by`}>Коллектор</Label>
-                        <Input
-                            id={`${prefix}.recorded_by`}
-                            placeholder="Фамилия И.О."
-                            aria-invalid={!!err?.recorded_by}
-                            {...register(`${prefix}.recorded_by`, { required: 'Обязательное поле' })}
+                        <Controller
+                            name={`${prefix}.recorded_by`}
+                            control={control}
+                            rules={{ required: 'Обязательное поле' }}
+                            render={({ field, fieldState }) => (
+                                <Input
+                                    id={`${prefix}.recorded_by`}
+                                    placeholder="Фамилия И.О."
+                                    aria-invalid={!!fieldState.error}
+                                    {...field}
+                                    value={field.value ?? ''}
+                                />
+                            )}
                         />
                     </div>
 
