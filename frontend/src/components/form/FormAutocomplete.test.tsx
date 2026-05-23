@@ -5,6 +5,8 @@ import { FormAutocomplete } from './FormAutocomplete';
 import type { FormRecord } from '@/types/api.dto';
 import type { ReactNode } from 'react';
 
+const noopSearch = vi.fn().mockResolvedValue([]);
+
 function Wrapper({ children }: { children: ReactNode }) {
     const methods = useForm<FormRecord>({
         defaultValues: { family: '' },
@@ -22,8 +24,7 @@ describe('FormAutocomplete', () => {
             <FormAutocomplete
                 name="family"
                 label="Семейство"
-                onSearch={vi.fn()}
-                suggestions={[]}
+                searchFn={noopSearch}
                 placeholder="Начните вводить…"
             />,
         );
@@ -37,8 +38,7 @@ describe('FormAutocomplete', () => {
             <FormAutocomplete
                 name="family"
                 label="Family"
-                onSearch={vi.fn()}
-                suggestions={[]}
+                searchFn={noopSearch}
                 placeholder="Type here…"
             />,
         );

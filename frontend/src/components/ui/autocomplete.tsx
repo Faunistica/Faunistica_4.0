@@ -14,6 +14,7 @@ interface AutocompleteProps {
     className?: string;
     id?: string;
     ariaInvalid?: boolean;
+    minChars?: number;
 }
 
 /**
@@ -31,6 +32,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
     className,
     id,
     ariaInvalid,
+    minChars = 2,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [highlightIndex, setHighlightIndex] = useState(-1);
@@ -59,7 +61,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
 
     const handleInputChange = (text: string) => {
         onChange(text);
-        if (text.length >= 2) {
+        if (text.length >= minChars) {
             onSearch(text);
         } else {
             setIsOpen(false);
@@ -98,7 +100,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
                     value={value ?? ''}
                     onChange={(e) => handleInputChange(e.target.value)}
                     onFocus={() => {
-                        if (suggestions.length > 0 && value && value.length >= 2) setIsOpen(true);
+                        if (suggestions.length > 0 && value && value.length >= minChars) setIsOpen(true);
                     }}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}

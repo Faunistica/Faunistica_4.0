@@ -24,7 +24,6 @@ import { DMInputGroup, DMSInputGroup } from '@/components/map/CoordinateInputs';
 import { GEOREF_OPTIONS, COUNTRY_OPTIONS } from '@/types/forms';
 import type { FormRecord } from '@/types/api.dto';
 
-import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useLazyGeoSearchQuery } from '@/api/utilAPI';
 
 interface Props {
@@ -68,27 +67,16 @@ const GeographyCard: FC<Props> = () => {
         setValue('is_manual_location', true);
     };
 
-    const [searchRegion, { isFetching: regionLoading }] = useLazyGeoSearchQuery();
-    const [searchDistrict, { isFetching: districtLoading }] = useLazyGeoSearchQuery();
+    const [searchRegion] = useLazyGeoSearchQuery();
+    const [searchDistrict] = useLazyGeoSearchQuery();
 
-    const [regionSuggestions, setRegionSuggestions] = useState<string[]>([]);
-    const [districtSuggestions, setDistrictSuggestions] = useState<string[]>([]);
+    const regionSearchFn = (text: string) =>
+        searchRegion({ field: 'region', text }).unwrap()
+            .then((r) => r.suggestions ?? []);
 
-    const handleRegionSearch = useDebouncedCallback(async (text: string) => {
-        const result = await searchRegion({ field: 'region', text }).unwrap();
-        setRegionSuggestions(result.suggestions ?? []);
-    }, 300);
-
-    const regionValue = watch('region');
-
-    const handleDistrictSearch = useDebouncedCallback(async (text: string) => {
-        const result = await searchDistrict({
-            field: 'district',
-            text,
-            region: regionValue ?? undefined,
-        }).unwrap();
-        setDistrictSuggestions(result.suggestions ?? []);
-    }, 300);
+    const districtSearchFn = (text: string) =>
+        searchDistrict({ field: 'district', text }).unwrap()
+            .then((r) => r.suggestions ?? []);
 
     return (
         <Card className="border-slate-200 shadow-sm">
@@ -187,18 +175,14 @@ const GeographyCard: FC<Props> = () => {
                     <FormAutocomplete
                         name="region"
                         label="Регион (субъект)"
-                        onSearch={handleRegionSearch}
-                        suggestions={regionSuggestions}
-                        isLoading={regionLoading}
+                        searchFn={regionSearchFn}
                         placeholder="Начните вводить…"
                         onChangeExtra={handleAutocompleteChange}
                     />
                     <FormAutocomplete
                         name="district"
                         label="Район"
-                        onSearch={handleDistrictSearch}
-                        suggestions={districtSuggestions}
-                        isLoading={districtLoading}
+                        searchFn={districtSearchFn}
                         placeholder="Начните вводить…"
                         onChangeExtra={handleAutocompleteChange}
                     />

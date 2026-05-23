@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -13,66 +13,28 @@ import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { FormAutocomplete } from '@/components/form/FormAutocomplete';
 import { FormTextField } from '@/components/form/FormTextField';
 import { Bug } from 'lucide-react';
-import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useLazySuggestTaxonQuery } from '@/api/utilAPI';
 import { TYPE_STATUS_OPTIONS, TAXON_RANK_OPTIONS } from '@/types/forms';
 import type { FormRecord } from '@/types/api.dto';
 
 const TaxonomyCard: FC = () => {
-    const { control, watch, setValue } = useFormContext<FormRecord>();
-
-    const familyValue = watch('family');
-    const genusValue = watch('genus');
+    const { control, setValue } = useFormContext<FormRecord>();
 
     const [searchFamily] = useLazySuggestTaxonQuery();
     const [searchGenus] = useLazySuggestTaxonQuery();
     const [searchSpecies] = useLazySuggestTaxonQuery();
 
-    const [familySuggestions, setFamilySuggestions] = useState<string[]>([]);
-    const [genusSuggestions, setGenusSuggestions] = useState<string[]>([]);
-    const [speciesSuggestions, setSpeciesSuggestions] = useState<string[]>([]);
-    const [famLoading, setFamLoading] = useState(false);
-    const [genLoading, setGenLoading] = useState(false);
-    const [spLoading, setSpLoading] = useState(false);
+    const familySearchFn = (text: string) =>
+        searchFamily({ field: 'family', text }).unwrap()
+            .then((r) => r.suggestions ?? []);
 
-    const handleFamilySearch = useDebouncedCallback(async (text: string) => {
-        setFamLoading(true);
-        try {
-            const r = await searchFamily({ field: 'family', text }).unwrap();
-            setFamilySuggestions(r.suggestions ?? []);
-        } finally {
-            setFamLoading(false);
-        }
-    }, 300);
+    const genusSearchFn = (text: string) =>
+        searchGenus({ field: 'genus', text }).unwrap()
+            .then((r) => r.suggestions ?? []);
 
-    const handleGenusSearch = useDebouncedCallback(async (text: string) => {
-        setGenLoading(true);
-        try {
-            const r = await searchGenus({
-                field: 'genus',
-                text,
-                family: familyValue,
-            }).unwrap();
-            setGenusSuggestions(r.suggestions ?? []);
-        } finally {
-            setGenLoading(false);
-        }
-    }, 300);
-
-    const handleSpeciesSearch = useDebouncedCallback(async (text: string) => {
-        setSpLoading(true);
-        try {
-            const r = await searchSpecies({
-                field: 'species',
-                text,
-                family: familyValue,
-                genus: genusValue,
-            }).unwrap();
-            setSpeciesSuggestions(r.suggestions ?? []);
-        } finally {
-            setSpLoading(false);
-        }
-    }, 300);
+    const speciesSearchFn = (text: string) =>
+        searchSpecies({ field: 'species', text }).unwrap()
+            .then((r) => r.suggestions ?? []);
 
     const handleAutocompleteChange = () => {
         setValue('tax_verbatim', false);
@@ -95,27 +57,21 @@ const TaxonomyCard: FC = () => {
                     <FormAutocomplete
                         name="family"
                         label="Семейство (Familia)"
-                        onSearch={handleFamilySearch}
-                        suggestions={familySuggestions}
-                        isLoading={famLoading}
+                        searchFn={familySearchFn}
                         placeholder="Начните вводить…"
                         onChangeExtra={handleAutocompleteChange}
                     />
                     <FormAutocomplete
                         name="genus"
                         label="Род (Genus)"
-                        onSearch={handleGenusSearch}
-                        suggestions={genusSuggestions}
-                        isLoading={genLoading}
+                        searchFn={genusSearchFn}
                         placeholder="Название рода"
                         onChangeExtra={handleAutocompleteChange}
                     />
                     <FormAutocomplete
                         name="species"
                         label="Видовое название (эпитет)"
-                        onSearch={handleSpeciesSearch}
-                        suggestions={speciesSuggestions}
-                        isLoading={spLoading}
+                        searchFn={speciesSearchFn}
                         placeholder="Только эпитет, без рода"
                         onChangeExtra={handleAutocompleteChange}
                     />
