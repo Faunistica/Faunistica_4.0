@@ -33,6 +33,8 @@ import { useSaveRecord } from '@/hooks/useSaveRecord';
 import { toFormPartial } from '@/lib/recordUtils';
 import { useRecordStatus, type RecordStatus } from '@/hooks/useRecordStatus';
 
+const SHOULD_AUTO_SAVE = !(import.meta.env.VITE_DISABLE_AUTO_SAVE?.toLowerCase?.() === 'true');
+
 interface OutletContextType {
     isSidebarOpen: boolean;
     setIsSidebarOpen: (isOpen: boolean) => void;
@@ -89,6 +91,10 @@ const FormFilling: FC = () => {
     }, []);
 
     useEffect(() => {
+        if (!SHOULD_AUTO_SAVE) {
+            return () => {};
+        }
+
         const subscription = methods.watch((_value, { type }) => {
             if (type !== 'change') return;
 
