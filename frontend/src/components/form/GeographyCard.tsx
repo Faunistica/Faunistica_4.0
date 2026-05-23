@@ -179,14 +179,14 @@ const GeographyCard: FC<Props> = () => {
                         label="Регион (субъект)"
                         searchFn={regionSearchFn}
                         placeholder="Начните вводить…"
-                        onChangeExtra={handleAutocompleteChange}
+                        onSelectExtra={handleAutocompleteChange}
                     />
                     <FormAutocomplete
                         name="district"
                         label="Район"
                         searchFn={districtSearchFn}
                         placeholder="Начните вводить…"
-                        onChangeExtra={handleAutocompleteChange}
+                        onSelectExtra={handleAutocompleteChange}
                     />
                     <Field data-invalid={!!errors?.locality}>
                         <FieldLabel htmlFor="locality">Локалитет (топоним)</FieldLabel>

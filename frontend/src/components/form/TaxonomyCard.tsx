@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
+import { useFormContext, Controller, useFormState, useWatch } from 'react-hook-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
@@ -20,24 +20,54 @@ import type { FormRecord } from '@/types/api.dto';
 const TaxonomyCard: FC = () => {
     const { control, setValue } = useFormContext<FormRecord>();
 
-    const [searchFamily] = useLazySuggestTaxonQuery();
-    const [searchGenus] = useLazySuggestTaxonQuery();
-    const [searchSpecies] = useLazySuggestTaxonQuery();
+    const [searchFamily, { isLoading: familyLoading }] = useLazySuggestTaxonQuery();
+    const [searchGenus, { isLoading: genusLoading }] = useLazySuggestTaxonQuery();
+    const [searchSpecies, { isLoading: speciesLoading }] = useLazySuggestTaxonQuery();
+
+    // TODO: idk how to do useWatch safely
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+    const [family, genus] = useWatch<FormRecord>({
+        control,
+        name: ['family', 'genus'],
+    }) as (string | null | undefined)[];
+    const { errors } = useFormState({ control, name: ['family', 'genus', 'species'] });
 
     const familySearchFn = (text: string) =>
         searchFamily({ field: 'family', text })
             .unwrap()
             .then((r) => r.suggestions ?? []);
 
-    const genusSearchFn = (text: string) =>
-        searchGenus({ field: 'genus', text })
-            .unwrap()
-            .then((r) => r.suggestions ?? []);
+    const genusSearchFn = (text: string) => {
+        const extra: {
+            family?: string | null;
+        } = {};
 
-    const speciesSearchFn = (text: string) =>
-        searchSpecies({ field: 'species', text })
+        if (!errors.family) {
+            extra.family = family;
+        }
+
+        return searchGenus({ field: 'genus', text, ...extra })
             .unwrap()
             .then((r) => r.suggestions ?? []);
+    };
+
+    const speciesSearchFn = (text: string) => {
+        const extra: {
+            family?: string | null;
+            genus?: string | null;
+        } = {};
+
+        if (!errors.family) {
+            extra.family = family;
+        }
+        if (!errors.genus) {
+            extra.genus = genus;
+        }
+
+        return searchGenus({ field: 'species', text, ...extra })
+            .unwrap()
+            .then((r) => r.suggestions ?? []);
+    };
 
     const handleAutocompleteChange = () => {
         setValue('tax_verbatim', false);
@@ -59,24 +89,27 @@ const TaxonomyCard: FC = () => {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <FormAutocomplete
                         name="family"
+                        isLoading={familyLoading}
                         label="Семейство (Familia)"
                         searchFn={familySearchFn}
                         placeholder="Начните вводить…"
-                        onChangeExtra={handleAutocompleteChange}
+                        onSelectExtra={handleAutocompleteChange}
                     />
                     <FormAutocomplete
                         name="genus"
+                        isLoading={genusLoading}
                         label="Род (Genus)"
                         searchFn={genusSearchFn}
                         placeholder="Название рода"
-                        onChangeExtra={handleAutocompleteChange}
+                        onSelectExtra={handleAutocompleteChange}
                     />
                     <FormAutocomplete
                         name="species"
+                        isLoading={speciesLoading}
                         label="Видовое название (эпитет)"
                         searchFn={speciesSearchFn}
                         placeholder="Только эпитет, без рода"
-                        onChangeExtra={handleAutocompleteChange}
+                        onSelectExtra={handleAutocompleteChange}
                     />
                 </div>
 

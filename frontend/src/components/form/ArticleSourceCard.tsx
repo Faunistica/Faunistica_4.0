@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import React, { type FC } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,7 +9,7 @@ interface Props {
     publ_id: number;
 }
 
-const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
+const ArticleSourceCard: FC<Props> = React.memo(function ({ publ_id }) {
     const { data: publication, isLoading, error } = useGetPublicationByIdQuery(publ_id);
 
     if (isLoading) {
@@ -70,6 +70,6 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
             </CardHeader>
         </Card>
     );
-};
+});
 
 export default ArticleSourceCard;

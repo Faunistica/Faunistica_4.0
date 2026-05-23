@@ -170,4 +170,8 @@ export const formRecordSchema = z.object({
     juveniles: z.number().min(0).nullish(),
 });
 
+export type FormKey<V> = {
+    [K in keyof FormRecord]-?: FormRecord[K] extends V ? K : never;
+}[keyof FormRecord];
+
 export type FormRecord = z.infer<typeof formRecordSchema>;

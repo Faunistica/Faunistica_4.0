@@ -2,24 +2,25 @@ import { useFormContext, useFormState } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
-import type { FormRecord } from '@/types/api.dto';
+import type { FormKey } from '@/types/forms';
+import React, { useMemo } from 'react';
 
 interface FormTextFieldProps {
-    name: keyof FormRecord;
+    name: FormKey<string | null | undefined>;
     label: string;
     placeholder?: string;
     inputType?: 'input' | 'textarea';
 }
 
-export function FormTextField({
+export const FormTextField = React.memo(function ({
     name,
     label,
     placeholder,
     inputType = 'input',
 }: FormTextFieldProps) {
     const { register, control } = useFormContext();
-    const { errors } = useFormState({ control, name: name as string });
-    const error = errors?.[name];
+    const { errors } = useFormState({ control, name });
+    const error = useMemo(() => errors?.[name], [errors, name]);
 
     return (
         <Field data-invalid={!!error}>
@@ -27,7 +28,7 @@ export function FormTextField({
             {inputType === 'textarea' ? (
                 <Textarea
                     id={name}
-                    className="min-h-[72px] resize-none"
+                    className="min-h-18 resize-none"
                     placeholder={placeholder}
                     aria-invalid={!!error}
                     {...register(name)}
@@ -43,4 +44,4 @@ export function FormTextField({
             <FieldError errors={[error]} />
         </Field>
     );
-}
+});

@@ -1,42 +1,35 @@
-import { type FC, useState, useRef, useEffect } from 'react';
+import { type ComponentProps, type FC, useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
-interface AutocompleteProps {
-    value: string;
-    onChange: (value: string) => void;
-    onSelect?: (value: string) => void;
-    onSearch: (text: string) => void;
-    onBlur?: () => void;
-    suggestions: string[];
-    placeholder?: string;
-    isLoading?: boolean;
-    disabled?: boolean;
-    className?: string;
-    id?: string;
-    ariaInvalid?: boolean;
-    minChars?: number;
-}
+type OverrideProps<TBase, TOverrides> = Omit<TBase, keyof TOverrides> & TOverrides;
+
+type AutocompleteProps = OverrideProps<
+    ComponentProps<'input'>,
+    {
+        id: string;
+        suggestions: string[];
+        isLoading?: boolean;
+        onSelect?: (value: string) => any;
+        onSearch: (text: string) => any;
+        minChars?: number;
+    }
+>;
 
 /**
  * Text input with a dropdown list of suggestions.
- * Fully controlled: parent provides value, onChange, suggestions, and search trigger.
+ * Fully controlled: parent provides onChange, suggestions, and search trigger.
  */
 const Autocomplete: FC<AutocompleteProps> = ({
-    value,
     onChange,
     onSelect,
     onSearch,
-    onBlur,
     suggestions,
-    placeholder,
     isLoading = false,
-    disabled = false,
     className,
-    id,
-    ariaInvalid,
     minChars = 2,
+    ...props
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [highlightIndex, setHighlightIndex] = useState(-1);
@@ -63,8 +56,12 @@ const Autocomplete: FC<AutocompleteProps> = ({
         }
     }, [suggestions]);
 
-    const handleInputChange = (text: string) => {
-        onChange(text);
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (onChange) {
+            onChange(e);
+        }
+
+        const text = e.target.value;
         if (text.length >= minChars) {
             onSearch(text);
         } else {
@@ -100,19 +97,15 @@ const Autocomplete: FC<AutocompleteProps> = ({
             <div className="relative">
                 <Input
                     ref={inputRef}
-                    id={id}
-                    value={value}
-                    onChange={(e) => handleInputChange(e.target.value)}
-                    onBlur={onBlur}
+                    onChange={handleInputChange}
                     onFocus={() => {
-                        if (suggestions.length > 0 && value && value.length >= minChars)
+                        if (suggestions.length > 0) {
                             setIsOpen(true);
+                        }
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder={placeholder}
-                    disabled={disabled}
-                    aria-invalid={ariaInvalid}
                     autoComplete="off"
+                    {...props}
                 />
                 {isLoading && (
                     <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
@@ -123,7 +116,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
 
             {isOpen && suggestions.length > 0 && (
                 <ul
-                    className="absolute z-[150] mt-2 max-h-60 w-full animate-in overflow-x-hidden overflow-y-auto rounded-xl border border-slate-200 bg-white/95 py-1.5 shadow-xl backdrop-blur-md duration-200 zoom-in-95 fade-in"
+                    className="absolute z-150 mt-2 max-h-60 w-full animate-in overflow-x-hidden overflow-y-auto rounded-xl border border-slate-200 bg-white/95 py-1.5 shadow-xl backdrop-blur-md duration-200 zoom-in-95 fade-in"
                     role="listbox"
                 >
                     {suggestions.map((item, i) => (

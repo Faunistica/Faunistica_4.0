@@ -1,49 +1,50 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Controller, useFormContext, useWatch } from 'react-hook-form';
-import { Field, FieldLabel, FieldError } from '@/components/ui/field';
+import { useFormContext, useFormState, useWatch } from 'react-hook-form';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
-import type { FormRecord } from '@/types/api.dto';
+import type { FormKey } from '@/types/forms';
 
 interface FormAutocompleteProps {
-    name: keyof FormRecord;
+    name: FormKey<string | null | undefined>;
+    isLoading?: boolean;
     label: string;
     placeholder?: string;
     searchFn: (text: string) => Promise<string[]>;
     debounceMs?: number;
-    onChangeExtra?: (value: string) => void;
+    onSelectExtra?: (value: string) => void;
 }
 
 export function FormAutocomplete({
     name,
+    isLoading,
     label,
     placeholder,
     searchFn,
     debounceMs = 300,
-    onChangeExtra,
+    onSelectExtra,
 }: FormAutocompleteProps) {
-    const { control } = useFormContext();
-    const [inputValue, setInputValue] = useState('');
+    const { control, register, setValue } = useFormContext();
     const [suggestions, setSuggestions] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const searchVersionRef = useRef(0);
     const lastCommittedRef = useRef('');
 
     const formValue = useWatch({ control, name });
+    const { errors } = useFormState({ control, name });
+    const error = errors?.[name];
 
     useEffect(() => {
         if (formValue !== lastCommittedRef.current) {
             lastCommittedRef.current = formValue ?? '';
-            setInputValue(formValue ?? '');
+            setValue(name, formValue ?? '');
             if (!formValue) {
                 setSuggestions([]);
                 searchVersionRef.current = 0;
             }
         }
-    }, [formValue]);
+    }, [name, formValue, setValue]);
 
     const debouncedSearch = useDebouncedCallback(async (text: string, version: number) => {
-        setIsLoading(true);
         try {
             const result = await searchFn(text);
             if (searchVersionRef.current === version) {
@@ -51,10 +52,6 @@ export function FormAutocomplete({
             }
         } catch (e) {
             console.error(e);
-        } finally {
-            if (searchVersionRef.current === version) {
-                setIsLoading(false);
-            }
         }
     }, debounceMs);
 
@@ -66,41 +63,35 @@ export function FormAutocomplete({
         [debouncedSearch],
     );
 
+    const { onBlur, ...registerProps } = register(name);
+
     return (
-        <Controller
-            name={name}
-            control={control}
-            render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>{label}</FieldLabel>
-                    <Autocomplete
-                        value={inputValue}
-                        onChange={setInputValue}
-                        onSelect={(val) => {
-                            setInputValue(val);
-                            field.onChange(val);
-                            lastCommittedRef.current = val;
-                            setSuggestions([]);
-                            searchVersionRef.current = 0;
-                            onChangeExtra?.(val);
-                        }}
-                        onBlur={() => {
-                            if (inputValue !== lastCommittedRef.current) {
-                                field.onChange(inputValue);
-                                lastCommittedRef.current = inputValue;
-                                onChangeExtra?.(inputValue);
-                            }
-                            field.onBlur();
-                        }}
-                        onSearch={handleSearch}
-                        suggestions={suggestions}
-                        isLoading={isLoading}
-                        placeholder={placeholder}
-                        ariaInvalid={fieldState.invalid}
-                    />
-                    <FieldError errors={[fieldState.error]} />
-                </Field>
-            )}
-        />
+        <Field>
+            <FieldLabel>{label}</FieldLabel>
+            <Autocomplete
+                {...registerProps}
+                id={name}
+                onSelect={(val) => {
+                    setValue(name, val);
+                    lastCommittedRef.current = val;
+                    setSuggestions([]);
+                    searchVersionRef.current = 0;
+                    onSelectExtra?.(val);
+                }}
+                onBlur={async (e) => {
+                    if (formValue !== lastCommittedRef.current) {
+                        lastCommittedRef.current = formValue;
+                        onSelectExtra?.(formValue);
+                    }
+                    await onBlur(e);
+                }}
+                onSearch={handleSearch}
+                suggestions={suggestions}
+                isLoading={isLoading}
+                placeholder={placeholder}
+                aria-invalid={!!error}
+            />
+            <FieldError errors={[error]} />
+        </Field>
     );
 }

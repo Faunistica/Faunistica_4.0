@@ -108,7 +108,7 @@ describe('FormAutocomplete', () => {
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onChangeExtra={onChangeExtra}
+                    onSelectExtra={onChangeExtra}
                 />,
             );
 
@@ -142,7 +142,7 @@ describe('FormAutocomplete', () => {
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onChangeExtra={onChangeExtra}
+                    onSelectExtra={onChangeExtra}
                 />,
                 { family: 'Initial' },
             );
@@ -172,7 +172,7 @@ describe('FormAutocomplete', () => {
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onChangeExtra={onChangeExtra}
+                    onSelectExtra={onChangeExtra}
                     debounceMs={0}
                 />,
             );
@@ -302,7 +302,7 @@ describe('FormAutocomplete', () => {
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onChangeExtra={onChangeExtra}
+                    onSelectExtra={onChangeExtra}
                 />,
                 { family: 'Existing' },
             );
@@ -416,7 +416,7 @@ describe('FormAutocomplete', () => {
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onChangeExtra={onChangeExtra}
+                    onSelectExtra={onChangeExtra}
                 />,
             );
 
@@ -455,7 +455,7 @@ describe('FormAutocomplete', () => {
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onChangeExtra={onChangeExtra}
+                    onSelectExtra={onChangeExtra}
                     debounceMs={0}
                 />,
             );
