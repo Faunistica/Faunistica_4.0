@@ -16,13 +16,14 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import type { RecordFull } from '@/types/api.dto';
-import type { RecordStatus } from '@/hooks/useRecordStatus';
+import type { RecordStatus } from '@/lib/recordStatus';
+import { computeInactiveStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 
 interface SidebarProps {
     records: RecordFull[];
     activeRecordId: string | null;
-    recordStatuses: Record<string, RecordStatus>;
+    activeStatus: RecordStatus | null;
     onSelectRecord: (id: string) => void;
     onCreateRecord: () => void;
 }
@@ -107,7 +108,7 @@ SidebarRecordItem.displayName = 'SidebarRecordItem';
 const FormSidebar: FC<SidebarProps> = ({
     records,
     activeRecordId,
-    recordStatuses,
+    activeStatus,
     onSelectRecord,
     onCreateRecord,
 }) => {
@@ -167,7 +168,7 @@ const FormSidebar: FC<SidebarProps> = ({
                                     key={record.id}
                                     record={record}
                                     isActive={record.id === activeRecordId}
-                                    status={recordStatuses[record.id] ?? 'draft'}
+                                    status={record.id === activeRecordId && activeStatus ? activeStatus : computeInactiveStatus(record)}
                                     onSelect={() => {
                                         onSelectRecord(record.id);
                                         if (isMobile) setOpenMobile(false);

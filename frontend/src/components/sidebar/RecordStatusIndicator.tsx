@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, AlertCircle, CircleDashed, Circle } from 'lucide-react';
-import type { RecordStatus } from '@/hooks/useRecordStatus';
+import type { RecordStatus } from '@/lib/recordStatus';
 
 const STATUS_CONFIG: Record<
     RecordStatus,

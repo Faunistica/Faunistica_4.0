@@ -1,12 +1,10 @@
 /* oxlint-disable typescript/no-unsafe-type-assertion */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import FormFilling from './FormFilling';
 
-const mockSave = vi.fn();
-const mockGetValues = vi.fn();
-const mockRecordsListQuery = vi.hoisted(() => vi.fn());
+const mockRecordsManager = vi.hoisted(() => vi.fn());
 
 vi.mock('react-router', () => ({
     useParams: () => ({ id: '1' }),
@@ -17,60 +15,21 @@ vi.mock('react-redux', () => ({
     useSelector: () => 123,
 }));
 
-vi.mock('@/store/store', () => ({
-    useAppDispatch: () => vi.fn(),
+vi.mock('@/hooks/useRecordsManager', () => ({
+    useRecordsManager: mockRecordsManager,
 }));
 
-vi.mock('@/hooks/useSaveRecord', () => ({
-    useSaveRecord: () => ({
-        save: mockSave,
-        submit: vi.fn(),
-        isSaving: false,
-        nonFieldErrors: [],
-    }),
-}));
-
-vi.mock('@/api/recordAPI', () => ({
-    useRecordsListQuery: mockRecordsListQuery,
-    useLazyRecordByIdQuery: () => [vi.fn()],
-    useCreateRecordMutation: () => [vi.fn()],
-    useDeleteRecordMutation: () => [vi.fn()],
-    recordAPI: { util: { updateQueryData: vi.fn() } },
-}));
-
-vi.mock('react-hook-form', async (importOriginal) => {
-    const actual = await importOriginal();
-    return {
-        ...(actual as object),
-        FormProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-        useForm: () => ({
-            reset: vi.fn(),
-            getValues: mockGetValues,
-            watch: vi.fn(() => ({ unsubscribe: vi.fn() })),
-            formState: { errors: {} },
-            control: {} as any,
-            register: vi.fn(),
-            setValue: vi.fn(),
-            handleSubmit: vi.fn(),
-        }),
-    };
-});
-
-vi.mock('@hookform/resolvers/zod', () => ({
-    zodResolver: () => ({}),
-}));
-
-vi.mock('sonner', () => ({
-    toast: { error: vi.fn() },
-}));
-
-vi.mock('@/components/ui/sidebar', () => ({
-    SidebarProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+vi.mock('@/components/form/RecordFormContent', () => ({
+    default: (props: any) => (
+        <div data-testid="record-form" data-active-record-id={props.activeRecord.id}>
+            RecordFormContent
+        </div>
+    ),
 }));
 
 vi.mock('@/components/form/FormSidebar', () => ({
-    default: ({ records, onSelectRecord }: any) => (
-        <div data-testid="sidebar">
+    default: ({ _activeRecordId, records, activeStatus, onSelectRecord }: any) => (
+        <div data-testid="sidebar" data-active-status={activeStatus}>
             {records.map((r: any) => (
                 <button
                     key={r.id}
@@ -84,14 +43,13 @@ vi.mock('@/components/form/FormSidebar', () => ({
     ),
 }));
 
-vi.mock('@/components/form/ArticleSourceCard', () => ({ default: () => null }));
-vi.mock('@/components/form/GeographyCard', () => ({ default: () => null }));
-vi.mock('@/components/form/CollectionEventCard', () => ({ default: () => null }));
-vi.mock('@/components/form/TaxonomyCard', () => ({ default: () => null }));
-vi.mock('@/components/form/QuantitiesCard', () => ({ default: () => null }));
-vi.mock('@/components/form/ServerErrorDisplay', () => ({ default: () => null }));
-vi.mock('@/components/form/FormFooter', () => ({ default: () => null }));
-vi.mock('@/components/LoadingScreen', () => ({ default: () => null }));
+vi.mock('@/components/ui/sidebar', () => ({
+    SidebarProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock('@/components/LoadingScreen', () => ({
+    default: () => <div data-testid="loading-screen">Loading...</div>,
+}));
 
 const mockRecords = [
     { id: '1', species: 'Canis', genus: 'Canis', family: 'Canidae', locality: 'Forest' },
@@ -99,53 +57,92 @@ const mockRecords = [
 ];
 
 function renderFormFilling() {
-    mockRecordsListQuery.mockReturnValue({
-        data: { items: mockRecords },
-        isLoading: false,
-    });
     return render(<FormFilling />);
 }
 
-describe('FormFilling switchToRecord', () => {
+describe('FormFilling', () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it('skips save when switching records and form has no unsaved changes', async () => {
-        mockGetValues.mockReturnValue({ males: 3 });
+    it('shows loading screen while data loads', () => {
+        mockRecordsManager.mockReturnValue({
+            records: [],
+            activeRecord: null,
+            isLoading: true,
+            recordMethods: { create: vi.fn(), switchTo: vi.fn(), delete: vi.fn() },
+            registerSave: vi.fn(),
+        });
+
         renderFormFilling();
-
-        await waitFor(() => {
-            screen.getByTestId('record-2');
-        });
-
-        await act(async () => {
-            screen.getByTestId('record-2').click();
-        });
-
-        await waitFor(() => {
-            expect(mockSave).not.toHaveBeenCalled();
-        });
+        expect(screen.getByTestId('loading-screen')).toBeDefined();
     });
 
-    it('calls save when switching records and form has unsaved changes', async () => {
-        let preClickCalls = 0;
-        mockGetValues.mockImplementation(() => {
-            preClickCalls++;
-            return preClickCalls <= 2 ? { males: 3 } : { males: 99 };
+    it('shows empty state when no records exist', () => {
+        mockRecordsManager.mockReturnValue({
+            records: [],
+            activeRecord: null,
+            isLoading: false,
+            recordMethods: { create: vi.fn(), switchTo: vi.fn(), delete: vi.fn() },
+            registerSave: vi.fn(),
         });
+
+        renderFormFilling();
+        expect(screen.getByText('Нет записей')).toBeDefined();
+        expect(screen.getByText('Создать запись')).toBeDefined();
+    });
+
+    it('renders form and sidebar when active record exists', () => {
+        mockRecordsManager.mockReturnValue({
+            records: mockRecords,
+            activeRecord: mockRecords[0],
+            isLoading: false,
+            recordMethods: { create: vi.fn(), switchTo: vi.fn(), delete: vi.fn() },
+            registerSave: vi.fn(),
+        });
+
         renderFormFilling();
 
-        await waitFor(() => {
-            screen.getByTestId('record-2');
+        expect(screen.getByTestId('record-form')).toBeDefined();
+        expect(screen.getByTestId('sidebar')).toBeDefined();
+        expect(screen.getByTestId('record-form').getAttribute('data-active-record-id')).toBe('1');
+    });
+
+    it('calls create when create button is clicked in empty state', async () => {
+        const mockCreate = vi.fn();
+        mockRecordsManager.mockReturnValue({
+            records: [],
+            activeRecord: null,
+            isLoading: false,
+            recordMethods: { create: mockCreate, switchTo: vi.fn(), delete: vi.fn() },
+            registerSave: vi.fn(),
         });
+
+        renderFormFilling();
+
+        await act(async () => {
+            screen.getByText('Создать запись').click();
+        });
+
+        expect(mockCreate).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls switchTo when sidebar item is clicked', async () => {
+        const mockSwitchTo = vi.fn();
+        mockRecordsManager.mockReturnValue({
+            records: mockRecords,
+            activeRecord: mockRecords[0],
+            isLoading: false,
+            recordMethods: { create: vi.fn(), switchTo: mockSwitchTo, delete: vi.fn() },
+            registerSave: vi.fn(),
+        });
+
+        renderFormFilling();
 
         await act(async () => {
             screen.getByTestId('record-2').click();
         });
 
-        await waitFor(() => {
-            expect(mockSave).toHaveBeenCalledTimes(1);
-        });
+        expect(mockSwitchTo).toHaveBeenCalledWith('2');
     });
 });

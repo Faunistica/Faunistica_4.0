@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
-import type { UseFormReturn } from 'react-hook-form';
 import type { FormRecord, RecordFull } from '@/types/api.dto';
 import { BLOCKING_FIELDS } from '@/types/forms';
 import { toFormPartial } from '@/lib/recordUtils';
+import type { FieldErrors } from 'react-hook-form';
 
 export type RecordStatus = 'empty' | 'draft' | 'valid' | 'error';
 
@@ -34,31 +33,19 @@ function computeFromFormValues(values: Partial<FormRecord>): RecordStatus {
     return 'draft';
 }
 
-export function useRecordStatus(
-    _recordId: string,
-    isActive: boolean,
-    record?: RecordFull,
-    methods?: UseFormReturn<FormRecord>,
+export function computeActiveStatus(
+    values: Partial<FormRecord>,
+    errors: FieldErrors<FormRecord>,
 ): RecordStatus {
-    return useMemo(() => {
-        if (isActive && methods) {
-            const values = methods.getValues();
-            const hasErrors = Object.keys(methods.formState.errors).length > 0;
+    if (Object.keys(errors).length > 0) return 'error';
+    return computeFromFormValues(values);
+}
 
-            if (hasErrors) return 'error';
+export function computeInactiveStatus(record: RecordFull): RecordStatus {
+    const serverType = record.type;
+    if (serverType && SERVER_STATUS_MAP[serverType]) {
+        return SERVER_STATUS_MAP[serverType];
+    }
 
-            return computeFromFormValues(values);
-        }
-
-        if (!isActive && record) {
-            const serverType = record.type;
-            if (serverType && SERVER_STATUS_MAP[serverType]) {
-                return SERVER_STATUS_MAP[serverType];
-            }
-
-            return computeFromFormValues(toFormPartial(record));
-        }
-
-        return 'draft';
-    }, [isActive, record, methods]);
+    return computeFromFormValues(toFormPartial(record));
 }

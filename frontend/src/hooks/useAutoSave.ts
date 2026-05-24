@@ -1,0 +1,81 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
+import type { UseFormReturn } from 'react-hook-form';
+import type { FormRecord } from '@/types/api.dto';
+
+const SHOULD_AUTO_SAVE = !(import.meta.env.VITE_DISABLE_AUTO_SAVE?.toLowerCase?.() === 'true');
+
+interface UseAutoSaveOptions {
+    save: (data: Partial<FormRecord>) => Promise<void>;
+    methods: UseFormReturn<FormRecord>;
+    activeRecordId: string | null;
+}
+
+interface UseAutoSaveReturn {
+    isAutoSaving: boolean;
+    lastSavedTime: Date | null;
+}
+
+export function useAutoSave({
+    save,
+    methods,
+    activeRecordId,
+}: UseAutoSaveOptions): UseAutoSaveReturn {
+    const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const lastSnapshotRef = useRef<string>('');
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
+    const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
+
+    const { getValues, watch } = methods;
+
+    const cancelPendingAutoSave = useCallback(() => {
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+            autoSaveTimerRef.current = undefined;
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!SHOULD_AUTO_SAVE) {
+            return () => {};
+        }
+
+        const subscription = watch((_value, { type }) => {
+            if (type !== 'change') return;
+
+            cancelPendingAutoSave();
+
+            autoSaveTimerRef.current = setTimeout(async () => {
+                const currentValues = getValues();
+                const currentSnapshot = JSON.stringify(currentValues);
+
+                if (currentSnapshot === lastSnapshotRef.current) {
+                    return;
+                }
+
+                setIsAutoSaving(true);
+                try {
+                    await save(currentValues);
+                    lastSnapshotRef.current = currentSnapshot;
+                    setLastSavedTime(new Date());
+                } catch {
+                    // auto-save errors handled by useSaveRecord
+                } finally {
+                    setIsAutoSaving(false);
+                }
+            }, 2000);
+        });
+
+        return () => {
+            subscription.unsubscribe();
+            cancelPendingAutoSave();
+        };
+    }, [watch, getValues, save, cancelPendingAutoSave]);
+
+    useEffect(() => {
+        if (activeRecordId) {
+            lastSnapshotRef.current = '';
+        }
+    }, [activeRecordId]);
+
+    return { isAutoSaving, lastSavedTime };
+}
