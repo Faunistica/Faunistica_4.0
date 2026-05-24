@@ -168,7 +168,11 @@ const FormSidebar: FC<SidebarProps> = ({
                                     key={record.id}
                                     record={record}
                                     isActive={record.id === activeRecordId}
-                                    status={record.id === activeRecordId && activeStatus ? activeStatus : computeInactiveStatus(record)}
+                                    status={
+                                        record.id === activeRecordId && activeStatus
+                                            ? activeStatus
+                                            : computeInactiveStatus(record)
+                                    }
                                     onSelect={() => {
                                         onSelectRecord(record.id);
                                         if (isMobile) setOpenMobile(false);

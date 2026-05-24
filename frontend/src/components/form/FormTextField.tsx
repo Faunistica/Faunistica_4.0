@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import type { FormKey } from '@/types/forms';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 interface FormTextFieldProps {
     name: FormKey<string | null | undefined>;
@@ -12,12 +12,12 @@ interface FormTextFieldProps {
     inputType?: 'input' | 'textarea';
 }
 
-export const FormTextField = React.memo(function ({
+export const FormTextField = ({
     name,
     label,
     placeholder,
     inputType = 'input',
-}: FormTextFieldProps) {
+}: FormTextFieldProps) => {
     const { register, control } = useFormContext();
     const { errors } = useFormState({ control, name });
     const error = useMemo(() => errors?.[name], [errors, name]);
@@ -44,4 +44,4 @@ export const FormTextField = React.memo(function ({
             <FieldError errors={[error]} />
         </Field>
     );
-});
+};

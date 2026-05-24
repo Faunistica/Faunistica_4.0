@@ -1,5 +1,3 @@
-/* oxlint-disable typescript/no-unsafe-type-assertion */
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import FormFilling from './FormFilling';
@@ -28,7 +26,7 @@ vi.mock('@/components/form/RecordFormContent', () => ({
 }));
 
 vi.mock('@/components/form/FormSidebar', () => ({
-    default: ({ _activeRecordId, records, activeStatus, onSelectRecord }: any) => (
+    default: ({ records, activeStatus, onSelectRecord }: any) => (
         <div data-testid="sidebar" data-active-status={activeStatus}>
             {records.map((r: any) => (
                 <button

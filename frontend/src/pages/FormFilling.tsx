@@ -22,8 +22,10 @@ const FormFilling: FC = () => {
     const publ_id = Number(id);
     const user_id = useSelector((state: RootState) => state.user.user_id);
 
-    const { records, activeRecord, isLoading, recordMethods, registerSave } =
-        useRecordsManager(publ_id, user_id!);
+    const { records, activeRecord, isLoading, recordMethods, registerSave } = useRecordsManager(
+        publ_id,
+        user_id!,
+    );
 
     const [activeStatus, setActiveStatus] = useState<RecordStatus | null>(null);
     const activeRecordId = activeRecord?.id ?? null;
