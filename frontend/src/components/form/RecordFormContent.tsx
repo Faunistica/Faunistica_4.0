@@ -1,5 +1,5 @@
 import { type FC, useEffect } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, useWatch, useFormState } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { RecordFull, FormRecord } from "@/types/api.dto";
 import { formRecordSchema } from "@/types/forms";
@@ -45,8 +45,8 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     getValues,
     reset,
     formState: { errors },
-    watch,
   } = methods;
+  const values = useWatch({ control: methods.control });
 
   useEffect(() => {
     onRegisterSave(() => save(getValues()));
@@ -57,14 +57,8 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
   }, [activeRecord, reset]);
 
   useEffect(() => {
-    const subscription = watch((values) => {
-      onStatusChange(computeActiveStatus(values as Partial<FormRecord>, errors));
-    });
-
-    onStatusChange(computeActiveStatus(getValues(), errors));
-
-    return () => subscription.unsubscribe();
-  }, [watch, getValues, errors, onStatusChange]);
+    onStatusChange(computeActiveStatus(values as Partial<FormRecord>, errors));
+  }, [values, errors, onStatusChange]);
 
   return (
     <FormProvider {...methods}>
