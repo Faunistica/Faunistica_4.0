@@ -17,7 +17,7 @@ interface UseRecordsManagerReturn {
     recordMethods: {
         create: () => Promise<void>;
         switchTo: (targetId: string) => Promise<void>;
-        delete: () => Promise<void>;
+        delete: (id: string) => Promise<void>;
     };
     registerSave: (fn: () => Promise<void>) => void;
 }
@@ -77,44 +77,45 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
         [activeRecord?.id, records, fetchRecordById],
     );
 
-    const deleteActiveRecord = useCallback(async () => {
-        if (!activeRecord) return;
+    const handleDelete = useCallback(
+        async (id: string) => {
+            const snapshot = recordsData;
+            const listArgs = { publ_id, user_id };
+            const isActive = id === activeRecord?.id;
 
-        const id = activeRecord.id;
-        const snapshot = recordsData;
-        const listArgs = { publ_id, user_id };
-
-        dispatch(
-            recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
-                draft.items = draft.items.filter((item) => item.id !== id);
-                draft.total = Math.max(0, draft.total - 1);
-            }),
-        );
-
-        const currentIdx = records.findIndex((r) => r.id === id);
-        const remaining = records.filter((r) => r.id !== id);
-        const nextRecord = remaining[currentIdx] ?? remaining[currentIdx - 1] ?? null;
-
-        try {
-            await deleteRecord({ record_id: id }).unwrap();
-
-            if (nextRecord) {
-                setActiveRecord(nextRecord);
-            } else {
-                setActiveRecord(null);
+            let nextRecord: RecordFull | null = null;
+            if (isActive) {
+                const currentIdx = records.findIndex((r) => r.id === id);
+                const remaining = records.filter((r) => r.id !== id);
+                nextRecord = remaining[currentIdx] ?? remaining[currentIdx - 1] ?? null;
             }
-        } catch {
-            if (snapshot) {
-                dispatch(
-                    recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
-                        draft.items = snapshot.items;
-                        draft.total = snapshot.total;
-                    }),
-                );
+
+            dispatch(
+                recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
+                    draft.items = draft.items.filter((item) => item.id !== id);
+                    draft.total = Math.max(0, draft.total - 1);
+                }),
+            );
+
+            try {
+                await deleteRecord({ record_id: id }).unwrap();
+                if (isActive) {
+                    setActiveRecord(nextRecord);
+                }
+            } catch {
+                if (snapshot) {
+                    dispatch(
+                        recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
+                            draft.items = snapshot.items;
+                            draft.total = snapshot.total;
+                        }),
+                    );
+                }
+                toast.error('Ошибка при удалении записи');
             }
-            toast.error('Ошибка при удалении записи');
-        }
-    }, [activeRecord, records, recordsData, publ_id, user_id, dispatch, deleteRecord]);
+        },
+        [activeRecord, records, recordsData, publ_id, user_id, dispatch, deleteRecord],
+    );
 
     return {
         records,
@@ -123,7 +124,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
         recordMethods: {
             create: handleCreate,
             switchTo: switchToRecord,
-            delete: deleteActiveRecord,
+            delete: handleDelete,
         },
         registerSave,
     };

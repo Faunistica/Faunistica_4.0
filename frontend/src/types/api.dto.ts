@@ -162,6 +162,17 @@ export interface GeoSearchResponse {
     suggestions: string[] | null;
 }
 
+export interface ImportError {
+    row: number;
+    error: string;
+}
+
+export interface ImportRecordsResponse {
+    imported: number;
+    failed: number;
+    errors: ImportError[];
+}
+
 export interface SupportRequest {
     link: string;
     user_name: string;

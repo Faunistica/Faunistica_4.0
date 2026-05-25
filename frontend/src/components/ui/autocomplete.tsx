@@ -132,9 +132,6 @@ const Autocomplete: FC<AutocompleteProps> = ({
                         inputRef.current = el;
                         if (typeof refProp === 'function') {
                             refProp(el);
-                        } else if (refProp) {
-                            (refProp as React.MutableRefObject<HTMLInputElement | null>).current =
-                                el;
                         }
                     }}
                     onKeyDown={handleKeyDown}

@@ -1,7 +1,7 @@
-import { type FC, memo } from 'react';
+import { type FC, useState } from 'react';
 import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Plus, LogOut, FileText, MapPin, X } from 'lucide-react';
+import { Plus, LogOut, FileText, MapPin, X, FileSpreadsheet, Trash2 } from 'lucide-react';
 import { Link } from 'react-router';
 import {
     Sidebar,
@@ -15,188 +15,252 @@ import {
     SidebarGroupContent,
     useSidebar,
 } from '@/components/ui/sidebar';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import type { RecordFull } from '@/types/api.dto';
-import type { RecordStatus } from '@/lib/recordStatus';
-import { computeInactiveStatus } from '@/lib/recordStatus';
+import { computeInactiveStatus, type RecordStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
+import ExcelUploadModal from '@/components/form/ExcelUploadModal';
 
 interface SidebarProps {
     records: RecordFull[];
     activeRecordId: string | null;
-    activeStatus: RecordStatus | null;
     onSelectRecord: (id: string) => void;
     onCreateRecord: () => void;
+    onDelete: (id: string) => void;
+    publ_id: number;
+    user_id: number;
 }
 
-const SidebarRecordItem = memo(
-    ({
-        record,
-        isActive,
-        onSelect,
-        status,
-    }: {
-        record: RecordFull;
-        isActive: boolean;
-        onSelect: () => void;
-        status: RecordStatus;
-    }) => {
-        const recordName = capitalizeFirstLetter(
-            record.species || record.genus || record.family || 'Новая запись',
-        );
+const SidebarRecordItem = ({
+    record,
+    isActive,
+    onSelect,
+    onDelete,
+    status,
+}: {
+    record: RecordFull;
+    isActive: boolean;
+    onSelect: () => void;
+    onDelete: () => void;
+    status: RecordStatus;
+}) => {
+    const recordName = capitalizeFirstLetter(
+        record.species || record.genus || record.family || 'Новая запись',
+    );
 
-        return (
-            <SidebarMenuItem>
-                <div
-                    role="button"
-                    tabIndex={0}
-                    data-active={isActive}
-                    onClick={onSelect}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            onSelect();
-                        }
-                    }}
-                    className={cn(
-                        'group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-3 text-left transition-all duration-200',
-                        isActive
-                            ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200'
-                            : 'hover:bg-slate-50',
-                    )}
-                >
-                    <div className="flex w-full items-center justify-between gap-2">
-                        <div className="flex min-w-0 items-center gap-2">
-                            <RecordStatusIndicator status={status} />
-                            <span
-                                className={cn(
-                                    'truncate text-xs leading-tight font-bold',
-                                    isActive ? 'text-slate-900' : 'text-slate-700',
-                                )}
+    return (
+        <SidebarMenuItem>
+            <div
+                role="button"
+                tabIndex={0}
+                data-active={isActive}
+                onClick={onSelect}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelect();
+                    }
+                }}
+                className={cn(
+                    'group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-3 text-left transition-all duration-200',
+                    isActive ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200' : 'hover:bg-slate-50',
+                )}
+            >
+                <div className="flex w-full items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                        <RecordStatusIndicator status={status} />
+                        <span
+                            className={cn(
+                                'truncate text-xs leading-tight font-bold',
+                                isActive ? 'text-slate-900' : 'text-slate-700',
+                            )}
+                        >
+                            {recordName}
+                        </span>
+                    </div>
+
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0 rounded-md text-slate-400 opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 data-[active=true]:opacity-100 md:opacity-0 md:group-hover/menu-button:opacity-100 md:data-[active=true]:opacity-100"
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label="Удалить запись"
                             >
-                                {recordName}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex w-full items-center gap-1.5 pl-0.5 text-[10px] text-slate-500">
-                        {isActive ? (
-                            <>
-                                <span className="relative flex h-2 pl-px">
-                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-                                    <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
-                                </span>
-                                <span className="pl-1 font-semibold text-blue-600">
-                                    Редактируется
-                                </span>
-                            </>
-                        ) : (
-                            <>
-                                <MapPin className="size-2.5 shrink-0" />
-                                <span className="truncate pl-1">
-                                    {record.locality || record.region || 'Нет данных о месте'}
-                                </span>
-                            </>
-                        )}
-                    </div>
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Вы абсолютно уверены?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Это действие нельзя отменить. Запись будет безвозвратно удалена.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                                    Отмена
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    variant="destructive"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDelete();
+                                    }}
+                                >
+                                    Удалить
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
-            </SidebarMenuItem>
-        );
-    },
-);
-SidebarRecordItem.displayName = 'SidebarRecordItem';
+
+                <div className="flex w-full items-center gap-1.5 pl-0.5 text-[10px] text-slate-500">
+                    {isActive ? (
+                        <>
+                            <span className="relative flex h-2 pl-px">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                                <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
+                            </span>
+                            <span className="pl-1 font-semibold text-blue-600">Редактируется</span>
+                        </>
+                    ) : (
+                        <>
+                            <MapPin className="size-2.5 shrink-0" />
+                            <span className="truncate pl-1">
+                                {record.locality || record.region || 'Нет данных о месте'}
+                            </span>
+                        </>
+                    )}
+                </div>
+            </div>
+        </SidebarMenuItem>
+    );
+};
 
 const FormSidebar: FC<SidebarProps> = ({
     records,
     activeRecordId,
-    activeStatus,
     onSelectRecord,
     onCreateRecord,
+    onDelete,
+    publ_id,
+    user_id,
 }) => {
     const { isMobile, setOpenMobile } = useSidebar();
+    const [isUploadOpen, setIsUploadOpen] = useState(false);
 
     return (
-        <Sidebar variant="sidebar" className="border-r border-slate-200">
-            <SidebarHeader className="border-b border-slate-100 p-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white">
-                            <FileText className="h-4 w-4" />
-                        </div>
-                        <div>
-                            <div className="text-sm leading-tight font-bold text-slate-900">
-                                Менеджер
+        <>
+            <Sidebar variant="sidebar" className="border-r border-slate-200">
+                <SidebarHeader className="border-b border-slate-100 p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white">
+                                <FileText className="h-4 w-4" />
                             </div>
-                            <div className="text-[10px] leading-tight font-medium text-slate-500">
-                                Записи данных
+                            <div>
+                                <div className="text-sm leading-tight font-bold text-slate-900">
+                                    Менеджер
+                                </div>
+                                <div className="text-[10px] leading-tight font-medium text-slate-500">
+                                    Записи данных
+                                </div>
                             </div>
                         </div>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-slate-400 hover:text-slate-600 md:hidden"
+                            onClick={() => setOpenMobile(false)}
+                            aria-label="Закрыть панель"
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
                     </div>
+                </SidebarHeader>
+
+                <SidebarContent>
+                    <div className="space-y-2 p-4 pb-0">
+                        <Button
+                            type="button"
+                            onClick={onCreateRecord}
+                            className="w-full gap-2 bg-slate-900 font-semibold text-white shadow-sm hover:bg-slate-800"
+                            size="sm"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Добавить запись
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsUploadOpen(true)}
+                            className="w-full gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                            size="sm"
+                        >
+                            <FileSpreadsheet className="h-4 w-4" />
+                            Работа с Excel
+                        </Button>
+                    </div>
+
+                    <SidebarGroup className="mt-2">
+                        <SidebarGroupLabel className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                            Список записей
+                        </SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu className="gap-1.5 px-2">
+                                {records.map((record) => (
+                                    <SidebarRecordItem
+                                        key={record.id}
+                                        record={record}
+                                        isActive={record.id === activeRecordId}
+                                        status={computeInactiveStatus(record)}
+                                        onSelect={() => {
+                                            onSelectRecord(record.id);
+                                            if (isMobile) setOpenMobile(false);
+                                        }}
+                                        onDelete={() => onDelete(record.id)}
+                                    />
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                </SidebarContent>
+
+                <SidebarFooter className="border-t border-slate-100 p-4">
                     <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-slate-600 md:hidden"
-                        onClick={() => setOpenMobile(false)}
-                        aria-label="Закрыть панель"
+                        asChild
+                        variant="outline"
+                        className="w-full justify-start gap-2 font-medium shadow-sm"
                     >
-                        <X className="h-4 w-4" />
+                        <Link to="/dashboard">
+                            <LogOut className="h-4 w-4 text-slate-500" />
+                            Вернуться назад
+                        </Link>
                     </Button>
-                </div>
-            </SidebarHeader>
+                </SidebarFooter>
+            </Sidebar>
 
-            <SidebarContent>
-                <div className="space-y-2 p-4 pb-0">
-                    <Button
-                        type="button"
-                        onClick={onCreateRecord}
-                        className="w-full gap-2 bg-slate-900 font-semibold text-white shadow-sm hover:bg-slate-800"
-                        size="sm"
-                    >
-                        <Plus className="h-4 w-4" />
-                        Добавить запись
-                    </Button>
-                </div>
-
-                <SidebarGroup className="mt-2">
-                    <SidebarGroupLabel className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                        Список записей
-                    </SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu className="gap-1.5 px-2">
-                            {records.map((record) => (
-                                <SidebarRecordItem
-                                    key={record.id}
-                                    record={record}
-                                    isActive={record.id === activeRecordId}
-                                    status={
-                                        record.id === activeRecordId && activeStatus
-                                            ? activeStatus
-                                            : computeInactiveStatus(record)
-                                    }
-                                    onSelect={() => {
-                                        onSelectRecord(record.id);
-                                        if (isMobile) setOpenMobile(false);
-                                    }}
-                                />
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-            </SidebarContent>
-
-            <SidebarFooter className="border-t border-slate-100 p-4">
-                <Button
-                    asChild
-                    variant="outline"
-                    className="w-full justify-start gap-2 font-medium shadow-sm"
-                >
-                    <Link to="/dashboard">
-                        <LogOut className="h-4 w-4 text-slate-500" />
-                        Вернуться назад
-                    </Link>
-                </Button>
-            </SidebarFooter>
-        </Sidebar>
+            <ExcelUploadModal
+                open={isUploadOpen}
+                onOpenChange={setIsUploadOpen}
+                publ_id={publ_id}
+                user_id={user_id}
+            />
+        </>
     );
 };
 

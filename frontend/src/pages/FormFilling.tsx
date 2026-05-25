@@ -1,9 +1,8 @@
-import { type FC, useState } from 'react';
+import { type FC } from 'react';
 import { useOutletContext, useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store/store';
 import { useRecordsManager } from '@/hooks/useRecordsManager';
-import type { RecordStatus } from '@/lib/recordStatus';
 import RecordFormContent from '@/components/form/RecordFormContent';
 import FormSidebar from '@/components/form/FormSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -27,7 +26,6 @@ const FormFilling: FC = () => {
         user_id!,
     );
 
-    const [activeStatus, setActiveStatus] = useState<RecordStatus | null>(null);
     const activeRecordId = activeRecord?.id ?? null;
 
     if (isLoading) return <LoadingScreen />;
@@ -40,19 +38,21 @@ const FormFilling: FC = () => {
             className="flex-1"
         >
             <FormSidebar
-                records={records}
+                records={records.filter((r) => r.type !== 'rec_del')}
                 activeRecordId={activeRecordId}
-                activeStatus={activeStatus}
                 onSelectRecord={recordMethods.switchTo}
                 onCreateRecord={recordMethods.create}
+                onDelete={recordMethods.delete}
+                publ_id={publ_id}
+                user_id={user_id!}
             />
             <main className="relative flex w-full min-w-0 flex-1 flex-col">
                 {activeRecord ? (
                     <RecordFormContent
                         publ_id={publ_id}
                         activeRecord={activeRecord}
+                        records={records}
                         onRegisterSave={registerSave}
-                        onStatusChange={setActiveStatus}
                         onDelete={recordMethods.delete}
                     />
                 ) : (

@@ -5,14 +5,6 @@ import type { FieldErrors } from 'react-hook-form';
 
 export type RecordStatus = 'empty' | 'draft' | 'valid' | 'error';
 
-const SERVER_STATUS_MAP: Record<string, RecordStatus> = {
-    rec_ok: 'valid',
-    check_ok: 'valid',
-    rec_fail: 'error',
-    check_fail: 'error',
-    rec_del: 'error',
-};
-
 function computeFromFormValues(values: Partial<FormRecord>): RecordStatus {
     const hasAnyValue = BLOCKING_FIELDS.some((field) => {
         const val = values[field as keyof FormRecord];
@@ -43,8 +35,17 @@ export function computeActiveStatus(
 
 export function computeInactiveStatus(record: RecordFull): RecordStatus {
     const serverType = record.type;
-    if (serverType && SERVER_STATUS_MAP[serverType]) {
-        return SERVER_STATUS_MAP[serverType];
+
+    if (serverType === 'rec_ok') return 'valid';
+    if (serverType === 'check_ok') return 'draft';
+    if (serverType === 'rec_fail') return 'error';
+
+    if (serverType === 'check_fail') {
+        const allBlockingFilled = BLOCKING_FIELDS.every((field) => {
+            const val = record[field as keyof RecordFull];
+            return val !== undefined && val !== null && val !== '';
+        });
+        return allBlockingFilled ? 'error' : 'draft';
     }
 
     return computeFromFormValues(toFormPartial(record));

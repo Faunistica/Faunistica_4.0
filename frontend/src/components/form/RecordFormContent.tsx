@@ -1,12 +1,11 @@
-import { type FC, useEffect, useMemo } from 'react';
-import { useForm, FormProvider, useWatch } from 'react-hook-form';
+import { type FC, useEffect } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { RecordFull, FormRecord } from '@/types/api.dto';
 import { formRecordSchema } from '@/types/forms';
 import { useSaveRecord } from '@/hooks/useSaveRecord';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { toFormPartial } from '@/lib/recordUtils';
-import { computeActiveStatus, type RecordStatus } from '@/lib/recordStatus';
 import ArticleSourceCard from '@/components/form/ArticleSourceCard';
 import GeographyCard from '@/components/form/GeographyCard';
 import CollectionEventCard from '@/components/form/CollectionEventCard';
@@ -18,16 +17,16 @@ import Footer from '@/components/form/FormFooter';
 interface RecordFormContentProps {
     publ_id: number;
     activeRecord: RecordFull;
+    records: RecordFull[];
     onRegisterSave: (fn: () => Promise<void>) => void;
-    onStatusChange: (status: RecordStatus) => void;
-    onDelete: () => void;
+    onDelete: (id: string) => void;
 }
 
 const RecordFormContent: FC<RecordFormContentProps> = ({
     publ_id,
     activeRecord,
+    records,
     onRegisterSave,
-    onStatusChange,
     onDelete,
 }) => {
     const activeRecordId = activeRecord.id;
@@ -41,12 +40,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     const { save, submit, isSaving, nonFieldErrors } = useSaveRecord(activeRecordId, methods);
     const { isAutoSaving, lastSavedTime } = useAutoSave({ save, methods, activeRecordId });
 
-    const {
-        getValues,
-        reset,
-        formState: { errors },
-    } = methods;
-    const values = useWatch({ control: methods.control });
+    const { getValues, reset } = methods;
 
     useEffect(() => {
         onRegisterSave(() => save(getValues()));
@@ -56,15 +50,6 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
         reset(toFormPartial(activeRecord));
     }, [activeRecord, reset]);
 
-    const status = useMemo(
-        () => computeActiveStatus(values as Partial<FormRecord>, errors),
-        [values, errors],
-    );
-
-    useEffect(() => {
-        onStatusChange(status);
-    }, [status, onStatusChange]);
-
     return (
         <FormProvider {...methods}>
             <div className="w-full flex-1 p-4 pb-45 md:p-8 md:pb-30">
@@ -73,10 +58,16 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
                         <ArticleSourceCard publ_id={publ_id} />
                     </div>
                     <div className="relative z-15 transition-all duration-200 focus-within:z-50">
-                        <GeographyCard publ_id={publ_id} />
+                        <GeographyCard
+                            publ_id={publ_id}
+                            otherRecords={records.filter((r) => r.id !== activeRecord.id)}
+                        />
                     </div>
                     <div className="relative z-10 transition-all duration-200 focus-within:z-50">
-                        <CollectionEventCard publ_id={publ_id} />
+                        <CollectionEventCard
+                            publ_id={publ_id}
+                            otherRecords={records.filter((r) => r.id !== activeRecord.id)}
+                        />
                     </div>
                     <div className="relative z-5 transition-all duration-200 focus-within:z-50">
                         <TaxonomyCard />
@@ -90,7 +81,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
             <Footer
                 onSave={() => save(getValues())}
                 onSubmit={() => submit(getValues())}
-                onDelete={onDelete}
+                onDelete={() => onDelete(activeRecordId)}
                 isSaving={isSaving}
                 isAutoSaving={isAutoSaving}
                 lastSavedTime={lastSavedTime}

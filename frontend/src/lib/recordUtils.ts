@@ -165,6 +165,5 @@ export function toFormPartial(record: RecordFull): Partial<FormRecord> {
             }
         }
     }
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     return result as Partial<FormRecord>;
 }

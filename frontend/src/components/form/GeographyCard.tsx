@@ -22,15 +22,17 @@ import { Map as MapIcon, MapPin } from 'lucide-react';
 import { GeographyMap } from '@/components/map/GeographyMap';
 import { DMInputGroup, DMSInputGroup } from '@/components/map/CoordinateInputs';
 import { GEOREF_OPTIONS, COUNTRY_OPTIONS } from '@/types/forms';
-import type { FormRecord } from '@/types/api.dto';
+import type { FormRecord, RecordFull } from '@/types/api.dto';
 
 import { useLazyGeoSearchQuery } from '@/api/utilAPI';
+import SavedPresetSelect from '@/components/form/SavedPresetSelect';
 
 interface Props {
     publ_id: number;
+    otherRecords: RecordFull[];
 }
 
-const GeographyCard: FC<Props> = () => {
+const GeographyCard: FC<Props> = ({ otherRecords }) => {
     const {
         register,
         control,
@@ -94,6 +96,7 @@ const GeographyCard: FC<Props> = () => {
             </CardHeader>
 
             <CardContent className="space-y-6">
+                <SavedPresetSelect type="location" otherRecords={otherRecords} />
                 <div className="grid grid-cols-1 gap-6 border-b border-slate-100 pb-6 lg:grid-cols-2">
                     <Controller
                         name="georef_source"

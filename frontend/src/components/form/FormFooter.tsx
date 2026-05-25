@@ -40,7 +40,7 @@ const Footer: FC<FooterProps> = ({
 
     return (
         <>
-            <footer className="fixed right-0 bottom-0 left-0 z-[90] flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10">
+            <footer className="fixed right-0 bottom-0 left-0 z-90 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10">
                 <div className="flex items-center gap-4">
                     <Button
                         onClick={() => setIsDeleteDialogOpen(true)}
