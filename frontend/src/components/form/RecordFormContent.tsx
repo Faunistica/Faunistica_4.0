@@ -53,31 +53,17 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
         reset(toFormPartial(activeRecord));
     }, [activeRecord, reset]);
 
+    const otherRecords = records.filter((r) => r.id !== activeRecord.id);
+
     return (
         <FormProvider {...methods} key={activeRecordId}>
             <div className="w-full flex-1 p-4 pb-45 md:p-8 md:pb-30">
                 <div className="mx-auto max-w-6xl space-y-6">
-                    <div className="relative z-20 mb-6 transition-all duration-200 focus-within:z-50">
-                        <ArticleSourceCard publ_id={publ_id} />
-                    </div>
-                    <div className="relative z-15 transition-all duration-200 focus-within:z-50">
-                        <GeographyCard
-                            publ_id={publ_id}
-                            otherRecords={records.filter((r) => r.id !== activeRecord.id)}
-                        />
-                    </div>
-                    <div className="relative z-10 transition-all duration-200 focus-within:z-50">
-                        <CollectionEventCard
-                            publ_id={publ_id}
-                            otherRecords={records.filter((r) => r.id !== activeRecord.id)}
-                        />
-                    </div>
-                    <div className="relative z-5 transition-all duration-200 focus-within:z-50">
-                        <TaxonomyCard />
-                    </div>
-                    <div className="relative z-0 transition-all duration-200 focus-within:z-50">
-                        <QuantitiesCard />
-                    </div>
+                    <ArticleSourceCard publ_id={publ_id} />
+                    <GeographyCard otherRecords={otherRecords} />
+                    <CollectionEventCard otherRecords={otherRecords} />
+                    <TaxonomyCard />
+                    <QuantitiesCard />
                     <ServerErrorDisplay errors={nonFieldErrors} />
                 </div>
             </div>

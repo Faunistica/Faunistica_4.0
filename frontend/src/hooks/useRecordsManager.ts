@@ -54,7 +54,6 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
         }
     }, [recordsData?.items, hasLoadedInitial]);
 
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!hasLoadedInitial || !recordsData) return;
         if (recordsData.items.length === 0) {
@@ -64,7 +63,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
         if (activeRecord && !recordsData.items.some((r) => r.id === activeRecord.id)) {
             setActiveRecord(recordsData.items[0]);
         }
-    }, [recordsData?.items, hasLoadedInitial, activeRecord?.id]);
+    }, [recordsData, hasLoadedInitial, activeRecord]);
 
     const registerSave = useCallback((fn: () => Promise<void>) => {
         saveRef.current = fn;

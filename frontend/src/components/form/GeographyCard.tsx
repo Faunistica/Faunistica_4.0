@@ -28,7 +28,6 @@ import { useLazyGeoSearchQuery } from '@/api/utilAPI';
 import SavedPresetSelect from '@/components/form/SavedPresetSelect';
 
 interface Props {
-    publ_id: number;
     otherRecords: RecordFull[];
 }
 
@@ -89,19 +88,19 @@ const GeographyCard: FC<Props> = ({ otherRecords }) => {
 
     return (
         <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-4">
+            <CardHeader className="flex justify-between pb-2">
                 <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                        <MapPin className="h-4 w-4" />
-                    </div>
+                    <span className="size-8 rounded-lg bg-emerald-50 p-2 text-emerald-600">
+                        <MapPin className="size-4" />
+                    </span>
                     <CardTitle className="text-lg font-semibold">
                         Пространственная локализация
                     </CardTitle>
                 </div>
+                <SavedPresetSelect type="location" otherRecords={otherRecords} />
             </CardHeader>
 
             <CardContent className="space-y-6">
-                <SavedPresetSelect type="location" otherRecords={otherRecords} />
                 <div className="grid grid-cols-1 gap-6 border-b border-slate-100 pb-6 lg:grid-cols-2">
                     <Controller
                         name="georef_source"

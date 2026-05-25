@@ -10,7 +10,6 @@ import type { FormRecord, RecordFull } from '@/types/api.dto';
 import SavedPresetSelect from '@/components/form/SavedPresetSelect';
 
 interface Props {
-    publ_id: number;
     otherRecords: RecordFull[];
 }
 
@@ -22,18 +21,18 @@ const CollectionEventCard: FC<Props> = ({ otherRecords }) => {
 
     return (
         <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-4">
+            <CardHeader className="flex justify-between pb-2">
                 <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                    <span className="size-8 rounded-lg bg-amber-50 p-2 text-amber-600">
                         <CalendarDays className="h-4 w-4" />
-                    </div>
+                    </span>
                     <CardTitle className="text-lg font-semibold">
                         Параметры сбора материала
                     </CardTitle>
                 </div>
+                <SavedPresetSelect type="event" otherRecords={otherRecords} />
             </CardHeader>
             <CardContent className="space-y-6">
-                <SavedPresetSelect type="event" otherRecords={otherRecords} />
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <TooltipProvider>
                         <Field data-invalid={!!errors?.verbatim_date}>
