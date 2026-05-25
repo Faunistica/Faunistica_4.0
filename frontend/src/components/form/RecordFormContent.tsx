@@ -1,4 +1,4 @@
-import { type FC, useEffect } from 'react';
+import { type FC, useEffect, useMemo } from 'react';
 import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { RecordFull, FormRecord } from '@/types/api.dto';
@@ -56,9 +56,14 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
         reset(toFormPartial(activeRecord));
     }, [activeRecord, reset]);
 
+    const status = useMemo(
+        () => computeActiveStatus(values as Partial<FormRecord>, errors),
+        [values, errors],
+    );
+
     useEffect(() => {
-        onStatusChange(computeActiveStatus(values as Partial<FormRecord>, errors));
-    }, [values, errors, onStatusChange]);
+        onStatusChange(status);
+    }, [status, onStatusChange]);
 
     return (
         <FormProvider {...methods}>

@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
-import type { FormKey } from '@/types/forms';
+import type { FormKey, FormRecord } from '@/types/forms';
+import { useFormStatus } from 'react-dom';
 
 interface FormAutocompleteProps {
     name: FormKey<string | null | undefined>;
@@ -24,25 +25,29 @@ export function FormAutocomplete({
     debounceMs = 300,
     onSelectExtra,
 }: FormAutocompleteProps) {
-    const { control, register, setValue } = useFormContext();
+    const {
+        register,
+        setValue,
+        getValues,
+        formState: { errors },
+    } = useFormContext();
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const searchVersionRef = useRef(0);
     const lastCommittedRef = useRef('');
-
-    const formValue = useWatch({ control, name });
-    const { errors } = useFormState({ control, name });
     const error = errors?.[name];
 
     useEffect(() => {
-        if (formValue !== lastCommittedRef.current) {
-            lastCommittedRef.current = formValue ?? '';
-            setValue(name, formValue ?? '');
-            if (!formValue) {
+        const value = getValues(name);
+
+        if (value !== lastCommittedRef.current) {
+            lastCommittedRef.current = value;
+            setValue(name, value);
+            if (!value) {
                 setSuggestions([]);
                 searchVersionRef.current = 0;
             }
         }
-    }, [name, formValue, setValue]);
+    }, [name, setValue, getValues]);
 
     const debouncedSearch = useDebouncedCallback(async (text: string, version: number) => {
         try {
@@ -67,17 +72,19 @@ export function FormAutocomplete({
 
     const handleBlur = useCallback(
         async (e: React.FocusEvent<HTMLInputElement>) => {
-            if (formValue !== lastCommittedRef.current) {
-                lastCommittedRef.current = formValue;
-                onSelectExtra?.(formValue);
+            const value = getValues(name);
+
+            if (value !== lastCommittedRef.current) {
+                lastCommittedRef.current = value;
+                onSelectExtra?.(value);
             }
             await onBlur(e);
         },
-        [onBlur, onSelectExtra, formValue],
+        [onBlur, onSelectExtra, getValues, name],
     );
 
     return (
-        <Field>
+        <Field data-invalid={!!error}>
             <FieldLabel>{label}</FieldLabel>
             <Autocomplete
                 {...registerProps}
@@ -96,7 +103,7 @@ export function FormAutocomplete({
                 placeholder={placeholder}
                 aria-invalid={!!error}
             />
-            <FieldError errors={[error]} />
+            {!!error && <FieldError errors={[error]} />}
         </Field>
     );
 }

@@ -14,8 +14,8 @@ export const utilAPI = createApi({
                 params: {
                     field,
                     text,
-                    ...(family ? { filters: { family: family } } : {}),
-                    ...(genus ? { filters: { genus: genus } } : {}),
+                    ...(family ? { 'filters.family': family } : {}),
+                    ...(genus ? { 'filters.genus': genus } : {}),
                 },
             }),
         }),
