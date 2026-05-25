@@ -72,7 +72,7 @@ const SidebarRecordItem = ({
                     }
                 }}
                 className={cn(
-                    'group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-3 text-left transition-all duration-200',
+                    'group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-2 text-left transition-all duration-200',
                     isActive ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200' : 'hover:bg-slate-50',
                 )}
             >

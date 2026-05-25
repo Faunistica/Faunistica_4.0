@@ -32,24 +32,28 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     const methods = useForm<FormRecord>({
         resolver: zodResolver(formRecordSchema),
         defaultValues: undefined,
-        mode: 'onTouched',
+        mode: 'onBlur',
         reValidateMode: 'onChange',
     });
 
     const { save, submit, isSaving, nonFieldErrors } = useSaveRecord(activeRecord.id, methods);
     const { isAutoSaving, lastSavedTime } = useAutoSave({
-        save,
+        save: (data) => save(data),
         methods,
     });
 
     const { getValues, reset } = methods;
 
     useEffect(() => {
-        onRegisterSave(() => save(getValues()));
+        onRegisterSave((options) => save(getValues(), options));
     }, [save, getValues, onRegisterSave]);
 
     useEffect(() => {
-        reset(toFormPartial(activeRecord));
+        reset(toFormPartial(activeRecord), {
+            keepErrors: false,
+            keepTouched: false,
+            keepDirty: false,
+        });
     }, [activeRecord, reset]);
 
     const otherRecords = records.filter((r) => r.id !== activeRecord.id);

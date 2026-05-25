@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Controller, useController, useFormContext, useWatch } from 'react-hook-form';
+import { useController, useFormContext } from 'react-hook-form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import type { FormKey, FormRecord } from '@/types/forms';
-import { Control } from 'leaflet';
 
 interface FormAutocompleteProps {
     name: FormKey<string | null | undefined>;

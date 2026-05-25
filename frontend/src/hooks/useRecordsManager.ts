@@ -19,13 +19,15 @@ interface UseRecordsManagerReturn {
         switchTo: (targetId: string) => Promise<void>;
         delete: (id: string) => Promise<void>;
     };
-    registerSave: (fn: () => Promise<void>) => void;
+    registerSave: (fn: (options?: { silent?: boolean }) => Promise<void>) => void;
 }
 
 export function useRecordsManager(publ_id: number, user_id: number): UseRecordsManagerReturn {
     const [activeRecord, setActiveRecord] = useState<RecordFull | null>(null);
     const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
-    const saveRef = useRef<(() => Promise<void>) | undefined>(undefined);
+    const saveRef = useRef<((options?: { silent?: boolean }) => Promise<void>) | undefined>(
+        undefined,
+    );
 
     const { data: recordsData, isLoading } = useRecordsListQuery(
         { publ_id, user_id },
@@ -46,7 +48,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
         }
     }, [records, hasLoadedInitial]);
 
-    const registerSave = useCallback((fn: () => Promise<void>) => {
+    const registerSave = useCallback((fn: (options?: { silent?: boolean }) => Promise<void>) => {
         saveRef.current = fn;
     }, []);
 
@@ -60,7 +62,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
             if (targetId === activeRecord?.id) return;
 
             try {
-                await saveRef.current?.();
+                await saveRef.current?.({ silent: true });
             } catch {
                 // proceed with switch even if save fails
             }

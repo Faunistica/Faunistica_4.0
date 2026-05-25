@@ -8,7 +8,6 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { CalendarDays, Info } from 'lucide-react';
 import type { FormRecord, RecordFull } from '@/types/api.dto';
 import SavedPresetSelect from '@/components/form/SavedPresetSelect';
-import { undefined } from 'zod';
 
 interface Props {
     otherRecords: RecordFull[];
@@ -103,7 +102,7 @@ const CollectionEventCard: FC<Props> = ({ otherRecords }) => {
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <TooltipProvider>
                         <Controller
-                            name="sampling_protocol"
+                            name="habitat"
                             control={control}
                             render={({ field, fieldState: { error, invalid } }) => (
                                 <Field data-invalid={invalid}>
@@ -125,6 +124,7 @@ const CollectionEventCard: FC<Props> = ({ otherRecords }) => {
                                         placeholder="Описание местообитания; второе местообитание"
                                         aria-invalid={invalid}
                                         {...field}
+                                        value={field.value?.toString()}
                                     />
                                     <FieldError errors={[error]} />
                                 </Field>
@@ -133,7 +133,7 @@ const CollectionEventCard: FC<Props> = ({ otherRecords }) => {
                     </TooltipProvider>
 
                     <Controller
-                        name="sampling_protocol"
+                        name="sampling_effort"
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>

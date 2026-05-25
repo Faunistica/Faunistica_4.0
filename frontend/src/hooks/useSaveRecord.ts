@@ -51,7 +51,7 @@ const FORM_RECORD_FIELDS: (keyof FormRecord)[] = [
 ];
 
 interface UseSaveRecordReturn {
-    save: (data: Partial<FormRecord>) => Promise<void>;
+    save: (data: Partial<FormRecord>, options?: { silent?: boolean }) => Promise<void>;
     submit: (data: Partial<FormRecord>) => Promise<void>;
     isSaving: boolean;
     nonFieldErrors: string[];
@@ -77,6 +77,7 @@ export function useSaveRecord(
         (
             _data: Partial<FormRecord>,
             response: { errors?: { fields: string[]; message: string }[] },
+            silent?: boolean,
         ) => {
             clearServerErrors();
 
@@ -89,18 +90,20 @@ export function useSaveRecord(
                     for (const field of err.fields) {
                         const match = FORM_RECORD_FIELDS.find((f) => f === field);
                         if (match) {
-                            methods.setError(match, {
-                                type: 'server',
-                                message: err.message,
-                            });
+                            if (!silent) {
+                                methods.setError(match, {
+                                    type: 'server',
+                                    message: err.message,
+                                });
+                            }
                         }
                     }
-                } else {
+                } else if (!silent) {
                     nonField.push(err.message);
                 }
             }
 
-            if (nonField.length > 0) {
+            if (!silent && nonField.length > 0) {
                 setNonFieldErrors(nonField);
             }
         },
@@ -108,7 +111,7 @@ export function useSaveRecord(
     );
 
     const save = useCallback(
-        async (data: Partial<FormRecord>) => {
+        async (data: Partial<FormRecord>, options?: { silent?: boolean }) => {
             if (!activeRecordId) return;
 
             setIsSaving(true);
@@ -118,7 +121,7 @@ export function useSaveRecord(
                     record_id: activeRecordId,
                     data: payload,
                 }).unwrap();
-                handleResponse(data, response);
+                handleResponse(data, response, options?.silent);
             } catch (error) {
                 toast.error('Ошибка при сохранении данных');
                 throw error;
