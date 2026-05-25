@@ -71,8 +71,12 @@ const TaxonomyCard: FC = () => {
             .then((r) => r.suggestions ?? []);
     };
 
-    const handleAutocompleteChange = () => {
+    const handleTaxonSuggestionSelect = () => {
         setValue('tax_verbatim', false);
+    };
+
+    const handleTaxonTypedCommit = () => {
+        setValue('tax_verbatim', true);
     };
 
     return (
@@ -95,7 +99,8 @@ const TaxonomyCard: FC = () => {
                         label="Семейство (Familia)"
                         searchFn={familySearchFn}
                         placeholder="Начните вводить…"
-                        onSelectExtra={handleAutocompleteChange}
+                        onSelectSuggestion={handleTaxonSuggestionSelect}
+                        onCommitTyped={handleTaxonTypedCommit}
                     />
                     <FormAutocomplete
                         name="genus"
@@ -103,7 +108,8 @@ const TaxonomyCard: FC = () => {
                         label="Род (Genus)"
                         searchFn={genusSearchFn}
                         placeholder="Название рода"
-                        onSelectExtra={handleAutocompleteChange}
+                        onSelectSuggestion={handleTaxonSuggestionSelect}
+                        onCommitTyped={handleTaxonTypedCommit}
                     />
                     <FormAutocomplete
                         name="species"
@@ -111,7 +117,8 @@ const TaxonomyCard: FC = () => {
                         label="Видовое название (эпитет)"
                         searchFn={speciesSearchFn}
                         placeholder="Только эпитет, без рода"
-                        onSelectExtra={handleAutocompleteChange}
+                        onSelectSuggestion={handleTaxonSuggestionSelect}
+                        onCommitTyped={handleTaxonTypedCommit}
                     />
                 </div>
 

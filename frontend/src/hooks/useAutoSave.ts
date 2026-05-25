@@ -7,7 +7,6 @@ const SHOULD_AUTO_SAVE = !(import.meta.env.VITE_DISABLE_AUTO_SAVE?.toLowerCase?.
 interface UseAutoSaveOptions {
     save: (data: Partial<FormRecord>) => Promise<void>;
     methods: UseFormReturn<FormRecord>;
-    activeRecordId: string | null;
 }
 
 interface UseAutoSaveReturn {
@@ -15,11 +14,7 @@ interface UseAutoSaveReturn {
     lastSavedTime: Date | null;
 }
 
-export function useAutoSave({
-    save,
-    methods,
-    activeRecordId,
-}: UseAutoSaveOptions): UseAutoSaveReturn {
+export function useAutoSave({ save, methods }: UseAutoSaveOptions): UseAutoSaveReturn {
     const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const lastSnapshotRef = useRef<string>('');
     const [isAutoSaving, setIsAutoSaving] = useState(false);
@@ -70,12 +65,6 @@ export function useAutoSave({
             cancelPendingAutoSave();
         };
     }, [watch, getValues, save, cancelPendingAutoSave]);
-
-    useEffect(() => {
-        if (activeRecordId) {
-            lastSnapshotRef.current = '';
-        }
-    }, [activeRecordId]);
 
     return { isAutoSaving, lastSavedTime };
 }

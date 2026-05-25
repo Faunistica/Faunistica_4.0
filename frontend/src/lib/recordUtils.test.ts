@@ -204,9 +204,10 @@ describe('toFormPartial', () => {
         expect(result.males).toBe(3);
         expect(result.females).toBe(5);
         expect(result.juveniles).toBe(6);
-        expect(result.subadultMales).toBeUndefined();
-        expect(result.subadultFemales).toBeUndefined();
-        expect(result.adults).toBeUndefined();
+        // Fields without matching specimens are explicitly set to null
+        expect(result.subadultMales).toBeNull();
+        expect(result.subadultFemales).toBeNull();
+        expect(result.adults).toBeNull();
     });
 
     it('maps all six specimen types', () => {
@@ -232,12 +233,16 @@ describe('toFormPartial', () => {
         expect(result.juveniles).toBe(6);
     });
 
-    it('handles null specimens', () => {
+    it('handles null specimens by setting all count fields to null', () => {
         const record = { ...baseRecord, specimens: null };
         const result = toFormPartial(record);
 
-        expect(result.males).toBeUndefined();
-        expect(result.females).toBeUndefined();
+        expect(result.males).toBeNull();
+        expect(result.females).toBeNull();
+        expect(result.subadultMales).toBeNull();
+        expect(result.subadultFemales).toBeNull();
+        expect(result.adults).toBeNull();
+        expect(result.juveniles).toBeNull();
     });
 
     it('preserves quantity_type', () => {
@@ -319,16 +324,19 @@ describe('toFormPartial', () => {
 
         const result = toFormPartial(empty);
 
-        expect(result.country).toBeNull();
-        expect(result.region).toBeNull();
-        expect(result.latitude).toBeNull();
-        expect(result.longitude).toBeNull();
-        expect(result.verbatim_date).toBeNull();
-        expect(result.sampling_protocol).toBeNull();
-        expect(result.recorded_by).toBeNull();
-        expect(result.family).toBeNull();
-        expect(result.genus).toBeNull();
-        expect(result.species).toBeNull();
+        // Required string fields default to empty string, not null
+        expect(result.country).toBe('');
+        expect(result.region).toBe('');
+        expect(result.verbatim_date).toBe('');
+        expect(result.sampling_protocol).toBe('');
+        expect(result.recorded_by).toBe('');
+        expect(result.family).toBe('');
+        expect(result.genus).toBe('');
+        expect(result.species).toBe('');
+        // Numeric fields default to 0
+        expect(result.latitude).toBe(0);
+        expect(result.longitude).toBe(0);
+        // Nullable fields default to null
         expect(result.quantity_type).toBeNull();
     });
 });

@@ -108,6 +108,19 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
     return data;
 };
 
+const REQUIRED_STRING_FIELDS = new Set([
+    'country',
+    'region',
+    'district',
+    'locality',
+    'verbatim_date',
+    'sampling_protocol',
+    'recorded_by',
+    'family',
+    'genus',
+    'species',
+]);
+
 export function toFormPartial(record: RecordFull): Partial<FormRecord> {
     const result: Record<string, unknown> = {};
     const keys: (keyof RecordData)[] = [
@@ -150,20 +163,18 @@ export function toFormPartial(record: RecordFull): Partial<FormRecord> {
     for (const key of keys) {
         const val = record[key];
         if (key === 'latitude' || key === 'longitude') {
-            result[key] = val != null ? Number(val) : null;
+            result[key] = val != null ? Number(val) : 0;
+        } else if (REQUIRED_STRING_FIELDS.has(key)) {
+            result[key] = val ?? '';
         } else {
             result[key] = val ?? null;
         }
     }
-    if (record.specimens) {
-        for (const spec of record.specimens) {
-            const mapping = SPECIMEN_FIELD_MAP.find(
-                (m) => m.sex === spec.sex && m.life_stage === spec.life_stage,
-            );
-            if (mapping) {
-                result[mapping.formField] = spec.count;
-            }
-        }
+    for (const mapping of SPECIMEN_FIELD_MAP) {
+        const spec = record.specimens?.find(
+            (s) => s.sex === mapping.sex && s.life_stage === mapping.life_stage,
+        );
+        result[mapping.formField] = spec?.count ?? null;
     }
     return result as Partial<FormRecord>;
 }

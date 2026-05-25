@@ -38,6 +38,7 @@ const GeographyCard: FC<Props> = ({ otherRecords }) => {
         control,
         watch,
         setValue,
+        getValues,
         formState: { errors },
     } = useFormContext<FormRecord>();
 
@@ -53,19 +54,23 @@ const GeographyCard: FC<Props> = ({ otherRecords }) => {
     const [coordFormat, setCoordFormat] = useState<'DD' | 'DM' | 'DMS' | ''>('');
 
     useEffect(() => {
-        if (isCustom) {
+        if (isCustom && getValues('verbatimcoordinates') !== null) {
             setValue('verbatimcoordinates' as const, null, {
                 shouldValidate: true,
             });
         }
-    }, [isCustom, setValue]);
+    }, [isCustom, setValue, getValues]);
 
     const handleMapSelect = (lat: number, lng: number) => {
         setValue('latitude' as const, lat, { shouldValidate: true });
         setValue('longitude' as const, lng, { shouldValidate: true });
     };
 
-    const handleAutocompleteChange = () => {
+    const handleLocationSuggestionSelect = () => {
+        setValue('is_manual_location', false);
+    };
+
+    const handleLocationTypedCommit = () => {
         setValue('is_manual_location', true);
     };
 
@@ -182,14 +187,16 @@ const GeographyCard: FC<Props> = ({ otherRecords }) => {
                         label="Регион (субъект)"
                         searchFn={regionSearchFn}
                         placeholder="Начните вводить…"
-                        onSelectExtra={handleAutocompleteChange}
+                        onSelectSuggestion={handleLocationSuggestionSelect}
+                        onCommitTyped={handleLocationTypedCommit}
                     />
                     <FormAutocomplete
                         name="district"
                         label="Район"
                         searchFn={districtSearchFn}
                         placeholder="Начните вводить…"
-                        onSelectExtra={handleAutocompleteChange}
+                        onSelectSuggestion={handleLocationSuggestionSelect}
+                        onCommitTyped={handleLocationTypedCommit}
                     />
                     <Field data-invalid={!!errors?.locality}>
                         <FieldLabel htmlFor="locality">Локалитет (топоним)</FieldLabel>

@@ -12,7 +12,7 @@ export const recordAPI = createApi({
             Types.RecordListRequest
         >({
             query: (params) => ({
-                url: '/records/',
+                url: '/records',
                 method: 'GET',
                 params: params,
             }),
@@ -42,7 +42,7 @@ export const recordAPI = createApi({
         }),
         createRecord: build.mutation<Types.RecordFull, Types.CreateRecordRequest>({
             query: (record) => ({
-                url: '/records/',
+                url: '/records',
                 method: 'POST',
                 body: record,
             }),
@@ -85,6 +85,7 @@ export const recordAPI = createApi({
 
                 if (result.error) return { error: result.error };
 
+                // oxlint-disable-next-line typescript/no-unsafe-type-assertion
                 const blob = result.data as Blob;
                 const url = window.URL.createObjectURL(blob);
                 Object.assign(document.createElement('a'), {

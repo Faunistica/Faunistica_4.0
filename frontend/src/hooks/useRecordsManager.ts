@@ -26,6 +26,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
     const [activeRecord, setActiveRecord] = useState<RecordFull | null>(null);
     const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
     const saveRef = useRef<(() => Promise<void>) | undefined>(undefined);
+    const recordsRef = useRef<RecordFull[]>([]);
 
     const { data: recordsData, isLoading } = useRecordsListQuery(
         { publ_id, user_id },
@@ -37,7 +38,11 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
     const [deleteRecord] = useDeleteRecordMutation();
     const dispatch = useAppDispatch();
 
-    const records = useMemo(() => recordsData?.items ?? [], [recordsData]);
+    const records = useMemo(() => {
+        const items = recordsData?.items ?? [];
+        recordsRef.current = items;
+        return items;
+    }, [recordsData]);
 
     useEffect(() => {
         if (recordsData?.items && !hasLoadedInitial) {
@@ -47,18 +52,19 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
             }
             setHasLoadedInitial(true);
         }
-    }, [recordsData, hasLoadedInitial]);
+    }, [recordsData?.items, hasLoadedInitial]);
 
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        if (!hasLoadedInitial) return;
-        if (!recordsData?.items?.length) {
+        if (!hasLoadedInitial || !recordsData) return;
+        if (recordsData.items.length === 0) {
             if (activeRecord !== null) setActiveRecord(null);
             return;
         }
         if (activeRecord && !recordsData.items.some((r) => r.id === activeRecord.id)) {
             setActiveRecord(recordsData.items[0]);
         }
-    }, [recordsData, hasLoadedInitial, activeRecord]);
+    }, [recordsData?.items, hasLoadedInitial, activeRecord?.id]);
 
     const registerSave = useCallback((fn: () => Promise<void>) => {
         saveRef.current = fn;
@@ -73,9 +79,13 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
         async (targetId: string) => {
             if (targetId === activeRecord?.id) return;
 
-            await saveRef.current?.();
+            try {
+                await saveRef.current?.();
+            } catch {
+                // proceed with switch even if save fails
+            }
 
-            const cached = records.find((r) => r.id === targetId);
+            const cached = recordsRef.current.find((r) => r.id === targetId);
             if (cached) {
                 setActiveRecord(cached);
             } else {
@@ -85,7 +95,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
                 }
             }
         },
-        [activeRecord?.id, records, fetchRecordById],
+        [activeRecord?.id, fetchRecordById],
     );
 
     const handleDelete = useCallback(
@@ -96,8 +106,8 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
 
             let nextRecord: RecordFull | null = null;
             if (isActive) {
-                const currentIdx = records.findIndex((r) => r.id === id);
-                const remaining = records.filter((r) => r.id !== id);
+                const currentIdx = recordsRef.current.findIndex((r) => r.id === id);
+                const remaining = recordsRef.current.filter((r) => r.id !== id);
                 nextRecord = remaining[currentIdx] ?? remaining[currentIdx - 1] ?? null;
             }
 
@@ -125,7 +135,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
                 toast.error('Ошибка при удалении записи');
             }
         },
-        [activeRecord, records, recordsData, publ_id, user_id, dispatch, deleteRecord],
+        [activeRecord?.id, recordsData, publ_id, user_id, dispatch, deleteRecord],
     );
 
     return {

@@ -66,7 +66,7 @@ describe('FormAutocomplete', () => {
     });
 
     describe('input value commitment', () => {
-        it('typing updates input display but does NOT immediately commit to form state', async () => {
+        it('typing updates input display and immediately commits to form state via register', async () => {
             const searchFn = createMockSearch();
             const { getFormMethods } = renderWithForm(
                 <FormAutocomplete
@@ -87,8 +87,8 @@ describe('FormAutocomplete', () => {
             // Input should show the typed value
             expect(input.value).toBe('A');
 
-            // But form value should still be empty (not committed)
-            expect(getFormMethods().getValues('family')).toBe('');
+            // Form value is immediately updated via register's onChange
+            expect(getFormMethods().getValues('family')).toBe('A');
 
             // Type more
             await act(async () => {
@@ -96,53 +96,52 @@ describe('FormAutocomplete', () => {
             });
 
             expect(input.value).toBe('ABC');
-            expect(getFormMethods().getValues('family')).toBe(''); // Still not committed
+            expect(getFormMethods().getValues('family')).toBe('ABC');
         });
 
-        it('blur commits the input value to form state', async () => {
+        it('blur commits the typed value and calls onCommitTyped', async () => {
             const searchFn = createMockSearch();
-            const onChangeExtra = vi.fn();
+            const onCommitTyped = vi.fn();
             const { getFormMethods } = renderWithForm(
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onSelectExtra={onChangeExtra}
+                    onCommitTyped={onCommitTyped}
                 />,
             );
 
             const input = screen.getByPlaceholderText('Начните вводить…') as HTMLInputElement;
 
-            // Type some text
+            // Type some text (immediately committed via register)
             await act(async () => {
                 fireEvent.change(input, { target: { value: 'Canidae' } });
             });
 
-            // Not committed yet
-            expect(getFormMethods().getValues('family')).toBe('');
-            expect(onChangeExtra).not.toHaveBeenCalled();
+            expect(getFormMethods().getValues('family')).toBe('Canidae');
+            expect(onCommitTyped).not.toHaveBeenCalled();
 
             // Blur the input
             await act(async () => {
                 fireEvent.blur(input);
             });
 
-            // Now it's committed
-            expect(getFormMethods().getValues('family')).toBe('Canidae');
-            expect(onChangeExtra).toHaveBeenCalledWith('Canidae');
+            // onCommitTyped is called on blur when value changed from last committed
+            expect(onCommitTyped).toHaveBeenCalledTimes(1);
+            expect(onCommitTyped).toHaveBeenCalledWith('Canidae');
         });
 
-        it('blurring without changes does not trigger unnecessary commits', async () => {
+        it('blurring without changes does not trigger onCommitTyped', async () => {
             const searchFn = createMockSearch();
-            const onChangeExtra = vi.fn();
+            const onCommitTyped = vi.fn();
             const { getFormMethods } = renderWithForm(
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onSelectExtra={onChangeExtra}
+                    onCommitTyped={onCommitTyped}
                 />,
                 { family: 'Initial' },
             );
@@ -157,22 +156,22 @@ describe('FormAutocomplete', () => {
                 fireEvent.blur(input);
             });
 
-            // onChangeExtra should not be called since value didn't change
-            expect(onChangeExtra).not.toHaveBeenCalled();
+            // onCommitTyped should not be called since value didn't change from initial
+            expect(onCommitTyped).not.toHaveBeenCalled();
         });
     });
 
     describe('suggestion selection', () => {
-        it('selecting a suggestion immediately commits the value', async () => {
+        it('selecting a suggestion immediately commits the value and calls onSelectSuggestion', async () => {
             const searchFn = createMockSearch(['Canidae', 'Canis']);
-            const onChangeExtra = vi.fn();
+            const onSelectSuggestion = vi.fn();
             const { getFormMethods } = renderWithForm(
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onSelectExtra={onChangeExtra}
+                    onSelectSuggestion={onSelectSuggestion}
                     debounceMs={0}
                 />,
             );
@@ -198,7 +197,7 @@ describe('FormAutocomplete', () => {
             // Value should be committed immediately
             expect(getFormMethods().getValues('family')).toBe('Canidae');
             expect(input.value).toBe('Canidae');
-            expect(onChangeExtra).toHaveBeenCalledWith('Canidae');
+            expect(onSelectSuggestion).toHaveBeenCalledWith('Canidae');
         });
 
         it('clears suggestions after selection', async () => {
@@ -293,38 +292,38 @@ describe('FormAutocomplete', () => {
     });
 
     describe('clearing input', () => {
-        it('commits empty string when input is cleared and blurred', async () => {
+        it('commits empty string when input is cleared and blurred, calls onCommitTyped', async () => {
             const searchFn = createMockSearch();
-            const onChangeExtra = vi.fn();
+            const onCommitTyped = vi.fn();
             const { getFormMethods } = renderWithForm(
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onSelectExtra={onChangeExtra}
+                    onCommitTyped={onCommitTyped}
                 />,
                 { family: 'Existing' },
             );
 
             const input = screen.getByPlaceholderText('Начните вводить…') as HTMLInputElement;
 
-            // Clear the input
+            // Clear the input (immediately committed via register)
             await act(async () => {
                 fireEvent.change(input, { target: { value: '' } });
             });
 
-            // Not committed yet
-            expect(getFormMethods().getValues('family')).toBe('Existing');
+            // Form value is already cleared via register's onChange
+            expect(getFormMethods().getValues('family')).toBe('');
 
-            // Blur to commit
+            // Blur to trigger onCommitTyped
             await act(async () => {
                 fireEvent.blur(input);
             });
 
-            // Now committed as empty
-            expect(getFormMethods().getValues('family')).toBe('');
-            expect(onChangeExtra).toHaveBeenCalledWith('');
+            // Now onCommitTyped is called
+            expect(onCommitTyped).toHaveBeenCalledTimes(1);
+            expect(onCommitTyped).toHaveBeenCalledWith('');
         });
     });
 
@@ -405,10 +404,10 @@ describe('FormAutocomplete', () => {
         });
     });
 
-    describe('onChangeExtra callback', () => {
-        it('is NOT called during typing (only on commit)', async () => {
+    describe('callback behavior', () => {
+        it('onCommitTyped is NOT called during typing (only on blur)', async () => {
             const searchFn = createMockSearch();
-            const onChangeExtra = vi.fn();
+            const onCommitTyped = vi.fn();
 
             renderWithForm(
                 <FormAutocomplete
@@ -416,7 +415,7 @@ describe('FormAutocomplete', () => {
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onSelectExtra={onChangeExtra}
+                    onCommitTyped={onCommitTyped}
                 />,
             );
 
@@ -433,21 +432,22 @@ describe('FormAutocomplete', () => {
                 fireEvent.change(input, { target: { value: 'ABC' } });
             });
 
-            // onChangeExtra should not have been called
-            expect(onChangeExtra).not.toHaveBeenCalled();
+            // onCommitTyped should not have been called during typing
+            expect(onCommitTyped).not.toHaveBeenCalled();
 
             // Only on blur
             await act(async () => {
                 fireEvent.blur(input);
             });
 
-            expect(onChangeExtra).toHaveBeenCalledTimes(1);
-            expect(onChangeExtra).toHaveBeenCalledWith('ABC');
+            expect(onCommitTyped).toHaveBeenCalledTimes(1);
+            expect(onCommitTyped).toHaveBeenCalledWith('ABC');
         });
 
-        it('is called when selecting a suggestion', async () => {
+        it('onSelectSuggestion is called when selecting a suggestion, not onCommitTyped', async () => {
             const searchFn = createMockSearch(['Suggested']);
-            const onChangeExtra = vi.fn();
+            const onSelectSuggestion = vi.fn();
+            const onCommitTyped = vi.fn();
 
             renderWithForm(
                 <FormAutocomplete
@@ -455,7 +455,8 @@ describe('FormAutocomplete', () => {
                     label="Семейство"
                     searchFn={searchFn}
                     placeholder="Начните вводить…"
-                    onSelectExtra={onChangeExtra}
+                    onSelectSuggestion={onSelectSuggestion}
+                    onCommitTyped={onCommitTyped}
                     debounceMs={0}
                 />,
             );
@@ -474,8 +475,10 @@ describe('FormAutocomplete', () => {
                 fireEvent.mouseDown(screen.getByText('Suggested'));
             });
 
-            expect(onChangeExtra).toHaveBeenCalledTimes(1);
-            expect(onChangeExtra).toHaveBeenCalledWith('Suggested');
+            // onSelectSuggestion should be called, not onCommitTyped
+            expect(onSelectSuggestion).toHaveBeenCalledTimes(1);
+            expect(onSelectSuggestion).toHaveBeenCalledWith('Suggested');
+            expect(onCommitTyped).not.toHaveBeenCalled();
         });
     });
 

@@ -38,7 +38,10 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     });
 
     const { save, submit, isSaving, nonFieldErrors } = useSaveRecord(activeRecordId, methods);
-    const { isAutoSaving, lastSavedTime } = useAutoSave({ save, methods, activeRecordId });
+    const { isAutoSaving, lastSavedTime } = useAutoSave({
+        save,
+        methods,
+    });
 
     const { getValues, reset } = methods;
 
@@ -51,7 +54,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     }, [activeRecord, reset]);
 
     return (
-        <FormProvider {...methods}>
+        <FormProvider {...methods} key={activeRecordId}>
             <div className="w-full flex-1 p-4 pb-45 md:p-8 md:pb-30">
                 <div className="mx-auto max-w-6xl space-y-6">
                     <div className="relative z-20 mb-6 transition-all duration-200 focus-within:z-50">
