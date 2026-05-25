@@ -19,7 +19,7 @@ interface RecordFormContentProps {
     activeRecord: RecordFull;
     records: RecordFull[];
     onRegisterSave: (fn: () => Promise<void>) => void;
-    onDelete: (id: string) => void;
+    deleteRecord: (id: string) => void;
 }
 
 const RecordFormContent: FC<RecordFormContentProps> = ({
@@ -27,9 +27,8 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     activeRecord,
     records,
     onRegisterSave,
-    onDelete,
+    deleteRecord: onDelete,
 }) => {
-    const activeRecordId = activeRecord.id;
     const methods = useForm<FormRecord>({
         resolver: zodResolver(formRecordSchema),
         defaultValues: undefined,
@@ -37,7 +36,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
         reValidateMode: 'onChange',
     });
 
-    const { save, submit, isSaving, nonFieldErrors } = useSaveRecord(activeRecordId, methods);
+    const { save, submit, isSaving, nonFieldErrors } = useSaveRecord(activeRecord.id, methods);
     const { isAutoSaving, lastSavedTime } = useAutoSave({
         save,
         methods,
@@ -56,7 +55,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     const otherRecords = records.filter((r) => r.id !== activeRecord.id);
 
     return (
-        <FormProvider {...methods} key={activeRecordId}>
+        <FormProvider {...methods} key={activeRecord.id}>
             <div className="w-full flex-1 p-4 pb-45 md:p-8 md:pb-30">
                 <div className="mx-auto max-w-6xl space-y-6">
                     <ArticleSourceCard publ_id={publ_id} />
@@ -70,7 +69,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
             <Footer
                 onSave={() => save(getValues())}
                 onSubmit={() => submit(getValues())}
-                onDelete={() => onDelete(activeRecordId)}
+                onDelete={() => onDelete(activeRecord.id)}
                 isSaving={isSaving}
                 isAutoSaving={isAutoSaving}
                 lastSavedTime={lastSavedTime}

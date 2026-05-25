@@ -36,7 +36,7 @@ interface SidebarProps {
     activeRecordId: string | null;
     onSelectRecord: (id: string) => void;
     onCreateRecord: () => void;
-    onDelete: (id: string) => void;
+    deleteRecord: (id: string) => void;
     publ_id: number;
     user_id: number;
 }
@@ -155,7 +155,7 @@ const FormSidebar: FC<SidebarProps> = ({
     activeRecordId,
     onSelectRecord,
     onCreateRecord,
-    onDelete,
+    deleteRecord,
     publ_id,
     user_id,
 }) => {
@@ -232,7 +232,7 @@ const FormSidebar: FC<SidebarProps> = ({
                                             onSelectRecord(record.id);
                                             if (isMobile) setOpenMobile(false);
                                         }}
-                                        onDelete={() => onDelete(record.id)}
+                                        onDelete={() => deleteRecord(record.id)}
                                     />
                                 ))}
                             </SidebarMenu>
