@@ -29,19 +29,21 @@ const Autocomplete: FC<AutocompleteProps> = ({
     isLoading = false,
     className,
     minChars = 2,
+    onBlur: onBlurProp,
     ...props
 }) => {
-    const [isOpen, setIsOpen] = useState(false);
+    const [open, setOpen] = useState(false);
     const [highlightIndex, setHighlightIndex] = useState(-1);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
             // oxlint-disable-next-line typescript/no-unsafe-type-assertion
             if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-                setIsOpen(false);
+                setOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClick);
@@ -51,10 +53,17 @@ const Autocomplete: FC<AutocompleteProps> = ({
     // Open dropdown when suggestions arrive
     useEffect(() => {
         if (suggestions.length > 0) {
-            setIsOpen(true);
+            setOpen(true);
             setHighlightIndex(-1);
         }
     }, [suggestions]);
+
+    // Scroll highlighted item into view
+    useEffect(() => {
+        if (highlightIndex >= 0) {
+            itemRefs.current[highlightIndex]?.scrollIntoView({ block: 'nearest' });
+        }
+    }, [highlightIndex]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (onChange) {
@@ -65,18 +74,21 @@ const Autocomplete: FC<AutocompleteProps> = ({
         if (text.length >= minChars) {
             onSearch(text);
         } else {
-            setIsOpen(false);
+            setOpen(false);
         }
     };
 
     const handleSelect = (item: string) => {
         onSelect?.(item);
-        setIsOpen(false);
+        if (inputRef.current) {
+            inputRef.current.value = item;
+        }
+        setOpen(false);
         inputRef.current?.focus();
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (!isOpen || suggestions.length === 0) return;
+        if (!open || suggestions.length === 0) return;
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
@@ -87,8 +99,6 @@ const Autocomplete: FC<AutocompleteProps> = ({
         } else if (e.key === 'Enter' && highlightIndex >= 0) {
             e.preventDefault();
             handleSelect(suggestions[highlightIndex]);
-        } else if (e.key === 'Escape') {
-            setIsOpen(false);
         }
     };
 
@@ -100,12 +110,16 @@ const Autocomplete: FC<AutocompleteProps> = ({
                     onChange={handleInputChange}
                     onFocus={() => {
                         if (suggestions.length > 0) {
-                            setIsOpen(true);
+                            setOpen(true);
                         }
                     }}
-                    onKeyDown={handleKeyDown}
+                    onBlur={(e) => {
+                        setOpen(false);
+                        onBlurProp?.(e);
+                    }}
                     autoComplete="off"
                     {...props}
+                    onKeyDown={handleKeyDown}
                 />
                 {isLoading && (
                     <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
@@ -114,7 +128,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
                 )}
             </div>
 
-            {isOpen && suggestions.length > 0 && (
+            {open && suggestions.length > 0 && (
                 <ul
                     className="absolute z-150 mt-2 max-h-60 w-full animate-in overflow-x-hidden overflow-y-auto rounded-xl border border-slate-200 bg-white/95 py-1.5 shadow-xl backdrop-blur-md duration-200 zoom-in-95 fade-in"
                     role="listbox"
@@ -122,6 +136,9 @@ const Autocomplete: FC<AutocompleteProps> = ({
                     {suggestions.map((item, i) => (
                         <li
                             key={item}
+                            ref={(el) => {
+                                itemRefs.current[i] = el;
+                            }}
                             role="option"
                             aria-selected={i === highlightIndex}
                             onMouseDown={(e) => {
