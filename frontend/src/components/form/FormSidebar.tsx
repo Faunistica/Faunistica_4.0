@@ -208,7 +208,7 @@ const FormSidebar: FC<SidebarProps> = ({
                             type="button"
                             variant="outline"
                             onClick={() => setIsUploadOpen(true)}
-                            className="w-full gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                            className="w-full gap-2 border-emerald-200 font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50 hover:text-emerald-800"
                             size="sm"
                         >
                             <FileSpreadsheet className="h-4 w-4" />

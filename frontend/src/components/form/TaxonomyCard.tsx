@@ -11,11 +11,12 @@ import {
 } from '@/components/ui/select';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { FormAutocomplete } from '@/components/form/FormAutocomplete';
-import { FormTextField } from '@/components/form/FormTextField';
 import { Bug } from 'lucide-react';
 import { useLazySuggestTaxonQuery } from '@/api/utilAPI';
 import { TYPE_STATUS_OPTIONS, TAXON_RANK_OPTIONS } from '@/types/forms';
 import type { FormRecord } from '@/types/api.dto';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 
 const TaxonomyCard: FC = () => {
     const { control, setValue, getValues, getFieldState } = useFormContext<FormRecord>();
@@ -173,10 +174,22 @@ const TaxonomyCard: FC = () => {
                             </Field>
                         )}
                     />
-                    <FormTextField
+                    <Controller
                         name="accepted_name"
-                        label="Валидное название"
-                        placeholder="Если приведённое в статье устарело"
+                        control={control}
+                        render={({ field, fieldState: { invalid, error } }) => (
+                            <Field data-invalid={invalid}>
+                                <FieldLabel htmlFor="accepted_name">Валидное название</FieldLabel>
+                                <Input
+                                    id="accepted_name"
+                                    placeholder="Если приведённое в статье устарело"
+                                    aria-invalid={invalid}
+                                    {...field}
+                                    value={field.value?.toString()}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
                     />
                 </div>
 
@@ -204,17 +217,43 @@ const TaxonomyCard: FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <FormTextField
+                    <Controller
                         name="taxon_remarks"
-                        label="Таксономические примечания"
-                        placeholder="Примечания ко всему таксону…"
-                        inputType="textarea"
+                        control={control}
+                        render={({ field, fieldState: { invalid, error } }) => (
+                            <Field data-invalid={invalid}>
+                                <FieldLabel htmlFor="taxon_remarks">
+                                    Таксономические примечания
+                                </FieldLabel>
+                                <Textarea
+                                    id="taxon_remarks"
+                                    placeholder="Примечания ко всему таксону…"
+                                    aria-invalid={invalid}
+                                    {...field}
+                                    value={field.value?.toString()}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
                     />
-                    <FormTextField
+                    <Controller
                         name="identification_remarks"
-                        label="Примечания к идентификации"
-                        placeholder="Примечания к определению…"
-                        inputType="textarea"
+                        control={control}
+                        render={({ field, fieldState: { invalid, error } }) => (
+                            <Field data-invalid={invalid}>
+                                <FieldLabel htmlFor="identification_remarks">
+                                    Примечания к идентификации
+                                </FieldLabel>
+                                <Textarea
+                                    id="identification_remarks"
+                                    placeholder="Примечания к определению…"
+                                    aria-invalid={invalid}
+                                    {...field}
+                                    value={field.value?.toString()}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
                     />
                 </div>
             </CardContent>

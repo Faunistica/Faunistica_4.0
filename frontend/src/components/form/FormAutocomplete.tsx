@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { Controller, useController, useFormContext, useWatch } from 'react-hook-form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
-import type { FormKey } from '@/types/forms';
+import type { FormKey, FormRecord } from '@/types/forms';
+import { Control } from 'leaflet';
 
 interface FormAutocompleteProps {
     name: FormKey<string | null | undefined>;
@@ -26,33 +27,29 @@ export function FormAutocomplete({
     onSelectSuggestion,
     onCommitTyped,
 }: FormAutocompleteProps) {
-    const {
-        register,
-        setValue,
-        getValues,
-        control,
-        formState: { errors },
-    } = useFormContext();
+    const { control, setValue } = useFormContext<FormRecord>();
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const searchVersionRef = useRef(0);
     const lastCommittedRef = useRef<string | null>(null);
-    const error = errors?.[name];
+    const {
+        field,
+        fieldState: { error },
+    } = useController({ name, control });
 
-    const currentValue = useWatch({ name, control });
     const initializedRef = useRef(false);
 
     // Only sync on mount (or when currentValue first becomes available)
     // This sets the initial "committed" state without tracking every form change
     useEffect(() => {
-        if (!initializedRef.current && currentValue !== undefined) {
-            lastCommittedRef.current = currentValue ?? null;
+        if (!initializedRef.current && field.value !== undefined) {
+            lastCommittedRef.current = field.value ?? null;
             initializedRef.current = true;
-            if (!currentValue) {
+            if (!field.value) {
                 setSuggestions([]);
                 searchVersionRef.current = 0;
             }
         }
-    }, [currentValue]);
+    }, [field.value]);
 
     const debouncedSearch = useDebouncedCallback(async (text: string, version: number) => {
         try {
@@ -73,29 +70,27 @@ export function FormAutocomplete({
         [debouncedSearch],
     );
 
-    const { onBlur, ...registerProps } = register(name);
-
     const handleBlur = useCallback(
-        async (e: React.FocusEvent<HTMLInputElement>) => {
-            const value = getValues(name) ?? null;
+        async (_: React.FocusEvent<HTMLInputElement>) => {
             const normalizedLast = lastCommittedRef.current;
 
-            if (value !== normalizedLast) {
-                lastCommittedRef.current = value;
+            if (field.value !== normalizedLast) {
+                lastCommittedRef.current = field.value ?? '';
                 // User typed and blurred without selecting from dropdown
-                onCommitTyped?.(value ?? '');
+                onCommitTyped?.(field.value ?? '');
             }
-            await onBlur(e);
+            // await field.onBlur(e);
         },
-        [onBlur, getValues, name, onCommitTyped],
+        [field, onCommitTyped],
     );
 
     return (
         <Field data-invalid={!!error}>
             <FieldLabel>{label}</FieldLabel>
             <Autocomplete
-                {...registerProps}
                 id={name}
+                value={field.value ?? ''}
+                onChange={field.onChange}
                 onSelect={(val) => {
                     setValue(name, val);
                     lastCommittedRef.current = val;

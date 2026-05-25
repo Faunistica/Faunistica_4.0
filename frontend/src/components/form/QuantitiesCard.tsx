@@ -19,11 +19,7 @@ import type { FormRecord } from '@/types/api.dto';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const QuantitiesCard: FC = () => {
-    const {
-        register,
-        control,
-        formState: { errors },
-    } = useFormContext<FormRecord>();
+    const { control } = useFormContext<FormRecord>();
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const total = useWatch<FormRecord>({
         name: ['males', 'subadultMales', 'females', 'subadultFemales', 'adults', 'juveniles'],
@@ -69,37 +65,43 @@ const QuantitiesCard: FC = () => {
                 <TooltipProvider>
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
                         {quantityFields.map(({ key, label, color }) => (
-                            <Field key={key} data-invalid={!!errors?.[key]} className="gap-1.5">
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <FieldLabel
-                                            htmlFor={key}
-                                            className={cn(
-                                                'text-[10px] font-semibold tracking-wider uppercase',
-                                                color,
-                                                'cursor-help truncate',
-                                            )}
-                                        >
-                                            {label}
-                                        </FieldLabel>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="text-xs">
-                                        {label}
-                                    </TooltipContent>
-                                </Tooltip>
-                                <Input
-                                    id={key}
-                                    type="number"
-                                    min={0}
-                                    placeholder="0"
-                                    className="h-9 text-center focus-visible:ring-1 focus-visible:ring-slate-300"
-                                    aria-invalid={!!errors?.[key]}
-                                    {...register(key, {
-                                        valueAsNumber: true,
-                                    })}
-                                />
-                                <FieldError errors={[errors?.[key]]} />
-                            </Field>
+                            <Controller
+                                name={key}
+                                key={key}
+                                control={control}
+                                render={({ field, fieldState: { error, invalid } }) => (
+                                    <Field data-invalid={invalid} className="gap-1.5">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <FieldLabel
+                                                    htmlFor={key}
+                                                    className={cn(
+                                                        'text-[10px] font-semibold tracking-wider uppercase',
+                                                        color,
+                                                        'cursor-help truncate',
+                                                    )}
+                                                >
+                                                    {label}
+                                                </FieldLabel>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top" className="text-xs">
+                                                {label}
+                                            </TooltipContent>
+                                        </Tooltip>
+                                        <Input
+                                            id={key}
+                                            type="number"
+                                            min={0}
+                                            placeholder="0"
+                                            className="h-9 text-center focus-visible:ring-1 focus-visible:ring-slate-300"
+                                            aria-invalid={invalid}
+                                            {...field}
+                                            value={field.value?.toString()}
+                                        />
+                                        <FieldError errors={[error]} />
+                                    </Field>
+                                )}
+                            />
                         ))}
                     </div>
                 </TooltipProvider>
@@ -138,17 +140,26 @@ const QuantitiesCard: FC = () => {
                     </Field>
                 </div>
 
-                <Field data-invalid={!!errors?.occurrence_remarks}>
-                    <FieldLabel htmlFor="occurrence_remarks">Примечания к образцам</FieldLabel>
-                    <Textarea
-                        id="occurrence_remarks"
-                        className="min-h-18 resize-none"
-                        placeholder="Укажите специфические детали экземпляра…"
-                        aria-invalid={!!errors?.occurrence_remarks}
-                        {...register('occurrence_remarks')}
-                    />
-                    <FieldError errors={[errors?.occurrence_remarks]} />
-                </Field>
+                <Controller
+                    name="occurrence_remarks"
+                    control={control}
+                    render={({ field, fieldState: { error, invalid } }) => (
+                        <Field data-invalid={invalid}>
+                            <FieldLabel htmlFor="occurrence_remarks">
+                                Примечания к образцам
+                            </FieldLabel>
+                            <Textarea
+                                id="occurrence_remarks"
+                                className="min-h-18 resize-none"
+                                placeholder="Укажите специфические детали экземпляра…"
+                                aria-invalid={invalid}
+                                {...field}
+                                value={field.value?.toString()}
+                            />
+                            <FieldError errors={[error]} />
+                        </Field>
+                    )}
+                />
             </CardContent>
         </Card>
     );

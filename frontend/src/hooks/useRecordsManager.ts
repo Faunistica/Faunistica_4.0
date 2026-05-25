@@ -26,7 +26,6 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
     const [activeRecord, setActiveRecord] = useState<RecordFull | null>(null);
     const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
     const saveRef = useRef<(() => Promise<void>) | undefined>(undefined);
-    const recordsRef = useRef<RecordFull[]>([]);
 
     const { data: recordsData, isLoading } = useRecordsListQuery(
         { publ_id, user_id },
@@ -38,32 +37,14 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
     const [deleteRecord] = useDeleteRecordMutation();
     const dispatch = useAppDispatch();
 
-    const records = useMemo(() => {
-        const items = recordsData?.items ?? [];
-        recordsRef.current = items;
-        return items;
-    }, [recordsData]);
+    const records = useMemo(() => recordsData?.items ?? [], [recordsData]);
 
     useEffect(() => {
-        if (recordsData?.items && !hasLoadedInitial) {
-            const items = recordsData.items;
-            if (items.length > 0) {
-                setActiveRecord(items[0]);
-            }
+        if (records.length > 0 && !hasLoadedInitial) {
+            setActiveRecord(records[0]);
             setHasLoadedInitial(true);
         }
-    }, [recordsData?.items, hasLoadedInitial]);
-
-    useEffect(() => {
-        if (!hasLoadedInitial || !recordsData) return;
-        if (recordsData.items.length === 0) {
-            if (activeRecord !== null) setActiveRecord(null);
-            return;
-        }
-        if (activeRecord && !recordsData.items.some((r) => r.id === activeRecord.id)) {
-            setActiveRecord(recordsData.items[0]);
-        }
-    }, [recordsData, hasLoadedInitial, activeRecord]);
+    }, [records, hasLoadedInitial]);
 
     const registerSave = useCallback((fn: () => Promise<void>) => {
         saveRef.current = fn;
@@ -84,14 +65,9 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
                 // proceed with switch even if save fails
             }
 
-            const cached = recordsRef.current.find((r) => r.id === targetId);
-            if (cached) {
-                setActiveRecord(cached);
-            } else {
-                const result = await fetchRecordById({ record_id: targetId }, false);
-                if (result.data) {
-                    setActiveRecord(result.data);
-                }
+            const result = await fetchRecordById({ record_id: targetId }, false);
+            if (result.data) {
+                setActiveRecord(result.data);
             }
         },
         [activeRecord?.id, fetchRecordById],
@@ -99,15 +75,12 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
 
     const handleDelete = useCallback(
         async (id: string) => {
-            const snapshot = recordsData;
             const listArgs = { publ_id, user_id };
             const isActive = id === activeRecord?.id;
 
             let nextRecord: RecordFull | null = null;
             if (isActive) {
-                const currentIdx = recordsRef.current.findIndex((r) => r.id === id);
-                const remaining = recordsRef.current.filter((r) => r.id !== id);
-                nextRecord = remaining[currentIdx] ?? remaining[currentIdx - 1] ?? null;
+                nextRecord = records.filter((r) => r.id !== id)[0] ?? null;
             }
 
             dispatch(
@@ -123,18 +96,18 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
                     setActiveRecord(nextRecord);
                 }
             } catch {
-                if (snapshot) {
+                if (records) {
                     dispatch(
                         recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
-                            draft.items = snapshot.items;
-                            draft.total = snapshot.total;
+                            draft.items = records;
+                            draft.total = records.length;
                         }),
                     );
                 }
                 toast.error('Ошибка при удалении записи');
             }
         },
-        [activeRecord?.id, recordsData, publ_id, user_id, dispatch, deleteRecord],
+        [activeRecord?.id, records, publ_id, user_id, dispatch, deleteRecord],
     );
 
     return {

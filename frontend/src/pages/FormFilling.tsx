@@ -35,14 +35,13 @@ const FormFilling: FC = () => {
             open={true}
             openMobile={isSidebarOpen}
             onOpenMobileChange={setIsSidebarOpen}
-            className="flex-1"
         >
             <FormSidebar
                 records={records.filter((r) => r.type !== 'rec_del')}
                 activeRecordId={activeRecordId}
                 onSelectRecord={recordMethods.switchTo}
                 onCreateRecord={recordMethods.create}
-                onDelete={recordMethods.delete}
+                deleteRecord={recordMethods.delete}
                 publ_id={publ_id}
                 user_id={user_id!}
             />
@@ -52,8 +51,8 @@ const FormFilling: FC = () => {
                         publ_id={publ_id}
                         activeRecord={activeRecord}
                         records={records}
-                        onRegisterSave={registerSave}
-                        onDelete={recordMethods.delete}
+                        registerSave={registerSave}
+                        deleteRecord={recordMethods.delete}
                     />
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-6 py-24">

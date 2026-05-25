@@ -18,7 +18,7 @@ interface RecordFormContentProps {
     publ_id: number;
     activeRecord: RecordFull;
     records: RecordFull[];
-    onRegisterSave: (fn: () => Promise<void>) => void;
+    registerSave: (fn: () => Promise<void>) => void;
     deleteRecord: (id: string) => void;
 }
 
@@ -26,7 +26,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     publ_id,
     activeRecord,
     records,
-    onRegisterSave,
+    registerSave: onRegisterSave,
     deleteRecord: onDelete,
 }) => {
     const methods = useForm<FormRecord>({
@@ -55,7 +55,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     const otherRecords = records.filter((r) => r.id !== activeRecord.id);
 
     return (
-        <FormProvider {...methods} key={activeRecord.id}>
+        <FormProvider {...methods}>
             <div className="w-full flex-1 p-4 pb-45 md:p-8 md:pb-30">
                 <div className="mx-auto max-w-6xl space-y-6">
                     <ArticleSourceCard publ_id={publ_id} />

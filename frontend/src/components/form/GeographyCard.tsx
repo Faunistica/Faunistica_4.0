@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 // oxlint-disable-next-line import/no-unassigned-import
 import 'leaflet/dist/leaflet.css';
 import { type FC, useState, useEffect } from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
+import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { Map as MapIcon, MapPin } from 'lucide-react';
 
 import { GeographyMap } from '@/components/map/GeographyMap';
@@ -32,18 +32,11 @@ interface Props {
 }
 
 const GeographyCard: FC<Props> = ({ otherRecords }) => {
-    const {
-        register,
-        control,
-        watch,
-        setValue,
-        getValues,
-        formState: { errors },
-    } = useFormContext<FormRecord>();
+    const { control, setValue, getValues } = useFormContext<FormRecord>();
 
-    const georefSource = watch('georef_source');
-    const latValue = watch('latitude');
-    const lonValue = watch('longitude');
+    const georefSource = useWatch({ name: 'georef_source', control });
+    const latValue = useWatch({ name: 'latitude', control });
+    const lonValue = useWatch({ name: 'longitude', control });
 
     const isNone = !georefSource || georefSource === 'none';
     const isArticle = georefSource === 'lit';
@@ -137,18 +130,24 @@ const GeographyCard: FC<Props> = ({ otherRecords }) => {
                             </Field>
                         )}
                     />
-                    <Field data-invalid={!!errors?.location_remarks}>
-                        <FieldLabel htmlFor="location_remarks">
-                            Географические примечания
-                        </FieldLabel>
-                        <Textarea
-                            id="location_remarks"
-                            className="h-28 resize-none"
-                            placeholder="Примечания к местоположению…"
-                            {...register('location_remarks')}
-                        />
-                        <FieldError errors={[errors?.location_remarks]} />
-                    </Field>
+                    <Controller
+                        control={control}
+                        name="location_remarks"
+                        render={({ field, fieldState }) => (
+                            <Field data-invalid={!!fieldState.error}>
+                                <FieldLabel htmlFor="location_remarks">
+                                    Географические примечания
+                                </FieldLabel>
+                                <Textarea
+                                    id="location_remarks"
+                                    className="h-28 resize-none"
+                                    placeholder="Примечания к местоположению…"
+                                    {...field}
+                                />
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -197,16 +196,22 @@ const GeographyCard: FC<Props> = ({ otherRecords }) => {
                         onSelectSuggestion={handleLocationSuggestionSelect}
                         onCommitTyped={handleLocationTypedCommit}
                     />
-                    <Field data-invalid={!!errors?.locality}>
-                        <FieldLabel htmlFor="locality">Локалитет (топоним)</FieldLabel>
-                        <Input
-                            id="locality"
-                            placeholder="Исходное название места из статьи"
-                            aria-invalid={!!errors?.locality}
-                            {...register('locality')}
-                        />
-                        <FieldError errors={[errors?.locality]} />
-                    </Field>
+                    <Controller
+                        name="locality"
+                        control={control}
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
+                                <FieldLabel htmlFor="locality">Локалитет (топоним)</FieldLabel>
+                                <Input
+                                    id="locality"
+                                    placeholder="Исходное название места из статьи"
+                                    aria-invalid={invalid}
+                                    {...field}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
+                    />
                 </div>
 
                 {!isNone && (
@@ -267,57 +272,70 @@ const GeographyCard: FC<Props> = ({ otherRecords }) => {
                         )}
 
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            <Field data-invalid={!!errors?.latitude}>
-                                <FieldLabel htmlFor="latitude">Широта (DD)</FieldLabel>
-                                <Input
-                                    id="latitude"
-                                    type="number"
-                                    step="any"
-                                    readOnly={isArticle && coordFormat !== 'DD'}
-                                    className={
-                                        isArticle && coordFormat !== 'DD'
-                                            ? 'cursor-not-allowed bg-slate-100'
-                                            : ''
-                                    }
-                                    aria-invalid={!!errors?.latitude}
-                                    {...register('latitude' as const, {
-                                        valueAsNumber: true,
-                                    })}
-                                />
-                                <FieldError errors={[errors?.latitude]} />
-                            </Field>
-                            <Field data-invalid={!!errors?.longitude}>
-                                <FieldLabel htmlFor="longitude">Долгота (DD)</FieldLabel>
-                                <Input
-                                    id="longitude"
-                                    type="number"
-                                    step="any"
-                                    readOnly={isArticle && coordFormat !== 'DD'}
-                                    className={
-                                        isArticle && coordFormat !== 'DD'
-                                            ? 'cursor-not-allowed bg-slate-100'
-                                            : ''
-                                    }
-                                    aria-invalid={!!errors?.longitude}
-                                    {...register('longitude' as const, {
-                                        valueAsNumber: true,
-                                    })}
-                                />
-                                <FieldError errors={[errors?.longitude]} />
-                            </Field>
-                            <Field data-invalid={!!errors?.coordinate_uncertainty}>
-                                <FieldLabel htmlFor="coordinate_uncertainty">
-                                    Неопределённость, м
-                                </FieldLabel>
-                                <Input
-                                    id="coordinate_uncertainty"
-                                    type="number"
-                                    {...register('coordinate_uncertainty' as const, {
-                                        valueAsNumber: true,
-                                    })}
-                                />
-                                <FieldError errors={[errors?.coordinate_uncertainty]} />
-                            </Field>
+                            <Controller
+                                control={control}
+                                name="latitude"
+                                render={({ field, fieldState: { invalid, error } }) => (
+                                    <Field data-invalid={invalid}>
+                                        <FieldLabel htmlFor="latitude">Широта (DD)</FieldLabel>
+                                        <Input
+                                            id="latitude"
+                                            type="number"
+                                            step="any"
+                                            readOnly={isArticle && coordFormat !== 'DD'}
+                                            className={
+                                                isArticle && coordFormat !== 'DD'
+                                                    ? 'cursor-not-allowed bg-slate-100'
+                                                    : ''
+                                            }
+                                            aria-invalid={invalid}
+                                            {...field}
+                                        />
+                                        <FieldError errors={[error]} />
+                                    </Field>
+                                )}
+                            />
+                            <Controller
+                                control={control}
+                                name="longitude"
+                                render={({ field, fieldState: { invalid, error } }) => (
+                                    <Field data-invalid={invalid}>
+                                        <FieldLabel htmlFor="longitude">Долгота (DD)</FieldLabel>
+                                        <Input
+                                            id="longitude"
+                                            type="number"
+                                            step="any"
+                                            readOnly={isArticle && coordFormat !== 'DD'}
+                                            className={
+                                                isArticle && coordFormat !== 'DD'
+                                                    ? 'cursor-not-allowed bg-slate-100'
+                                                    : ''
+                                            }
+                                            aria-invalid={invalid}
+                                            {...field}
+                                        />
+                                        <FieldError errors={[error]} />
+                                    </Field>
+                                )}
+                            />
+                            <Controller
+                                control={control}
+                                name="coordinate_uncertainty"
+                                render={({ field, fieldState: { invalid, error } }) => (
+                                    <Field data-invalid={invalid}>
+                                        <FieldLabel htmlFor="coordinate_uncertainty">
+                                            Неопределённость, м
+                                        </FieldLabel>
+                                        <Input
+                                            id="coordinate_uncertainty"
+                                            type="number"
+                                            {...field}
+                                            value={field.value?.toString()}
+                                        />
+                                        <FieldError errors={[error]} />
+                                    </Field>
+                                )}
+                            />
                         </div>
                     </div>
                 )}
