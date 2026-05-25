@@ -10,7 +10,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useImportRecordsMutation, useExportRecordsMutation } from '@/api/recordAPI';
+import { useUploadExcelMutation, useDownloadRecordsMutation } from '@/api/recordAPI';
 
 interface Props {
     open: boolean;
@@ -31,8 +31,8 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id, user_id }) =
     const [showConfirm, setShowConfirm] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [importRecords] = useImportRecordsMutation();
-    const [exportRecords, { isLoading: isExporting }] = useExportRecordsMutation();
+    const [uploadExcel] = useUploadExcelMutation();
+    const [downloadRecords, { isLoading: isExporting }] = useDownloadRecordsMutation();
 
     const isValidFile = (file: File) => {
         const ext = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -86,7 +86,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id, user_id }) =
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        const { data: result, error } = await importRecords(formData);
+        const { data: result, error } = await uploadExcel(formData);
 
         if (error) {
             const message =
@@ -118,7 +118,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id, user_id }) =
 
     const handleExport = async () => {
         if (!user_id) return;
-        const { data: blob, error } = await exportRecords({
+        const { error } = await downloadRecords({
             user_id,
             publ_id,
             scope: 'user',
@@ -127,17 +127,6 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id, user_id }) =
 
         if (error) {
             toast.error('Ошибка при скачивании файла');
-            return;
-        }
-
-        if (blob) {
-            const url = window.URL.createObjectURL(blob);
-            Object.assign(document.createElement('a'), {
-                href: url,
-                download: `данные_faunistica_${publ_id || 'все'}.xlsx`,
-            }).click();
-            window.URL.revokeObjectURL(url);
-            toast.success('Файл успешно скачан');
         }
     };
 

@@ -71,18 +71,33 @@ export const recordAPI = createApi({
             }),
             invalidatesTags: ['records-list'],
         }),
-        exportRecords: build.mutation<
-            Blob,
+        downloadRecords: build.mutation<
+            null,
             { user_id: number; publ_id?: number; scope?: string; format?: string }
         >({
-            query: (params) => ({
-                url: '/records/export',
-                method: 'GET',
-                params,
-                responseHandler: (response) => response.blob(),
-            }),
+            queryFn: async (params, _api, _extraOptions, baseQuery) => {
+                const result = await baseQuery({
+                    url: '/records/export',
+                    method: 'GET',
+                    params,
+                    responseHandler: (response: Response) => response.blob(),
+                });
+
+                if (result.error) return { error: result.error };
+
+                const blob = result.data as Blob;
+                const url = window.URL.createObjectURL(blob);
+                Object.assign(document.createElement('a'), {
+                    href: url,
+                    download: `данные_faunistica_${params.publ_id || 'все'}.xlsx`,
+                }).click();
+                window.URL.revokeObjectURL(url);
+
+                // RTK query wouldn't cache a blob
+                return { data: null };
+            },
         }),
-        importRecords: build.mutation<Types.ImportRecordsResponse, FormData>({
+        uploadExcel: build.mutation<Types.UploadExcelResponse, FormData>({
             query: (formData) => ({
                 url: '/records/import',
                 method: 'POST',
@@ -101,6 +116,6 @@ export const {
     useEditRecordMutation,
     useDeleteRecordMutation,
     useSubmitRecordMutation,
-    useExportRecordsMutation,
-    useImportRecordsMutation,
+    useDownloadRecordsMutation,
+    useUploadExcelMutation,
 } = recordAPI;

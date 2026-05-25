@@ -167,7 +167,7 @@ export interface ImportError {
     error: string;
 }
 
-export interface ImportRecordsResponse {
+export interface UploadExcelResponse {
     imported: number;
     failed: number;
     errors: ImportError[];
