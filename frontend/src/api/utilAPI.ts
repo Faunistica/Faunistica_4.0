@@ -14,8 +14,8 @@ export const utilAPI = createApi({
                 params: {
                     field,
                     text,
-                    ...(family ? { family } : {}),
-                    ...(genus ? { genus } : {}),
+                    ...(family ? { filters: { family: family } } : {}),
+                    ...(genus ? { filters: { genus: genus } } : {}),
                 },
             }),
         }),
@@ -30,7 +30,11 @@ export const utilAPI = createApi({
             query: ({ field, text, region }) => ({
                 url: '/geo/search',
                 method: 'GET',
-                params: { field, text, ...(region ? { region } : {}) },
+                params: {
+                    field,
+                    text,
+                    ...(region ? { filters: { region: region } } : {}),
+                },
             }),
         }),
         getLocationByCoords: build.query<Types.GetLocationResponse, Types.GetLocationRequest>({
