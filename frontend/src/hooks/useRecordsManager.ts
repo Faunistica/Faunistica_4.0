@@ -49,6 +49,17 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
         }
     }, [recordsData, hasLoadedInitial]);
 
+    useEffect(() => {
+        if (!hasLoadedInitial) return;
+        if (!recordsData?.items?.length) {
+            if (activeRecord !== null) setActiveRecord(null);
+            return;
+        }
+        if (activeRecord && !recordsData.items.some((r) => r.id === activeRecord.id)) {
+            setActiveRecord(recordsData.items[0]);
+        }
+    }, [recordsData, hasLoadedInitial, activeRecord]);
+
     const registerSave = useCallback((fn: () => Promise<void>) => {
         saveRef.current = fn;
     }, []);
