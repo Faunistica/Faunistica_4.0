@@ -12,6 +12,8 @@ import { History, X } from 'lucide-react';
 import type { RecordFull, FormRecord } from '@/types/api.dto';
 import { LOCATION_FIELDS, EVENT_FIELDS, locationSummary, eventSummary } from '@/types/recordLabels';
 
+type SharedField = keyof RecordFull & keyof FormRecord;
+
 type PresetType = 'location' | 'event';
 
 interface Props {
@@ -22,12 +24,11 @@ interface Props {
 interface Preset {
     label: string;
     sourceIndex: number;
-    data: Partial<RecordFull>;
 }
 
-const FIELD_KEYS: Record<PresetType, readonly string[]> = {
-    location: LOCATION_FIELDS as unknown as string[],
-    event: EVENT_FIELDS as unknown as string[],
+const FIELD_KEYS: Record<PresetType, SharedField[]> = {
+    location: LOCATION_FIELDS,
+    event: EVENT_FIELDS,
 };
 
 const LABEL_BUILDERS: Record<PresetType, (d: RecordFull) => string> = {
@@ -54,22 +55,16 @@ const SavedPresetSelect: FC<Props> = ({ type, otherRecords }) => {
 
         otherRecords.forEach((record, idx) => {
             const hasData = fields.some((f) => {
-                const val = (record as Record<string, unknown>)[f];
+                const val = record[f];
                 return val !== null && val !== undefined && val !== '';
             });
             if (!hasData) return;
 
-            const data: Partial<RecordFull> = {};
-            for (const f of fields) {
-                (data as Record<string, unknown>)[f] = (record as Record<string, unknown>)[f];
-            }
-
-            const hash = JSON.stringify(data);
+            const hash = JSON.stringify(fields.map((f) => record[f]));
             if (seen.has(hash)) return;
             seen.add(hash);
 
-            const label = buildLabel(record);
-            result.push({ label, sourceIndex: idx, data });
+            result.push({ label: buildLabel(record), sourceIndex: idx });
         });
 
         return result;
@@ -82,10 +77,12 @@ const SavedPresetSelect: FC<Props> = ({ type, otherRecords }) => {
         const preset = presets.find((p) => p.sourceIndex === idx);
         if (!preset) return;
 
+        const source = otherRecords[preset.sourceIndex];
+        if (!source) return;
+
         const fields = FIELD_KEYS[type];
         for (const f of fields) {
-            const val = (preset.data as Record<string, unknown>)[f] as string | null | undefined;
-            setValue(f as keyof FormRecord, val ?? null, { shouldDirty: true });
+            setValue(f, source[f] ?? null, { shouldDirty: true });
         }
         setIsOpen(false);
     };

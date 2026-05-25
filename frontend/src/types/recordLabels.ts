@@ -1,8 +1,10 @@
-export const LOCATION_FIELDS = ['country', 'region', 'district', 'locality'] as const;
+import type { RecordFull, FormRecord } from '@/types/api.dto';
 
-export const EVENT_FIELDS = ['verbatim_date', 'habitat', 'recorded_by'] as const;
+type SharedField = keyof RecordFull & keyof FormRecord;
 
-import type { RecordFull } from '@/types/api.dto';
+export const LOCATION_FIELDS: SharedField[] = ['country', 'region', 'district', 'locality'];
+
+export const EVENT_FIELDS: SharedField[] = ['verbatim_date', 'habitat', 'recorded_by'];
 
 export function locationSummary(record: RecordFull): string {
     return [record.country, record.region, record.district, record.locality]
