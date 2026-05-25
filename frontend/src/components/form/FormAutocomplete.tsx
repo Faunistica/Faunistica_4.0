@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
@@ -65,6 +65,17 @@ export function FormAutocomplete({
 
     const { onBlur, ...registerProps } = register(name);
 
+    const handleBlur = useCallback(
+        async (e: React.FocusEvent<HTMLInputElement>) => {
+            if (formValue !== lastCommittedRef.current) {
+                lastCommittedRef.current = formValue;
+                onSelectExtra?.(formValue);
+            }
+            await onBlur(e);
+        },
+        [onBlur, onSelectExtra, formValue],
+    );
+
     return (
         <Field>
             <FieldLabel>{label}</FieldLabel>
@@ -78,13 +89,7 @@ export function FormAutocomplete({
                     searchVersionRef.current = 0;
                     onSelectExtra?.(val);
                 }}
-                onBlur={async (e) => {
-                    if (formValue !== lastCommittedRef.current) {
-                        lastCommittedRef.current = formValue;
-                        onSelectExtra?.(formValue);
-                    }
-                    await onBlur(e);
-                }}
+                onBlur={handleBlur}
                 onSearch={handleSearch}
                 suggestions={suggestions}
                 isLoading={isLoading}

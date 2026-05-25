@@ -1,4 +1,4 @@
-import { type ComponentProps, type FC, useState, useRef, useEffect } from 'react';
+import { type ComponentProps, type FC, useState, useRef, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
     className,
     minChars = 2,
     onBlur: onBlurProp,
+    ref: refProp,
     ...props
 }) => {
     const [open, setOpen] = useState(false);
@@ -65,48 +66,56 @@ const Autocomplete: FC<AutocompleteProps> = ({
         }
     }, [highlightIndex]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (onChange) {
-            onChange(e);
-        }
+    const handleInputChange = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>) => {
+            if (onChange) {
+                onChange(e);
+            }
 
-        const text = e.target.value;
-        if (text.length >= minChars) {
-            onSearch(text);
-        } else {
+            const text = e.target.value;
+            if (text.length >= minChars) {
+                onSearch(text);
+            } else {
+                setOpen(false);
+            }
+        },
+        [minChars, onChange, onSearch],
+    );
+
+    const handleSelect = useCallback(
+        (item: string) => {
+            onSelect?.(item);
+            if (inputRef.current) {
+                inputRef.current.value = item;
+            }
             setOpen(false);
-        }
-    };
+            inputRef.current?.focus();
+        },
+        [onSelect],
+    );
 
-    const handleSelect = (item: string) => {
-        onSelect?.(item);
-        if (inputRef.current) {
-            inputRef.current.value = item;
-        }
-        setOpen(false);
-        inputRef.current?.focus();
-    };
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+            if (!open || suggestions.length === 0) return;
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (!open || suggestions.length === 0) return;
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setHighlightIndex((prev) => (prev + 1) % suggestions.length);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setHighlightIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
-        } else if (e.key === 'Enter' && highlightIndex >= 0) {
-            e.preventDefault();
-            handleSelect(suggestions[highlightIndex]);
-        }
-    };
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setHighlightIndex((prev) => (prev + 1) % suggestions.length);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setHighlightIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
+            } else if (e.key === 'Enter' && highlightIndex >= 0) {
+                e.preventDefault();
+                handleSelect(suggestions[highlightIndex]);
+            }
+        },
+        [suggestions, open, handleSelect, highlightIndex, setHighlightIndex],
+    );
 
     return (
         <div ref={wrapperRef} className={cn('relative', className)}>
             <div className="relative">
                 <Input
-                    ref={inputRef}
                     onChange={handleInputChange}
                     onFocus={() => {
                         if (suggestions.length > 0) {
@@ -119,6 +128,15 @@ const Autocomplete: FC<AutocompleteProps> = ({
                     }}
                     autoComplete="off"
                     {...props}
+                    ref={(el) => {
+                        inputRef.current = el;
+                        if (typeof refProp === 'function') {
+                            refProp(el);
+                        } else if (refProp) {
+                            (refProp as React.MutableRefObject<HTMLInputElement | null>).current =
+                                el;
+                        }
+                    }}
                     onKeyDown={handleKeyDown}
                 />
                 {isLoading && (

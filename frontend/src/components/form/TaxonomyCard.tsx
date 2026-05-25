@@ -18,19 +18,11 @@ import { TYPE_STATUS_OPTIONS, TAXON_RANK_OPTIONS } from '@/types/forms';
 import type { FormRecord } from '@/types/api.dto';
 
 const TaxonomyCard: FC = () => {
-    const { control, setValue } = useFormContext<FormRecord>();
+    const { control, setValue, getValues, getFieldState } = useFormContext<FormRecord>();
 
     const [searchFamily, { isLoading: familyLoading }] = useLazySuggestTaxonQuery();
     const [searchGenus, { isLoading: genusLoading }] = useLazySuggestTaxonQuery();
     const [searchSpecies, { isLoading: speciesLoading }] = useLazySuggestTaxonQuery();
-
-    // TODO: idk how to do useWatch safely
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    const [family, genus] = useWatch<FormRecord>({
-        control,
-        name: ['family', 'genus'],
-    }) as (string | null | undefined)[];
-    const { errors } = useFormState({ control, name: ['family', 'genus', 'species'] });
 
     const familySearchFn = (text: string) =>
         searchFamily({ field: 'family', text })
@@ -42,7 +34,10 @@ const TaxonomyCard: FC = () => {
             family?: string | null;
         } = {};
 
-        if (!errors.family) {
+        const family = getValues('family');
+        const familyState = getFieldState('family');
+
+        if (!familyState.error) {
             extra.family = family;
         }
 
@@ -57,10 +52,17 @@ const TaxonomyCard: FC = () => {
             genus?: string | null;
         } = {};
 
-        if (!errors.family) {
+        const family = getValues('family');
+        const familyState = getFieldState('family');
+
+        if (!familyState.error) {
             extra.family = family;
         }
-        if (!errors.genus) {
+
+        const genus = getValues('genus');
+        const genusState = getFieldState('genus');
+
+        if (!genusState.error) {
             extra.genus = genus;
         }
 
