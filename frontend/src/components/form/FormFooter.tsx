@@ -8,7 +8,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Save, Send, Trash2, Cloud, CloudOff, Check } from 'lucide-react';
+import { Save, Send, Trash2, Cloud, CloudOff, Check, Loader2 } from 'lucide-react';
 
 interface FooterProps {
     onSave: () => void;
@@ -45,9 +45,8 @@ const Footer: FC<FooterProps> = ({
                     <Button
                         onClick={() => setIsDeleteDialogOpen(true)}
                         disabled={isSaving}
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1.5 text-red-500 hover:bg-red-50 hover:text-red-700"
+                        variant="destructive"
+                        className="gap-2"
                     >
                         <Trash2 className="h-3.5 w-3.5" />
                         <span className="text-xs font-medium">Удалить</span>
@@ -76,12 +75,16 @@ const Footer: FC<FooterProps> = ({
                 <div className="flex items-center gap-3">
                     <Button
                         onClick={onSave}
-                        disabled={isSaving}
+                        disabled={isSaving || isAutoSaving}
                         variant="outline"
                         className="gap-2"
                     >
-                        <Save className="h-4 w-4" />
-                        {isSaving ? 'Сохранение...' : 'Сохранить'}
+                        {isSaving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <Save className="h-4 w-4" />
+                        )}
+                        Сохранить
                     </Button>
                     <Button
                         onClick={() => setIsSubmitDialogOpen(true)}
@@ -150,7 +153,7 @@ const Footer: FC<FooterProps> = ({
                             disabled={isSaving}
                             variant="destructive"
                         >
-                            {isSaving ? 'Удаление...' : 'Удалить'}
+                            Удалить
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>

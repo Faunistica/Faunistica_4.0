@@ -27,8 +27,8 @@ interface RecordFormContentProps {
 const RecordFormContent: FC<RecordFormContentProps> = ({
     publ_id,
     activeRecordId,
-    registerSave: onRegisterSave,
-    deleteRecord: onDelete,
+    registerSave,
+    deleteRecord,
 }) => {
     const { currentData: activeRecord } = useRecordByIdQuery(
         { record_id: activeRecordId },
@@ -71,11 +71,14 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
 
     const handleSave = useCallback(() => save(getValues()), [save, getValues]);
     const handleSubmit = useCallback(() => submit(getValues()), [submit, getValues]);
-    const handleDelete = useCallback(() => onDelete(activeRecordId), [onDelete, activeRecordId]);
+    const handleDelete = useCallback(
+        () => deleteRecord(activeRecordId),
+        [deleteRecord, activeRecordId],
+    );
 
     useEffect(() => {
-        onRegisterSave((options) => save(getValues(), options));
-    }, [save, getValues, onRegisterSave]);
+        registerSave((options) => save(getValues(), options));
+    }, [save, getValues, registerSave]);
 
     if (!activeRecord) {
         return <LoadingScreen />;
