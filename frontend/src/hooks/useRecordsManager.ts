@@ -61,18 +61,23 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
         async (targetId: string) => {
             if (targetId === activeRecord?.id) return;
 
-            try {
-                await saveRef.current?.({ silent: true });
-            } catch {
-                // proceed with switch even if save fails
-            }
+            // Fire-and-forget background save - don't block record switching
+            saveRef.current?.({ silent: true }).catch(() => {});
 
-            const result = await fetchRecordById({ record_id: targetId }, false);
-            if (result.data) {
-                setActiveRecord(result.data);
+            const cachedRecord = records.find((r) => r.id === targetId);
+            if (cachedRecord) {
+                setActiveRecord(cachedRecord);
+                fetchRecordById({ record_id: targetId }).catch(() => {
+                    // Silent background refresh - already showing cached data
+                });
+            } else {
+                const result = await fetchRecordById({ record_id: targetId });
+                if (result.data) {
+                    setActiveRecord(result.data);
+                }
             }
         },
-        [activeRecord?.id, fetchRecordById],
+        [activeRecord?.id, records, fetchRecordById],
     );
 
     const handleDelete = useCallback(
