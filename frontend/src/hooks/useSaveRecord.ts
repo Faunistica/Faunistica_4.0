@@ -5,13 +5,11 @@ import { draftToRecordData } from '@/lib/recordUtils';
 import { useEditRecordMutation, useSubmitRecordMutation } from '@/api/recordAPI';
 
 interface UseSaveRecordReturn {
-    save: (
-        data: Partial<FormRecord>,
-        options?: { silent?: boolean },
-    ) => Promise<UpdateRecordResponse | undefined>;
+    save: (data: Partial<FormRecord>) => Promise<UpdateRecordResponse | undefined>;
     submit: (data: Partial<FormRecord>) => Promise<UpdateRecordResponse | undefined>;
     isSaving: boolean;
-    isSavingRef: React.RefObject<boolean>;
+    isSavingRef: React.MutableRefObject<boolean>;
+    shouldSkipSync: (updatedAt: string) => boolean;
 }
 
 export function useSaveRecord(
@@ -23,13 +21,18 @@ export function useSaveRecord(
     const [submitRecord] = useSubmitRecordMutation();
     const [isSaving, setIsSaving] = useState(false);
     const isSavingRef = useRef(false);
+    const lastSavedAtRef = useRef<string | null>(null);
 
     useEffect(() => {
         isSavingRef.current = isSaving;
     }, [isSaving]);
 
+    const shouldSkipSync = useCallback((updatedAt: string): boolean => {
+        return updatedAt === lastSavedAtRef.current;
+    }, []);
+
     const save = useCallback(
-        async (data: Partial<FormRecord>, _options?: { silent?: boolean }) => {
+        async (data: Partial<FormRecord>): Promise<UpdateRecordResponse | undefined> => {
             if (!activeRecordId) return undefined;
 
             setIsSaving(true);
@@ -41,6 +44,7 @@ export function useSaveRecord(
                     publ_id,
                     user_id,
                 }).unwrap();
+                lastSavedAtRef.current = response.record.updated_at;
                 return response;
             } catch (error) {
                 toast.error('Ошибка при сохранении данных');
@@ -53,7 +57,7 @@ export function useSaveRecord(
     );
 
     const submit = useCallback(
-        async (data: Partial<FormRecord>) => {
+        async (data: Partial<FormRecord>): Promise<UpdateRecordResponse | undefined> => {
             if (!activeRecordId) return undefined;
 
             setIsSaving(true);
@@ -69,6 +73,7 @@ export function useSaveRecord(
                     record_id: activeRecordId,
                     data: payload,
                 }).unwrap();
+                lastSavedAtRef.current = response.record.updated_at;
                 return response;
             } catch (error) {
                 toast.error('Ошибка при отправке данных');
@@ -80,5 +85,5 @@ export function useSaveRecord(
         [activeRecordId, editRecord, submitRecord, publ_id, user_id],
     );
 
-    return { save, submit, isSaving, isSavingRef };
+    return { save, submit, isSaving, isSavingRef, shouldSkipSync };
 }

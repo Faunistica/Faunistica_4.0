@@ -12,14 +12,34 @@ vi.mock('@/api/recordAPI', () => ({
     useSubmitRecordMutation: () => [mockSubmitRecord, { isLoading: false }],
 }));
 
+function mockResponse(updatedAt = '2024-01-01T00:00:00Z') {
+    return {
+        record: {
+            id: 'record-1',
+            updated_at: updatedAt,
+        },
+        errors: [],
+    };
+}
+
+function mockSubmitResponse(updatedAt = '2024-01-01T01:00:00Z') {
+    return {
+        record: {
+            id: 'record-1',
+            updated_at: updatedAt,
+        },
+        errors: [],
+    };
+}
+
 describe('useSaveRecord', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockEditRecord.mockReturnValue({
-            unwrap: vi.fn().mockResolvedValue({ errors: [] }),
+            unwrap: vi.fn().mockResolvedValue(mockResponse()),
         });
         mockSubmitRecord.mockReturnValue({
-            unwrap: vi.fn().mockResolvedValue({ errors: [] }),
+            unwrap: vi.fn().mockResolvedValue(mockSubmitResponse()),
         });
     });
 
@@ -61,5 +81,41 @@ describe('useSaveRecord', () => {
         });
 
         expect(mockEditRecord).not.toHaveBeenCalled();
+    });
+
+    it('shouldSkipSync returns false before any save', () => {
+        const { result } = renderHook(() => useSaveRecord('record-1'));
+
+        expect(result.current.shouldSkipSync('any-value')).toBe(false);
+    });
+
+    it('shouldSkipSync returns true for saved updated_at after save', async () => {
+        const { result } = renderHook(() => useSaveRecord('record-1'));
+
+        await act(async () => {
+            await result.current.save({ males: 3 });
+        });
+
+        expect(result.current.shouldSkipSync('2024-01-01T00:00:00Z')).toBe(true);
+    });
+
+    it('shouldSkipSync returns false for different updated_at after save', async () => {
+        const { result } = renderHook(() => useSaveRecord('record-1'));
+
+        await act(async () => {
+            await result.current.save({ males: 3 });
+        });
+
+        expect(result.current.shouldSkipSync('2025-01-01T00:00:00Z')).toBe(false);
+    });
+
+    it('shouldSkipSync returns true for submit response updated_at', async () => {
+        const { result } = renderHook(() => useSaveRecord('record-1'));
+
+        await act(async () => {
+            await result.current.submit({ males: 3 });
+        });
+
+        expect(result.current.shouldSkipSync('2024-01-01T01:00:00Z')).toBe(true);
     });
 });

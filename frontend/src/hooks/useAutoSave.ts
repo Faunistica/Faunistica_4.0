@@ -1,30 +1,30 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
-import type { FormRecord } from '@/types/api.dto';
+import type { FormRecord, UpdateRecordResponse } from '@/types/api.dto';
 
 const SHOULD_AUTO_SAVE = !(import.meta.env.VITE_DISABLE_AUTO_SAVE?.toLowerCase?.() === 'true');
 
 interface UseAutoSaveOptions {
-    save: (data: Partial<FormRecord>) => Promise<void>;
+    save: (data: Partial<FormRecord>) => Promise<UpdateRecordResponse | undefined>;
     methods: UseFormReturn<FormRecord>;
     isSavingRef?: React.MutableRefObject<boolean>;
-    onAutoSavingChange?: (saving: boolean) => void;
-    onAutoSaved?: (time: Date) => void;
+    onSaved?: (response: UpdateRecordResponse) => void;
 }
 
 interface UseAutoSaveReturn {
     cancelPendingAutoSave: () => void;
+    isAutoSaving: boolean;
 }
 
 export function useAutoSave({
     save,
     methods,
     isSavingRef,
-    onAutoSavingChange,
-    onAutoSaved,
+    onSaved,
 }: UseAutoSaveOptions): UseAutoSaveReturn {
     const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const lastSnapshotRef = useRef<string>('');
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
 
     const { getValues, watch } = methods;
 
@@ -55,15 +55,15 @@ export function useAutoSave({
                     return;
                 }
 
-                onAutoSavingChange?.(true);
+                setIsAutoSaving(true);
                 try {
-                    await save(currentValues);
+                    const response = await save(currentValues);
                     lastSnapshotRef.current = currentSnapshot;
-                    onAutoSaved?.(new Date());
+                    if (response) onSaved?.(response);
                 } catch {
                     // auto-save errors handled by useSaveRecord
                 } finally {
-                    onAutoSavingChange?.(false);
+                    setIsAutoSaving(false);
                 }
             }, 2000);
         });
@@ -72,7 +72,7 @@ export function useAutoSave({
             subscription.unsubscribe();
             cancelPendingAutoSave();
         };
-    }, [watch, getValues, save, cancelPendingAutoSave, isSavingRef, onAutoSavingChange, onAutoSaved]);
+    }, [watch, getValues, save, cancelPendingAutoSave, isSavingRef, onSaved]);
 
-    return { cancelPendingAutoSave };
+    return { cancelPendingAutoSave, isAutoSaving };
 }

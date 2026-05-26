@@ -1,10 +1,14 @@
-import { type FC, useCallback } from 'react';
+import { type FC, useCallback, useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { FormRecord } from '@/types/api.dto';
+import type { FormRecord, RecordFull, UpdateRecordResponse } from '@/types/api.dto';
 import { formRecordSchema } from '@/types/forms';
 import { useRecordByIdQuery } from '@/api/recordAPI';
-import { useRecordForm } from '@/hooks/useRecordForm';
+import { useSaveRecord } from '@/hooks/useSaveRecord';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { useSyncRecordToForm } from '@/hooks/useSyncRecordToForm';
+import { toFormPartial } from '@/lib/recordUtils';
+import { syncServerErrors } from '@/lib/syncServerErrors';
 import ArticleSourceCard from '@/components/form/ArticleSourceCard';
 import GeographyCard from '@/components/form/GeographyCard';
 import CollectionEventCard from '@/components/form/CollectionEventCard';
@@ -39,26 +43,77 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
         reValidateMode: 'onChange',
     });
 
-    const {
-        handleSave,
-        handleSubmit,
-        isSaving,
-        isAutoSaving,
-        lastSavedTime,
-        nonFieldErrors,
-    } = useRecordForm({
+    const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
+    const [nonFieldErrors, setNonFieldErrors] = useState<string[]>([]);
+
+    useEffect(() => {
+        setNonFieldErrors([]);
+        setLastSavedTime(null);
+    }, [activeRecordId]);
+
+    const { save, submit, isSaving, isSavingRef, shouldSkipSync } = useSaveRecord(
         activeRecordId,
-        activeRecord,
-        methods,
         publ_id,
-        user_id: activeRecord?.user_id ?? 0,
-        registerSave,
+        activeRecord?.user_id ?? 0,
+    );
+
+    const handleSaveResult = useCallback(
+        (response: UpdateRecordResponse) => {
+            setNonFieldErrors(syncServerErrors(response, methods));
+            setLastSavedTime(new Date());
+        },
+        [methods],
+    );
+
+    const onAutoSaved = useCallback(() => {
+        setLastSavedTime(new Date());
+    }, []);
+
+    const { isAutoSaving, cancelPendingAutoSave } = useAutoSave({
+        save,
+        methods,
+        isSavingRef,
+        onSaved: onAutoSaved,
     });
+
+    const handleSave = useCallback(async () => {
+        cancelPendingAutoSave();
+        const response = await save(methods.getValues());
+        if (response) handleSaveResult(response);
+    }, [save, methods, cancelPendingAutoSave, handleSaveResult]);
+
+    const handleSubmit = useCallback(async () => {
+        cancelPendingAutoSave();
+        const response = await submit(methods.getValues());
+        if (response) handleSaveResult(response);
+    }, [submit, methods, cancelPendingAutoSave, handleSaveResult]);
 
     const handleDelete = useCallback(
         () => deleteRecord(activeRecordId),
         [deleteRecord, activeRecordId],
     );
+
+    useSyncRecordToForm(
+        activeRecord,
+        useCallback(
+            (record: RecordFull) => {
+                if (shouldSkipSync(record.updated_at)) return;
+                methods.reset(toFormPartial(record), {
+                    keepErrors: false,
+                    keepTouched: false,
+                    keepDirty: false,
+                });
+            },
+            [methods, shouldSkipSync],
+        ),
+    );
+
+    useEffect(() => {
+        registerSave(async () => {
+            cancelPendingAutoSave();
+            await save(methods.getValues());
+        });
+    }, [save, methods, registerSave, cancelPendingAutoSave]);
 
     if (!activeRecord) {
         return <LoadingScreen />;

@@ -53,6 +53,7 @@ const SidebarRecordItem = ({
     onSelectRecord: (id: string) => void;
     deleteRecord: (id: string) => void;
 }) => {
+    // Only use blocking fields?
     const { currentData: record } = useRecordByIdQuery({ record_id: recordId });
     const { isMobile, setOpenMobile } = useSidebar();
     const status = record ? computeInactiveStatus(record) : 'empty';
@@ -172,10 +173,10 @@ const FormSidebar: FC<SidebarProps> = ({
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-    const recordIds = useAppSelector(state => {
+    const recordIds = useAppSelector((state) => {
         const result = recordAPI.endpoints.recordsList.select({ publ_id, user_id })(state);
         const data = 'data' in result ? result.data : undefined;
-        return data?.items?.map(r => r.id) ?? [];
+        return data?.items?.map((r) => r.id) ?? [];
     }, shallowEqual);
 
     return (
