@@ -26,17 +26,14 @@ vi.mock('@/components/form/RecordFormContent', () => ({
 }));
 
 vi.mock('@/components/form/FormSidebar', () => ({
-    default: ({ records, activeStatus, onSelectRecord }: any) => (
-        <div data-testid="sidebar" data-active-status={activeStatus}>
-            {records.map((r: any) => (
-                <button
-                    key={r.id}
-                    data-testid={`record-${r.id}`}
-                    onClick={() => onSelectRecord(r.id)}
-                >
-                    {r.species}
-                </button>
-            ))}
+    default: ({ onSelectRecord }: any) => (
+        <div data-testid="sidebar">
+            <button data-testid="record-1" onClick={() => onSelectRecord('1')}>
+                Canis
+            </button>
+            <button data-testid="record-2" onClick={() => onSelectRecord('2')}>
+                Felis
+            </button>
         </div>
     ),
 }));

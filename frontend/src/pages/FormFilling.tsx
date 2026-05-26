@@ -37,7 +37,6 @@ const FormFilling: FC = () => {
             onOpenMobileChange={setIsSidebarOpen}
         >
             <FormSidebar
-                records={records.filter((r) => r.type !== 'rec_del')}
                 activeRecordId={activeRecordId}
                 onSelectRecord={recordMethods.switchTo}
                 onCreateRecord={recordMethods.create}

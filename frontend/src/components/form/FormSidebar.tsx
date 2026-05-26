@@ -1,4 +1,5 @@
 import { type FC, useState } from 'react';
+import { shallowEqual } from 'react-redux';
 import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Plus, LogOut, FileText, MapPin, X, FileSpreadsheet, Trash2 } from 'lucide-react';
@@ -26,13 +27,13 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import type { RecordFull } from '@/types/api.dto';
-import { computeInactiveStatus, type RecordStatus } from '@/lib/recordStatus';
+import { recordAPI, useRecordByIdQuery } from '@/api/recordAPI';
+import { computeInactiveStatus } from '@/lib/recordStatus';
+import { useAppSelector } from '@/store/store';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 import ExcelUploadModal from '@/components/form/ExcelUploadModal';
 
 interface SidebarProps {
-    records: RecordFull[];
     activeRecordId: string | null;
     onSelectRecord: (id: string) => void;
     onCreateRecord: () => void;
@@ -42,20 +43,20 @@ interface SidebarProps {
 }
 
 const SidebarRecordItem = ({
-    record,
+    recordId,
     isActive,
     onSelect,
     onDelete,
-    status,
 }: {
-    record: RecordFull;
+    recordId: string;
     isActive: boolean;
     onSelect: () => void;
     onDelete: () => void;
-    status: RecordStatus;
 }) => {
+    const { currentData: record } = useRecordByIdQuery({ record_id: recordId });
+    const status = record ? computeInactiveStatus(record) : 'empty';
     const recordName = capitalizeFirstLetter(
-        record.species || record.genus || record.family || 'Новая запись',
+        record?.species || record?.genus || record?.family || 'Новая запись',
     );
 
     return (
@@ -140,7 +141,7 @@ const SidebarRecordItem = ({
                         <>
                             <MapPin className="size-2.5 shrink-0" />
                             <span className="truncate pl-1">
-                                {record.locality || record.region || 'Нет данных о месте'}
+                                {record?.locality || record?.region || 'Нет данных о месте'}
                             </span>
                         </>
                     )}
@@ -151,7 +152,6 @@ const SidebarRecordItem = ({
 };
 
 const FormSidebar: FC<SidebarProps> = ({
-    records,
     activeRecordId,
     onSelectRecord,
     onCreateRecord,
@@ -161,6 +161,12 @@ const FormSidebar: FC<SidebarProps> = ({
 }) => {
     const { isMobile, setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+    const recordIds = useAppSelector(state => {
+        const result = recordAPI.endpoints.recordsList.select({ publ_id, user_id })(state);
+        const data = 'data' in result ? result.data : undefined;
+        return data?.items?.map(r => r.id) ?? [];
+    }, shallowEqual);
 
     return (
         <>
@@ -222,17 +228,16 @@ const FormSidebar: FC<SidebarProps> = ({
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu className="gap-1.5 px-2">
-                                {records.map((record) => (
+                                {recordIds.map((id) => (
                                     <SidebarRecordItem
-                                        key={record.id}
-                                        record={record}
-                                        isActive={record.id === activeRecordId}
-                                        status={computeInactiveStatus(record)}
+                                        key={id}
+                                        recordId={id}
+                                        isActive={id === activeRecordId}
                                         onSelect={() => {
-                                            onSelectRecord(record.id);
+                                            onSelectRecord(id);
                                             if (isMobile) setOpenMobile(false);
                                         }}
-                                        onDelete={() => deleteRecord(record.id)}
+                                        onDelete={() => deleteRecord(id)}
                                     />
                                 ))}
                             </SidebarMenu>
