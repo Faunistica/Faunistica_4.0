@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormRecord } from '@/types/api.dto';
 
@@ -8,19 +8,23 @@ interface UseAutoSaveOptions {
     save: (data: Partial<FormRecord>) => Promise<void>;
     methods: UseFormReturn<FormRecord>;
     isSavingRef?: React.MutableRefObject<boolean>;
+    onAutoSavingChange?: (saving: boolean) => void;
+    onAutoSaved?: (time: Date) => void;
 }
 
 interface UseAutoSaveReturn {
-    isAutoSaving: boolean;
-    lastSavedTime: Date | null;
     cancelPendingAutoSave: () => void;
 }
 
-export function useAutoSave({ save, methods, isSavingRef }: UseAutoSaveOptions): UseAutoSaveReturn {
+export function useAutoSave({
+    save,
+    methods,
+    isSavingRef,
+    onAutoSavingChange,
+    onAutoSaved,
+}: UseAutoSaveOptions): UseAutoSaveReturn {
     const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const lastSnapshotRef = useRef<string>('');
-    const [isAutoSaving, setIsAutoSaving] = useState(false);
-    const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
 
     const { getValues, watch } = methods;
 
@@ -51,15 +55,15 @@ export function useAutoSave({ save, methods, isSavingRef }: UseAutoSaveOptions):
                     return;
                 }
 
-                setIsAutoSaving(true);
+                onAutoSavingChange?.(true);
                 try {
                     await save(currentValues);
                     lastSnapshotRef.current = currentSnapshot;
-                    setLastSavedTime(new Date());
+                    onAutoSaved?.(new Date());
                 } catch {
                     // auto-save errors handled by useSaveRecord
                 } finally {
-                    setIsAutoSaving(false);
+                    onAutoSavingChange?.(false);
                 }
             }, 2000);
         });
@@ -68,7 +72,7 @@ export function useAutoSave({ save, methods, isSavingRef }: UseAutoSaveOptions):
             subscription.unsubscribe();
             cancelPendingAutoSave();
         };
-    }, [watch, getValues, save, cancelPendingAutoSave, isSavingRef]);
+    }, [watch, getValues, save, cancelPendingAutoSave, isSavingRef, onAutoSavingChange, onAutoSaved]);
 
-    return { isAutoSaving, lastSavedTime, cancelPendingAutoSave };
+    return { cancelPendingAutoSave };
 }

@@ -1,13 +1,10 @@
-import { type FC, useEffect, useRef, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { FormRecord } from '@/types/api.dto';
 import { formRecordSchema } from '@/types/forms';
 import { useRecordByIdQuery } from '@/api/recordAPI';
-import { useSaveRecord } from '@/hooks/useSaveRecord';
-import { useAutoSave } from '@/hooks/useAutoSave';
-import { useSyncRecordToForm } from '@/hooks/useSyncRecordToForm';
-import { toFormPartial } from '@/lib/recordUtils';
+import { useRecordForm } from '@/hooks/useRecordForm';
 import ArticleSourceCard from '@/components/form/ArticleSourceCard';
 import GeographyCard from '@/components/form/GeographyCard';
 import CollectionEventCard from '@/components/form/CollectionEventCard';
@@ -42,43 +39,26 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
         reValidateMode: 'onChange',
     });
 
-    const cancelAutoSaveRef = useRef<(() => void) | undefined>(undefined);
-
-    const { save, submit, isSaving, nonFieldErrors, isSavingRef } = useSaveRecord(
+    const {
+        handleSave,
+        handleSubmit,
+        isSaving,
+        isAutoSaving,
+        lastSavedTime,
+        nonFieldErrors,
+    } = useRecordForm({
         activeRecordId,
+        activeRecord,
         methods,
         publ_id,
-        activeRecord?.user_id ?? 0,
-        cancelAutoSaveRef,
-    );
-    const { isAutoSaving, lastSavedTime, cancelPendingAutoSave } = useAutoSave({
-        save,
-        methods,
-        isSavingRef,
+        user_id: activeRecord?.user_id ?? 0,
+        registerSave,
     });
 
-    cancelAutoSaveRef.current = cancelPendingAutoSave;
-
-    const { getValues, reset } = methods;
-
-    useSyncRecordToForm(activeRecord, (record) =>
-        reset(toFormPartial(record), {
-            keepErrors: false,
-            keepTouched: false,
-            keepDirty: false,
-        }),
-    );
-
-    const handleSave = useCallback(() => save(getValues()), [save, getValues]);
-    const handleSubmit = useCallback(() => submit(getValues()), [submit, getValues]);
     const handleDelete = useCallback(
         () => deleteRecord(activeRecordId),
         [deleteRecord, activeRecordId],
     );
-
-    useEffect(() => {
-        registerSave((options) => save(getValues(), options));
-    }, [save, getValues, registerSave]);
 
     if (!activeRecord) {
         return <LoadingScreen />;

@@ -9,17 +9,19 @@ export function useSyncRecordToForm(
 ) {
   const prevRecordIdRef = useRef<string | undefined>(undefined);
   const prevUpdatedAtRef = useRef<string | undefined>(undefined);
+  const callbackRef = useRef(setFormValues);
+  callbackRef.current = setFormValues;
 
   useEffect(() => {
-    if (record) {
-      const isNewRecord = record.id !== prevRecordIdRef.current;
-      const isNewData = record.updated_at !== prevUpdatedAtRef.current;
+    if (!record) return;
 
-      if (isNewRecord || isNewData) {
-        prevRecordIdRef.current = record.id;
-        prevUpdatedAtRef.current = record.updated_at;
-        setFormValues(record);
-      }
+    const isNewRecord = record.id !== prevRecordIdRef.current;
+    const isNewData = record.updated_at !== prevUpdatedAtRef.current;
+
+    if (isNewRecord || isNewData) {
+      prevRecordIdRef.current = record.id;
+      prevUpdatedAtRef.current = record.updated_at;
+      callbackRef.current(record);
     }
-  }, [record, setFormValues]);
+  }, [record]);
 }
