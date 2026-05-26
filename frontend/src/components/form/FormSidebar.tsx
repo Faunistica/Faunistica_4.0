@@ -198,20 +198,20 @@ const FormSidebar: FC<SidebarProps> = ({
                         <Button
                             type="button"
                             onClick={onCreateRecord}
-                            className="w-full gap-2 bg-slate-900 font-semibold text-white shadow-sm hover:bg-slate-800"
+                            className="flex h-fit w-full items-center gap-2 bg-slate-900 py-2 font-semibold text-white shadow-sm hover:bg-slate-800"
                             size="sm"
                         >
-                            <Plus className="h-4 w-4" />
-                            Добавить запись
+                            <Plus className="size-4" />
+                            <span>Добавить запись</span>
                         </Button>
                         <Button
                             type="button"
                             variant="outline"
                             onClick={() => setIsUploadOpen(true)}
-                            className="w-full gap-2 border-emerald-200 font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50 hover:text-emerald-800"
+                            className="flex h-fit w-full items-center gap-2 border-emerald-200 py-2 font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50 hover:text-emerald-800"
                             size="sm"
                         >
-                            <FileSpreadsheet className="h-4 w-4" />
+                            <FileSpreadsheet className="size-4" />
                             Работа с Excel
                         </Button>
                     </div>
