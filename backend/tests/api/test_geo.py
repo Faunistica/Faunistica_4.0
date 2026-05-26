@@ -19,7 +19,7 @@ async def test_search_returns_200_with_locations(
 
     response = await authenticated_client.get(
         "/api/geo/search",
-        params={"field": "region", "text": "Москва"},
+        params={"field": "region", "query": "Москва"},
     )
     assert response.status_code == 200
     result = response.json()

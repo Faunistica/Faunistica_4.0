@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query, Request
 
 from core.dependencies import LocationData
 from core.rate_limiter import limiter
-from schema.geo import GeoSearchRequest, GeoSearchResponse
+from schema.geo import GeoFilters, GeoSearchRequest, GeoSearchResponse
 from service import geo
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,6 @@ async def search_geo(
     Ищет подсказки локаций по полю и тексту с фильтрацией по региону.
     """
     suggestions = await geo.get_location_suggestions(
-        location_data, data.field, data.text, data.filters
+        location_data, data.field, data.query, GeoFilters(region=data.region)
     )
     return GeoSearchResponse(suggestions=suggestions)

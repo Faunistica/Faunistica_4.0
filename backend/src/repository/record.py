@@ -85,11 +85,14 @@ async def get_records_paginated(
     order_col = getattr(EventRecord, sort, EventRecord.created_at)
 
     if publ_id is None:
-        where_condition = EventRecord.user_id == user_id
+        where_condition = and_(
+            EventRecord.user_id == user_id, EventRecord.type != "rec_del"
+        )
     else:
         where_condition = and_(
             EventRecord.user_id == user_id,
             EventRecord.publ_id == publ_id,
+            EventRecord.type != "rec_del",
         )
 
     count_stmt = select(func.count()).where(where_condition)

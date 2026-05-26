@@ -69,13 +69,13 @@ const GeographyCard: FC<Props> = ({ otherRecords }) => {
     const [searchRegion] = useLazyGeoSearchQuery();
     const [searchDistrict] = useLazyGeoSearchQuery();
 
-    const regionSearchFn = (text: string) =>
-        searchRegion({ field: 'region', text })
+    const regionSearchFn = (query: string) =>
+        searchRegion({ field: 'region', query })
             .unwrap()
             .then((r) => r.suggestions ?? []);
 
-    const districtSearchFn = (text: string) =>
-        searchDistrict({ field: 'district', text })
+    const districtSearchFn = (query: string) =>
+        searchDistrict({ field: 'district', query })
             .unwrap()
             .then((r) => r.suggestions ?? []);
 
