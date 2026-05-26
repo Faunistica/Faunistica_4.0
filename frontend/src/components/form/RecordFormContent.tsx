@@ -1,4 +1,4 @@
-import { type FC, useEffect, useRef } from 'react';
+import { type FC, useEffect, useRef, useCallback } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { FormRecord } from '@/types/api.dto';
@@ -6,6 +6,7 @@ import { formRecordSchema } from '@/types/forms';
 import { useRecordByIdQuery } from '@/api/recordAPI';
 import { useSaveRecord } from '@/hooks/useSaveRecord';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useSyncRecordToForm } from '@/hooks/useSyncRecordToForm';
 import { toFormPartial } from '@/lib/recordUtils';
 import ArticleSourceCard from '@/components/form/ArticleSourceCard';
 import GeographyCard from '@/components/form/GeographyCard';
@@ -29,9 +30,10 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     registerSave: onRegisterSave,
     deleteRecord: onDelete,
 }) => {
-    const { currentData: activeRecord } = useRecordByIdQuery({
-        record_id: activeRecordId,
-    });
+    const { currentData: activeRecord } = useRecordByIdQuery(
+        { record_id: activeRecordId },
+        { refetchOnMountOrArgChange: true },
+    );
 
     const methods = useForm<FormRecord>({
         resolver: zodResolver(formRecordSchema),
@@ -50,7 +52,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
         cancelAutoSaveRef,
     );
     const { isAutoSaving, lastSavedTime, cancelPendingAutoSave } = useAutoSave({
-        save: (data) => save(data),
+        save,
         methods,
         isSavingRef,
     });
@@ -59,19 +61,21 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
 
     const { getValues, reset } = methods;
 
+    useSyncRecordToForm(activeRecord, (record) =>
+        reset(toFormPartial(record), {
+            keepErrors: false,
+            keepTouched: false,
+            keepDirty: false,
+        }),
+    );
+
+    const handleSave = useCallback(() => save(getValues()), [save, getValues]);
+    const handleSubmit = useCallback(() => submit(getValues()), [submit, getValues]);
+    const handleDelete = useCallback(() => onDelete(activeRecordId), [onDelete, activeRecordId]);
+
     useEffect(() => {
         onRegisterSave((options) => save(getValues(), options));
     }, [save, getValues, onRegisterSave]);
-
-    useEffect(() => {
-        if (activeRecord) {
-            reset(toFormPartial(activeRecord), {
-                keepErrors: false,
-                keepTouched: false,
-                keepDirty: false,
-            });
-        }
-    }, [activeRecord, reset]);
 
     if (!activeRecord) {
         return <LoadingScreen />;
@@ -90,9 +94,9 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
                 </div>
             </div>
             <Footer
-                onSave={() => save(getValues())}
-                onSubmit={() => submit(getValues())}
-                onDelete={() => onDelete(activeRecord.id)}
+                onSave={handleSave}
+                onSubmit={handleSubmit}
+                onDelete={handleDelete}
                 isSaving={isSaving}
                 isAutoSaving={isAutoSaving}
                 lastSavedTime={lastSavedTime}
