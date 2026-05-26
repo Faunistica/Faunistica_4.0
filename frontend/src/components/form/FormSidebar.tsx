@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC, useState, useCallback } from 'react';
 import { shallowEqual } from 'react-redux';
 import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -45,19 +45,29 @@ interface SidebarProps {
 const SidebarRecordItem = ({
     recordId,
     isActive,
-    onSelect,
-    onDelete,
+    onSelectRecord,
+    deleteRecord,
 }: {
     recordId: string;
     isActive: boolean;
-    onSelect: () => void;
-    onDelete: () => void;
+    onSelectRecord: (id: string) => void;
+    deleteRecord: (id: string) => void;
 }) => {
     const { currentData: record } = useRecordByIdQuery({ record_id: recordId });
+    const { isMobile, setOpenMobile } = useSidebar();
     const status = record ? computeInactiveStatus(record) : 'empty';
     const recordName = capitalizeFirstLetter(
         record?.species || record?.genus || record?.family || 'Новая запись',
     );
+
+    const handleSelect = useCallback(() => {
+        onSelectRecord(recordId);
+        if (isMobile) setOpenMobile(false);
+    }, [onSelectRecord, recordId, isMobile, setOpenMobile]);
+
+    const handleDelete = useCallback(() => {
+        deleteRecord(recordId);
+    }, [deleteRecord, recordId]);
 
     return (
         <SidebarMenuItem>
@@ -65,11 +75,11 @@ const SidebarRecordItem = ({
                 role="button"
                 tabIndex={0}
                 data-active={isActive}
-                onClick={onSelect}
+                onClick={handleSelect}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        onSelect();
+                        handleSelect();
                     }
                 }}
                 className={cn(
@@ -118,7 +128,7 @@ const SidebarRecordItem = ({
                                     variant="destructive"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        onDelete();
+                                        handleDelete();
                                     }}
                                 >
                                     Удалить
@@ -159,7 +169,7 @@ const FormSidebar: FC<SidebarProps> = ({
     publ_id,
     user_id,
 }) => {
-    const { isMobile, setOpenMobile } = useSidebar();
+    const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
     const recordIds = useAppSelector(state => {
@@ -233,11 +243,8 @@ const FormSidebar: FC<SidebarProps> = ({
                                         key={id}
                                         recordId={id}
                                         isActive={id === activeRecordId}
-                                        onSelect={() => {
-                                            onSelectRecord(id);
-                                            if (isMobile) setOpenMobile(false);
-                                        }}
-                                        onDelete={() => deleteRecord(id)}
+                                        onSelectRecord={onSelectRecord}
+                                        deleteRecord={deleteRecord}
                                     />
                                 ))}
                             </SidebarMenu>
