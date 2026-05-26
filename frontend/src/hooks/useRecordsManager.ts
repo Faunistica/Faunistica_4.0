@@ -1,18 +1,16 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { shallowEqual } from 'react-redux';
 import { toast } from 'sonner';
-import type { RecordFull } from '@/types/api.dto';
 import {
     recordAPI,
     useRecordsListQuery,
-    useLazyRecordByIdQuery,
     useCreateRecordMutation,
     useDeleteRecordMutation,
 } from '@/api/recordAPI';
-import { useAppDispatch } from '@/store/store';
+import { useAppDispatch, useAppSelector } from '@/store/store';
 
 interface UseRecordsManagerReturn {
-    records: RecordFull[];
-    activeRecord: RecordFull | null;
+    activeRecordId: string | null;
     isLoading: boolean;
     recordMethods: {
         create: () => Promise<void>;
@@ -23,30 +21,34 @@ interface UseRecordsManagerReturn {
 }
 
 export function useRecordsManager(publ_id: number, user_id: number): UseRecordsManagerReturn {
-    const [activeRecord, setActiveRecord] = useState<RecordFull | null>(null);
-    const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
+    const [activeRecordId, setActiveRecordId] = useState<string | null>(null);
     const saveRef = useRef<((options?: { silent?: boolean }) => Promise<void>) | undefined>(
         undefined,
     );
 
-    const { data: recordsData, isLoading } = useRecordsListQuery(
-        { publ_id, user_id },
-        { skip: !user_id || !publ_id },
-    );
+    const { isLoading } = useRecordsListQuery({ publ_id, user_id }, { skip: !user_id || !publ_id });
 
     const [createRecord] = useCreateRecordMutation();
-    const [fetchRecordById] = useLazyRecordByIdQuery();
     const [deleteRecord] = useDeleteRecordMutation();
     const dispatch = useAppDispatch();
 
-    const records = useMemo(() => recordsData?.items ?? [], [recordsData]);
+    const activeIdRef = useRef(activeRecordId);
+    activeIdRef.current = activeRecordId;
+
+    const recordIds = useAppSelector((state) => {
+        const result = recordAPI.endpoints.recordsList.select({ publ_id, user_id })(state);
+        const data = 'data' in result ? result.data : undefined;
+        return data?.items?.map((r) => r.id) ?? [];
+    }, shallowEqual);
+
+    const recordIdsRef = useRef(recordIds);
+    recordIdsRef.current = recordIds;
 
     useEffect(() => {
-        if (records.length > 0 && !hasLoadedInitial) {
-            setActiveRecord(records[0]);
-            setHasLoadedInitial(true);
+        if (recordIds.length > 0 && activeRecordId === null) {
+            setActiveRecordId(recordIds[0]);
         }
-    }, [records, hasLoadedInitial]);
+    }, [recordIds, activeRecordId]);
 
     const registerSave = useCallback((fn: (options?: { silent?: boolean }) => Promise<void>) => {
         saveRef.current = fn;
@@ -54,42 +56,34 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
 
     const handleCreate = useCallback(async () => {
         const created = await createRecord({ publ_id }).unwrap();
-        setActiveRecord(created);
-    }, [publ_id, createRecord]);
+        dispatch(
+            recordAPI.util.upsertQueryData('recordById', { record_id: created.id }, created),
+        ).catch(() => {});
+        setActiveRecordId(created.id);
+    }, [publ_id, createRecord, dispatch]);
 
     const switchToRecord = useCallback(
         async (targetId: string) => {
-            if (targetId === activeRecord?.id) return;
+            if (targetId === activeIdRef.current) return;
 
-            // Fire-and-forget background save - don't block record switching
             saveRef.current?.({ silent: true }).catch(() => {
                 toast.error('Не удалось сохранить текущую запись');
             });
 
-            const cachedRecord = records.find((r) => r.id === targetId);
-            if (cachedRecord) {
-                setActiveRecord(cachedRecord);
-                fetchRecordById({ record_id: targetId }).catch(() => {
-                    // Silent background refresh - already showing cached data
-                });
-            } else {
-                const result = await fetchRecordById({ record_id: targetId });
-                if (result.data) {
-                    setActiveRecord(result.data);
-                }
-            }
+            setActiveRecordId(targetId);
         },
-        [activeRecord?.id, records, fetchRecordById],
+        [],
     );
 
     const handleDelete = useCallback(
         async (id: string) => {
             const listArgs = { publ_id, user_id };
-            const isActive = id === activeRecord?.id;
+            const isActive = id === activeIdRef.current;
 
-            let nextRecord: RecordFull | null = null;
+            let nextId: string | null = null;
             if (isActive) {
-                nextRecord = records.filter((r) => r.id !== id)[0] ?? null;
+                const remaining = recordIdsRef.current.filter((rid) => rid !== id);
+                nextId = remaining[0] ?? null;
             }
 
             dispatch(
@@ -102,26 +96,18 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
             try {
                 await deleteRecord({ record_id: id }).unwrap();
                 if (isActive) {
-                    setActiveRecord(nextRecord);
+                    setActiveRecordId(nextId);
                 }
             } catch {
-                if (records) {
-                    dispatch(
-                        recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
-                            draft.items = records;
-                            draft.total = records.length;
-                        }),
-                    );
-                }
+                dispatch(recordAPI.util.invalidateTags(['records-list']));
                 toast.error('Ошибка при удалении записи');
             }
         },
-        [activeRecord?.id, records, publ_id, user_id, dispatch, deleteRecord],
+        [publ_id, user_id, dispatch, deleteRecord],
     );
 
     return {
-        records,
-        activeRecord,
+        activeRecordId,
         isLoading,
         recordMethods: {
             create: handleCreate,

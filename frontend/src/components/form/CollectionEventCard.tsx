@@ -6,14 +6,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { CalendarDays, Info } from 'lucide-react';
-import type { FormRecord, RecordFull } from '@/types/api.dto';
+import type { FormRecord } from '@/types/api.dto';
 import SavedPresetSelect from '@/components/form/SavedPresetSelect';
 
 interface Props {
-    otherRecords: RecordFull[];
+    publ_id: number;
+    activeRecordId: string | null;
 }
 
-const CollectionEventCard: FC<Props> = ({ otherRecords }) => {
+const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
     const { control } = useFormContext<FormRecord>();
 
     return (
@@ -27,7 +28,7 @@ const CollectionEventCard: FC<Props> = ({ otherRecords }) => {
                         Параметры сбора материала
                     </CardTitle>
                 </div>
-                <SavedPresetSelect type="event" otherRecords={otherRecords} />
+                <SavedPresetSelect type="event" publ_id={publ_id} activeRecordId={activeRecordId} />
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

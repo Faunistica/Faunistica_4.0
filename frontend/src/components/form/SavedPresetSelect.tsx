@@ -1,9 +1,11 @@
-import { type FC, useMemo } from 'react';
+import { type FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { History } from 'lucide-react';
 import type { RecordFull, FormRecord } from '@/types/api.dto';
 import { LOCATION_FIELDS, EVENT_FIELDS, locationSummary, eventSummary } from '@/types/recordLabels';
+import { recordAPI } from '@/api/recordAPI';
+import { store, useAppSelector } from '@/store/store';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,12 +19,13 @@ type PresetType = 'location' | 'event';
 
 interface Props {
     type: PresetType;
-    otherRecords: RecordFull[];
+    publ_id: number;
+    activeRecordId: string | null;
 }
 
 interface Preset {
     label: string;
-    sourceIndex: number;
+    recordId: string;
 }
 
 const FIELD_KEYS: Record<PresetType, SharedField[]> = {
@@ -35,41 +38,61 @@ const LABEL_BUILDERS: Record<PresetType, (d: RecordFull) => string> = {
     event: eventSummary,
 };
 
-const SavedPresetSelect: FC<Props> = ({ type, otherRecords }) => {
+const EMPTY_PRESETS: Preset[] = [];
+
+const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
     const { setValue } = useFormContext<FormRecord>();
 
-    const presets = useMemo(() => {
-        if (!otherRecords || otherRecords.length <= 1) return [];
+    const presets = useAppSelector(state => {
+        const userId = state.user.user_id;
+        if (!userId) return EMPTY_PRESETS;
 
+        const result = recordAPI.endpoints.recordsList.select({
+            publ_id,
+            user_id: userId,
+        })(state);
+        const items = 'data' in result ? (result.data?.items ?? []) : [];
         const fields = FIELD_KEYS[type];
         const buildLabel = LABEL_BUILDERS[type];
         const seen = new Set<string>();
-        const result: Preset[] = [];
+        const resultList: Preset[] = [];
 
-        otherRecords.forEach((record, idx) => {
+        for (const record of items) {
+            if (activeRecordId && record.id === activeRecordId) continue;
+
             const hasData = fields.some((f) => {
                 const val = record[f];
                 return val !== null && val !== undefined && val !== '';
             });
-            if (!hasData) return;
+            if (!hasData) continue;
 
             const hash = JSON.stringify(fields.map((f) => record[f]));
-            if (seen.has(hash)) return;
+            if (seen.has(hash)) continue;
             seen.add(hash);
 
-            result.push({ label: buildLabel(record), sourceIndex: idx });
-        });
+            resultList.push({ label: buildLabel(record), recordId: record.id });
+        }
 
-        return result;
-    }, [otherRecords, type]);
+        return resultList;
+    }, (a, b) => {
+        if (a === b) return true;
+        if (a.length !== b.length) return false;
+        return a.every((p, i) => p.label === b[i].label && p.recordId === b[i].recordId);
+    });
 
     if (presets.length === 0) return null;
 
-    const handleSelect = (index: number) => {
-        const preset = presets.find((p) => p.sourceIndex === index);
-        if (!preset) return;
+    const handleSelect = (recordId: string) => {
+        const state = store.getState();
+        const userId = state.user.user_id;
+        if (!userId) return;
 
-        const source = otherRecords[preset.sourceIndex];
+        const result = recordAPI.endpoints.recordsList.select({
+            publ_id,
+            user_id: userId,
+        })(state);
+        const items = 'data' in result ? (result.data?.items ?? []) : [];
+        const source = items.find((r) => r.id === recordId);
         if (!source) return;
 
         const fields = FIELD_KEYS[type];
@@ -94,12 +117,12 @@ const SavedPresetSelect: FC<Props> = ({ type, otherRecords }) => {
             <DropdownMenuContent className="w-fit" align="end">
                 {presets.map((p) => (
                     <DropdownMenuItem
-                        key={p.sourceIndex}
-                        onSelect={() => handleSelect(p.sourceIndex)}
+                        key={p.recordId}
+                        onSelect={() => handleSelect(p.recordId)}
                         className="flex items-center gap-2"
                     >
                         <span className="w-6 text-xs font-semibold text-blue-600">
-                            #{presets.length - p.sourceIndex}
+                            #{presets.length - presets.indexOf(p)}
                         </span>
                         <span className="text-slate-700">{p.label}</span>
                     </DropdownMenuItem>

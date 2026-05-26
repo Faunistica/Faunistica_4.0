@@ -19,7 +19,7 @@ vi.mock('@/hooks/useRecordsManager', () => ({
 
 vi.mock('@/components/form/RecordFormContent', () => ({
     default: (props: any) => (
-        <div data-testid="record-form" data-active-record-id={props.activeRecord.id}>
+        <div data-testid="record-form" data-active-record-id={props.activeRecordId}>
             RecordFormContent
         </div>
     ),
@@ -46,11 +46,6 @@ vi.mock('@/components/LoadingScreen', () => ({
     default: () => <div data-testid="loading-screen">Loading...</div>,
 }));
 
-const mockRecords = [
-    { id: '1', species: 'Canis', genus: 'Canis', family: 'Canidae', locality: 'Forest' },
-    { id: '2', species: 'Felis', genus: 'Felis', family: 'Felidae', locality: 'Desert' },
-];
-
 function renderFormFilling() {
     return render(<FormFilling />);
 }
@@ -62,8 +57,7 @@ describe('FormFilling', () => {
 
     it('shows loading screen while data loads', () => {
         mockRecordsManager.mockReturnValue({
-            records: [],
-            activeRecord: null,
+            activeRecordId: null,
             isLoading: true,
             recordMethods: { create: vi.fn(), switchTo: vi.fn(), delete: vi.fn() },
             registerSave: vi.fn(),
@@ -75,8 +69,7 @@ describe('FormFilling', () => {
 
     it('shows empty state when no records exist', () => {
         mockRecordsManager.mockReturnValue({
-            records: [],
-            activeRecord: null,
+            activeRecordId: null,
             isLoading: false,
             recordMethods: { create: vi.fn(), switchTo: vi.fn(), delete: vi.fn() },
             registerSave: vi.fn(),
@@ -89,8 +82,7 @@ describe('FormFilling', () => {
 
     it('renders form and sidebar when active record exists', () => {
         mockRecordsManager.mockReturnValue({
-            records: mockRecords,
-            activeRecord: mockRecords[0],
+            activeRecordId: '1',
             isLoading: false,
             recordMethods: { create: vi.fn(), switchTo: vi.fn(), delete: vi.fn() },
             registerSave: vi.fn(),
@@ -106,8 +98,7 @@ describe('FormFilling', () => {
     it('calls create when create button is clicked in empty state', async () => {
         const mockCreate = vi.fn();
         mockRecordsManager.mockReturnValue({
-            records: [],
-            activeRecord: null,
+            activeRecordId: null,
             isLoading: false,
             recordMethods: { create: mockCreate, switchTo: vi.fn(), delete: vi.fn() },
             registerSave: vi.fn(),
@@ -125,8 +116,7 @@ describe('FormFilling', () => {
     it('calls switchTo when sidebar item is clicked', async () => {
         const mockSwitchTo = vi.fn();
         mockRecordsManager.mockReturnValue({
-            records: mockRecords,
-            activeRecord: mockRecords[0],
+            activeRecordId: '1',
             isLoading: false,
             recordMethods: { create: vi.fn(), switchTo: mockSwitchTo, delete: vi.fn() },
             registerSave: vi.fn(),

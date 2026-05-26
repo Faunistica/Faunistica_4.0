@@ -21,12 +21,10 @@ const FormFilling: FC = () => {
     const publ_id = Number(id);
     const user_id = useSelector((state: RootState) => state.user.user_id);
 
-    const { records, activeRecord, isLoading, recordMethods, registerSave } = useRecordsManager(
+    const { activeRecordId, isLoading, recordMethods, registerSave } = useRecordsManager(
         publ_id,
         user_id!,
     );
-
-    const activeRecordId = activeRecord?.id ?? null;
 
     if (isLoading) return <LoadingScreen />;
 
@@ -45,11 +43,10 @@ const FormFilling: FC = () => {
                 user_id={user_id!}
             />
             <main className="relative flex w-full min-w-0 flex-1 flex-col">
-                {activeRecord ? (
+                {activeRecordId ? (
                     <RecordFormContent
                         publ_id={publ_id}
-                        activeRecord={activeRecord}
-                        records={records}
+                        activeRecordId={activeRecordId}
                         registerSave={registerSave}
                         deleteRecord={recordMethods.delete}
                     />

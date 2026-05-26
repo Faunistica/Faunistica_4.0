@@ -1,8 +1,9 @@
 import { type FC, useEffect, useRef } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { RecordFull, FormRecord } from '@/types/api.dto';
+import type { FormRecord } from '@/types/api.dto';
 import { formRecordSchema } from '@/types/forms';
+import { useRecordByIdQuery } from '@/api/recordAPI';
 import { useSaveRecord } from '@/hooks/useSaveRecord';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { toFormPartial } from '@/lib/recordUtils';
@@ -13,22 +14,25 @@ import TaxonomyCard from '@/components/form/TaxonomyCard';
 import QuantitiesCard from '@/components/form/QuantitiesCard';
 import ServerErrorDisplay from '@/components/form/ServerErrorDisplay';
 import Footer from '@/components/form/FormFooter';
+import LoadingScreen from '@/components/LoadingScreen';
 
 interface RecordFormContentProps {
     publ_id: number;
-    activeRecord: RecordFull;
-    records: RecordFull[];
+    activeRecordId: string;
     registerSave: (fn: (options?: { silent?: boolean }) => Promise<void>) => void;
     deleteRecord: (id: string) => void;
 }
 
 const RecordFormContent: FC<RecordFormContentProps> = ({
     publ_id,
-    activeRecord,
-    records,
+    activeRecordId,
     registerSave: onRegisterSave,
     deleteRecord: onDelete,
 }) => {
+    const { currentData: activeRecord } = useRecordByIdQuery({
+        record_id: activeRecordId,
+    });
+
     const methods = useForm<FormRecord>({
         resolver: zodResolver(formRecordSchema),
         defaultValues: undefined,
@@ -39,10 +43,10 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     const cancelAutoSaveRef = useRef<(() => void) | undefined>(undefined);
 
     const { save, submit, isSaving, nonFieldErrors, isSavingRef } = useSaveRecord(
-        activeRecord.id,
+        activeRecordId,
         methods,
         publ_id,
-        activeRecord.user_id,
+        activeRecord?.user_id ?? 0,
         cancelAutoSaveRef,
     );
     const { isAutoSaving, lastSavedTime, cancelPendingAutoSave } = useAutoSave({
@@ -60,22 +64,26 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     }, [save, getValues, onRegisterSave]);
 
     useEffect(() => {
-        reset(toFormPartial(activeRecord), {
-            keepErrors: false,
-            keepTouched: false,
-            keepDirty: false,
-        });
+        if (activeRecord) {
+            reset(toFormPartial(activeRecord), {
+                keepErrors: false,
+                keepTouched: false,
+                keepDirty: false,
+            });
+        }
     }, [activeRecord, reset]);
 
-    const otherRecords = records.filter((r) => r.id !== activeRecord.id);
+    if (!activeRecord) {
+        return <LoadingScreen />;
+    }
 
     return (
         <FormProvider {...methods}>
             <div className="w-full flex-1 p-4 pb-45 md:p-8 md:pb-30">
                 <div className="mx-auto max-w-6xl space-y-6">
                     <ArticleSourceCard publ_id={publ_id} />
-                    <GeographyCard otherRecords={otherRecords} />
-                    <CollectionEventCard otherRecords={otherRecords} />
+                    <GeographyCard publ_id={publ_id} activeRecordId={activeRecordId} />
+                    <CollectionEventCard publ_id={publ_id} activeRecordId={activeRecordId} />
                     <TaxonomyCard />
                     <QuantitiesCard />
                     <ServerErrorDisplay errors={nonFieldErrors} />
