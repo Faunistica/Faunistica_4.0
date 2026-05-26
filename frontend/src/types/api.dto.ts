@@ -135,6 +135,8 @@ export interface RecordListRequest {
 export interface EditRecordRequest {
     record_id: string;
     data: RecordData;
+    publ_id?: number;
+    user_id?: number;
 }
 
 export interface GetLocationRequest {

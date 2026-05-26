@@ -1,4 +1,4 @@
-import { type FC, useEffect } from 'react';
+import { type FC, useEffect, useRef } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { RecordFull, FormRecord } from '@/types/api.dto';
@@ -18,7 +18,7 @@ interface RecordFormContentProps {
     publ_id: number;
     activeRecord: RecordFull;
     records: RecordFull[];
-    registerSave: (fn: () => Promise<void>) => void;
+    registerSave: (fn: (options?: { silent?: boolean }) => Promise<void>) => void;
     deleteRecord: (id: string) => void;
 }
 
@@ -36,11 +36,22 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
         reValidateMode: 'onChange',
     });
 
-    const { save, submit, isSaving, nonFieldErrors } = useSaveRecord(activeRecord.id, methods);
-    const { isAutoSaving, lastSavedTime } = useAutoSave({
+    const cancelAutoSaveRef = useRef<(() => void) | undefined>(undefined);
+
+    const { save, submit, isSaving, nonFieldErrors, isSavingRef } = useSaveRecord(
+        activeRecord.id,
+        methods,
+        publ_id,
+        activeRecord.user_id,
+        cancelAutoSaveRef,
+    );
+    const { isAutoSaving, lastSavedTime, cancelPendingAutoSave } = useAutoSave({
         save: (data) => save(data),
         methods,
+        isSavingRef,
     });
+
+    cancelAutoSaveRef.current = cancelPendingAutoSave;
 
     const { getValues, reset } = methods;
 

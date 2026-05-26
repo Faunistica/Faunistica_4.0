@@ -7,14 +7,16 @@ const SHOULD_AUTO_SAVE = !(import.meta.env.VITE_DISABLE_AUTO_SAVE?.toLowerCase?.
 interface UseAutoSaveOptions {
     save: (data: Partial<FormRecord>) => Promise<void>;
     methods: UseFormReturn<FormRecord>;
+    isSavingRef?: React.MutableRefObject<boolean>;
 }
 
 interface UseAutoSaveReturn {
     isAutoSaving: boolean;
     lastSavedTime: Date | null;
+    cancelPendingAutoSave: () => void;
 }
 
-export function useAutoSave({ save, methods }: UseAutoSaveOptions): UseAutoSaveReturn {
+export function useAutoSave({ save, methods, isSavingRef }: UseAutoSaveOptions): UseAutoSaveReturn {
     const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const lastSnapshotRef = useRef<string>('');
     const [isAutoSaving, setIsAutoSaving] = useState(false);
@@ -40,6 +42,8 @@ export function useAutoSave({ save, methods }: UseAutoSaveOptions): UseAutoSaveR
             cancelPendingAutoSave();
 
             autoSaveTimerRef.current = setTimeout(async () => {
+                if (isSavingRef?.current) return;
+
                 const currentValues = getValues();
                 const currentSnapshot = JSON.stringify(currentValues);
 
@@ -64,7 +68,7 @@ export function useAutoSave({ save, methods }: UseAutoSaveOptions): UseAutoSaveR
             subscription.unsubscribe();
             cancelPendingAutoSave();
         };
-    }, [watch, getValues, save, cancelPendingAutoSave]);
+    }, [watch, getValues, save, cancelPendingAutoSave, isSavingRef]);
 
-    return { isAutoSaving, lastSavedTime };
+    return { isAutoSaving, lastSavedTime, cancelPendingAutoSave };
 }

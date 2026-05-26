@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import type { UseFormReturn } from 'react-hook-form';
 
@@ -55,16 +55,26 @@ interface UseSaveRecordReturn {
     submit: (data: Partial<FormRecord>) => Promise<void>;
     isSaving: boolean;
     nonFieldErrors: string[];
+    isSavingRef: React.MutableRefObject<boolean>;
 }
 
 export function useSaveRecord(
     activeRecordId: string | null,
     methods: UseFormReturn<FormRecord>,
+    publ_id?: number,
+    user_id?: number,
+    cancelAutoSaveRef?: React.MutableRefObject<(() => void) | undefined>,
 ): UseSaveRecordReturn {
     const [editRecord] = useEditRecordMutation();
     const [submitRecord] = useSubmitRecordMutation();
     const [isSaving, setIsSaving] = useState(false);
+    const isSavingRef = useRef(false);
     const [nonFieldErrors, setNonFieldErrors] = useState<string[]>([]);
+
+    // Keep the ref in sync so useAutoSave can read it without re-rendering
+    useEffect(() => {
+        isSavingRef.current = isSaving;
+    }, [isSaving]);
 
     const clearServerErrors = useCallback(() => {
         setNonFieldErrors([]);
@@ -114,12 +124,16 @@ export function useSaveRecord(
         async (data: Partial<FormRecord>, options?: { silent?: boolean }) => {
             if (!activeRecordId) return;
 
+            cancelAutoSaveRef?.current?.();
+
             setIsSaving(true);
             try {
                 const payload = draftToRecordData(data);
                 const response = await editRecord({
                     record_id: activeRecordId,
                     data: payload,
+                    publ_id,
+                    user_id,
                 }).unwrap();
                 handleResponse(data, response, options?.silent);
             } catch (error) {
@@ -129,12 +143,14 @@ export function useSaveRecord(
                 setIsSaving(false);
             }
         },
-        [activeRecordId, editRecord, handleResponse],
+        [activeRecordId, editRecord, handleResponse, cancelAutoSaveRef, publ_id, user_id],
     );
 
     const submit = useCallback(
         async (data: Partial<FormRecord>) => {
             if (!activeRecordId) return;
+
+            cancelAutoSaveRef?.current?.();
 
             setIsSaving(true);
             try {
@@ -142,6 +158,8 @@ export function useSaveRecord(
                 await editRecord({
                     record_id: activeRecordId,
                     data: payload,
+                    publ_id,
+                    user_id,
                 }).unwrap();
                 const response = await submitRecord({
                     record_id: activeRecordId,
@@ -155,8 +173,8 @@ export function useSaveRecord(
                 setIsSaving(false);
             }
         },
-        [activeRecordId, editRecord, submitRecord, handleResponse],
+        [activeRecordId, editRecord, submitRecord, handleResponse, cancelAutoSaveRef],
     );
 
-    return { save, submit, isSaving, nonFieldErrors };
+    return { save, submit, isSaving, nonFieldErrors, isSavingRef };
 }

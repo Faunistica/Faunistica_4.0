@@ -54,7 +54,38 @@ export const recordAPI = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: ['records-list'],
+            onQueryStarted: async ({ record_id, publ_id, user_id }, { dispatch, queryFulfilled }) => {
+                try {
+                    const { data } = await queryFulfilled;
+                    if (data.record) {
+                        if (publ_id !== undefined && user_id !== undefined) {
+                            dispatch(
+                                recordAPI.util.updateQueryData(
+                                    'recordsList',
+                                    { publ_id, user_id } as Types.RecordListRequest,
+                                    (draft) => {
+                                        const idx = draft.items.findIndex(
+                                            (r) => r.id === record_id,
+                                        );
+                                        if (idx !== -1) {
+                                            draft.items[idx] = data.record;
+                                        }
+                                    },
+                                ),
+                            );
+                        }
+                        dispatch(
+                            recordAPI.util.upsertQueryData(
+                                'recordById',
+                                { record_id },
+                                data.record,
+                            ),
+                        );
+                    }
+                } catch {
+                    // mutation failed — RTK Query handles rollback automatically
+                }
+            },
         }),
         deleteRecord: build.mutation<void, Types.RecordIdRequest>({
             query: ({ record_id }) => ({

@@ -62,7 +62,9 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
             if (targetId === activeRecord?.id) return;
 
             // Fire-and-forget background save - don't block record switching
-            saveRef.current?.({ silent: true }).catch(() => {});
+            saveRef.current?.({ silent: true }).catch(() => {
+                toast.error('Не удалось сохранить текущую запись');
+            });
 
             const cachedRecord = records.find((r) => r.id === targetId);
             if (cachedRecord) {
