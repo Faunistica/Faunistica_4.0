@@ -260,9 +260,10 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                 <Button
                                     type="button"
                                     variant="outline"
+                                    className="gap-2"
                                     onClick={() => setShowMap(!showMap)}
                                 >
-                                    <MapIcon className="mr-2 h-4 w-4" />
+                                    <MapIcon className="h-4 w-4" />
                                     {showMap ? 'Скрыть карту' : 'Выбрать на карте'}
                                 </Button>
 
