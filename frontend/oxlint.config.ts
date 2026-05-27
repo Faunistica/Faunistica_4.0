@@ -27,7 +27,11 @@ export default defineConfig({
     },
     rules: {
         ...betterTailwindcss.configs.recommended.rules,
+        'typescript/no-explicit-any': 'warn',
+        'typescript/no-empty-object-type': 'warn',
         'react/react-in-jsx-scope': 'off',
+        'react-hooks-js/refs': 'warn',
+        'react-hooks-js/set-state-in-effect': 'warn',
         'react-hooks-js/set-state-in-render': 'error',
         'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
         // TODO: turn on later
