@@ -23,7 +23,7 @@ export default function Volunteers() {
 
                         <div className="grid gap-4 pt-4 sm:grid-cols-2">
                             <div className="flex items-start gap-3">
-                                <Trophy className="h-6 w-6 shrink-0 text-amber-400" />
+                                <Trophy className="size-6  shrink-0 text-amber-400" />
                                 <div>
                                     <h4 className="font-semibold text-white">Рейтинг и сувениры</h4>
                                     <p className="text-sm text-slate-400">
@@ -33,7 +33,7 @@ export default function Volunteers() {
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <BookOpen className="h-6 w-6 shrink-0 text-blue-400" />
+                                <BookOpen className="size-6  shrink-0 text-blue-400" />
                                 <div>
                                     <h4 className="font-semibold text-white">
                                         Эксклюзивные знания
@@ -45,7 +45,7 @@ export default function Volunteers() {
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <Users className="h-6 w-6 shrink-0 text-emerald-400" />
+                                <Users className="size-6  shrink-0 text-emerald-400" />
                                 <div>
                                     <h4 className="font-semibold text-white">Сообщество</h4>
                                     <p className="text-sm text-slate-400">
@@ -55,7 +55,7 @@ export default function Volunteers() {
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <ShieldCheck className="h-6 w-6 shrink-0 text-purple-400" />
+                                <ShieldCheck className="size-6  shrink-0 text-purple-400" />
                                 <div>
                                     <h4 className="font-semibold text-white">Терапия фобий</h4>
                                     <p className="text-sm text-slate-400">
@@ -87,7 +87,7 @@ export default function Volunteers() {
                                     работу на базе реальных научных данных.
                                 </p>
                                 <div className="flex items-center gap-4 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
-                                    <FileText className="h-8 w-8 text-[#229ED9]" />
+                                    <FileText className="size-8  text-[#229ED9]" />
                                     <p className="text-sm">
                                         Наиболее активные и продуктивные волонтеры могут
                                         рассчитывать на соавторство в научных публикациях.
@@ -95,7 +95,7 @@ export default function Volunteers() {
                                 </div>
                             </CardContent>
                         </Card>
-                        <div className="absolute -right-6 -bottom-6 -z-10 h-full w-full rounded-xl bg-slate-700 opacity-50 blur-sm"></div>
+                        <div className="absolute -right-6 -bottom-6 -z-10 size-full  rounded-xl bg-slate-700 opacity-50 blur-sm"></div>
                     </div>
                 </div>
             </div>

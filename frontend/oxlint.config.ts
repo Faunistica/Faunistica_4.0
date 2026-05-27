@@ -34,8 +34,6 @@ export default defineConfig({
         'react-hooks-js/set-state-in-effect': 'off',
         'react-hooks-js/set-state-in-render': 'error',
         'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
-        // TODO: turn on later
-        'better-tailwindcss/enforce-canonical-classes': 'off',
         'import/no-unassigned-import': ['warn', { allow: ['**/*.css'] }],
     },
     overrides: [

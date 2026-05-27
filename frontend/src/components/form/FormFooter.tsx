@@ -40,7 +40,7 @@ const Footer: FC<FooterProps> = ({
 
     return (
         <>
-            <footer className="fixed right-0 bottom-0 left-0 z-90 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10">
+            <footer className="fixed inset-x-0 bottom-0  z-90 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-4  shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10">
                 <div className="flex items-center gap-4">
                     <Button
                         onClick={() => setIsDeleteDialogOpen(true)}
@@ -48,24 +48,24 @@ const Footer: FC<FooterProps> = ({
                         variant="destructive"
                         className="gap-2"
                     >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="size-3.5 " />
                         <span className="text-xs font-medium">Удалить</span>
                     </Button>
 
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                         {isAutoSaving ? (
                             <>
-                                <Cloud className="h-3.5 w-3.5 animate-pulse text-blue-500" />
+                                <Cloud className="size-3.5  animate-pulse text-blue-500" />
                                 <span>Автосохранение...</span>
                             </>
                         ) : lastSavedTime ? (
                             <>
-                                <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                <Check className="size-3.5  text-emerald-500" />
                                 <span>Сохранено в {formatTime(lastSavedTime)}</span>
                             </>
                         ) : (
                             <>
-                                <CloudOff className="h-3.5 w-3.5 text-slate-400" />
+                                <CloudOff className="size-3.5  text-slate-400" />
                                 <span>Не сохранено</span>
                             </>
                         )}
@@ -80,9 +80,9 @@ const Footer: FC<FooterProps> = ({
                         className="gap-2"
                     >
                         {isSaving ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="size-4  animate-spin" />
                         ) : (
-                            <Save className="h-4 w-4" />
+                            <Save className="size-4 " />
                         )}
                         Сохранить
                     </Button>
@@ -91,7 +91,7 @@ const Footer: FC<FooterProps> = ({
                         disabled={isSaving}
                         className="gap-2 bg-slate-900 font-semibold text-white hover:bg-slate-800"
                     >
-                        <Send className="h-4 w-4" />
+                        <Send className="size-4 " />
                         Отправить
                     </Button>
                 </div>

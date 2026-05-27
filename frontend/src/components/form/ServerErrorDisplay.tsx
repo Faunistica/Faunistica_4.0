@@ -13,7 +13,7 @@ const ServerErrorDisplay: FC<Props> = ({ errors }) => {
         <Card className="border-red-200 bg-red-50 shadow-sm">
             <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+                    <AlertCircle className="mt-0.5 size-5  shrink-0 text-red-500" />
                     <div className="space-y-1.5">
                         <p className="text-sm font-semibold text-red-700">Ошибки при сохранении</p>
                         {errors.map((msg, i) => (

@@ -17,7 +17,7 @@ const TelegramAuth: FC = () => {
     return (
         <div className="mx-auto w-full max-w-[400px] space-y-6">
             <Card className="relative overflow-hidden border-slate-200 shadow-sm">
-                <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-telegram"></div>
+                <div className="absolute inset-y-0  left-0 w-1.5 bg-telegram"></div>
                 <CardHeader className="space-y-1 pl-6 text-center">
                     <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
                         Telegram Secure Login
@@ -29,9 +29,9 @@ const TelegramAuth: FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="my-4 flex justify-center">
-                        <div className="flex h-40 w-40 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 p-2 shadow-inner">
-                            <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 text-slate-400">
-                                <Send className="h-8 w-8 opacity-50" />
+                        <div className="flex size-40  items-center justify-center rounded-xl border border-slate-200 bg-slate-100 p-2 shadow-inner">
+                            <div className="flex size-full  flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 text-slate-400">
+                                <Send className="size-8  opacity-50" />
                                 <span className="font-mono text-xs">QR / Widget Area</span>
                             </div>
                         </div>
@@ -39,7 +39,7 @@ const TelegramAuth: FC = () => {
 
                     <div className="space-y-4">
                         <Button className="w-full gap-2 bg-telegram font-semibold text-white shadow-md hover:bg-[#1E8CC0]">
-                            <Send className="h-4 w-4" />
+                            <Send className="size-4 " />
                             Log in via Telegram
                         </Button>
 
@@ -57,20 +57,20 @@ const TelegramAuth: FC = () => {
                             className="w-full gap-2 border-slate-300 text-slate-700 hover:bg-slate-50"
                             onClick={() => navigate('/auth/login')}
                         >
-                            <Key className="h-4 w-4 text-slate-500" />
+                            <Key className="size-4  text-slate-500" />
                             Standard Login
                         </Button>
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-center border-t border-slate-100 bg-slate-50 py-4">
                     <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Loader2 className="h-4 w-4 animate-spin text-telegram" />
+                        <Loader2 className="size-4  animate-spin text-telegram" />
                         <span>Waiting for authentication...</span>
                     </div>
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm leading-relaxed text-slate-500">
+            <p className="px-4 text-center text-sm/relaxed  text-slate-500">
                 By clicking continue, you agree to our{' '}
                 <Link
                     to="#"

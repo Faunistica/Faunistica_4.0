@@ -62,7 +62,7 @@ const Login: FC = () => {
                             variant="outline"
                             className="w-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
-                            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                            <svg className="mr-2 size-4 " viewBox="0 0 24 24">
                                 <path
                                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                                     fill="#4285F4"
@@ -88,7 +88,7 @@ const Login: FC = () => {
                             className="w-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
                             <Link to="/auth/telegram">
-                                <Send className="mr-2 h-4 w-4 text-[#229ED9]" />
+                                <Send className="mr-2 size-4  text-[#229ED9]" />
                                 Telegram
                             </Link>
                         </Button>
@@ -168,7 +168,7 @@ const Login: FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm leading-relaxed text-slate-500">
+            <p className="px-4 text-center text-sm/relaxed  text-slate-500">
                 {'Продолжая, вы соглашаетесь с нашими '}
                 <Link
                     to="/terms-of-service"

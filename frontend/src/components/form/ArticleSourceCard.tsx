@@ -15,7 +15,7 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
     if (isLoading) {
         return (
             <Card className="relative flex items-center justify-center overflow-hidden border-slate-300 bg-white p-8 shadow-sm">
-                <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                <Loader2 className="size-6  animate-spin text-slate-400" />
             </Card>
         );
     }
@@ -36,7 +36,7 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
 
     return (
         <Card className="relative overflow-hidden border-slate-300 bg-white shadow-sm">
-            <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-slate-800"></div>
+            <div className="absolute inset-y-0  left-0 w-1.5 bg-slate-800"></div>
             <CardHeader className="pl-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex-1 space-y-1.5">
@@ -48,7 +48,7 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
                                 ID: PUB-{publication.publ_id}
                             </span>
                         </div>
-                        <CardTitle className="text-lg leading-tight text-slate-900 md:text-xl">
+                        <CardTitle className="text-lg/tight  text-slate-900 md:text-xl">
                             {publication.name || 'Без названия'}
                         </CardTitle>
                         <CardDescription className="text-sm">
@@ -62,7 +62,7 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
                             className="w-full shrink-0 gap-2 border-slate-300 md:w-auto"
                             onClick={openPdf}
                         >
-                            <FileText className="h-4 w-4" />
+                            <FileText className="size-4 " />
                             Открыть PDF
                         </Button>
                     )}

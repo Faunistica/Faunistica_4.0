@@ -39,13 +39,13 @@ const Recovery: FC = () => {
                         to="/auth/login"
                         className="flex items-center text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
                     >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        <ArrowLeft className="mr-2 size-4 " />
                         Back to login
                     </Link>
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm leading-relaxed text-slate-500">
+            <p className="px-4 text-center text-sm/relaxed  text-slate-500">
                 Need help? Contact our{' '}
                 <Link
                     to="/support"

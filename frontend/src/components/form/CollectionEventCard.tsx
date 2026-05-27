@@ -22,7 +22,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
             <CardHeader className="flex justify-between pb-2">
                 <div className="flex items-center gap-2">
                     <span className="size-8 rounded-lg bg-amber-50 p-2 text-amber-600">
-                        <CalendarDays className="h-4 w-4" />
+                        <CalendarDays className="size-4 " />
                     </span>
                     <CardTitle className="text-lg font-semibold">
                         Параметры сбора материала
@@ -44,7 +44,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                         </FieldLabel>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Info className="h-3.5 w-3.5 cursor-help text-slate-400" />
+                                                <Info className="size-3.5  cursor-help text-slate-400" />
                                             </TooltipTrigger>
                                             <TooltipContent side="top" className="max-w-xs text-xs">
                                                 Укажите дату точно так, как она приведена в статье.
@@ -111,7 +111,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                         <FieldLabel htmlFor="habitat">Биотоп</FieldLabel>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Info className="h-3.5 w-3.5 cursor-help text-slate-400" />
+                                                <Info className="size-3.5  cursor-help text-slate-400" />
                                             </TooltipTrigger>
                                             <TooltipContent side="top" className="max-w-xs text-xs">
                                                 Если биотопов несколько, разделяйте их точкой с

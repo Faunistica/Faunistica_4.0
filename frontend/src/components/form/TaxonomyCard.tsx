@@ -84,8 +84,8 @@ const TaxonomyCard: FC = () => {
         <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
-                        <Bug className="h-4 w-4" />
+                    <div className="flex size-8  items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                        <Bug className="size-4 " />
                     </div>
                     <CardTitle className="text-lg font-semibold">
                         Таксономическая принадлежность

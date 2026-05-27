@@ -145,7 +145,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
                 />
                 {isLoading && (
                     <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
-                        <Spinner className="h-4 w-4" />
+                        <Spinner className="size-4 " />
                     </div>
                 )}
             </div>

@@ -92,7 +92,7 @@ const SidebarRecordItem = ({
                         <RecordStatusIndicator status={status} />
                         <span
                             className={cn(
-                                'truncate text-xs leading-tight font-bold',
+                                'truncate text-xs/tight  font-bold',
                                 isActive ? 'text-slate-900' : 'text-slate-700',
                             )}
                         >
@@ -106,11 +106,11 @@ const SidebarRecordItem = ({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 shrink-0 rounded-md text-slate-400 opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 data-[active=true]:opacity-100 md:opacity-0 md:group-hover/menu-button:opacity-100 md:data-[active=true]:opacity-100"
+                                className="size-6  shrink-0 rounded-md text-slate-400 opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 data-[active=true]:opacity-100 md:opacity-0 md:group-hover/menu-button:opacity-100 md:data-[active=true]:opacity-100"
                                 onClick={(e) => e.stopPropagation()}
                                 aria-label="Удалить запись"
                             >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="size-3.5 " />
                             </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -142,7 +142,7 @@ const SidebarRecordItem = ({
                     {isActive ? (
                         <>
                             <span className="relative flex h-2 pl-px">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                                <span className="absolute inline-flex size-full  animate-ping rounded-full bg-blue-400 opacity-75" />
                                 <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
                             </span>
                             <span className="pl-1 font-semibold text-blue-600">Редактируется</span>
@@ -183,11 +183,11 @@ const FormSidebar: FC<SidebarProps> = ({
                 <SidebarHeader className="border-b border-slate-100 p-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white">
-                                <FileText className="h-4 w-4" />
+                            <div className="flex size-8  items-center justify-center rounded-md bg-slate-900 text-white">
+                                <FileText className="size-4 " />
                             </div>
                             <div>
-                                <div className="text-sm leading-tight font-bold text-slate-900">
+                                <div className="text-sm/tight  font-bold text-slate-900">
                                     Менеджер
                                 </div>
                                 <div className="text-[10px] leading-tight font-medium text-slate-500">
@@ -199,11 +199,11 @@ const FormSidebar: FC<SidebarProps> = ({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-slate-400 hover:text-slate-600 md:hidden"
+                            className="size-8  text-slate-400 hover:text-slate-600 md:hidden"
                             onClick={() => setOpenMobile(false)}
                             aria-label="Закрыть панель"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="size-4 " />
                         </Button>
                     </div>
                 </SidebarHeader>
@@ -258,7 +258,7 @@ const FormSidebar: FC<SidebarProps> = ({
                         className="w-full justify-start gap-2 font-medium shadow-sm"
                     >
                         <Link to="/dashboard">
-                            <LogOut className="h-4 w-4 text-slate-500" />
+                            <LogOut className="size-4  text-slate-500" />
                             Вернуться назад
                         </Link>
                     </Button>

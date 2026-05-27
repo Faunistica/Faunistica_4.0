@@ -18,8 +18,8 @@ export default function About() {
                 <div className="grid gap-8 md:grid-cols-3">
                     <Card className="border-none bg-white shadow-sm">
                         <CardHeader>
-                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-red-50 text-red-600">
-                                <Search className="h-6 w-6" />
+                            <div className="mb-4 flex size-12  items-center justify-center rounded-lg bg-red-50 text-red-600">
+                                <Search className="size-6 " />
                             </div>
                             <CardTitle className="text-xl">Ручной труд</CardTitle>
                         </CardHeader>
@@ -34,8 +34,8 @@ export default function About() {
 
                     <Card className="border-none bg-white shadow-sm">
                         <CardHeader>
-                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                                <Network className="h-6 w-6" />
+                            <div className="mb-4 flex size-12  items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                <Network className="size-6 " />
                             </div>
                             <CardTitle className="text-xl">Изолированность</CardTitle>
                         </CardHeader>
@@ -50,11 +50,11 @@ export default function About() {
 
                     <Card className="relative overflow-hidden border-none bg-white shadow-sm">
                         <div className="absolute top-0 right-0 p-4 opacity-5">
-                            <Database className="h-32 w-32" />
+                            <Database className="size-32 " />
                         </div>
                         <CardHeader>
-                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                                <Globe className="h-6 w-6" />
+                            <div className="mb-4 flex size-12  items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                                <Globe className="size-6 " />
                             </div>
                             <CardTitle className="text-xl">Решение: Оцифровка</CardTitle>
                         </CardHeader>
