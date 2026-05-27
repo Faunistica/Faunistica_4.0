@@ -1,6 +1,6 @@
 import type { RecordData, RecordFull, FormRecord, Specimen } from '@/types/api.dto';
 import type { QuantityField } from '@/types/forms';
-import { FORM_SCALAR_FIELDS } from '@/types/forms';
+import { QUANTITY_FIELDS } from '@/types/forms';
 
 const NULLISH_NUMBER_FIELDS = new Set<string>(['coordinate_uncertainty', 'sample_size_value']);
 
@@ -77,9 +77,8 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
         occurrence_remarks: null,
         identification_remarks: null,
     };
-    const d = draft as Record<string, unknown>;
-    for (const key of FORM_SCALAR_FIELDS) {
-        const val = d[key];
+    for (const [key, val] of Object.entries(draft)) {
+        if (key in QUANTITY_FIELDS || val == null) continue;
         if (val === undefined) continue;
         if (NULLISH_NUMBER_FIELDS.has(key) && val === 0) continue;
         if ((key === 'latitude' || key === 'longitude') && typeof val === 'number') {
@@ -89,17 +88,8 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
         }
     }
     const specimens: Specimen[] = [];
-    const quantityFields = [
-        'males',
-        'subadultMales',
-        'females',
-        'subadultFemales',
-        'adults',
-        'juveniles',
-    ] as const;
-    const d3 = draft as Record<string, unknown>;
-    for (const field of quantityFields) {
-        const count = d3[field];
+    for (const field of QUANTITY_FIELDS) {
+        const count = draft[field];
         if (typeof count === 'number' && count > 0) {
             const { sex, life_stage } = getSexAndLifestageFromField(field);
             specimens.push({ sex, life_stage, count });
@@ -114,7 +104,7 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
 export function toFormPartial(record: RecordFull): Partial<FormRecord> {
     const result: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(record)) {
-        if (key in SPECIMEN_FIELD_MAP || val == null) continue;
+        if (key in QUANTITY_FIELDS || val == null) continue;
         result[key] = key === 'latitude' || key === 'longitude' ? Number(val) : val;
     }
     for (const mapping of SPECIMEN_FIELD_MAP) {

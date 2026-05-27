@@ -104,6 +104,15 @@ export type QuantityField =
     | 'adults'
     | 'juveniles';
 
+export const QUANTITY_FIELDS: QuantityField[] = [
+    'males',
+    'subadultMales',
+    'females',
+    'subadultFemales',
+    'adults',
+    'juveniles',
+] as const;
+
 export const QUANTITY_FIELD_LABELS: Record<QuantityField, string> = {
     males: 'Самцов',
     subadultMales: 'Субвзрослых самцов',
