@@ -169,7 +169,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                 : selectedFile
                                   ? 'border-emerald-300 bg-emerald-50/50'
                                   : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
-                        } `}
+                        }`}
                     >
                         <input
                             ref={fileInputRef}

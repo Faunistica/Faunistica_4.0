@@ -8,15 +8,13 @@ interface UseSaveRecordReturn {
     save: (data: Partial<FormRecord>) => Promise<UpdateRecordResponse | undefined>;
     submit: (data: Partial<FormRecord>) => Promise<UpdateRecordResponse | undefined>;
     isSaving: boolean;
-    isSavingRef: React.MutableRefObject<boolean>;
+    isSavingRef: React.RefObject<boolean>;
     shouldSkipSync: (updatedAt: string) => boolean;
 }
 
 export function useSaveRecord(
     activeRecordId: string | null,
-    methods: UseFormReturn<FormRecord>,
     publ_id?: number,
-    cancelAutoSaveRef?: React.MutableRefObject<(() => void) | undefined>,
 ): UseSaveRecordReturn {
     const [editRecord] = useEditRecordMutation();
     const [submitRecord] = useSubmitRecordMutation();
