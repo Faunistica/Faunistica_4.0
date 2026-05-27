@@ -5,8 +5,8 @@ from fastapi import APIRouter, Query
 
 from core.dependencies import DBSession
 from core.exceptions import UserNotFoundError
-from repository import user as repo
 from schema.user import UserLookupResponse
+from service.user import UserService
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ async def lookup_user(
     name: Annotated[str, Query(..., description="Username to lookup")],
     session: DBSession,
 ) -> UserLookupResponse:
-    user = await repo.find_user_by_username(session, name)
+    user = await UserService(session).find_by_username(name)
     if user is None:
         logger.info("User lookup failed: %s", name)
         raise UserNotFoundError(name)

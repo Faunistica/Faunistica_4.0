@@ -51,15 +51,6 @@ QUANTITY_TYPES: frozenset[str] = frozenset(
 
 SEX_VALUES: frozenset[str] = frozenset({"none", "male", "female"})
 
-LIFE_STAGES: frozenset[str] = frozenset(
-    {
-        "none",
-        "adult",
-        "subadult",
-        "juvenile",
-    }
-)
-
 CYRILLIC_LANGUAGES: frozenset[str] = frozenset({"rus", "ukr"})
 
 # Numeric thresholds

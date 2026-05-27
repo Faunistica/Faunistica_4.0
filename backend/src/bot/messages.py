@@ -36,8 +36,8 @@ class Messages:
 
     @staticmethod
     def already_registered(first_name: str | None) -> str:
-        if first_name is None:
-            f"Вы уже зарегистрированы под именем {first_name}!"
+        if first_name is not None:
+            return f"Вы уже зарегистрированы под именем {first_name}!"
         return "Вы уже зарегистрированы!"
 
     @staticmethod

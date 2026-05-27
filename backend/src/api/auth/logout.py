@@ -7,9 +7,9 @@ from core.dependencies import DBSession
 from core.exceptions import InvalidTokenError
 from core.rate_limiter import limiter
 from core.security import get_jwt_user
-from repository.user import increment_token_version
 from schema.common import Message
 from service.actions import ActionService
+from service.user import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +27,6 @@ async def logout(
         bool, Query(description="Invalidate all active sessions")
     ] = True,
 ) -> Message:
-    """
-    Выход пользователя.
-
-    Инвалидирует токены (инкрементит token_version),
-    очищает куки, логирует fau_logout.
-    """
     user = None
     try:
         user = await get_jwt_user(request, session)
@@ -40,7 +34,7 @@ async def logout(
         logger.warning("Logout with invalid/missing token")
 
     if user is not None and invalidate_all:
-        await increment_token_version(session, user.user_id)
+        await UserService(session).increment_token_version(user.user_id)
 
     if user is not None:
         try:
