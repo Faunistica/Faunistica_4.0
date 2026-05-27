@@ -7,7 +7,7 @@ export default function Footer() {
             <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 md:grid-cols-4 md:px-6">
                 <div className="space-y-4 md:col-span-2">
                     <div className="flex items-center gap-2">
-                        <Database className="size-6  text-white" />
+                        <Database className="size-6 text-white" />
                         <span className="text-lg font-bold tracking-tight text-white">
                             Faunistics
                         </span>

@@ -263,7 +263,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     className="gap-2"
                                     onClick={() => setShowMap(!showMap)}
                                 >
-                                    <MapIcon className="size-4 " />
+                                    <MapIcon className="size-4" />
                                     {showMap ? 'Скрыть карту' : 'Выбрать на карте'}
                                 </Button>
 

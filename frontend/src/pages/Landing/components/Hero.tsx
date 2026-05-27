@@ -33,7 +33,7 @@ export default function Hero() {
                                 size="lg"
                                 className="h-12 gap-2 bg-slate-900 px-8 text-base text-white hover:bg-slate-800"
                             >
-                                Стать волонтером <ArrowRight className="size-4 " />
+                                Стать волонтером <ArrowRight className="size-4" />
                             </Button>
                             <Button
                                 size="lg"
@@ -48,12 +48,12 @@ export default function Hero() {
                         <img
                             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsrjxQrStxvS_pnd2XmpIIOl3toW8Pv8He4A&s"
                             alt="Макрофотография паутины"
-                            className="size-full  transform object-cover transition-transform duration-700 hover:scale-105"
+                            className="size-full transform object-cover transition-transform duration-700 hover:scale-105"
                         />
                         <div className="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-slate-900/60 to-transparent p-6 md:p-8">
                             <div className="mt-auto space-y-1 text-white">
                                 <div className="flex items-center gap-2 text-lg font-semibold">
-                                    <Bug className="size-5 " />
+                                    <Bug className="size-5" />
                                     Модельная группа: Пауки Урала
                                 </div>
                                 <p className="text-sm text-slate-200">

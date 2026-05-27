@@ -121,7 +121,7 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
                     size="sm"
                     className="my-auto border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
                 >
-                    <History className="size-4 " />
+                    <History className="size-4" />
                     Заполнить как у другой записи
                 </Button>
             </DropdownMenuTrigger>

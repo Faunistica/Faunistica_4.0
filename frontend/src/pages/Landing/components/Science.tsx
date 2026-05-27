@@ -18,7 +18,7 @@ export default function Science() {
                     <div className="flex flex-col gap-8 md:flex-row">
                         <div className="flex shrink-0 items-start justify-center md:pt-2">
                             <div className="rounded-full border border-slate-100 bg-white p-4 shadow-sm">
-                                <Microscope className="size-10  text-slate-700" />
+                                <Microscope className="size-10 text-slate-700" />
                             </div>
                         </div>
                         <div className="space-y-6 leading-relaxed text-slate-600">
@@ -39,13 +39,13 @@ export default function Science() {
 
                             <div className="flex flex-wrap gap-4 pt-4">
                                 <div className="flex w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 sm:w-auto">
-                                    <span className="size-2  rounded-full bg-emerald-500"></span>
+                                    <span className="size-2 rounded-full bg-emerald-500"></span>
                                     <span className="text-sm font-medium text-slate-900">
                                         При поддержке РНФ (№ 24-24-00460)
                                     </span>
                                 </div>
                                 <div className="flex w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 sm:w-auto">
-                                    <span className="size-2  rounded-full bg-blue-500"></span>
+                                    <span className="size-2 rounded-full bg-blue-500"></span>
                                     <span className="text-sm font-medium text-slate-900">
                                         Интеграция с GBIF
                                     </span>

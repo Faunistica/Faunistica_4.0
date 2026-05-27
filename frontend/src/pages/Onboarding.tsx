@@ -49,7 +49,7 @@ export default function Onboarding() {
                                 <div className="grid gap-1.5 leading-none">
                                     <Label
                                         htmlFor="agreement"
-                                        className="cursor-pointer text-sm/snug  font-semibold"
+                                        className="cursor-pointer text-sm/snug font-semibold"
                                     >
                                         Я подтверждаю, что соблюдаю условия пользовательского
                                         соглашения и соответствую возрастным критериям проекта
@@ -61,7 +61,7 @@ export default function Onboarding() {
                         {/* Секция 2: Демография */}
                         <div className="space-y-6">
                             <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
-                                <UserCheck className="size-5 " />
+                                <UserCheck className="size-5" />
                                 <h3>Личные данные</h3>
                             </div>
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -96,7 +96,7 @@ export default function Onboarding() {
                         {/* Секция 3: Языки */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
-                                <Languages className="size-5 " />
+                                <Languages className="size-5" />
                                 <h3>Языковые компетенции</h3>
                             </div>
                             <p className="text-sm text-slate-900">
@@ -122,10 +122,10 @@ export default function Onboarding() {
                         {/* Секция 4: Предпочтения */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
-                                <Settings2 className="size-5 " />
+                                <Settings2 className="size-5" />
                                 <h3>Профессиональные предпочтения</h3>
                             </div>
-                            <div className="space-y-3 text-sm/relaxed  text-slate-900">
+                            <div className="space-y-3 text-sm/relaxed text-slate-900">
                                 <p>
                                     Какие публикации вы хотели бы получать и в каком порядке?
                                     Возможно, у вас имеются предпочтения по{' '}
@@ -158,7 +158,7 @@ export default function Onboarding() {
                         {/* Секция 5: Публичный рейтинг */}
                         <div className="space-y-4 pt-4">
                             <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
-                                <FileText className="size-5 " />
+                                <FileText className="size-5" />
                                 <h3>Публичность данных</h3>
                             </div>
                             <div className="space-y-3">

@@ -136,7 +136,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                     <AlertDialogHeader>
                         <div className="flex w-full items-center justify-between gap-4">
                             <AlertDialogTitle className="flex items-center gap-2 text-xl">
-                                <FileSpreadsheet className="size-5  text-emerald-600" />
+                                <FileSpreadsheet className="size-5 text-emerald-600" />
                                 Работа с Excel
                             </AlertDialogTitle>
                             <Button
@@ -147,9 +147,9 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                 className="shrink-0 border-emerald-200 text-emerald-700 shadow-sm transition-all hover:border-emerald-300 hover:bg-emerald-50 active:scale-95"
                             >
                                 {isExporting ? (
-                                    <Loader2 className="mr-2 size-4  animate-spin" />
+                                    <Loader2 className="mr-2 size-4 animate-spin" />
                                 ) : (
-                                    <Download className="mr-2 size-4 " />
+                                    <Download className="mr-2 size-4" />
                                 )}
                                 Скачать XLSX
                             </Button>
@@ -183,8 +183,8 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
 
                         {selectedFile ? (
                             <>
-                                <div className="flex size-12  items-center justify-center rounded-full bg-emerald-100">
-                                    <FileSpreadsheet className="size-6  text-emerald-600" />
+                                <div className="flex size-12 items-center justify-center rounded-full bg-emerald-100">
+                                    <FileSpreadsheet className="size-6 text-emerald-600" />
                                 </div>
                                 <div className="text-center">
                                     <p className="font-medium text-slate-900">
@@ -204,14 +204,14 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                         setSelectedFile(null);
                                     }}
                                 >
-                                    <X className="mr-1 size-4 " />
+                                    <X className="mr-1 size-4" />
                                     Убрать файл
                                 </Button>
                             </>
                         ) : (
                             <>
-                                <div className="flex size-12  items-center justify-center rounded-full bg-slate-200">
-                                    <Upload className="size-6  text-slate-500" />
+                                <div className="flex size-12 items-center justify-center rounded-full bg-slate-200">
+                                    <Upload className="size-6 text-slate-500" />
                                 </div>
                                 <div className="text-center">
                                     <p className="font-medium text-slate-700">
@@ -236,12 +236,12 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                         >
                             {isUploading ? (
                                 <>
-                                    <Loader2 className="size-4  animate-spin" />
+                                    <Loader2 className="size-4 animate-spin" />
                                     Загрузка...
                                 </>
                             ) : (
                                 <>
-                                    <Upload className="size-4 " />
+                                    <Upload className="size-4" />
                                     Загрузить
                                 </>
                             )}
@@ -254,7 +254,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="size-5  text-amber-500" />
+                            <AlertTriangle className="size-5 text-amber-500" />
                             Подтверждение импорта
                         </AlertDialogTitle>
                         <AlertDialogDescription>

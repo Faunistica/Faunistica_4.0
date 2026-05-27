@@ -22,10 +22,10 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="size-9  rounded-md text-slate-600 lg:hidden"
+                            className="size-9 rounded-md text-slate-600 lg:hidden"
                             onClick={() => setSidebarOpen(true)}
                         >
-                            <PanelLeft className="size-5 " />
+                            <PanelLeft className="size-5" />
                         </Button>
                     )}
 
@@ -33,13 +33,13 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="size-9  rounded-md text-slate-600 md:hidden"
+                            className="size-9 rounded-md text-slate-600 md:hidden"
                             onClick={() => setIsMobileMenuOpen((v) => !v)}
                         >
                             {isMobileMenuOpen ? (
-                                <X className="size-5 " />
+                                <X className="size-5" />
                             ) : (
-                                <Menu className="size-5 " />
+                                <Menu className="size-5" />
                             )}
                         </Button>
                     )}
@@ -113,7 +113,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                     <Link to="/auth/login">Личный кабинет</Link>
                                 </Button>
                             ) : (
-                                <div className="flex size-9  cursor-pointer items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white shadow-sm transition-transform hover:scale-105 hover:bg-slate-800">
+                                <div className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white shadow-sm transition-transform hover:scale-105 hover:bg-slate-800">
                                     Yu
                                 </div>
                             )}

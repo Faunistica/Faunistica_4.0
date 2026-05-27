@@ -34,7 +34,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                 {/* Строка с ID и бейджами */}
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 font-mono text-xs font-semibold text-slate-500">
-                        <Hash className="size-3 " />
+                        <Hash className="size-3" />
                         {pub.publ_id}
                     </span>
 
@@ -60,7 +60,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
 
                 {/* Название публикации */}
                 <h4
-                    className="line-clamp-2 text-sm/snug  font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
+                    className="line-clamp-2 text-sm/snug font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
                     title={pub.name || 'Без названия'}
                 >
                     {pub.name || 'Название публикации отсутствует'}
@@ -69,12 +69,12 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                 {/* Автор и год — с иконками для лучшего считывания */}
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     <span className="inline-flex items-center gap-1">
-                        <User className="size-3.5  text-slate-400" />
+                        <User className="size-3.5 text-slate-400" />
                         {pub.author || 'Автор неизвестен'}
                     </span>
                     {pub.year && (
                         <span className="inline-flex items-center gap-1">
-                            <Calendar className="size-3.5  text-slate-400" />
+                            <Calendar className="size-3.5 text-slate-400" />
                             {pub.year}
                         </span>
                     )}
@@ -98,12 +98,12 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                 >
                     {pub.pdf_file ? (
                         <a href={pub.pdf_file} target="_blank" rel="noopener noreferrer">
-                            <FileDown className="size-4 " />
+                            <FileDown className="size-4" />
                             <span>PDF</span>
                         </a>
                     ) : (
                         <>
-                            <FileText className="size-4 " />
+                            <FileText className="size-4" />
                             <span>Нет PDF</span>
                         </>
                     )}
@@ -117,7 +117,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                             size="sm"
                             className="h-9 w-full justify-center gap-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto"
                         >
-                            <XCircle className="size-4 " />
+                            <XCircle className="size-4" />
                             <span>Отказаться</span>
                         </Button>
                         <Button
@@ -126,7 +126,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                             className="h-9 w-full justify-center gap-2 rounded-lg bg-amber-500 text-white shadow-sm shadow-amber-200/50 hover:bg-amber-600 sm:w-auto"
                         >
                             <Link to={`/publication/${pub.publ_id}`}>
-                                <FileSearch className="size-4 " />
+                                <FileSearch className="size-4" />
                                 <span>Взять в работу</span>
                             </Link>
                         </Button>

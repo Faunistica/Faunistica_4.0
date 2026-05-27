@@ -69,7 +69,7 @@ const Register: FC = () => {
                             variant="outline"
                             className="w-full gap-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
-                            <svg className="size-4 " viewBox="0 0 24 24">
+                            <svg className="size-4" viewBox="0 0 24 24">
                                 <path
                                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                                     fill="#4285F4"
@@ -94,7 +94,7 @@ const Register: FC = () => {
                             variant="outline"
                             className="w-full gap-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
-                            <Send className="size-4  text-telegram" />
+                            <Send className="size-4 text-telegram" />
                             Sign up with Telegram
                         </Button>
                     </div>
@@ -113,7 +113,7 @@ const Register: FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm/relaxed  text-slate-500">
+            <p className="px-4 text-center text-sm/relaxed text-slate-500">
                 By clicking continue, you agree to our{' '}
                 <Link
                     to="#"

@@ -11,7 +11,7 @@ const NetworkErrorAlert: FC<NetworkErrorAlertProps> = ({ onClose }) => {
     return (
         <div className="fixed right-4 bottom-4 z-100 max-w-md animate-in fade-in slide-in-from-bottom-4">
             <Alert variant="destructive" className="border-destructive bg-white shadow-lg">
-                <AlertCircle className="size-4 " />
+                <AlertCircle className="size-4" />
                 <AlertTitle className="font-bold text-destructive">
                     Нет доступа к серверу
                 </AlertTitle>
@@ -22,10 +22,10 @@ const NetworkErrorAlert: FC<NetworkErrorAlertProps> = ({ onClose }) => {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-2 right-2 size-8  rounded-full hover:bg-slate-100"
+                    className="absolute top-2 right-2 size-8 rounded-full hover:bg-slate-100"
                     onClick={onClose}
                 >
-                    <X className="size-4  text-slate-400" />
+                    <X className="size-4 text-slate-400" />
                 </Button>
             </Alert>
         </div>
