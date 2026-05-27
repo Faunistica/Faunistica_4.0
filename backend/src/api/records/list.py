@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response, StreamingResponse
 
 from core.config import settings
+from core.dependencies import TokenUser
 from core.exceptions import AdminOnlyError
 from schema.common import PaginatedResponse
 from schema.records import RecordFull
@@ -18,7 +19,8 @@ router = APIRouter(
 @router.get("")
 async def list_records(
     service: Annotated[RecordService, Depends()],
-    user_id: Annotated[int, Query(ge=1, description="User ID")],
+    token: TokenUser,
+    user_id: Annotated[int | None, Query(ge=1, description="User ID")] = None,
     publ_id: Annotated[int | None, Query(ge=1, description="Publication ID")] = None,
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     page_size: Annotated[int, Query(ge=1, le=100, description="Page size")] = 20,
@@ -28,7 +30,7 @@ async def list_records(
     ] = "created_at",
 ) -> PaginatedResponse[RecordFull]:
     return await service.list_records(
-        user_id=user_id,
+        user_id=user_id or token.user_id,
         publ_id=publ_id,
         page=page,
         page_size=page_size,
@@ -39,10 +41,11 @@ async def list_records(
 @router.get("/export", response_model=None)
 async def export_records(
     service: Annotated[RecordService, Depends()],
-    user_id: Annotated[int, Query(..., description="User ID")],
+    token: TokenUser,
+    user_id: Annotated[int | None, Query(description="User ID")] = None,
     publ_id: Annotated[
         int | None,
-        Query(..., description="Publication ID if exporting records for publication"),
+        Query(description="Publication ID if exporting records for publication"),
     ] = None,
     scope: Annotated[
         Literal["user", "project"],
@@ -55,7 +58,7 @@ async def export_records(
         raise AdminOnlyError
 
     result = await service.list_records(
-        user_id=user_id,
+        user_id=user_id or token.user_id,
         publ_id=publ_id,
         page=1,
         page_size=settings.MAX_USER_RECORDS_PER_PUBLICATION,

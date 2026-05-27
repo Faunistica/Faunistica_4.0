@@ -1,7 +1,5 @@
 import { type FC } from 'react';
 import { useOutletContext, useParams } from 'react-router';
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/store/store';
 import { useRecordsManager } from '@/hooks/useRecordsManager';
 import RecordFormContent from '@/components/form/RecordFormContent';
 import FormSidebar from '@/components/form/FormSidebar';
@@ -19,12 +17,8 @@ const FormFilling: FC = () => {
     const { isSidebarOpen, setIsSidebarOpen } = useOutletContext<OutletContextType>();
     const { id } = useParams<{ id: string }>();
     const publ_id = Number(id);
-    const user_id = useSelector((state: RootState) => state.user.user_id);
 
-    const { activeRecordId, isLoading, recordMethods, registerSave } = useRecordsManager(
-        publ_id,
-        user_id!,
-    );
+    const { activeRecordId, isLoading, recordMethods, registerSave } = useRecordsManager(publ_id);
 
     if (isLoading) return <LoadingScreen />;
 
@@ -40,7 +34,6 @@ const FormFilling: FC = () => {
                 onCreateRecord={recordMethods.create}
                 deleteRecord={recordMethods.delete}
                 publ_id={publ_id}
-                user_id={user_id!}
             />
             <main className="relative flex w-full min-w-0 flex-1 flex-col">
                 {activeRecordId ? (

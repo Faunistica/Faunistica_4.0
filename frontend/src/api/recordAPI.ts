@@ -54,30 +54,25 @@ export const recordAPI = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            onQueryStarted: async (
-                { record_id, publ_id, user_id },
-                { dispatch, queryFulfilled },
-            ) => {
+            onQueryStarted: async ({ record_id }, { dispatch, queryFulfilled }) => {
                 try {
                     const { data } = await queryFulfilled;
                     if (data.record) {
-                        if (publ_id !== undefined && user_id !== undefined) {
-                            dispatch(
-                                recordAPI.util.updateQueryData(
-                                    'recordsList',
-                                    { publ_id, user_id } as Types.RecordListRequest,
-                                    (draft) => {
-                                        const idx = draft.items.findIndex(
-                                            (r) => r.id === record_id,
-                                        );
-                                        if (idx !== -1) {
-                                            draft.items[idx] = data.record;
-                                        }
-                                    },
-                                ),
-                            );
-                        }
+                        const user_id = data.record.user_id;
+                        const publ_id = data.record.publ_id;
                         dispatch(
+                            recordAPI.util.updateQueryData(
+                                'recordsList',
+                                { publ_id, user_id } as Types.RecordListRequest,
+                                (draft) => {
+                                    const idx = draft.items.findIndex((r) => r.id === record_id);
+                                    if (idx !== -1) {
+                                        draft.items[idx] = data.record;
+                                    }
+                                },
+                            ),
+                        );
+                        await dispatch(
                             recordAPI.util.upsertQueryData(
                                 'recordById',
                                 { record_id },
@@ -107,7 +102,7 @@ export const recordAPI = createApi({
         }),
         downloadRecords: build.mutation<
             null,
-            { user_id: number; publ_id?: number; scope?: string; format?: string }
+            { user_id?: number; publ_id?: number; scope?: string; format?: string }
         >({
             queryFn: async (params, _api, _extraOptions, baseQuery) => {
                 const result = await baseQuery({

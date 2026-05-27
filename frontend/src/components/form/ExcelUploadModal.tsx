@@ -16,7 +16,6 @@ interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     publ_id: number;
-    user_id: number;
 }
 
 const ACCEPTED_TYPES = [
@@ -25,7 +24,7 @@ const ACCEPTED_TYPES = [
 ];
 const ACCEPTED_EXTENSIONS = ['.xlsx', '.csv'];
 
-const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id, user_id }) => {
+const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -117,9 +116,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id, user_id }) =
     };
 
     const handleExport = async () => {
-        if (!user_id) return;
         const { error } = await downloadRecords({
-            user_id,
             publ_id,
             scope: 'user',
             format: 'xlsx',

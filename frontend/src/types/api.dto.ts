@@ -126,7 +126,7 @@ export interface RecordIdRequest {
 
 export interface RecordListRequest {
     publ_id?: number;
-    user_id: number;
+    user_id?: number;
     page?: number;
     page_size?: number;
     sort?: string;

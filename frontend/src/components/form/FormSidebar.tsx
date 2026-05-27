@@ -39,7 +39,6 @@ interface SidebarProps {
     onCreateRecord: () => void;
     deleteRecord: (id: string) => void;
     publ_id: number;
-    user_id: number;
 }
 
 const SidebarRecordItem = ({
@@ -168,13 +167,12 @@ const FormSidebar: FC<SidebarProps> = ({
     onCreateRecord,
     deleteRecord,
     publ_id,
-    user_id,
 }) => {
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
     const recordIds = useAppSelector((state) => {
-        const result = recordAPI.endpoints.recordsList.select({ publ_id, user_id })(state);
+        const result = recordAPI.endpoints.recordsList.select({ publ_id })(state);
         const data = 'data' in result ? result.data : undefined;
         return data?.items?.map((r) => r.id) ?? [];
     }, shallowEqual);
@@ -271,7 +269,6 @@ const FormSidebar: FC<SidebarProps> = ({
                 open={isUploadOpen}
                 onOpenChange={setIsUploadOpen}
                 publ_id={publ_id}
-                user_id={user_id}
             />
         </>
     );

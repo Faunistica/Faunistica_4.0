@@ -20,13 +20,13 @@ interface UseRecordsManagerReturn {
     registerSave: (fn: (options?: { silent?: boolean }) => Promise<void>) => void;
 }
 
-export function useRecordsManager(publ_id: number, user_id: number): UseRecordsManagerReturn {
+export function useRecordsManager(publ_id: number): UseRecordsManagerReturn {
     const [activeRecordId, setActiveRecordId] = useState<string | null>(null);
     const saveRef = useRef<((options?: { silent?: boolean }) => Promise<void>) | undefined>(
         undefined,
     );
 
-    const { isLoading } = useRecordsListQuery({ publ_id, user_id }, { skip: !user_id || !publ_id });
+    const { isLoading } = useRecordsListQuery({ publ_id }, { skip: !publ_id });
 
     const [createRecord] = useCreateRecordMutation();
     const [deleteRecord] = useDeleteRecordMutation();
@@ -36,7 +36,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
     activeIdRef.current = activeRecordId;
 
     const recordIds = useAppSelector((state) => {
-        const result = recordAPI.endpoints.recordsList.select({ publ_id, user_id })(state);
+        const result = recordAPI.endpoints.recordsList.select({ publ_id })(state);
         const data = 'data' in result ? result.data : undefined;
         return data?.items?.map((r) => r.id) ?? [];
     }, shallowEqual);
@@ -74,7 +74,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
 
     const handleDelete = useCallback(
         async (id: string) => {
-            const listArgs = { publ_id, user_id };
+            const listArgs = { publ_id };
             const isActive = id === activeIdRef.current;
 
             let nextId: string | null = null;
@@ -100,7 +100,7 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
                 toast.error('Ошибка при удалении записи');
             }
         },
-        [publ_id, user_id, dispatch, deleteRecord],
+        [publ_id, dispatch, deleteRecord],
     );
 
     return {

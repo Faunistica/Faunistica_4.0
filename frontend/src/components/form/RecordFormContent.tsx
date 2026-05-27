@@ -54,7 +54,6 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     const { save, submit, isSaving, isSavingRef, shouldSkipSync } = useSaveRecord(
         activeRecordId,
         publ_id,
-        activeRecord?.user_id ?? 0,
     );
 
     const handleSaveResult = useCallback(

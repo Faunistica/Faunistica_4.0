@@ -14,8 +14,9 @@ interface UseSaveRecordReturn {
 
 export function useSaveRecord(
     activeRecordId: string | null,
+    methods: UseFormReturn<FormRecord>,
     publ_id?: number,
-    user_id?: number,
+    cancelAutoSaveRef?: React.MutableRefObject<(() => void) | undefined>,
 ): UseSaveRecordReturn {
     const [editRecord] = useEditRecordMutation();
     const [submitRecord] = useSubmitRecordMutation();
@@ -49,7 +50,6 @@ export function useSaveRecord(
                     record_id: activeRecordId,
                     data: payload,
                     publ_id,
-                    user_id,
                 }).unwrap();
                 lastKnownRef.current = {
                     id: activeRecordId,
@@ -63,7 +63,7 @@ export function useSaveRecord(
                 setIsSaving(false);
             }
         },
-        [activeRecordId, editRecord, publ_id, user_id],
+        [activeRecordId, editRecord, publ_id],
     );
 
     const submit = useCallback(
@@ -77,7 +77,6 @@ export function useSaveRecord(
                     record_id: activeRecordId,
                     data: payload,
                     publ_id,
-                    user_id,
                 }).unwrap();
                 const response = await submitRecord({
                     record_id: activeRecordId,
@@ -95,7 +94,7 @@ export function useSaveRecord(
                 setIsSaving(false);
             }
         },
-        [activeRecordId, editRecord, submitRecord, publ_id, user_id],
+        [activeRecordId, editRecord, submitRecord, publ_id],
     );
 
     return { save, submit, isSaving, isSavingRef, shouldSkipSync };
