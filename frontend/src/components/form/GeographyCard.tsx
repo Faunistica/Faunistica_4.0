@@ -148,6 +148,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     className="h-28 resize-none"
                                     placeholder="Примечания к местоположению…"
                                     {...field}
+                                    value={field.value ?? ''}
                                 />
                                 <FieldError errors={[fieldState.error]} />
                             </Field>

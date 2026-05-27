@@ -1,9 +1,8 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import type { ApiErrorBody } from '@/types/api.dto';
 import { logout } from '../store/reducers/userSlice';
 
-export const baseQuery = fetchBaseQuery({
+const baseQuery = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_URL,
     credentials: 'include',
 });
@@ -11,7 +10,7 @@ export const baseQuery = fetchBaseQuery({
 export const baseQueryWithReauth: BaseQueryFn<
     string | FetchArgs,
     unknown,
-    FetchBaseQueryError & { data?: ApiErrorBody }
+    FetchBaseQueryError
 > = async (args, api, extraOptions) => {
     let result = await baseQuery(args, api, extraOptions);
 

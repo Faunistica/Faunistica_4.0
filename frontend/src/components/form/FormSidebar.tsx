@@ -92,7 +92,7 @@ const SidebarRecordItem = ({
                         <RecordStatusIndicator status={status} />
                         <span
                             className={cn(
-                                'truncate text-xs/tight  font-bold',
+                                'truncate text-xs/tight font-bold',
                                 isActive ? 'text-slate-900' : 'text-slate-700',
                             )}
                         >

@@ -9,13 +9,10 @@ export interface RouteHandle {
 
 function isRouteHandle(value: unknown): value is RouteHandle {
     if (typeof value !== 'object' || value === null) return false;
-    const obj: Record<string, unknown> = value;
-    return (
-        obj.isLanding === undefined ||
-        (typeof obj.isLanding === 'boolean' && obj.isNavigateEnabled === undefined) ||
-        (typeof obj.isNavigateEnabled === 'boolean' && obj.isSidebarEnabled === undefined) ||
-        typeof obj.isSidebarEnabled === 'boolean'
-    );
+    if ('isLanding' in value || 'isNavigateEnabled' in value || 'isSidebarEnabled' in value) {
+        return true;
+    }
+    return false;
 }
 
 export const useRouteHandle = (): RouteHandle => {

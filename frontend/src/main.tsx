@@ -15,19 +15,21 @@ import type * as Types from '@/types/api.dto';
 
 async function verifyAuthInBackground(setNetworkError: (value: boolean) => void) {
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+        const API_BASE = import.meta.env.VITE_API_URL;
+        const response = await fetch(`${API_BASE}/users/me`, {
             method: 'GET',
             credentials: 'include',
         });
 
         if (response.ok) {
+            // oxlint-disable-next-line typescript/no-unsafe-assignment
             const user: Types.UserInfo = await response.json();
             store.dispatch(login(user));
             return;
         }
 
         if (response.status === 401) {
-            const refreshResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+            const refreshResponse = await fetch(`${API_BASE}/auth/refresh`, {
                 method: 'POST',
                 credentials: 'include',
             });

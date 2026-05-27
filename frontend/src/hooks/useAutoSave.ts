@@ -2,12 +2,12 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormRecord, UpdateRecordResponse } from '@/types/api.dto';
 
-const SHOULD_AUTO_SAVE = !(import.meta.env.VITE_DISABLE_AUTO_SAVE?.toLowerCase?.() === 'true');
+const SHOULD_AUTO_SAVE = !import.meta.env.VITE_DISABLE_AUTO_SAVE;
 
 interface UseAutoSaveOptions {
     save: (data: Partial<FormRecord>) => Promise<UpdateRecordResponse | undefined>;
     methods: UseFormReturn<FormRecord>;
-    isSavingRef?: React.MutableRefObject<boolean>;
+    isSavingRef?: React.RefObject<boolean>;
     onSaved?: (response: UpdateRecordResponse) => void;
 }
 

@@ -75,13 +75,7 @@ export interface RecordFull extends RecordData {
     ip?: string | null;
 }
 
-export enum RuleCategory {
-    Taxonomy = 'taxonomy',
-    Geo = 'geo',
-    Location = 'location',
-    Event = 'event',
-    Abundance = 'abundance',
-}
+export type RuleCategory = 'taxonomy' | 'geo' | 'location' | 'event' | 'abundance';
 
 export interface RecordValidationError {
     fields: string[];
@@ -111,7 +105,7 @@ export type { RecordForm as FormRecord } from '@/types/forms';
 
 export interface SuggestTaxonRequest {
     field: 'family' | 'genus' | 'species';
-    text: string;
+    query: string;
     family?: string | null;
     genus?: string | null;
 }
@@ -166,7 +160,7 @@ export interface GetLocationResponse {
 
 export interface GeoSearchRequest {
     field: string;
-    text: string;
+    query: string;
     region?: string | null;
 }
 

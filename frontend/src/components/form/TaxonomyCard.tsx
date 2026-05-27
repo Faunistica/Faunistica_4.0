@@ -25,12 +25,12 @@ const TaxonomyCard: FC = () => {
     const [searchGenus, { isLoading: genusLoading }] = useLazySuggestTaxonQuery();
     const [searchSpecies, { isLoading: speciesLoading }] = useLazySuggestTaxonQuery();
 
-    const familySearchFn = (text: string) =>
-        searchFamily({ field: 'family', text })
+    const familySearchFn = (query: string) =>
+        searchFamily({ field: 'family', query })
             .unwrap()
             .then((r) => r.suggestions ?? []);
 
-    const genusSearchFn = (text: string) => {
+    const genusSearchFn = (query: string) => {
         const extra: {
             family?: string | null;
         } = {};
@@ -42,12 +42,12 @@ const TaxonomyCard: FC = () => {
             extra.family = family;
         }
 
-        return searchGenus({ field: 'genus', text, ...extra })
+        return searchGenus({ field: 'genus', query, ...extra })
             .unwrap()
             .then((r) => r.suggestions ?? []);
     };
 
-    const speciesSearchFn = (text: string) => {
+    const speciesSearchFn = (query: string) => {
         const extra: {
             family?: string | null;
             genus?: string | null;
@@ -67,7 +67,7 @@ const TaxonomyCard: FC = () => {
             extra.genus = genus;
         }
 
-        return searchSpecies({ field: 'species', text, ...extra })
+        return searchSpecies({ field: 'species', query, ...extra })
             .unwrap()
             .then((r) => r.suggestions ?? []);
     };

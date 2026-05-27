@@ -40,7 +40,8 @@ const Login: FC = () => {
 
     const apiErrorMessage =
         error && 'status' in error
-            ? (error.data?.detail ?? 'Ошибка входа. Пожалуйста, попробуйте снова.')
+            ? ((error.data as { detail?: string } | undefined)?.detail ??
+              'Ошибка входа. Пожалуйста, попробуйте снова.')
             : error
               ? 'Ошибка сети. Пожалуйста, проверьте ваше подключение.'
               : null;

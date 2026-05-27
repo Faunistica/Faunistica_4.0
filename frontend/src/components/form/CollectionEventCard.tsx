@@ -144,6 +144,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Например: 20 ловушко-суток"
                                     aria-invalid={invalid}
                                     {...field}
+                                    value={field.value ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>

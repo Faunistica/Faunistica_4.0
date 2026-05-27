@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useSyncRecordToForm } from './useSyncRecordToForm';
+import type { RecordFull } from '@/types/api.dto';
 
-const createRecord = (id: string, updated_at: string) => ({
+const createRecord = (id: string, updated_at: string): RecordFull => ({
     id,
     updated_at,
     publ_id: 1,
@@ -11,6 +12,42 @@ const createRecord = (id: string, updated_at: string) => ({
     errors: null,
     type: null,
     ip: null,
+    country: null,
+    region: null,
+    district: null,
+    locality: null,
+    is_manual_location: null,
+    latitude: null,
+    longitude: null,
+    verbatimcoordinates: null,
+    coordinate_uncertainty: null,
+    georef_source: null,
+    location_remarks: null,
+    verbatim_date: null,
+    date_precision: null,
+    is_interval: null,
+    habitat: null,
+    sampling_protocol: null,
+    sampling_effort: null,
+    sample_size_value: null,
+    sample_size_unit: null,
+    event_remarks: null,
+    field_number: null,
+    catalog_number: null,
+    collection_code: null,
+    recorded_by: null,
+    family: null,
+    genus: null,
+    species: null,
+    tax_verbatim: null,
+    taxon_rank: null,
+    type_status: null,
+    accepted_name: null,
+    taxon_remarks: null,
+    quantity_type: null,
+    specimens: null,
+    occurrence_remarks: null,
+    identification_remarks: null,
 });
 
 describe('useSyncRecordToForm', () => {

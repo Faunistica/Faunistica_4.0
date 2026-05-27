@@ -26,6 +26,7 @@ function useGeocodingSearch() {
             const res = await fetch(
                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=ru`,
             );
+            // oxlint-disable-next-line typescript/no-unsafe-assignment
             const data: SearchResult[] = await res.json();
             setResults(data);
         } catch (error) {

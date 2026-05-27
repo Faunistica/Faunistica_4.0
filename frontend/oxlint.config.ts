@@ -51,6 +51,7 @@ export default defineConfig({
                 'typescript/no-unsafe-assignment': 'off',
                 'typescript/no-misused-promises': 'off',
                 'typescript/strict-void-return': 'off',
+                'react-compiler-js/react-compiler': 'off',
             },
         },
     ],

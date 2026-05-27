@@ -39,7 +39,44 @@ export const getSexAndLifestageFromField = (
 };
 
 export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
-    const data: RecordData = {};
+    const data: RecordData = {
+        country: null,
+        region: null,
+        district: null,
+        locality: null,
+        is_manual_location: null,
+        latitude: null,
+        longitude: null,
+        verbatimcoordinates: null,
+        coordinate_uncertainty: null,
+        georef_source: null,
+        location_remarks: null,
+        verbatim_date: null,
+        date_precision: null,
+        is_interval: null,
+        habitat: null,
+        sampling_protocol: null,
+        sampling_effort: null,
+        sample_size_value: null,
+        sample_size_unit: null,
+        event_remarks: null,
+        field_number: null,
+        catalog_number: null,
+        collection_code: null,
+        recorded_by: null,
+        family: null,
+        genus: null,
+        species: null,
+        tax_verbatim: null,
+        taxon_rank: null,
+        type_status: null,
+        accepted_name: null,
+        taxon_remarks: null,
+        quantity_type: null,
+        specimens: null,
+        occurrence_remarks: null,
+        identification_remarks: null,
+    };
     const d = draft as Record<string, unknown>;
     for (const key of FORM_SCALAR_FIELDS) {
         const val = d[key];
@@ -76,9 +113,8 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
 
 export function toFormPartial(record: RecordFull): Partial<FormRecord> {
     const result: Record<string, unknown> = {};
-    for (const key of FORM_SCALAR_FIELDS) {
-        const val = record[key];
-        if (val == null) continue;
+    for (const [key, val] of Object.entries(record)) {
+        if (key in SPECIMEN_FIELD_MAP || val == null) continue;
         result[key] = key === 'latitude' || key === 'longitude' ? Number(val) : val;
     }
     for (const mapping of SPECIMEN_FIELD_MAP) {

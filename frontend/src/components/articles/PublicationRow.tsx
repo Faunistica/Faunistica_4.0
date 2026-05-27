@@ -22,7 +22,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
             {/* Левая цветная полоса-индикатор (опционально для разграничения режимов) */}
             <div
                 className={cn(
-                    'absolute inset-y-0  left-0 w-1 rounded-l-xl transition-colors',
+                    'absolute inset-y-0 left-0 w-1 rounded-l-xl transition-colors',
                     mode === 'suggested' && 'bg-amber-400',
                     mode === 'progress' && 'bg-blue-400',
                     mode === 'available' && 'bg-emerald-400',

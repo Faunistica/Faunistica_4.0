@@ -176,10 +176,6 @@ export type RecordFormKey<V> = {
     [K in keyof RecordForm]-?: RecordForm[K] extends V ? K : never;
 }[keyof RecordForm];
 
-export const FORM_SCALAR_FIELDS = Object.keys(recordFormSchema.shape).filter(
-    (k) => !(k in QUANTITY_FIELD_LABELS),
-);
-
 export const FORM_DEFAULT_VALUES: RecordForm = {
     country: '',
     region: '',
