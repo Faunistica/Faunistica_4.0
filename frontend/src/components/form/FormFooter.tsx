@@ -8,7 +8,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { motion, useScroll, useMotionValueEvent } from 'motion/react';
 import { Save, Send, Trash2, Cloud, CloudOff, Check, Loader2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FooterProps {
     onSave: () => void;
@@ -27,6 +29,8 @@ function formatTime(date: Date): string {
     });
 }
 
+const ENABLE_MOTION_ON_DESKTOP = false;
+
 const Footer: FC<FooterProps> = ({
     onSave,
     onSubmit,
@@ -37,35 +41,70 @@ const Footer: FC<FooterProps> = ({
 }) => {
     const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isHidden, setIsHidden] = useState(false);
+
+    const mobile = useIsMobile();
+
+    const { scrollY } = useScroll();
+
+    useMotionValueEvent(scrollY, 'change', (latest) => {
+        if (!ENABLE_MOTION_ON_DESKTOP && !mobile) {
+            setIsHidden(false);
+            return;
+        }
+
+        const previous = scrollY.getPrevious() ?? 0;
+        const scrollHeight = document.documentElement.scrollHeight;
+        const clientHeight = window.innerHeight;
+        const isAtBottom = scrollHeight - clientHeight - latest <= 20;
+
+        if (isAtBottom || latest <= 10) {
+            setIsHidden(false);
+        } else if (latest > previous && latest > 50) {
+            setIsHidden(true);
+        } else if (latest < previous) {
+            setIsHidden(false);
+        }
+    });
+
+    const shouldAnimate = ENABLE_MOTION_ON_DESKTOP ? isHidden : mobile && isHidden;
 
     return (
         <>
-            <footer className="fixed inset-x-0 bottom-0  z-90 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-4  shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10">
+            <motion.footer
+                variants={{
+                    visible: { y: 0, opacity: 1 },
+                    hidden: { y: '100%', opacity: 0 },
+                }}
+                animate={shouldAnimate ? 'hidden' : 'visible'}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="fixed inset-x-0 bottom-0 z-90 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10"
+            >
                 <div className="flex items-center gap-4">
                     <Button
                         onClick={() => setIsDeleteDialogOpen(true)}
                         disabled={isSaving}
                         variant="destructive"
-                        className="gap-2"
+                        className="gap-2 text-xs"
                     >
-                        <Trash2 className="size-3.5 " />
-                        <span className="text-xs font-medium">Удалить</span>
+                        <Trash2 className="size-4" />
+                        Удалить
                     </Button>
 
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                         {isAutoSaving ? (
                             <>
-                                <Cloud className="size-3.5  animate-pulse text-blue-500" />
+                                <Cloud className="size-4 animate-pulse text-blue-500" />
                                 <span>Автосохранение...</span>
                             </>
                         ) : lastSavedTime ? (
                             <>
-                                <Check className="size-3.5  text-emerald-500" />
+                                <Check className="size-4 text-emerald-500" />
                                 <span>Сохранено в {formatTime(lastSavedTime)}</span>
                             </>
                         ) : (
                             <>
-                                <CloudOff className="size-3.5  text-slate-400" />
+                                <CloudOff className="size-4 text-slate-400" />
                                 <span>Не сохранено</span>
                             </>
                         )}
@@ -77,25 +116,25 @@ const Footer: FC<FooterProps> = ({
                         onClick={onSave}
                         disabled={isSaving || isAutoSaving}
                         variant="outline"
-                        className="gap-2"
+                        className="gap-2 text-xs"
                     >
                         {isSaving ? (
-                            <Loader2 className="size-4  animate-spin" />
+                            <Loader2 className="size-4 animate-spin" />
                         ) : (
-                            <Save className="size-4 " />
+                            <Save className="size-4" />
                         )}
                         Сохранить
                     </Button>
                     <Button
                         onClick={() => setIsSubmitDialogOpen(true)}
                         disabled={isSaving}
-                        className="gap-2 bg-slate-900 font-semibold text-white hover:bg-slate-800"
+                        className="gap-2 bg-slate-900 text-xs font-semibold text-white hover:bg-slate-800"
                     >
-                        <Send className="size-4 " />
+                        <Send className="size-4" />
                         Отправить
                     </Button>
                 </div>
-            </footer>
+            </motion.footer>
 
             <AlertDialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
                 <AlertDialogContent>
