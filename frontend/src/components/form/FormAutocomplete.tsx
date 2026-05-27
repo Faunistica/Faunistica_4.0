@@ -44,7 +44,6 @@ export function FormAutocomplete({
             lastCommittedRef.current = field.value ?? null;
             initializedRef.current = true;
             if (!field.value) {
-                setSuggestions([]);
                 searchVersionRef.current = 0;
             }
         }

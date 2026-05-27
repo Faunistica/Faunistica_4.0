@@ -11,8 +11,8 @@ type AutocompleteProps = OverrideProps<
         id: string;
         suggestions: string[];
         isLoading?: boolean;
-        onSelect?: (value: string) => any;
-        onSearch: (text: string) => any;
+        onSelect?: (value: string) => void;
+        onSearch: (text: string) => void;
         minChars?: number;
     }
 >;

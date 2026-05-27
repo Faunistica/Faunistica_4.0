@@ -7,7 +7,10 @@ export function useSyncRecordToForm(record: RecordFull | undefined, setFormValue
     const prevRecordIdRef = useRef<string | undefined>(undefined);
     const prevUpdatedAtRef = useRef<string | undefined>(undefined);
     const callbackRef = useRef(setFormValues);
-    callbackRef.current = setFormValues;
+
+    useEffect(() => {
+        callbackRef.current = setFormValues;
+    });
 
     useEffect(() => {
         if (!record) return;

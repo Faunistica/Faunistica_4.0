@@ -18,15 +18,15 @@ vi.mock('@/hooks/useRecordsManager', () => ({
 }));
 
 vi.mock('@/components/form/RecordFormContent', () => ({
-    default: (props: any) => (
-        <div data-testid="record-form" data-active-record-id={props.activeRecordId}>
+    default: (props: Record<string, unknown>) => (
+        <div data-testid="record-form" data-active-record-id={props.activeRecordId as string}>
             RecordFormContent
         </div>
     ),
 }));
 
 vi.mock('@/components/form/FormSidebar', () => ({
-    default: ({ onSelectRecord }: any) => (
+    default: ({ onSelectRecord }: { onSelectRecord: (id: string) => void }) => (
         <div data-testid="sidebar">
             <button data-testid="record-1" onClick={() => onSelectRecord('1')}>
                 Canis

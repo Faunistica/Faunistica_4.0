@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, type FieldPath } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { History } from 'lucide-react';
 import type { RecordFull, FormRecord } from '@/types/api.dto';
@@ -102,7 +102,7 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
         for (const f of fields) {
             const val = source[f];
             if (val == null) continue;
-            setValue(f as any, f === 'latitude' || f === 'longitude' ? Number(val) : val, {
+            setValue(f as FieldPath<FormRecord>, f === 'latitude' || f === 'longitude' ? Number(val) : val, {
                 shouldDirty: true,
             });
         }

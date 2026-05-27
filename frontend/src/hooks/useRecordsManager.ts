@@ -33,7 +33,10 @@ export function useRecordsManager(publ_id: number): UseRecordsManagerReturn {
     const dispatch = useAppDispatch();
 
     const activeIdRef = useRef(activeRecordId);
-    activeIdRef.current = activeRecordId;
+
+    useEffect(() => {
+        activeIdRef.current = activeRecordId;
+    });
 
     const recordIds = useAppSelector((state) => {
         const result = recordAPI.endpoints.recordsList.select({ publ_id })(state);
@@ -42,8 +45,13 @@ export function useRecordsManager(publ_id: number): UseRecordsManagerReturn {
     }, shallowEqual);
 
     const recordIdsRef = useRef(recordIds);
-    recordIdsRef.current = recordIds;
 
+    useEffect(() => {
+        recordIdsRef.current = recordIds;
+    });
+
+    // oxlint-disable-next-line react-hooks-js/set-state-in-effect
+    // OK: auto-select the first record when the list arrives; not a cascading render
     useEffect(() => {
         if (recordIds.length > 0 && activeRecordId === null) {
             setActiveRecordId(recordIds[0]);

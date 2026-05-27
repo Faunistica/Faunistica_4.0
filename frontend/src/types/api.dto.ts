@@ -75,15 +75,19 @@ export interface RecordFull extends RecordData {
     ip?: string | null;
 }
 
-export interface RuleCategory {
-    // taxonomy, geo, location, event, abundance
+export enum RuleCategory {
+    Taxonomy = 'taxonomy',
+    Geo = 'geo',
+    Location = 'location',
+    Event = 'event',
+    Abundance = 'abundance',
 }
 
 export interface RecordValidationError {
     fields: string[];
     code: string;
     message: string;
-    category?: string | null;
+    category?: RuleCategory | null;
 }
 
 export interface UpdateRecordResponse {
