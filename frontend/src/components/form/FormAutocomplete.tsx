@@ -3,10 +3,10 @@ import { useController, useFormContext } from 'react-hook-form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
-import type { FormKey, FormRecord } from '@/types/forms';
+import type { RecordFormKey, RecordForm } from '@/types/forms';
 
 interface FormAutocompleteProps {
-    name: FormKey<string | null | undefined>;
+    name: RecordFormKey<string | null | undefined>;
     isLoading?: boolean;
     label: string;
     placeholder?: string;
@@ -26,7 +26,7 @@ export function FormAutocomplete({
     onSelectSuggestion,
     onCommitTyped,
 }: FormAutocompleteProps) {
-    const { control, setValue } = useFormContext<FormRecord>();
+    const { control, setValue } = useFormContext<RecordForm>();
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const searchVersionRef = useRef(0);
     const lastCommittedRef = useRef<string | null>(null);

@@ -2,7 +2,7 @@ import { type FC, useCallback, useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { FormRecord, RecordFull, UpdateRecordResponse } from '@/types/api.dto';
-import { formRecordSchema, FORM_DEFAULT_VALUES } from '@/types/forms';
+import { recordFormSchema, FORM_DEFAULT_VALUES } from '@/types/forms';
 import { useRecordByIdQuery } from '@/api/recordAPI';
 import { useSaveRecord } from '@/hooks/useSaveRecord';
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -37,7 +37,7 @@ const RecordFormContent: FC<RecordFormContentProps> = ({
     );
 
     const methods = useForm<FormRecord>({
-        resolver: zodResolver(formRecordSchema),
+        resolver: zodResolver(recordFormSchema),
         defaultValues: FORM_DEFAULT_VALUES,
         mode: 'onBlur',
         reValidateMode: 'onChange',

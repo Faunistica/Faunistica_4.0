@@ -1,5 +1,6 @@
 import type { RecordData, RecordFull, FormRecord, Specimen } from '@/types/api.dto';
 import type { QuantityField } from '@/types/forms';
+import { FORM_SCALAR_FIELDS } from '@/types/forms';
 
 const NULLISH_NUMBER_FIELDS = new Set<string>(['coordinate_uncertainty', 'sample_size_value']);
 
@@ -39,45 +40,8 @@ export const getSexAndLifestageFromField = (
 
 export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
     const data: RecordData = {};
-    const fieldsToCopy: (keyof RecordData)[] = [
-        'country',
-        'region',
-        'district',
-        'locality',
-        'is_manual_location',
-        'latitude',
-        'longitude',
-        'verbatimcoordinates',
-        'coordinate_uncertainty',
-        'georef_source',
-        'location_remarks',
-        'verbatim_date',
-        'date_precision',
-        'is_interval',
-        'habitat',
-        'sampling_protocol',
-        'sampling_effort',
-        'sample_size_value',
-        'sample_size_unit',
-        'event_remarks',
-        'field_number',
-        'catalog_number',
-        'collection_code',
-        'recorded_by',
-        'family',
-        'genus',
-        'species',
-        'tax_verbatim',
-        'taxon_rank',
-        'type_status',
-        'accepted_name',
-        'taxon_remarks',
-        'quantity_type',
-        'occurrence_remarks',
-        'identification_remarks',
-    ];
     const d = draft as Record<string, unknown>;
-    for (const key of fieldsToCopy) {
+    for (const key of FORM_SCALAR_FIELDS) {
         const val = d[key];
         if (val === undefined) continue;
         if (NULLISH_NUMBER_FIELDS.has(key) && val === 0) continue;
@@ -112,44 +76,7 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
 
 export function toFormPartial(record: RecordFull): Partial<FormRecord> {
     const result: Record<string, unknown> = {};
-    const keys: (keyof RecordData)[] = [
-        'country',
-        'region',
-        'district',
-        'locality',
-        'is_manual_location',
-        'latitude',
-        'longitude',
-        'verbatimcoordinates',
-        'coordinate_uncertainty',
-        'georef_source',
-        'location_remarks',
-        'verbatim_date',
-        'date_precision',
-        'is_interval',
-        'habitat',
-        'sampling_protocol',
-        'sampling_effort',
-        'sample_size_value',
-        'sample_size_unit',
-        'event_remarks',
-        'field_number',
-        'catalog_number',
-        'collection_code',
-        'recorded_by',
-        'family',
-        'genus',
-        'species',
-        'tax_verbatim',
-        'taxon_rank',
-        'type_status',
-        'accepted_name',
-        'taxon_remarks',
-        'identification_remarks',
-        'quantity_type',
-        'occurrence_remarks',
-    ];
-    for (const key of keys) {
+    for (const key of FORM_SCALAR_FIELDS) {
         const val = record[key];
         if (val == null) continue;
         result[key] = key === 'latitude' || key === 'longitude' ? Number(val) : val;

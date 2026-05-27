@@ -97,7 +97,7 @@ export interface PaginatedResponse<T> {
     pages: number;
 }
 
-export type { FormRecord } from '@/types/forms';
+export type { RecordForm as FormRecord } from '@/types/forms';
 
 export interface SuggestTaxonRequest {
     field: 'family' | 'genus' | 'species';

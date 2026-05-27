@@ -115,7 +115,7 @@ export const QUANTITY_FIELD_LABELS: Record<QuantityField, string> = {
 
 import { z } from 'zod';
 
-export const formRecordSchema = z.object({
+export const recordFormSchema = z.object({
     // ═══ LOCATION ═══
     georef_source: z.enum(['lit', 'vol', 'none']).nullish(),
     country: z.string().min(1, 'Обязательное поле'),
@@ -170,13 +170,17 @@ export const formRecordSchema = z.object({
     juveniles: z.number().min(0).nullish(),
 });
 
-export type FormKey<V> = {
-    [K in keyof FormRecord]-?: FormRecord[K] extends V ? K : never;
-}[keyof FormRecord];
+export type RecordForm = z.infer<typeof recordFormSchema>;
 
-export type FormRecord = z.infer<typeof formRecordSchema>;
+export type RecordFormKey<V> = {
+    [K in keyof RecordForm]-?: RecordForm[K] extends V ? K : never;
+}[keyof RecordForm];
 
-export const FORM_DEFAULT_VALUES: FormRecord = {
+export const FORM_SCALAR_FIELDS = Object.keys(recordFormSchema.shape).filter(
+    (k) => !(k in QUANTITY_FIELD_LABELS),
+);
+
+export const FORM_DEFAULT_VALUES: RecordForm = {
     country: '',
     region: '',
     district: '',
