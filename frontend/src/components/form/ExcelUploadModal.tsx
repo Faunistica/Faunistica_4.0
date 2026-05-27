@@ -88,9 +88,10 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
         const { data: result, error } = await uploadExcel(formData);
 
         if (error) {
-            const message =
-                (error as any)?.data?.detail || (error as any)?.message || 'Неизвестная ошибка';
-            toast.error('Ошибка при загрузке файла', { description: String(message) });
+            const message = error && 'status' in error
+                ? error.data?.detail ?? error.data?.message ?? 'Неизвестная ошибка'
+                : error?.message ?? 'Неизвестная ошибка';
+            toast.error('Ошибка при загрузке файла', { description: message });
         } else if (result) {
             toast.success(`Загружено ${result.imported} записей`, { duration: 5000 });
 

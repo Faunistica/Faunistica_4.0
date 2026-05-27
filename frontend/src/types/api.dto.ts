@@ -1,3 +1,9 @@
+export interface ApiErrorBody {
+    detail?: string;
+    message?: string;
+    error?: string;
+}
+
 export interface LoginRequest {
     username: string;
     password: string;
