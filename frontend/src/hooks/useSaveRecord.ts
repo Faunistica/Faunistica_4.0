@@ -21,15 +21,22 @@ export function useSaveRecord(
     const [submitRecord] = useSubmitRecordMutation();
     const [isSaving, setIsSaving] = useState(false);
     const isSavingRef = useRef(false);
-    const lastSavedAtRef = useRef<string | null>(null);
+    const lastKnownRef = useRef<{ id: string; updatedAt: string } | null>(null);
 
     useEffect(() => {
-        isSavingRef.current = isSaving;
-    }, [isSaving]);
+        lastKnownRef.current = null;
+    }, [activeRecordId]);
 
-    const shouldSkipSync = useCallback((updatedAt: string): boolean => {
-        return updatedAt === lastSavedAtRef.current;
-    }, []);
+    const shouldSkipSync = useCallback(
+        (updatedAt: string): boolean => {
+            if (!lastKnownRef.current) return false;
+            return (
+                lastKnownRef.current.id === activeRecordId &&
+                lastKnownRef.current.updatedAt === updatedAt
+            );
+        },
+        [activeRecordId],
+    );
 
     const save = useCallback(
         async (data: Partial<FormRecord>): Promise<UpdateRecordResponse | undefined> => {
@@ -44,7 +51,10 @@ export function useSaveRecord(
                     publ_id,
                     user_id,
                 }).unwrap();
-                lastSavedAtRef.current = response.record.updated_at;
+                lastKnownRef.current = {
+                    id: activeRecordId,
+                    updatedAt: response.record.updated_at,
+                };
                 return response;
             } catch (error) {
                 toast.error('Ошибка при сохранении данных');
@@ -73,7 +83,10 @@ export function useSaveRecord(
                     record_id: activeRecordId,
                     data: payload,
                 }).unwrap();
-                lastSavedAtRef.current = response.record.updated_at;
+                lastKnownRef.current = {
+                    id: activeRecordId,
+                    updatedAt: response.record.updated_at,
+                };
                 return response;
             } catch (error) {
                 toast.error('Ошибка при отправке данных');

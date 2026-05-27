@@ -118,4 +118,20 @@ describe('useSaveRecord', () => {
 
         expect(result.current.shouldSkipSync('2024-01-01T01:00:00Z')).toBe(true);
     });
+
+    it('shouldSkipSync returns false after activeRecordId changes', async () => {
+        const { result, rerender } = renderHook((id: string | null) => useSaveRecord(id), {
+            initialProps: 'record-1',
+        });
+
+        await act(async () => {
+            await result.current.save({ males: 3 });
+        });
+
+        expect(result.current.shouldSkipSync('2024-01-01T00:00:00Z')).toBe(true);
+
+        rerender('record-2');
+
+        expect(result.current.shouldSkipSync('2024-01-01T00:00:00Z')).toBe(false);
+    });
 });

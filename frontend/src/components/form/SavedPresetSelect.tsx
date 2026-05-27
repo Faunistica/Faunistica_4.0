@@ -43,42 +43,45 @@ const EMPTY_PRESETS: Preset[] = [];
 const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
     const { setValue } = useFormContext<FormRecord>();
 
-    const presets = useAppSelector(state => {
-        const userId = state.user.user_id;
-        if (!userId) return EMPTY_PRESETS;
+    const presets = useAppSelector(
+        (state) => {
+            const userId = state.user.user_id;
+            if (!userId) return EMPTY_PRESETS;
 
-        const result = recordAPI.endpoints.recordsList.select({
-            publ_id,
-            user_id: userId,
-        })(state);
-        const items = 'data' in result ? (result.data?.items ?? []) : [];
-        const fields = FIELD_KEYS[type];
-        const buildLabel = LABEL_BUILDERS[type];
-        const seen = new Set<string>();
-        const resultList: Preset[] = [];
+            const result = recordAPI.endpoints.recordsList.select({
+                publ_id,
+                user_id: userId,
+            })(state);
+            const items = 'data' in result ? (result.data?.items ?? []) : [];
+            const fields = FIELD_KEYS[type];
+            const buildLabel = LABEL_BUILDERS[type];
+            const seen = new Set<string>();
+            const resultList: Preset[] = [];
 
-        for (const record of items) {
-            if (activeRecordId && record.id === activeRecordId) continue;
+            for (const record of items) {
+                if (activeRecordId && record.id === activeRecordId) continue;
 
-            const hasData = fields.some((f) => {
-                const val = record[f];
-                return val !== null && val !== undefined && val !== '';
-            });
-            if (!hasData) continue;
+                const hasData = fields.some((f) => {
+                    const val = record[f];
+                    return val !== null && val !== undefined && val !== '';
+                });
+                if (!hasData) continue;
 
-            const hash = JSON.stringify(fields.map((f) => record[f]));
-            if (seen.has(hash)) continue;
-            seen.add(hash);
+                const hash = JSON.stringify(fields.map((f) => record[f]));
+                if (seen.has(hash)) continue;
+                seen.add(hash);
 
-            resultList.push({ label: buildLabel(record), recordId: record.id });
-        }
+                resultList.push({ label: buildLabel(record), recordId: record.id });
+            }
 
-        return resultList;
-    }, (a, b) => {
-        if (a === b) return true;
-        if (a.length !== b.length) return false;
-        return a.every((p, i) => p.label === b[i].label && p.recordId === b[i].recordId);
-    });
+            return resultList;
+        },
+        (a, b) => {
+            if (a === b) return true;
+            if (a.length !== b.length) return false;
+            return a.every((p, i) => p.label === b[i].label && p.recordId === b[i].recordId);
+        },
+    );
 
     if (presets.length === 0) return null;
 
@@ -97,7 +100,11 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
 
         const fields = FIELD_KEYS[type];
         for (const f of fields) {
-            setValue(f, source[f] ?? null, { shouldDirty: true });
+            const val = source[f];
+            if (val == null) continue;
+            setValue(f as any, f === 'latitude' || f === 'longitude' ? Number(val) : val, {
+                shouldDirty: true,
+            });
         }
     };
 

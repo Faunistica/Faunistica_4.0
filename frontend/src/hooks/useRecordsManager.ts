@@ -62,18 +62,15 @@ export function useRecordsManager(publ_id: number, user_id: number): UseRecordsM
         setActiveRecordId(created.id);
     }, [publ_id, createRecord, dispatch]);
 
-    const switchToRecord = useCallback(
-        async (targetId: string) => {
-            if (targetId === activeIdRef.current) return;
+    const switchToRecord = useCallback(async (targetId: string) => {
+        if (targetId === activeIdRef.current) return;
 
-            saveRef.current?.({ silent: true }).catch(() => {
-                toast.error('Не удалось сохранить текущую запись');
-            });
+        saveRef.current?.({ silent: true }).catch(() => {
+            toast.error('Не удалось сохранить текущую запись');
+        });
 
-            setActiveRecordId(targetId);
-        },
-        [],
-    );
+        setActiveRecordId(targetId);
+    }, []);
 
     const handleDelete = useCallback(
         async (id: string) => {

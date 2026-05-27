@@ -175,18 +175,18 @@ describe('toFormPartial', () => {
         expect(result.region).toBe('Test Region');
         expect(result.latitude).toBe(55.5);
         expect(result.longitude).toBe(37.2);
-        expect(result.is_manual_location).toBeNull();
-        expect(result.verbatimcoordinates).toBeNull();
-        expect(result.coordinate_uncertainty).toBeNull();
-        expect(result.date_precision).toBeNull();
+        expect(result.is_manual_location).toBeUndefined();
+        expect(result.verbatimcoordinates).toBeUndefined();
+        expect(result.coordinate_uncertainty).toBeUndefined();
+        expect(result.date_precision).toBeUndefined();
     });
 
-    it('converts null record fields to null in form', () => {
+    it('omits null record fields (reset fills from defaultValues)', () => {
         const record = { ...baseRecord, location_remarks: null, habitat: null };
         const result = toFormPartial(record);
 
-        expect(result.location_remarks).toBeNull();
-        expect(result.habitat).toBeNull();
+        expect(result.location_remarks).toBeUndefined();
+        expect(result.habitat).toBeUndefined();
     });
 
     it('maps specimens to quantity form fields', () => {
@@ -204,10 +204,10 @@ describe('toFormPartial', () => {
         expect(result.males).toBe(3);
         expect(result.females).toBe(5);
         expect(result.juveniles).toBe(6);
-        // Fields without matching specimens are explicitly set to null
-        expect(result.subadultMales).toBeNull();
-        expect(result.subadultFemales).toBeNull();
-        expect(result.adults).toBeNull();
+        // Fields without matching specimens are omitted (reset fills from defaultValues)
+        expect(result.subadultMales).toBeUndefined();
+        expect(result.subadultFemales).toBeUndefined();
+        expect(result.adults).toBeUndefined();
     });
 
     it('maps all six specimen types', () => {
@@ -233,16 +233,16 @@ describe('toFormPartial', () => {
         expect(result.juveniles).toBe(6);
     });
 
-    it('handles null specimens by setting all count fields to null', () => {
+    it('handles null specimens by omitting all count fields', () => {
         const record = { ...baseRecord, specimens: null };
         const result = toFormPartial(record);
 
-        expect(result.males).toBeNull();
-        expect(result.females).toBeNull();
-        expect(result.subadultMales).toBeNull();
-        expect(result.subadultFemales).toBeNull();
-        expect(result.adults).toBeNull();
-        expect(result.juveniles).toBeNull();
+        expect(result.males).toBeUndefined();
+        expect(result.females).toBeUndefined();
+        expect(result.subadultMales).toBeUndefined();
+        expect(result.subadultFemales).toBeUndefined();
+        expect(result.adults).toBeUndefined();
+        expect(result.juveniles).toBeUndefined();
     });
 
     it('preserves quantity_type', () => {
@@ -252,11 +252,11 @@ describe('toFormPartial', () => {
         expect(result.quantity_type).toBe('individuals');
     });
 
-    it('sets quantity_type to null when missing', () => {
+    it('omits quantity_type when null', () => {
         const record = { ...baseRecord, quantity_type: null };
         const result = toFormPartial(record);
 
-        expect(result.quantity_type).toBeNull();
+        expect(result.quantity_type).toBeUndefined();
     });
 
     it('includes required blocking fields', () => {
@@ -324,19 +324,7 @@ describe('toFormPartial', () => {
 
         const result = toFormPartial(empty);
 
-        // Required string fields default to empty string, not null
-        expect(result.country).toBe('');
-        expect(result.region).toBe('');
-        expect(result.verbatim_date).toBe('');
-        expect(result.sampling_protocol).toBe('');
-        expect(result.recorded_by).toBe('');
-        expect(result.family).toBe('');
-        expect(result.genus).toBe('');
-        expect(result.species).toBe('');
-        // Numeric fields default to 0
-        expect(result.latitude).toBe(0);
-        expect(result.longitude).toBe(0);
-        // Nullable fields default to null
-        expect(result.quantity_type).toBeNull();
+        // All nulls are omitted — reset fills from defaultValues
+        expect(Object.keys(result)).toHaveLength(0);
     });
 });

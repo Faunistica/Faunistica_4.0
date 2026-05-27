@@ -91,7 +91,11 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         Пространственная локализация
                     </CardTitle>
                 </div>
-                <SavedPresetSelect type="location" publ_id={publ_id} activeRecordId={activeRecordId} />
+                <SavedPresetSelect
+                    type="location"
+                    publ_id={publ_id}
+                    activeRecordId={activeRecordId}
+                />
             </CardHeader>
 
             <CardContent className="space-y-6">

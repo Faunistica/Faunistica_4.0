@@ -1,6 +1,8 @@
 import type { RecordData, RecordFull, FormRecord, Specimen } from '@/types/api.dto';
 import type { QuantityField } from '@/types/forms';
 
+const NULLISH_NUMBER_FIELDS = new Set<string>(['coordinate_uncertainty', 'sample_size_value']);
+
 const SPECIMEN_FIELD_MAP: Array<{
     sex: Specimen['sex'];
     life_stage: Specimen['life_stage'];
@@ -77,12 +79,12 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
     const d = draft as Record<string, unknown>;
     for (const key of fieldsToCopy) {
         const val = d[key];
-        if (val !== undefined) {
-            if ((key === 'latitude' || key === 'longitude') && typeof val === 'number') {
-                Object.assign(data, { [key]: String(val) });
-            } else {
-                Object.assign(data, { [key]: val });
-            }
+        if (val === undefined) continue;
+        if (NULLISH_NUMBER_FIELDS.has(key) && val === 0) continue;
+        if ((key === 'latitude' || key === 'longitude') && typeof val === 'number') {
+            Object.assign(data, { [key]: String(val) });
+        } else {
+            Object.assign(data, { [key]: val });
         }
     }
     const specimens: Specimen[] = [];
@@ -107,19 +109,6 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
     }
     return data;
 };
-
-const REQUIRED_STRING_FIELDS = new Set([
-    'country',
-    'region',
-    'district',
-    'locality',
-    'verbatim_date',
-    'sampling_protocol',
-    'recorded_by',
-    'family',
-    'genus',
-    'species',
-]);
 
 export function toFormPartial(record: RecordFull): Partial<FormRecord> {
     const result: Record<string, unknown> = {};
@@ -162,19 +151,16 @@ export function toFormPartial(record: RecordFull): Partial<FormRecord> {
     ];
     for (const key of keys) {
         const val = record[key];
-        if (key === 'latitude' || key === 'longitude') {
-            result[key] = val != null ? Number(val) : 0;
-        } else if (REQUIRED_STRING_FIELDS.has(key)) {
-            result[key] = val ?? '';
-        } else {
-            result[key] = val ?? null;
-        }
+        if (val == null) continue;
+        result[key] = key === 'latitude' || key === 'longitude' ? Number(val) : val;
     }
     for (const mapping of SPECIMEN_FIELD_MAP) {
         const spec = record.specimens?.find(
             (s) => s.sex === mapping.sex && s.life_stage === mapping.life_stage,
         );
-        result[mapping.formField] = spec?.count ?? null;
+        if (spec?.count != null) {
+            result[mapping.formField] = spec.count;
+        }
     }
     return result as Partial<FormRecord>;
 }

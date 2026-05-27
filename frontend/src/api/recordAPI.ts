@@ -54,7 +54,10 @@ export const recordAPI = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            onQueryStarted: async ({ record_id, publ_id, user_id }, { dispatch, queryFulfilled }) => {
+            onQueryStarted: async (
+                { record_id, publ_id, user_id },
+                { dispatch, queryFulfilled },
+            ) => {
                 try {
                     const { data } = await queryFulfilled;
                     if (data.record) {
