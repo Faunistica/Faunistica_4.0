@@ -33,6 +33,8 @@ export default defineConfig({
         ...betterTailwindcss.configs.recommended.rules,
         'typescript/no-explicit-any': 'warn',
         'typescript/no-empty-object-type': 'warn',
+        'typescript/no-misused-promises': 'error',
+        'typescript/no-unsafe-assignment': 'error',
         'react/react-in-jsx-scope': 'off',
         'react-hooks-js/refs': 'warn',
         'react-hooks-js/set-state-in-effect': 'off',
@@ -46,6 +48,9 @@ export default defineConfig({
             files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', '**/tests/**'],
             rules: {
                 'typescript/no-unsafe-type-assertion': 'off',
+                'typescript/no-unsafe-assignment': 'off',
+                'typescript/no-misused-promises': 'off',
+                'typescript/strict-void-return': 'off',
             },
         },
     ],
