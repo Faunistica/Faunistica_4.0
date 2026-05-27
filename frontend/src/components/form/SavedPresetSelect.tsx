@@ -102,9 +102,13 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
         for (const f of fields) {
             const val = source[f];
             if (val == null) continue;
-            setValue(f as FieldPath<FormRecord>, f === 'latitude' || f === 'longitude' ? Number(val) : val, {
-                shouldDirty: true,
-            });
+            setValue(
+                f as FieldPath<FormRecord>,
+                f === 'latitude' || f === 'longitude' ? Number(val) : val,
+                {
+                    shouldDirty: true,
+                },
+            );
         }
     };
 

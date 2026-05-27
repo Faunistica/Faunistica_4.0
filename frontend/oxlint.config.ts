@@ -36,6 +36,7 @@ export default defineConfig({
         'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
         // TODO: turn on later
         'better-tailwindcss/enforce-canonical-classes': 'off',
+        'import/no-unassigned-import': ['warn', { allow: ['**/*.css'] }],
     },
     overrides: [
         {

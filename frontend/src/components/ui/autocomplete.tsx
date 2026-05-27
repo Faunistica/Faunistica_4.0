@@ -14,6 +14,7 @@ type AutocompleteProps = OverrideProps<
         onSelect?: (value: string) => void;
         onSearch: (text: string) => void;
         minChars?: number;
+        blurOnSelect?: boolean;
     }
 >;
 
@@ -29,6 +30,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
     isLoading = false,
     className,
     minChars = 2,
+    blurOnSelect = false,
     onBlur: onBlurProp,
     ref: refProp,
     ...props
@@ -89,9 +91,13 @@ const Autocomplete: FC<AutocompleteProps> = ({
                 inputRef.current.value = item;
             }
             setOpen(false);
-            inputRef.current?.focus();
+            if (blurOnSelect) {
+                inputRef.current?.blur();
+            } else {
+                inputRef.current?.focus();
+            }
         },
-        [onSelect],
+        [onSelect, blurOnSelect],
     );
 
     const handleKeyDown = useCallback(
@@ -113,9 +119,10 @@ const Autocomplete: FC<AutocompleteProps> = ({
     );
 
     return (
-        <div ref={wrapperRef} className={cn('relative', className)}>
+        <div ref={wrapperRef} className="relative">
             <div className="relative">
                 <Input
+                    className={className}
                     onChange={handleInputChange}
                     onFocus={() => {
                         if (suggestions.length > 0) {
