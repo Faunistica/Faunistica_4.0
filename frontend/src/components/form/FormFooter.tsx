@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     AlertDialog,
@@ -45,6 +45,8 @@ const Footer: FC<FooterProps> = ({
 
     const mobile = useIsMobile();
 
+    const lastScrollDownY = useRef(0);
+
     const { scrollY } = useScroll();
 
     useMotionValueEvent(scrollY, 'change', (latest) => {
@@ -53,30 +55,40 @@ const Footer: FC<FooterProps> = ({
             return;
         }
 
-        const previous = scrollY.getPrevious() ?? 0;
-        const scrollHeight = document.documentElement.scrollHeight;
-        const clientHeight = window.innerHeight;
-        const isAtBottom = scrollHeight - clientHeight - latest <= 20;
+        const prev = scrollY.getPrevious() ?? 0;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        const distFromBottom = maxScroll - latest;
+        const isNearTop = latest <= 10;
+        const isNearBottom = distFromBottom <= 80;
+        const scrollingDown = latest > prev;
 
-        if (isAtBottom || latest <= 10) {
+        if (isNearTop || isNearBottom) {
             setIsHidden(false);
-        } else if (latest > previous && latest > 50) {
+            return;
+        }
+
+        if (scrollingDown && latest > 50) {
             setIsHidden(true);
-        } else if (latest < previous) {
+            lastScrollDownY.current = latest;
+            return;
+        }
+
+        if (isHidden && !scrollingDown && latest < lastScrollDownY.current - 30) {
             setIsHidden(false);
         }
     });
 
-    const shouldAnimate = ENABLE_MOTION_ON_DESKTOP ? isHidden : mobile && isHidden;
+    const animateMotion = ENABLE_MOTION_ON_DESKTOP || mobile;
 
     return (
         <>
             <motion.footer
                 variants={{
-                    visible: { y: 0, opacity: 1 },
-                    hidden: { y: '100%', opacity: 0 },
+                    visible: { y: 0 },
+                    hidden: { y: '100%' },
                 }}
-                animate={shouldAnimate ? 'hidden' : 'visible'}
+                animate={animateMotion && isHidden ? 'hidden' : 'visible'}
+                inert={isHidden}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
                 className="fixed inset-x-0 bottom-0 z-90 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10"
             >
