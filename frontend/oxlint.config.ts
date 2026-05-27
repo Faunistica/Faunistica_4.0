@@ -15,6 +15,10 @@ export default defineConfig({
             name: 'better-tailwindcss',
             specifier: 'eslint-plugin-better-tailwindcss',
         },
+        {
+            name: 'react-compiler-js',
+            specifier: 'eslint-plugin-react-compiler',
+        },
     ],
     settings: {
         'better-tailwindcss': {
@@ -33,6 +37,7 @@ export default defineConfig({
         'react-hooks-js/refs': 'warn',
         'react-hooks-js/set-state-in-effect': 'off',
         'react-hooks-js/set-state-in-render': 'error',
+        'react-compiler-js/react-compiler': 'error',
         'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
         'import/no-unassigned-import': ['warn', { allow: ['**/*.css'] }],
     },

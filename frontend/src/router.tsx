@@ -12,21 +12,6 @@ import { store } from './store/store';
 import LoadingScreen from './components/LoadingScreen';
 import Layout from './layout/Layout';
 
-import Landing from './pages/Landing';
-import AuthLayout from './pages/Auth';
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
-import TelegramAuth from './pages/Auth/Telegram';
-import Recovery from './pages/Auth/Recovery';
-import Dashboard from './pages/Dashboard';
-import FormFilling from './pages/FormFilling';
-import Instructions from './pages/Instructions';
-import Statistics from './pages/Statistics';
-import Support from './pages/Support';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import Onboarding from './pages/Onboarding';
-
 import { Toaster } from 'sonner';
 
 function NavigationWrapper() {
@@ -79,33 +64,62 @@ export const routes: RouteObject[] = [
                     {
                         index: true,
                         loader: requireGuest,
-                        element: <Landing />,
+                        lazy: () =>
+                            import('./pages/Landing').then((m) => ({ Component: m.default })),
                         handle: { isLanding: true, isNavigateEnabled: true },
                     },
 
                     {
                         path: 'privacy-policy',
-                        element: <PrivacyPolicy />,
+                        lazy: () =>
+                            import('./pages/PrivacyPolicy').then((m) => ({ Component: m.default })),
                     },
 
                     {
                         path: 'terms-of-service',
-                        element: <TermsOfService />,
+                        lazy: () =>
+                            import('./pages/TermsOfService').then((m) => ({
+                                Component: m.default,
+                            })),
                     },
 
                     {
                         path: 'auth',
                         loader: requireGuest,
-                        element: <AuthLayout />,
+                        lazy: () => import('./pages/Auth').then((m) => ({ Component: m.default })),
                         children: [
                             {
                                 index: true,
                                 element: <Navigate to="login" replace />,
                             },
-                            { path: 'login', element: <Login /> },
-                            { path: 'register', element: <Register /> },
-                            { path: 'telegram', element: <TelegramAuth /> },
-                            { path: 'recovery', element: <Recovery /> },
+                            {
+                                path: 'login',
+                                lazy: () =>
+                                    import('./pages/Auth/Login').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'register',
+                                lazy: () =>
+                                    import('./pages/Auth/Register').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'telegram',
+                                lazy: () =>
+                                    import('./pages/Auth/Telegram').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'recovery',
+                                lazy: () =>
+                                    import('./pages/Auth/Recovery').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
                         ],
                     },
 
@@ -113,20 +127,50 @@ export const routes: RouteObject[] = [
                         loader: requireAuth,
                         handle: { isNavigateEnabled: true },
                         children: [
-                            { path: 'dashboard', element: <Dashboard /> },
+                            {
+                                path: 'dashboard',
+                                lazy: () =>
+                                    import('./pages/Dashboard').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
                             {
                                 path: 'onboarding',
-                                element: <Onboarding />,
+                                lazy: () =>
+                                    import('./pages/Onboarding').then((m) => ({
+                                        Component: m.default,
+                                    })),
                                 handle: { isNavigateEnabled: false },
                             },
                             {
                                 path: 'publication/:id',
-                                element: <FormFilling />,
+                                lazy: () =>
+                                    import('./pages/FormFilling').then((m) => ({
+                                        Component: m.default,
+                                    })),
                                 handle: { isSidebarEnabled: true },
                             },
-                            { path: 'instructions', element: <Instructions /> },
-                            { path: 'support', element: <Support /> },
-                            { path: 'statistics', element: <Statistics /> },
+                            {
+                                path: 'instructions',
+                                lazy: () =>
+                                    import('./pages/Instructions').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'support',
+                                lazy: () =>
+                                    import('./pages/Support').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'statistics',
+                                lazy: () =>
+                                    import('./pages/Statistics').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
                         ],
                     },
                 ],
