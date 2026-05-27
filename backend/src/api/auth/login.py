@@ -45,9 +45,7 @@ async def login(
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if result.new_hash:
-        await UserService(session).update_user_data(
-            user.user_id, hash=result.new_hash
-        )
+        await UserService(session).update_user_data(user.user_id, hash=result.new_hash)
 
     if UserService.is_password_expired(user):
         logger.info("Password expired for user: %s", data.username)

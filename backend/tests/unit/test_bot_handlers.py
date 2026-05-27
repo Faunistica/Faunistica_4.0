@@ -71,7 +71,9 @@ class TestRegisterCommand:
             mock_user_service.start_registration.assert_called_once_with(12345)
             mock_state.set_state.assert_called_once()
 
-    async def test_register_existing_completed(self, mock_message, mock_state, mock_bot):
+    async def test_register_existing_completed(
+        self, mock_message, mock_state, mock_bot
+    ):
         user = MagicMock()
         user.reg_stat = MagicMock()
         user.reg_stat.value = "completed"

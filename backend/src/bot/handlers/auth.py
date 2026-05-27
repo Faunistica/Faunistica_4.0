@@ -72,9 +72,7 @@ async def get_code(message: Message, bot: Bot) -> None:
                 disable_web_page_preview=True,
             )
 
-        await user_service.set_state(
-            message.from_user.id, UserState.REG_COMPLETED
-        )
+        await user_service.set_state(message.from_user.id, UserState.REG_COMPLETED)
         await action_service.log_bot_auth(
             message.from_user.id, status="success", ip=None
         )

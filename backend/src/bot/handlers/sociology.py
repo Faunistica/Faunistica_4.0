@@ -64,9 +64,7 @@ async def _progress_survey(
             await message.answer(_SURVEY_QUESTIONS[next_field])
             return
 
-        await user_service.update_user_data(
-            user_id, reg_stat=UserState.REG_COMPLETED
-        )
+        await user_service.update_user_data(user_id, reg_stat=UserState.REG_COMPLETED)
         await state.clear()
 
     await message.answer(Messages.sociology_completed())

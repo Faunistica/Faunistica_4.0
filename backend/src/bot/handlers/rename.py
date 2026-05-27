@@ -32,9 +32,7 @@ async def rename_start(message: Message, state: FSMContext, bot: Bot) -> None:
             await message.answer(res.error)
             return
 
-        await user_service.set_state(
-            message.from_user.id, UserState.RENAME
-        )
+        await user_service.set_state(message.from_user.id, UserState.RENAME)
         await state.set_state(RenameStates.waiting_for_new_name)
 
 
