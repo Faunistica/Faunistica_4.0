@@ -22,9 +22,10 @@ import {
     useDeleteRecordMutation,
 } from '@/api/recordAPI';
 import { useAppDispatch, useAppSelector } from '@/store/store';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 export const AUTO_SAVE_DELAY = 2000;
-const SHOULD_AUTO_SAVE = !import.meta.env.VITE_DISABLE_AUTO_SAVE;
+const SHOULD_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE !== 'true';
 
 export type RecordFormPhase =
     | { phase: 'idle' }
@@ -81,11 +82,38 @@ export function RecordFormProvider({
 
     const activeRecordIdRef = useRef(activeRecordId);
     const statusRef = useRef(status);
-    const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const lastSnapshotRef = useRef<string>('');
     const lastKnownRef = useRef<{ id: string; updatedAt: string } | null>(null);
     const methodsRef = useRef(methods);
     const pendingSyncRef = useRef(false);
+
+    const { fn: debouncedAutoSave, cancel: cancelPendingAutoSave } = useDebouncedCallback(
+        async () => {
+            const currentValues = methods.getValues();
+            const currentSnapshot = JSON.stringify(currentValues);
+            if (currentSnapshot === lastSnapshotRef.current) return;
+
+            setPhase({ phase: 'saving', source: 'auto' });
+            try {
+                const payload = draftToRecordData(currentValues);
+                const response = await editRecord({
+                    record_id: activeRecordIdRef.current!,
+                    data: payload,
+                    publ_id,
+                }).unwrap();
+                lastSnapshotRef.current = currentSnapshot;
+                lastKnownRef.current = {
+                    id: activeRecordIdRef.current!,
+                    updatedAt: response.record.updated_at,
+                };
+                setLastSavedTime(new Date());
+                setPhase({ phase: 'idle' });
+            } catch {
+                setPhase({ phase: 'idle' });
+            }
+        },
+        autoSaveDelay,
+    );
 
     useEffect(() => {
         activeRecordIdRef.current = activeRecordId;
@@ -177,53 +205,20 @@ export function RecordFormProvider({
         }
     }, []);
 
-    const cancelPendingAutoSave = useCallback(() => {
-        if (autoSaveTimerRef.current) {
-            clearTimeout(autoSaveTimerRef.current);
-            autoSaveTimerRef.current = undefined;
-        }
-    }, []);
-
     useEffect(() => {
         if (!SHOULD_AUTO_SAVE) return () => {};
 
-        const subscription = methods.watch((_value, { type }) => {
-            if (type !== 'change') return;
+        const subscription = methods.watch(() => {
             if (statusRef.current.phase === 'saving') return;
 
-            cancelPendingAutoSave();
-
-            autoSaveTimerRef.current = setTimeout(async () => {
-                const currentValues = methods.getValues();
-                const currentSnapshot = JSON.stringify(currentValues);
-                if (currentSnapshot === lastSnapshotRef.current) return;
-
-                setPhase({ phase: 'saving', source: 'auto' });
-                try {
-                    const payload = draftToRecordData(currentValues);
-                    const response = await editRecord({
-                        record_id: activeRecordIdRef.current!,
-                        data: payload,
-                        publ_id,
-                    }).unwrap();
-                    lastSnapshotRef.current = currentSnapshot;
-                    lastKnownRef.current = {
-                        id: activeRecordIdRef.current!,
-                        updatedAt: response.record.updated_at,
-                    };
-                    setLastSavedTime(new Date());
-                    setPhase({ phase: 'idle' });
-                } catch {
-                    setPhase({ phase: 'idle' });
-                }
-            }, autoSaveDelay);
+            debouncedAutoSave();
         });
 
         return () => {
             subscription.unsubscribe();
             cancelPendingAutoSave();
         };
-    }, [methods, cancelPendingAutoSave, editRecord, publ_id, autoSaveDelay, setPhase]);
+    }, [methods, debouncedAutoSave, cancelPendingAutoSave]);
 
     const performSave = useCallback(
         async (

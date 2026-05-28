@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, act, waitFor } from '@testing-library/react';
+import { render, act, waitFor, renderHook } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { RecordFormProvider, useRecordFormContext } from '@/contexts/RecordFormProvider';
 import type { RecordFormActions, RecordFormState } from '@/contexts/RecordFormProvider';
@@ -117,11 +117,11 @@ function StateDisplay() {
     return <div data-testid="state-display" />;
 }
 
-function TestHarness({ children }: { children: React.ReactNode }) {
+function TestHarness({ children, autoSaveDelay }: { children: React.ReactNode; autoSaveDelay?: number }) {
     const methods = useForm<FormRecord>({ defaultValues: {} });
     testMethodsRef.current = methods;
     return (
-        <RecordFormProvider publ_id={1} methods={methods}>
+        <RecordFormProvider publ_id={1} methods={methods} autoSaveDelay={autoSaveDelay}>
             <FormProvider {...methods}>{children}</FormProvider>
         </RecordFormProvider>
     );
@@ -352,4 +352,91 @@ describe('RecordFormProvider', () => {
 
         expect(testState!.status.phase).toBe('idle');
     });
+
+    it('RHF watch fires on setValue', async () => {
+        const callback = vi.fn();
+        const { result } = renderHook(() => useForm<FormRecord>({ defaultValues: { country: 'RU' } }));
+        result.current.watch(callback);
+        result.current.setValue('country', 'US');
+        await new Promise((r) => setTimeout(r, 10));
+        expect(callback).toHaveBeenCalled();
+    });
+
+    it('RHF watch fires after reset + setValue', async () => {
+        const { result } = renderHook(() => useForm<FormRecord>({ defaultValues: { country: 'RU' } }));
+        const callback = vi.fn();
+        result.current.watch(callback);
+        result.current.reset({ country: 'DE' });
+        await new Promise((r) => setTimeout(r, 10));
+        result.current.setValue('country', 'US');
+        await new Promise((r) => setTimeout(r, 10));
+        expect(callback).toHaveBeenCalled();
+    });
+
+    describe('auto-save', () => {
+        it('auto-saves on form change after debounce delay', async () => {
+            setQueryResult(null, undefined);
+            setQueryResult('rec-1', RECORD_1);
+
+            render(<TestHarness autoSaveDelay={1}><StateDisplay /></TestHarness>);
+            expect(testState!.activeRecordId).toBe('rec-1');
+
+            await act(async () => {
+                testMethodsRef.current!.setValue('country', 'US');
+            });
+
+            await waitFor(() => {
+                expect(mockEditRecord).toHaveBeenCalledWith(
+                    expect.objectContaining({ record_id: 'rec-1' }),
+                );
+            });
+            expect(testState!.status.phase).toBe('idle');
+        });
+
+        it('manual save cancels pending auto-save', async () => {
+            setQueryResult(null, undefined);
+            setQueryResult('rec-1', RECORD_1);
+
+            render(<TestHarness autoSaveDelay={100}><StateDisplay /></TestHarness>);
+            expect(testState!.activeRecordId).toBe('rec-1');
+
+            testMethodsRef.current!.setValue('country', 'US');
+
+            await act(async () => {
+                await testActions!.save();
+            });
+
+            await new Promise((r) => setTimeout(r, 200));
+
+            expect(mockEditRecord).toHaveBeenCalledTimes(1);
+            expect(testState!.status.phase).toBe('idle');
+        });
+
+        it('auto-save fires once with latest values after rapid changes', async () => {
+            setQueryResult(null, undefined);
+            setQueryResult('rec-1', RECORD_1);
+
+            render(<TestHarness autoSaveDelay={50}><StateDisplay /></TestHarness>);
+            expect(testState!.activeRecordId).toBe('rec-1');
+
+            await act(async () => {
+                testMethodsRef.current!.setValue('country', 'US');
+                testMethodsRef.current!.setValue('locality', 'Moscow');
+                testMethodsRef.current!.setValue('country', 'DE');
+            });
+
+            await waitFor(() => {
+                expect(mockEditRecord).toHaveBeenCalledTimes(1);
+            });
+            expect(mockEditRecord).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    record_id: 'rec-1',
+                    data: expect.objectContaining({ country: 'DE', locality: 'Moscow' }),
+                }),
+            );
+            expect(testState!.status.phase).toBe('idle');
+        });
+    });
+
+
 });

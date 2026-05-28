@@ -49,7 +49,7 @@ export function FormAutocomplete({
         }
     }, [field.value]);
 
-    const debouncedSearch = useDebouncedCallback(async (text: string, version: number) => {
+    const { fn: debouncedSearch } = useDebouncedCallback(async (text: string, version: number) => {
         try {
             const result = await searchFn(text);
             if (searchVersionRef.current === version) {
