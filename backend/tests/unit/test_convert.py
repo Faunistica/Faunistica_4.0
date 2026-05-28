@@ -32,13 +32,13 @@ def test_mixed_sexes_mixed_stages_format():
     """Sex column includes lifestage when sexes span multiple stages."""
     specimens = [
         Specimen(sex="male", life_stage="adult", count=3),
-        Specimen(sex="male", life_stage="juvenile", count=1),
+        Specimen(sex="male", life_stage="subadult", count=1),
         Specimen(sex="female", life_stage="adult", count=2),
     ]
     db = specimens_to_db(specimens)
     assert db["quantity"] == 6
-    assert db["sex"] == "3 adult male | 1 juvenile male | 2 adult female"
-    assert db["life_stage"] == "5 adult | 1 juvenile"
+    assert db["sex"] == "3 adult male | 1 subadult male | 2 adult female"
+    assert db["life_stage"] == "5 adult | 1 subadult"
 
 
 def test_life_stage_column_never_has_sex():
@@ -56,7 +56,7 @@ def test_life_stage_column_never_has_sex():
     db = specimens_to_db(
         [
             Specimen(sex="male", life_stage="adult", count=3),
-            Specimen(sex="male", life_stage="juvenile", count=1),
+            Specimen(sex="male", life_stage="subadult", count=1),
             Specimen(sex="female", life_stage="adult", count=2),
         ]
     )
@@ -84,7 +84,7 @@ def test_roundtrip_mixed_sexes_same_stage():
 def test_roundtrip_mixed_sexes_mixed_stages():
     specimens = [
         Specimen(sex="male", life_stage="adult", count=3),
-        Specimen(sex="male", life_stage="juvenile", count=1),
+        Specimen(sex="male", life_stage="subadult", count=1),
         Specimen(sex="female", life_stage="adult", count=2),
     ]
     db = specimens_to_db(specimens)
@@ -104,14 +104,18 @@ def test_roundtrip_with_none_sex():
     assert sorted(result, key=lambda x: x.sex) == sorted(specimens, key=lambda x: x.sex)
 
 
-def test_roundtrip_with_none_lifestage():
+def test_roundtrip_with_none_sex_only():
+    """Test specimens with none sex (adults/juveniles) roundtrip correctly."""
+    # Test adults only (none + adult)
     specimens = [
-        Specimen(sex="male", life_stage="none", count=2),
-        Specimen(sex="female", life_stage="adult", count=3),
+        Specimen(sex="none", life_stage="adult", count=2),
     ]
     db = specimens_to_db(specimens)
     result = specimens_from_db(db["quantity"], db["sex"], db["life_stage"])
-    assert sorted(result, key=lambda x: x.sex) == sorted(specimens, key=lambda x: x.sex)
+    assert len(result) == 1
+    assert result[0].sex == "none"
+    assert result[0].life_stage == "adult"
+    assert result[0].count == 2
 
 
 def test_empty_specimens():

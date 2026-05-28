@@ -125,7 +125,7 @@ RECORDS_DATA: list[dict] = [
         "specimens": [
             Specimen(sex="male", life_stage="adult", count=1),
             Specimen(sex="female", life_stage="adult", count=1),
-            Specimen(sex="male", life_stage="juvenile", count=1),
+            Specimen(sex="male", life_stage="subadult", count=1),
         ],
     },
     # User DEV_TG, Publication 2 — Staphylinidae

@@ -60,18 +60,13 @@ SPECIMEN_HEADER_MAP: dict[
         Literal["adult", "subadult", "juvenile", "none"],
     ],
 ] = {
-    "Male Adult Quantity": ("male", "adult"),
-    "Male Subadult Quantity": ("male", "subadult"),
-    "Male Juvenile Quantity": ("male", "juvenile"),
-    "Male Unknown Quantity": ("male", "none"),
-    "Female Adult Quantity": ("female", "adult"),
-    "Female Subadult Quantity": ("female", "subadult"),
-    "Female Juvenile Quantity": ("female", "juvenile"),
-    "Female Unknown Quantity": ("female", "none"),
-    "Unknown Adult Quantity": ("none", "adult"),
-    "Unknown Subadult Quantity": ("none", "subadult"),
-    "Unknown Juvenile Quantity": ("none", "juvenile"),
-    "Unknown Quantity": ("none", "none"),
+    # Only 6 valid combinations matching frontend specimen fields
+    "Male Adult Quantity": ("male", "adult"),           # males
+    "Male Subadult Quantity": ("male", "subadult"),     # subadultMales
+    "Female Adult Quantity": ("female", "adult"),       # females
+    "Female Subadult Quantity": ("female", "subadult"),  # subadultFemales
+    "Unknown Adult Quantity": ("none", "adult"),        # adults
+    "Unknown Juvenile Quantity": ("none", "juvenile"),  # juveniles
 }
 
 REVERSE_COLUMN_MAPPING: dict[str, str] = {v: k for k, v in COLUMN_MAPPING.items()}
@@ -168,7 +163,7 @@ def _parse_specimen_columns(
     return specimens, errors
 
 
-def _specimens_to_12_columns(
+def _specimens_to_columns(
     specimens: list[Specimen],
 ) -> dict[str, float]:
     result: dict[str, float] = dict.fromkeys(list(SPECIMEN_HEADER_MAP), 0.0)
@@ -282,7 +277,7 @@ def records_to_excel(records: Sequence[RecordFull]) -> bytes:
 
     for record in reversed(records):
         row = [getattr(record, field, None) for field in COLUMN_MAPPING]
-        specimen_vals = _specimens_to_12_columns(record.specimens or [])
+        specimen_vals = _specimens_to_columns(record.specimens or [])
         row.extend(specimen_vals[h] for h in list(SPECIMEN_HEADER_MAP))
         ws.append(row)
 
@@ -303,7 +298,7 @@ def records_to_csv(records: Sequence[RecordFull]) -> str:
             COLUMN_MAPPING[field]: getattr(record, field, None)
             for field in COLUMN_MAPPING
         }
-        specimen_vals = _specimens_to_12_columns(record.specimens or [])
+        specimen_vals = _specimens_to_columns(record.specimens or [])
         for h in list(SPECIMEN_HEADER_MAP):
             row[h] = specimen_vals[h]
         writer.writerow(row)

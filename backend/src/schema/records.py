@@ -1,9 +1,21 @@
 from datetime import datetime
-from typing import TypedDict
+from typing import Literal, TypedDict
 
-from pydantic import UUID4, BaseModel, ConfigDict, Field
+from pydantic import UUID4, BaseModel, ConfigDict, Field, field_validator
 
 from core.enums import RecordType
+
+
+# Valid (sex, life_stage) combinations - only 6 are allowed
+# Matches frontend specimen field mappings in frontend/src/lib/recordUtils.ts
+VALID_SPECIMEN_COMBINATIONS: frozenset[tuple[str, str]] = frozenset({
+    ("male", "adult"),       # males field
+    ("male", "subadult"),    # subadultMales field
+    ("female", "adult"),     # females field
+    ("female", "subadult"),  # subadultFemales field
+    ("none", "adult"),       # adults field
+    ("none", "juvenile"),    # juveniles field
+})
 
 
 class SpecimenDbRow(TypedDict, total=False):
@@ -82,6 +94,27 @@ class RecordData(BaseModel):
     identification_remarks: str | None = Field(default=None, max_length=1000)
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("specimens", mode="before")
+    @classmethod
+    def filter_invalid_specimen_combinations(cls, v: list[Specimen] | None) -> list[Specimen] | None:
+        """Filter out specimens with invalid sex/life_stage combinations.
+
+        Only 6 combinations are valid, matching frontend specimen fields:
+        - male + adult (males)
+        - male + subadult (subadultMales)
+        - female + adult (females)
+        - female + subadult (subadultFemales)
+        - none + adult (adults)
+        - none + juvenile (juveniles)
+        """
+        if v is None:
+            return None
+        filtered = [
+            s for s in v
+            if (s.sex, s.life_stage) in VALID_SPECIMEN_COMBINATIONS
+        ]
+        return filtered if filtered else None
 
 
 class RecordFull(RecordData, RecordMetadata): ...
