@@ -279,52 +279,44 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         )}
 
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            <Controller
-                                control={control}
-                                name="latitude"
-                                render={({ field, fieldState: { invalid, error } }) => (
-                                    <Field data-invalid={invalid}>
-                                        <FieldLabel htmlFor="latitude">Широта (DD)</FieldLabel>
-                                        <Input
-                                            id="latitude"
-                                            type="number"
-                                            step="any"
-                                            readOnly={isArticle && coordFormat !== 'DD'}
-                                            className={
-                                                isArticle && coordFormat !== 'DD'
-                                                    ? 'cursor-not-allowed bg-slate-100'
-                                                    : ''
-                                            }
-                                            aria-invalid={invalid}
-                                            {...field}
-                                        />
-                                        <FieldError errors={[error]} />
-                                    </Field>
-                                )}
-                            />
-                            <Controller
-                                control={control}
-                                name="longitude"
-                                render={({ field, fieldState: { invalid, error } }) => (
-                                    <Field data-invalid={invalid}>
-                                        <FieldLabel htmlFor="longitude">Долгота (DD)</FieldLabel>
-                                        <Input
-                                            id="longitude"
-                                            type="number"
-                                            step="any"
-                                            readOnly={isArticle && coordFormat !== 'DD'}
-                                            className={
-                                                isArticle && coordFormat !== 'DD'
-                                                    ? 'cursor-not-allowed bg-slate-100'
-                                                    : ''
-                                            }
-                                            aria-invalid={invalid}
-                                            {...field}
-                                        />
-                                        <FieldError errors={[error]} />
-                                    </Field>
-                                )}
-                            />
+                            {(!isArticle || coordFormat === 'DD' || !coordFormat) && (
+                                <Controller
+                                    control={control}
+                                    name="latitude"
+                                    render={({ field, fieldState: { invalid, error } }) => (
+                                        <Field data-invalid={invalid}>
+                                            <FieldLabel htmlFor="latitude">Широта (DD)</FieldLabel>
+                                            <Input
+                                                id="latitude"
+                                                type="number"
+                                                step="any"
+                                                aria-invalid={invalid}
+                                                {...field}
+                                            />
+                                            <FieldError errors={[error]} />
+                                        </Field>
+                                    )}
+                                />
+                            )}
+                            {(!isArticle || coordFormat === 'DD' || !coordFormat) && (
+                                <Controller
+                                    control={control}
+                                    name="longitude"
+                                    render={({ field, fieldState: { invalid, error } }) => (
+                                        <Field data-invalid={invalid}>
+                                            <FieldLabel htmlFor="longitude">Долгота (DD)</FieldLabel>
+                                            <Input
+                                                id="longitude"
+                                                type="number"
+                                                step="any"
+                                                aria-invalid={invalid}
+                                                {...field}
+                                            />
+                                            <FieldError errors={[error]} />
+                                        </Field>
+                                    )}
+                                />
+                            )}
                             <Controller
                                 control={control}
                                 name="coordinate_uncertainty"

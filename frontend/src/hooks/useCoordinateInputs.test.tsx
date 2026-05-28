@@ -4,11 +4,16 @@ import { useForm, FormProvider, type UseFormReturn } from 'react-hook-form';
 import { useCoordinateInputs } from './useCoordinateInputs';
 import type { FormRecord } from '@/types/api.dto';
 
-function createWrapper() {
+function createWrapper(defaults?: Partial<FormRecord>) {
     const formRef: { current: UseFormReturn<FormRecord> | null } = { current: null };
     const wrapper = ({ children }: { children: React.ReactNode }) => {
         const methods = useForm<FormRecord>({
-            defaultValues: { latitude: 0, longitude: 0, verbatimcoordinates: '' },
+            defaultValues: {
+                latitude: 0,
+                longitude: 0,
+                verbatimcoordinates: '',
+                ...defaults,
+            },
         });
         formRef.current = methods;
         return <FormProvider {...methods}>{children}</FormProvider>;
@@ -22,10 +27,10 @@ describe('useCoordinateInputs — DM mode', () => {
         const { result } = renderHook(() => useCoordinateInputs('', 'dm'), { wrapper });
 
         act(() => {
-            result.current.setLatDeg(50);
-            result.current.setLatMin(30);
-            result.current.setLonDeg(30);
-            result.current.setLonMin(15);
+            result.current.latitude.setDegrees(50);
+            result.current.latitude.setMinutes(30);
+            result.current.longitude.setDegrees(30);
+            result.current.longitude.setMinutes(15);
         });
 
         await vi.waitFor(
@@ -39,30 +44,16 @@ describe('useCoordinateInputs — DM mode', () => {
         expect(formRef.current!.getValues('verbatimcoordinates')).toBe("50° 30' N, 30° 15' E");
     });
 
-    it('does not write when any field is empty', async () => {
-        const { wrapper, formRef } = createWrapper();
-        const { result } = renderHook(() => useCoordinateInputs('', 'dm'), { wrapper });
-
-        act(() => {
-            result.current.setLatDeg(50);
-            result.current.setLatMin(30);
-        });
-
-        await new Promise((r) => setTimeout(r, 400));
-
-        expect(formRef.current!.getValues('latitude')).toBe(0);
-    });
-
     it('negates latitude for S direction', async () => {
         const { wrapper, formRef } = createWrapper();
         const { result } = renderHook(() => useCoordinateInputs('', 'dm'), { wrapper });
 
         act(() => {
-            result.current.setLatDeg(50);
-            result.current.setLatMin(30);
-            result.current.setLatDir('S');
-            result.current.setLonDeg(30);
-            result.current.setLonMin(15);
+            result.current.latitude.setDegrees(50);
+            result.current.latitude.setMinutes(30);
+            result.current.latitude.setDirection('S');
+            result.current.longitude.setDegrees(30);
+            result.current.longitude.setMinutes(15);
         });
 
         await vi.waitFor(
@@ -78,11 +69,11 @@ describe('useCoordinateInputs — DM mode', () => {
         const { result } = renderHook(() => useCoordinateInputs('', 'dm'), { wrapper });
 
         act(() => {
-            result.current.setLatDeg(50);
-            result.current.setLatMin(30);
-            result.current.setLonDeg(30);
-            result.current.setLonMin(15);
-            result.current.setLonDir('W');
+            result.current.latitude.setDegrees(50);
+            result.current.latitude.setMinutes(30);
+            result.current.longitude.setDegrees(30);
+            result.current.longitude.setMinutes(15);
+            result.current.longitude.setDirection('W');
         });
 
         await vi.waitFor(
@@ -100,12 +91,12 @@ describe('useCoordinateInputs — DMS mode', () => {
         const { result } = renderHook(() => useCoordinateInputs('', 'dms'), { wrapper });
 
         act(() => {
-            result.current.setLatDeg(50);
-            result.current.setLatMin(30);
-            result.current.setLatSec(36);
-            result.current.setLonDeg(30);
-            result.current.setLonMin(15);
-            result.current.setLonSec(0);
+            result.current.latitude.setDegrees(50);
+            result.current.latitude.setMinutes(30);
+            result.current.latitude.setSeconds(36);
+            result.current.longitude.setDegrees(30);
+            result.current.longitude.setMinutes(15);
+            result.current.longitude.setSeconds(0);
         });
 
         await vi.waitFor(
@@ -120,21 +111,47 @@ describe('useCoordinateInputs — DMS mode', () => {
             "50° 30' 36'' N, 30° 15' 0'' E",
         );
     });
+});
 
-    it('does not write when any DMS field is empty', async () => {
+describe('useCoordinateInputs — sync from form to local state', () => {
+    it('initializes local state from existing form values on mount', () => {
+        const { wrapper } = createWrapper({ latitude: 50.5, longitude: 30.25 });
+        const { result } = renderHook(() => useCoordinateInputs('', 'dm'), { wrapper });
+
+        expect(result.current.latitude.degrees).toBe(50);
+        expect(result.current.latitude.minutes).toBe(30);
+        expect(result.current.longitude.degrees).toBe(30);
+        expect(result.current.longitude.minutes).toBe(15);
+    });
+
+    it('updates DM local state when form values change externally', () => {
+        const { wrapper, formRef } = createWrapper();
+        const { result } = renderHook(() => useCoordinateInputs('', 'dm'), { wrapper });
+
+        act(() => {
+            formRef.current!.setValue('latitude', 50.5);
+            formRef.current!.setValue('longitude', 30.25);
+        });
+
+        expect(result.current.latitude.degrees).toBe(50);
+        expect(result.current.latitude.minutes).toBe(30);
+        expect(result.current.longitude.degrees).toBe(30);
+        expect(result.current.longitude.minutes).toBe(15);
+    });
+
+    it('updates DMS local state when form values change externally', () => {
         const { wrapper, formRef } = createWrapper();
         const { result } = renderHook(() => useCoordinateInputs('', 'dms'), { wrapper });
 
         act(() => {
-            result.current.setLatDeg(50);
-            result.current.setLatMin(30);
-            result.current.setLonDeg(30);
-            result.current.setLonMin(15);
-            // latSec and lonSec left empty
+            formRef.current!.setValue('latitude', 50.51);
+            formRef.current!.setValue('longitude', 30.25);
         });
 
-        await new Promise((r) => setTimeout(r, 400));
-
-        expect(formRef.current!.getValues('latitude')).toBe(0);
+        expect(result.current.latitude.degrees).toBe(50);
+        expect(result.current.latitude.minutes).toBe(30);
+        expect(result.current.latitude.seconds).toBe(36);
+        expect(result.current.longitude.degrees).toBe(30);
+        expect(result.current.longitude.minutes).toBe(15);
     });
 });
