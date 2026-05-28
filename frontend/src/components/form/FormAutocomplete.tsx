@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useController, useFormContext } from 'react-hook-form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
-import { useDebouncedCallback } from '@/hooks/useDebounce';
+import { useDebouncedRaceSafe } from '@/hooks/useDebouncedRaceSafe';
 import type { RecordFormKey, RecordForm } from '@/types/forms';
 
 interface FormAutocompleteProps {
@@ -28,7 +28,6 @@ export function FormAutocomplete({
 }: FormAutocompleteProps) {
     const { control, setValue } = useFormContext<RecordForm>();
     const [suggestions, setSuggestions] = useState<string[]>([]);
-    const searchVersionRef = useRef(0);
     const lastCommittedRef = useRef<string | null>(null);
     const {
         field,
@@ -43,29 +42,15 @@ export function FormAutocomplete({
         if (!initializedRef.current && field.value !== undefined) {
             lastCommittedRef.current = field.value ?? null;
             initializedRef.current = true;
-            if (!field.value) {
-                searchVersionRef.current = 0;
-            }
         }
     }, [field.value]);
 
-    const { fn: debouncedSearch } = useDebouncedCallback(async (text: string, version: number) => {
-        try {
-            const result = await searchFn(text);
-            if (searchVersionRef.current === version) {
-                setSuggestions(result);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }, debounceMs);
-
-    const handleSearch = useCallback(
-        (text: string) => {
-            const version = ++searchVersionRef.current;
-            debouncedSearch(text, version);
+    const { fn: handleSearch, cancel: cancelSearch } = useDebouncedRaceSafe(
+        async (text: string, _signal: AbortSignal) => {
+            return await searchFn(text);
         },
-        [debouncedSearch],
+        setSuggestions,
+        debounceMs,
     );
 
     const handleBlur = useCallback(
@@ -93,7 +78,7 @@ export function FormAutocomplete({
                     setValue(name, val);
                     lastCommittedRef.current = val;
                     setSuggestions([]);
-                    searchVersionRef.current = 0;
+                    cancelSearch();
                     onSelectSuggestion?.(val);
                 }}
                 onBlur={handleBlur}

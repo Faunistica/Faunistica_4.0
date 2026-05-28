@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { useDebouncedRaceSafe } from './useDebouncedRaceSafe';
 
 interface SearchResult {
     display_name: string;
@@ -12,57 +13,36 @@ const DEBOUNCE_MS = 500;
 
 function useGeocodingSearch() {
     const [results, setResults] = useState<SearchResult[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const performSearch = useCallback(async (query: string) => {
-        if (query.trim().length < MIN_QUERY_LENGTH) {
-            setResults([]);
-            return;
-        }
-
-        setIsSearching(true);
-        try {
+    const { fn: debouncedFetch, isPending } = useDebouncedRaceSafe(
+        async (query: string, signal: AbortSignal) => {
             const res = await fetch(
                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=ru`,
+                { signal },
             );
             // oxlint-disable-next-line typescript/no-unsafe-assignment
             const data: SearchResult[] = await res.json();
-            setResults(data);
-        } catch (error) {
-            console.error('Geocoding error:', error);
-            setResults([]);
-        } finally {
-            setIsSearching(false);
-        }
-    }, []);
+            return data;
+        },
+        setResults,
+        DEBOUNCE_MS,
+    );
 
     const onSearch = useCallback(
         (text: string) => {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-
             if (text.trim().length < MIN_QUERY_LENGTH) {
                 setResults([]);
                 return;
             }
-
-            debounceRef.current = setTimeout(() => {
-                void performSearch(text);
-            }, DEBOUNCE_MS);
+            debouncedFetch(text);
         },
-        [performSearch],
+        [debouncedFetch],
     );
-
-    useEffect(() => {
-        return () => {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-        };
-    }, []);
 
     return {
         suggestions: results.map((r) => r.display_name),
         resultMap: results,
-        isSearching,
+        isSearching: isPending,
         onSearch,
     };
 }
