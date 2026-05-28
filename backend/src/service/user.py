@@ -47,12 +47,18 @@ REGISTERED_STATES = (
 )
 
 
+def _no_action_service() -> None:
+    return None
+
+
 class UserService:
     def __init__(
         self,
         session: DBSession,
-        bot: Bot | None = None,
-        action_service: Annotated[ActionService, Depends()] | None = None,
+        bot: Annotated[Bot | None, Depends(_no_action_service)] = None,
+        action_service: Annotated[
+            ActionService | None, Depends(_no_action_service)
+        ] = None,
     ) -> None:
         self.session = session
         self.bot = bot
