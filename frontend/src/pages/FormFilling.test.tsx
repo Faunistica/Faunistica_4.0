@@ -91,9 +91,18 @@ const RECORD_FIELDS = {
     occurrence_remarks: null,
 };
 
-const RECORD_1 = { id: 'rec-1', ...RECORD_FIELDS, updated_at: '2024-01-01T00:00:00Z', country: 'RU' };
-const RECORD_2 = { id: 'rec-2', ...RECORD_FIELDS, updated_at: '2024-01-01T00:00:02Z', country: 'DE' };
-
+const RECORD_1 = {
+    id: 'rec-1',
+    ...RECORD_FIELDS,
+    updated_at: '2024-01-01T00:00:00Z',
+    country: 'RU',
+};
+const RECORD_2 = {
+    id: 'rec-2',
+    ...RECORD_FIELDS,
+    updated_at: '2024-01-01T00:00:02Z',
+    country: 'DE',
+};
 
 const queryResults: Record<string, { currentData: typeof RECORD_1 | undefined }> = {};
 function setQueryResult(recordId: string | null, data: typeof RECORD_1 | undefined) {
@@ -108,7 +117,9 @@ function queryResult(recordId: string | null) {
 
 let testState: RecordFormState | null = null;
 let testActions: RecordFormActions | null = null;
-const testMethodsRef: { current: ReturnType<typeof useForm<FormRecord>> | null } = { current: null };
+const testMethodsRef: { current: ReturnType<typeof useForm<FormRecord>> | null } = {
+    current: null,
+};
 
 function StateDisplay() {
     const { state, actions } = useRecordFormContext();
@@ -117,7 +128,13 @@ function StateDisplay() {
     return <div data-testid="state-display" />;
 }
 
-function TestHarness({ children, autoSaveDelay }: { children: React.ReactNode; autoSaveDelay?: number }) {
+function TestHarness({
+    children,
+    autoSaveDelay,
+}: {
+    children: React.ReactNode;
+    autoSaveDelay?: number;
+}) {
     const methods = useForm<FormRecord>({ defaultValues: {} });
     testMethodsRef.current = methods;
     return (
@@ -138,8 +155,8 @@ describe('RecordFormProvider', () => {
 
         mockRecordsListQuery.mockReturnValue({ isLoading: false });
 
-        mockRecordByIdQuery.mockImplementation(
-            ({ record_id }: { record_id: string | null }) => queryResult(record_id),
+        mockRecordByIdQuery.mockImplementation(({ record_id }: { record_id: string | null }) =>
+            queryResult(record_id),
         );
 
         mockEditRecord.mockReturnValue({
@@ -150,7 +167,12 @@ describe('RecordFormProvider', () => {
         });
         mockCreateRecord.mockReturnValue({
             unwrap: () =>
-                Promise.resolve({ id: 'rec-new', ...RECORD_FIELDS, updated_at: '2024-01-01T00:00:00Z', country: null }),
+                Promise.resolve({
+                    id: 'rec-new',
+                    ...RECORD_FIELDS,
+                    updated_at: '2024-01-01T00:00:00Z',
+                    country: null,
+                }),
         });
         mockDeleteRecord.mockReturnValue({
             unwrap: () => Promise.resolve(undefined),
@@ -160,7 +182,11 @@ describe('RecordFormProvider', () => {
     it('shows loading state while list is loading', () => {
         mockRecordsListQuery.mockReturnValue({ isLoading: true });
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         expect(testState!.isInitialLoading).toBe(true);
     });
@@ -169,7 +195,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         expect(testState!.activeRecordId).toBe('rec-1');
     });
@@ -178,7 +208,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         expect(testMethodsRef.current!.getValues('country')).toBe('RU');
     });
@@ -187,7 +221,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         expect(testState!.isInitialLoading).toBe(false);
     });
@@ -196,7 +234,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         expect(testState!.status.phase).toBe('idle');
     });
@@ -206,7 +248,11 @@ describe('RecordFormProvider', () => {
         setQueryResult('rec-1', RECORD_1);
         setQueryResult('rec-2', RECORD_2);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
         expect(testState!.activeRecordId).toBe('rec-1');
 
         act(() => {
@@ -227,7 +273,11 @@ describe('RecordFormProvider', () => {
         setQueryResult('rec-1', RECORD_1);
         setQueryResult('rec-2', RECORD_2);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
         expect(testState!.activeRecordId).toBe('rec-1');
         expect(testMethodsRef.current!.getValues('country')).toBe('RU');
 
@@ -274,7 +324,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
         testMethodsRef.current!.setValue('country', 'DE');
 
         testActions!.switchTo('rec-1');
@@ -288,7 +342,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         await act(() => testActions!.save());
 
@@ -301,7 +359,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         await act(() => testActions!.save());
 
@@ -313,7 +375,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         await act(() => testActions!.submit());
 
@@ -330,13 +396,15 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         await act(() => testActions!.create());
 
-        expect(mockCreateRecord).toHaveBeenCalledWith(
-            expect.objectContaining({ publ_id: 1 }),
-        );
+        expect(mockCreateRecord).toHaveBeenCalledWith(expect.objectContaining({ publ_id: 1 }));
         expect(testState!.activeRecordId).toBe('rec-new');
 
         await waitFor(() => {
@@ -348,7 +416,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
         expect(testState!.activeRecordId).toBe('rec-1');
 
         await act(() => testActions!.deleteRecord('rec-1'));
@@ -367,7 +439,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         await act(() => testActions!.save());
 
@@ -381,7 +457,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         await act(() => testActions!.submit());
 
@@ -395,7 +475,11 @@ describe('RecordFormProvider', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
-        render(<TestHarness><StateDisplay /></TestHarness>);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
 
         await act(() => testActions!.create());
 
@@ -404,7 +488,9 @@ describe('RecordFormProvider', () => {
 
     it('RHF watch fires on setValue', async () => {
         const callback = vi.fn();
-        const { result } = renderHook(() => useForm<FormRecord>({ defaultValues: { country: 'RU' } }));
+        const { result } = renderHook(() =>
+            useForm<FormRecord>({ defaultValues: { country: 'RU' } }),
+        );
         result.current.watch(callback);
         result.current.setValue('country', 'US');
         await new Promise((r) => setTimeout(r, 10));
@@ -412,7 +498,9 @@ describe('RecordFormProvider', () => {
     });
 
     it('RHF watch fires after reset + setValue', async () => {
-        const { result } = renderHook(() => useForm<FormRecord>({ defaultValues: { country: 'RU' } }));
+        const { result } = renderHook(() =>
+            useForm<FormRecord>({ defaultValues: { country: 'RU' } }),
+        );
         const callback = vi.fn();
         result.current.watch(callback);
         result.current.reset({ country: 'DE' });
@@ -427,7 +515,11 @@ describe('RecordFormProvider', () => {
             setQueryResult(null, undefined);
             setQueryResult('rec-1', RECORD_1);
 
-            render(<TestHarness autoSaveDelay={1}><StateDisplay /></TestHarness>);
+            render(
+                <TestHarness autoSaveDelay={1}>
+                    <StateDisplay />
+                </TestHarness>,
+            );
             expect(testState!.activeRecordId).toBe('rec-1');
 
             await act(async () => {
@@ -446,7 +538,11 @@ describe('RecordFormProvider', () => {
             setQueryResult(null, undefined);
             setQueryResult('rec-1', RECORD_1);
 
-            render(<TestHarness autoSaveDelay={100}><StateDisplay /></TestHarness>);
+            render(
+                <TestHarness autoSaveDelay={100}>
+                    <StateDisplay />
+                </TestHarness>,
+            );
             expect(testState!.activeRecordId).toBe('rec-1');
 
             testMethodsRef.current!.setValue('country', 'US');
@@ -465,7 +561,11 @@ describe('RecordFormProvider', () => {
             setQueryResult(null, undefined);
             setQueryResult('rec-1', RECORD_1);
 
-            render(<TestHarness autoSaveDelay={50}><StateDisplay /></TestHarness>);
+            render(
+                <TestHarness autoSaveDelay={50}>
+                    <StateDisplay />
+                </TestHarness>,
+            );
             expect(testState!.activeRecordId).toBe('rec-1');
 
             await act(async () => {
@@ -486,6 +586,4 @@ describe('RecordFormProvider', () => {
             expect(testState!.status.phase).toBe('idle');
         });
     });
-
-
 });

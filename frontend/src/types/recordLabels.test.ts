@@ -69,20 +69,33 @@ describe('locationSummary', () => {
     });
 
     it('includes district when present', () => {
-        const record = makeRecord({ country: 'RU', region: 'Tatarstan', district: 'Zelenodolsky', locality: 'Kazan' });
+        const record = makeRecord({
+            country: 'RU',
+            region: 'Tatarstan',
+            district: 'Zelenodolsky',
+            locality: 'Kazan',
+        });
         expect(locationSummary(record)).toBe('RU, Tatarstan, Zelenodolsky, Kazan');
     });
 });
 
 describe('eventSummary', () => {
     it('joins fields with middle dot', () => {
-        const record = makeRecord({ verbatim_date: '2024-01-15', habitat: 'Forest edge', recorded_by: 'Ivanov' });
+        const record = makeRecord({
+            verbatim_date: '2024-01-15',
+            habitat: 'Forest edge',
+            recorded_by: 'Ivanov',
+        });
         expect(eventSummary(record)).toBe('2024-01-15 · Forest edge · Ivanov');
     });
 
     it('truncates habitat to 30 characters', () => {
         const longHabitat = 'A'.repeat(50);
-        const record = makeRecord({ verbatim_date: '2024-01-15', habitat: longHabitat, recorded_by: 'Ivanov' });
+        const record = makeRecord({
+            verbatim_date: '2024-01-15',
+            habitat: longHabitat,
+            recorded_by: 'Ivanov',
+        });
         expect(eventSummary(record)).toBe('2024-01-15 · AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA · Ivanov');
         expect(eventSummary(record)).toHaveLength(52); // 10 + 3 + 30 + 3 + 6
     });

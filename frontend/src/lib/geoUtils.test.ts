@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { convertDMToDD, convertDMSToDD, convertDDToDM, convertDDToDMS, formatDMVerbatim, formatDMSVerbatim } from './geoUtils';
+import {
+    convertDMToDD,
+    convertDMSToDD,
+    convertDDToDM,
+    convertDDToDMS,
+    formatDMVerbatim,
+    formatDMSVerbatim,
+} from './geoUtils';
 
 describe('convertDMToDD', () => {
     it('converts N hemisphere', () => {
@@ -49,7 +56,9 @@ describe('formatDMVerbatim', () => {
 
 describe('formatDMSVerbatim', () => {
     it('formats DMS coordinates', () => {
-        expect(formatDMSVerbatim(50, 30, 36, 'N', 30, 15, 0, 'E')).toBe("50° 30' 36'' N, 30° 15' 0'' E");
+        expect(formatDMSVerbatim(50, 30, 36, 'N', 30, 15, 0, 'E')).toBe(
+            "50° 30' 36'' N, 30° 15' 0'' E",
+        );
     });
 });
 
@@ -77,14 +86,29 @@ describe('convertDDToDM', () => {
 
 describe('convertDDToDMS', () => {
     it('converts positive lat to N', () => {
-        expect(convertDDToDMS(50.51, true)).toEqual({ degrees: 50, minutes: 30, seconds: 36, direction: 'N' });
+        expect(convertDDToDMS(50.51, true)).toEqual({
+            degrees: 50,
+            minutes: 30,
+            seconds: 36,
+            direction: 'N',
+        });
     });
 
     it('converts negative lat to S', () => {
-        expect(convertDDToDMS(-50.51, true)).toEqual({ degrees: 50, minutes: 30, seconds: 36, direction: 'S' });
+        expect(convertDDToDMS(-50.51, true)).toEqual({
+            degrees: 50,
+            minutes: 30,
+            seconds: 36,
+            direction: 'S',
+        });
     });
 
     it('handles zero', () => {
-        expect(convertDDToDMS(0, true)).toEqual({ degrees: 0, minutes: 0, seconds: 0, direction: 'N' });
+        expect(convertDDToDMS(0, true)).toEqual({
+            degrees: 0,
+            minutes: 0,
+            seconds: 0,
+            direction: 'N',
+        });
     });
 });

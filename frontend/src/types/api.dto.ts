@@ -1,134 +1,134 @@
 // Re-export domain models for backward compatibility
 export type {
-  Specimen,
-  RecordData,
-  RecordFull,
-  RuleCategory,
-  RecordValidationError,
-  Publication,
-  UserInfo,
-  ImportError,
-} from "./domain";
+    Specimen,
+    RecordData,
+    RecordFull,
+    RuleCategory,
+    RecordValidationError,
+    Publication,
+    UserInfo,
+    ImportError,
+} from './domain';
 
-import type { RecordFull, RecordData, UserInfo, ImportError } from "./domain";
+import type { RecordFull, RecordData, UserInfo, ImportError } from './domain';
 
 export interface ApiErrorBody {
-  // TODO: type detail properly as FastAPI validation errors (PydanticValidationError[])
-  detail?: string | unknown[];
-  message?: string;
-  error?: string;
+    // TODO: type detail properly as FastAPI validation errors (PydanticValidationError[])
+    detail?: string | unknown[];
+    message?: string;
+    error?: string;
 }
 
 export interface LoginRequest {
-  username: string;
-  password: string;
+    username: string;
+    password: string;
 }
 
 export type UserLoginResponse = UserInfo;
 
 export interface UpdateRecordResponse {
-  record: RecordFull;
-  errors: import("./domain").RecordValidationError[];
+    record: RecordFull;
+    errors: import('./domain').RecordValidationError[];
 }
 
 export interface CreateRecordRequest {
-  publ_id: number;
+    publ_id: number;
 }
 
 export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  page_size: number;
-  pages: number;
+    items: T[];
+    total: number;
+    page: number;
+    page_size: number;
+    pages: number;
 }
 
-export type { RecordForm as FormRecord } from "@/types/forms";
+export type { RecordForm as FormRecord } from '@/types/forms';
 
 export interface SuggestTaxonRequest {
-  field: "family" | "genus" | "species";
-  query: string;
-  family?: string | null;
-  genus?: string | null;
+    field: 'family' | 'genus' | 'species';
+    query: string;
+    family?: string | null;
+    genus?: string | null;
 }
 
 export interface SuggestTaxonResponse {
-  suggestions: string[] | null;
+    suggestions: string[] | null;
 }
 
 export interface AutofillTaxonRequest {
-  field: "family" | "genus" | "species";
-  text: string;
+    field: 'family' | 'genus' | 'species';
+    text: string;
 }
 
 export interface AutofillTaxonResponse {
-  family?: string | null;
-  genus?: string | null;
+    family?: string | null;
+    genus?: string | null;
 }
 
 export interface RecordIdRequest {
-  record_id: string;
+    record_id: string;
 }
 
 export interface RecordListRequest {
-  publ_id?: number;
-  user_id?: number;
-  page?: number;
-  page_size?: number;
-  sort?: string;
+    publ_id?: number;
+    user_id?: number;
+    page?: number;
+    page_size?: number;
+    sort?: string;
 }
 
 export interface EditRecordRequest {
-  record_id: string;
-  data: RecordData;
-  publ_id?: number;
-  user_id?: number;
+    record_id: string;
+    data: RecordData;
+    publ_id?: number;
+    user_id?: number;
 }
 
 export interface GetLocationRequest {
-  degrees_n: number;
-  minutes_n?: number | null;
-  seconds_n?: number | null;
-  degrees_e: number;
-  minutes_e?: number | null;
-  seconds_e?: number | null;
+    degrees_n: number;
+    minutes_n?: number | null;
+    seconds_n?: number | null;
+    degrees_e: number;
+    minutes_e?: number | null;
+    seconds_e?: number | null;
 }
 
 export interface GetLocationResponse {
-  country?: string | null;
-  region?: string | null;
-  district?: string | null;
+    country?: string | null;
+    region?: string | null;
+    district?: string | null;
 }
 
 export interface GeoSearchRequest {
-  field: string;
-  query: string;
-  region?: string | null;
+    field: string;
+    query: string;
+    region?: string | null;
 }
 
 export interface GeoSearchResponse {
-  suggestions: string[] | null;
+    suggestions: string[] | null;
 }
 
 export interface UploadExcelResponse {
-  imported: number;
-  failed: number;
-  errors: ImportError[];
+    imported: number;
+    failed: number;
+    errors: ImportError[];
 }
 
 export interface SupportRequest {
-  link: string;
-  user_name: string;
-  text: string;
-  issue_type: string;
+    link: string;
+    user_name: string;
+    text: string;
+    issue_type: string;
 }
 
 export interface StatisticsResponse {
-  total_volunteers: number;
-  total_records: number;
-  species_count: number;
-  processed_publications_count: number;
-  most_common_family: string | null;
-  most_common_genus: string | null;
-  most_common_species: string | null;
+    total_volunteers: number;
+    total_records: number;
+    species_count: number;
+    processed_publications_count: number;
+    most_common_family: string | null;
+    most_common_genus: string | null;
+    most_common_species: string | null;
 }
