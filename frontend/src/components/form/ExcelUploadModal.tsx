@@ -11,6 +11,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useUploadExcelMutation, useDownloadRecordsMutation } from '@/api/recordAPI';
+import { getErrorMessage } from '@/utils/error';
 
 interface Props {
     open: boolean;
@@ -88,10 +89,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
         const { data: result, error } = await uploadExcel(formData);
 
         if (error) {
-            const message =
-                error && 'status' in error
-                    ? (error.data?.detail ?? error.data?.message ?? 'Неизвестная ошибка')
-                    : (error?.message ?? 'Неизвестная ошибка');
+            const message = getErrorMessage(error);
             toast.error('Ошибка при загрузке файла', { description: message });
         } else if (result) {
             toast.success(`Загружено ${result.imported} записей`, { duration: 5000 });

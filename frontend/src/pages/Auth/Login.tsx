@@ -2,6 +2,7 @@ import { type FC } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Send } from 'lucide-react';
+import { getErrorMessage } from '@/utils/error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,13 +39,9 @@ const Login: FC = () => {
         }
     };
 
-    const apiErrorMessage =
-        error && 'status' in error
-            ? ((error.data as { detail?: string } | undefined)?.detail ??
-              'Ошибка входа. Пожалуйста, попробуйте снова.')
-            : error
-              ? 'Ошибка сети. Пожалуйста, проверьте ваше подключение.'
-              : null;
+    const apiErrorMessage = getErrorMessage(error, {
+        api: 'Ошибка входа. Пожалуйста, попробуйте снова.',
+    });
 
     return (
         <div className="mx-auto w-full max-w-[400px] space-y-6">

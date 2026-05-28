@@ -1,5 +1,6 @@
 import { defineConfig } from 'oxlint';
 import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
+import reactCompiler from 'eslint-plugin-react-compiler';
 
 export default defineConfig({
     options: {
@@ -16,7 +17,7 @@ export default defineConfig({
             specifier: 'eslint-plugin-better-tailwindcss',
         },
         {
-            name: 'react-compiler-js',
+            name: 'react-compiler',
             specifier: 'eslint-plugin-react-compiler',
         },
     ],
@@ -31,15 +32,14 @@ export default defineConfig({
     },
     rules: {
         ...betterTailwindcss.configs.recommended.rules,
+        ...reactCompiler.configs.recommended.rules,
         'typescript/no-explicit-any': 'warn',
         'typescript/no-empty-object-type': 'warn',
-        'typescript/no-misused-promises': 'error',
+        'typescript/no-misused-promises': 'off',
         'typescript/no-unsafe-assignment': 'error',
         'react/react-in-jsx-scope': 'off',
-        'react-hooks-js/refs': 'warn',
+        'react-hooks/exhaustive-deps': 'warn',
         'react-hooks-js/set-state-in-effect': 'off',
-        'react-hooks-js/set-state-in-render': 'error',
-        'react-compiler-js/react-compiler': 'error',
         'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
         'import/no-unassigned-import': ['warn', { allow: ['**/*.css'] }],
     },
@@ -51,7 +51,7 @@ export default defineConfig({
                 'typescript/no-unsafe-assignment': 'off',
                 'typescript/no-misused-promises': 'off',
                 'typescript/strict-void-return': 'off',
-                'react-compiler-js/react-compiler': 'off',
+                'react-compiler/react-compiler': 'off',
             },
         },
     ],

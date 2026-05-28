@@ -1,5 +1,6 @@
 export interface ApiErrorBody {
-    detail?: string;
+    // TODO: type detail properly as FastAPI validation errors (PydanticValidationError[])
+    detail?: string | unknown[];
     message?: string;
     error?: string;
 }

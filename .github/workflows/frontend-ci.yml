@@ -26,6 +26,8 @@ jobs:
             display: check-knip
           - task: test
             display: check-test
+          - task: typecheck
+            display: check-typescript
     name: ${{ matrix.display }}
     runs-on: ubuntu-latest
     steps:
