@@ -18,7 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from core.enums import RecordType, RecordTypeType, UserState, UserStateType
+from core.enums import RecordType, UserState, UserStateType
 
 
 class Base(DeclarativeBase):

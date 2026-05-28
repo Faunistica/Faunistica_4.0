@@ -61,11 +61,11 @@ SPECIMEN_HEADER_MAP: dict[
     ],
 ] = {
     # Only 6 valid combinations matching frontend specimen fields
-    "Male Adult Quantity": ("male", "adult"),           # males
-    "Male Subadult Quantity": ("male", "subadult"),     # subadultMales
-    "Female Adult Quantity": ("female", "adult"),       # females
+    "Male Adult Quantity": ("male", "adult"),  # males
+    "Male Subadult Quantity": ("male", "subadult"),  # subadultMales
+    "Female Adult Quantity": ("female", "adult"),  # females
     "Female Subadult Quantity": ("female", "subadult"),  # subadultFemales
-    "Unknown Adult Quantity": ("none", "adult"),        # adults
+    "Unknown Adult Quantity": ("none", "adult"),  # adults
     "Unknown Juvenile Quantity": ("none", "juvenile"),  # juveniles
 }
 
