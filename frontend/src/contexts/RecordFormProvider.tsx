@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormRecord, UpdateRecordResponse } from '@/types/api.dto';
 import { draftToRecordData, toFormPartial } from '@/lib/recordUtils';
+import { FORM_DEFAULT_VALUES } from '@/types/forms';
 import { syncServerErrors } from '@/lib/syncServerErrors';
 import {
     recordAPI,
@@ -235,10 +236,12 @@ export function RecordFormProvider({
                     data: payload,
                     publ_id,
                 }).unwrap();
-                lastKnownRef.current = {
-                    id,
-                    updatedAt: response.record.updated_at,
-                };
+                if (activeRecordIdRef.current === id) {
+                    lastKnownRef.current = {
+                        id,
+                        updatedAt: response.record.updated_at,
+                    };
+                }
                 return response;
             } catch (error) {
                 toast.error(
@@ -307,6 +310,7 @@ export function RecordFormProvider({
             if (targetId === activeRecordIdRef.current) return;
 
             cancelPendingAutoSave();
+            lastKnownRef.current = null;
 
             if (activeRecordIdRef.current) {
                 setPhase({ phase: 'saving', source: 'manual' });
@@ -326,15 +330,36 @@ export function RecordFormProvider({
 
     const create = useCallback(async () => {
         try {
+            cancelPendingAutoSave();
+
+            if (activeRecordIdRef.current) {
+                await performSave('manual', methodsRef.current.getValues()).catch(() => {});
+            }
+
             const created = await createRecord({ publ_id }).unwrap();
             void dispatch(
                 recordAPI.util.upsertQueryData('recordById', { record_id: created.id }, created),
             );
+
+            lastKnownRef.current = {
+                id: created.id,
+                updatedAt: created.updated_at,
+            };
+
+            methodsRef.current.reset(FORM_DEFAULT_VALUES, {
+                keepValues: false,
+                keepErrors: false,
+                keepTouched: false,
+                keepDirty: false,
+            });
+
             setActiveRecordId(created.id);
+            setLastSavedTime(null);
+            setNonFieldErrors([]);
         } catch {
             toast.error('Ошибка при создании записи');
         }
-    }, [publ_id, createRecord, dispatch]);
+    }, [publ_id, createRecord, dispatch, cancelPendingAutoSave, performSave]);
 
     const deleteRecordAction = useCallback(
         async (id: string) => {

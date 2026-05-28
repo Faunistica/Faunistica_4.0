@@ -221,6 +221,55 @@ describe('RecordFormProvider', () => {
         expect(testMethodsRef.current!.getValues('country')).toBe('DE');
     });
 
+    it('switchTo back-and-forth does not mix up data', async () => {
+        // Regression test: ensure shouldSkipSync logic doesn't skip legitimate syncs
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+        setQueryResult('rec-2', RECORD_2);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+        expect(testState!.activeRecordId).toBe('rec-1');
+        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+
+        // Switch to rec-2
+        act(() => {
+            testActions!.switchTo('rec-2');
+        });
+
+        expect(testState!.activeRecordId).toBe('rec-2');
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+
+        // Switch back to rec-1
+        act(() => {
+            testActions!.switchTo('rec-1');
+        });
+
+        expect(testState!.activeRecordId).toBe('rec-1');
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+        // This should be 'RU', NOT 'DE' - regression guard
+        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+
+        // Switch to rec-2 again
+        act(() => {
+            testActions!.switchTo('rec-2');
+        });
+
+        expect(testState!.activeRecordId).toBe('rec-2');
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+        // This should be 'DE', NOT 'RU'
+        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+    });
+
     it('switchTo to same record is no-op', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
