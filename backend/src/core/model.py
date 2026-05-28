@@ -115,7 +115,7 @@ class EventRecord(Base):
     )
     ip: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)
-    type: Mapped[RecordType | None] = mapped_column(RecordTypeType)
+    type: Mapped[RecordType | None] = mapped_column(Text)
 
     country: Mapped[str | None] = mapped_column("countrycode", Text)
     region: Mapped[str | None] = mapped_column("stateprovince", Text)
@@ -174,7 +174,7 @@ class Record(Base):
     datetime: Mapped[datetime_type | None] = mapped_column(TIMESTAMP(precision=6))
     ip: Mapped[str | None] = mapped_column(Text)
     publ_id: Mapped[int | None] = mapped_column(Integer)
-    type: Mapped[RecordType | None] = mapped_column(RecordTypeType)
+    type: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)
     adm_country: Mapped[str | None] = mapped_column(Text)
     adm_region: Mapped[str | None] = mapped_column(Text)
