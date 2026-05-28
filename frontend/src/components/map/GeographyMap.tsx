@@ -42,7 +42,7 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
     const [map, setMap] = useState<L.Map | null>(null);
     const { suggestions, resultMap, isSearching, onSearch } = useGeocodingSearch();
 
-    const defaultCenter: [number, number] = [55.75, 37.61];
+    const defaultCenter: [number, number] = [58.006, 56.18];
 
     const center: [number, number] =
         isValidCoordinate(latitude) && isValidCoordinate(longitude)

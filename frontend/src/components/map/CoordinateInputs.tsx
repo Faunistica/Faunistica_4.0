@@ -89,16 +89,12 @@ const DirectionSelect = ({
         </Select>
     );
 };
-DirectionSelect.displayName = 'DirectionSelect';
 
 export const DMInputGroup: FC<Props> = ({ prefix, disabled }) => {
-    const {
-        latitude,
-        longitude,
-    } = useCoordinateInputs(prefix, 'dm');
+    const { latitude, longitude } = useCoordinateInputs(prefix, 'dm');
 
     return (
-        <div className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 p-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="space-y-2">
                 <Label htmlFor={`lat-deg-${prefix}`}>Широта (градусы° минуты')</Label>
                 <div className="flex items-start gap-2">
@@ -174,13 +170,10 @@ export const DMInputGroup: FC<Props> = ({ prefix, disabled }) => {
 };
 
 export const DMSInputGroup: FC<Props> = ({ prefix, disabled }) => {
-    const {
-        latitude,
-        longitude,
-    } = useCoordinateInputs(prefix, 'dms');
+    const { latitude, longitude } = useCoordinateInputs(prefix, 'dms');
 
     return (
-        <div className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 p-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="space-y-2">
                 <Label htmlFor={`lat-deg-dms-${prefix}`}>Широта (градусы° минуты' секунды'')</Label>
                 <div className="flex flex-wrap items-start gap-2">

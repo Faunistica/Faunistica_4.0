@@ -13,7 +13,6 @@ import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { FormAutocomplete } from '@/components/form/FormAutocomplete';
 import { Button } from '@/components/ui/button';
 
-// oxlint-disable-next-line import/no-unassigned-import
 import 'leaflet/dist/leaflet.css';
 import { type FC, useState, useEffect } from 'react';
 import { useFormContext, Controller, useWatch } from 'react-hook-form';
@@ -35,24 +34,20 @@ interface Props {
 const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
     const { control, setValue, getValues } = useFormContext<FormRecord>();
 
-    const georefSource = useWatch({ name: 'georef_source', control });
+    const georefSource = useWatch({ name: 'georef_source', control }) || 'none';
     const latValue = useWatch({ name: 'latitude', control });
     const lonValue = useWatch({ name: 'longitude', control });
-
-    const isNone = !georefSource || georefSource === 'none';
-    const isArticle = georefSource === 'lit';
-    const isCustom = georefSource === 'vol';
 
     const [showMap, setShowMap] = useState(false);
     const [coordFormat, setCoordFormat] = useState<'DD' | 'DM' | 'DMS' | ''>('');
 
     useEffect(() => {
-        if (isCustom && getValues('verbatimcoordinates') !== null) {
+        if (georefSource == 'vol' && getValues('verbatimcoordinates') !== null) {
             setValue('verbatimcoordinates' as const, null, {
                 shouldValidate: true,
             });
         }
-    }, [isCustom, setValue, getValues]);
+    }, [georefSource, setValue, getValues]);
 
     const handleMapSelect = (lat: number, lng: number) => {
         setValue('latitude' as const, lat, { shouldValidate: true });
@@ -220,9 +215,9 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     />
                 </div>
 
-                {!isNone && (
+                {georefSource !== 'none' && (
                     <div className="space-y-6 border-t border-slate-100 pt-5">
-                        {isArticle && (
+                        {georefSource === 'lit' && (
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <Field>
@@ -256,7 +251,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                             </div>
                         )}
 
-                        {isCustom && (
+                        {georefSource === 'vol' && (
                             <div className="space-y-4">
                                 <Button
                                     type="button"
@@ -279,43 +274,47 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         )}
 
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {(!isArticle || coordFormat === 'DD' || !coordFormat) && (
-                                <Controller
-                                    control={control}
-                                    name="latitude"
-                                    render={({ field, fieldState: { invalid, error } }) => (
-                                        <Field data-invalid={invalid}>
-                                            <FieldLabel htmlFor="latitude">Широта (DD)</FieldLabel>
-                                            <Input
-                                                id="latitude"
-                                                type="number"
-                                                step="any"
-                                                aria-invalid={invalid}
-                                                {...field}
-                                            />
-                                            <FieldError errors={[error]} />
-                                        </Field>
-                                    )}
-                                />
-                            )}
-                            {(!isArticle || coordFormat === 'DD' || !coordFormat) && (
-                                <Controller
-                                    control={control}
-                                    name="longitude"
-                                    render={({ field, fieldState: { invalid, error } }) => (
-                                        <Field data-invalid={invalid}>
-                                            <FieldLabel htmlFor="longitude">Долгота (DD)</FieldLabel>
-                                            <Input
-                                                id="longitude"
-                                                type="number"
-                                                step="any"
-                                                aria-invalid={invalid}
-                                                {...field}
-                                            />
-                                            <FieldError errors={[error]} />
-                                        </Field>
-                                    )}
-                                />
+                            {(georefSource !== 'lit' || coordFormat === 'DD' || !coordFormat) && (
+                                <>
+                                    <Controller
+                                        control={control}
+                                        name="latitude"
+                                        render={({ field, fieldState: { invalid, error } }) => (
+                                            <Field data-invalid={invalid}>
+                                                <FieldLabel htmlFor="latitude">
+                                                    Широта (DD)
+                                                </FieldLabel>
+                                                <Input
+                                                    id="latitude"
+                                                    type="number"
+                                                    step="any"
+                                                    aria-invalid={invalid}
+                                                    {...field}
+                                                />
+                                                <FieldError errors={[error]} />
+                                            </Field>
+                                        )}
+                                    />
+                                    <Controller
+                                        control={control}
+                                        name="longitude"
+                                        render={({ field, fieldState: { invalid, error } }) => (
+                                            <Field data-invalid={invalid}>
+                                                <FieldLabel htmlFor="longitude">
+                                                    Долгота (DD)
+                                                </FieldLabel>
+                                                <Input
+                                                    id="longitude"
+                                                    type="number"
+                                                    step="any"
+                                                    aria-invalid={invalid}
+                                                    {...field}
+                                                />
+                                                <FieldError errors={[error]} />
+                                            </Field>
+                                        )}
+                                    />
+                                </>
                             )}
                             <Controller
                                 control={control}
