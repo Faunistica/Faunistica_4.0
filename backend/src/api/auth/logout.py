@@ -23,6 +23,7 @@ async def logout(
     response: Response,
     session: DBSession,
     action_service: Annotated[ActionService, Depends()],
+    user_service: Annotated[UserService, Depends()],
     invalidate_all: Annotated[
         bool, Query(description="Invalidate all active sessions")
     ] = True,
@@ -34,7 +35,7 @@ async def logout(
         logger.warning("Logout with invalid/missing token")
 
     if user is not None and invalidate_all:
-        await UserService(session).increment_token_version(user.user_id)
+        await user_service.increment_token_version(user.user_id)
 
     if user is not None:
         try:

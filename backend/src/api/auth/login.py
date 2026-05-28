@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from core.dependencies import ClientIP, DBSession
+from core.dependencies import ClientIP
 from core.rate_limiter import limiter
 from core.security import check_password, set_response_token_cookies
 from schema.common import LoginRequest, UserLoginResponse
@@ -22,11 +22,11 @@ async def login(
     request: Request,
     response: Response,
     data: LoginRequest,
-    session: DBSession,
     ip: ClientIP,
     action_service: Annotated[ActionService, Depends()],
+    user_service: Annotated[UserService, Depends()],
 ) -> UserLoginResponse:
-    user = await UserService(session).find_by_username(data.username)
+    user = await user_service.find_by_username(data.username)
     if user is None:
         logger.info("User not found: %s", data.username)
         raise HTTPException(status_code=404, detail="User not found")
@@ -45,7 +45,7 @@ async def login(
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if result.new_hash:
-        await UserService(session).update_user_data(user.user_id, hash=result.new_hash)
+        await user_service.update_user_data(user.user_id, hash=result.new_hash)
 
     if UserService.is_password_expired(user):
         logger.info("Password expired for user: %s", data.username)

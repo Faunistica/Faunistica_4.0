@@ -1,8 +1,9 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from core.dependencies import DBSession, TokenUser
+from core.dependencies import TokenUser
 from schema.user import UserFull, UserMinimal, UserUpdateMe
 from service.user import UserService
 
@@ -22,9 +23,8 @@ async def get_current_user(
 async def update_current_user(
     data: UserUpdateMe,
     token: TokenUser,
-    session: DBSession,
+    user_service: Annotated[UserService, Depends()],
 ) -> UserFull:
-    user_service = UserService(session)
     user = await user_service.update_user_data(
         token.user_id, lng=data.lng, email=data.email
     )

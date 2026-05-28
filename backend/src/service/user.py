@@ -1,14 +1,15 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 
 from aiogram import Bot
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
 
 from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
 from core.config import settings
+from core.dependencies import DBSession
 from core.enums import UserState
 from core.exceptions import MsgErr, Ok
 from core.model import User
@@ -49,9 +50,9 @@ REGISTERED_STATES = (
 class UserService:
     def __init__(
         self,
-        session: AsyncSession,
+        session: DBSession,
         bot: Bot | None = None,
-        action_service: ActionService | None = None,
+        action_service: Annotated[ActionService, Depends()] | None = None,
     ) -> None:
         self.session = session
         self.bot = bot
