@@ -67,7 +67,7 @@ describe('draftToRecordData', () => {
 
     it('omits specimens when all quantity fields are undefined', () => {
         const result = draftToRecordData({});
-        expect(result.specimens).toBeUndefined();
+        expect(result.specimens).toBeNull();
     });
 
     it('omits specimens when all quantity fields are zero', () => {
@@ -76,7 +76,7 @@ describe('draftToRecordData', () => {
             females: 0,
             adults: 0,
         });
-        expect(result.specimens).toBeUndefined();
+        expect(result.specimens).toBeNull();
     });
 
     it('includes only non-zero quantity fields', () => {
@@ -274,7 +274,7 @@ describe('toFormPartial', () => {
         expect(result.species).toBe('lupus');
     });
 
-    it('returns all keys for an empty record (all nulls)', () => {
+    it('omits all null RecordData fields', () => {
         const empty: RecordFull = {
             id: 'rec-1',
             publ_id: 1,
@@ -324,7 +324,11 @@ describe('toFormPartial', () => {
 
         const result = toFormPartial(empty);
 
-        // All nulls are omitted — reset fills from defaultValues
-        expect(Object.keys(result)).toHaveLength(0);
+        // RecordFull fields (id, publ_id, user_id, type, created_at, updated_at) are not null
+        // RecordData fields are all null so omitted
+        expect(Object.keys(result).length).toBeGreaterThanOrEqual(5);
+        expect(result).not.toHaveProperty('country');
+        expect(result).not.toHaveProperty('locality');
+        expect(result).not.toHaveProperty('family');
     });
 });

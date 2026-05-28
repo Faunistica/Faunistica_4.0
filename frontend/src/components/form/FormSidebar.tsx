@@ -32,14 +32,7 @@ import { computeInactiveStatus } from '@/lib/recordStatus';
 import { useAppSelector } from '@/store/store';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 import ExcelUploadModal from '@/components/form/ExcelUploadModal';
-
-interface SidebarProps {
-    activeRecordId: string | null;
-    onSelectRecord: (id: string) => void;
-    onCreateRecord: () => void;
-    deleteRecord: (id: string) => void;
-    publ_id: number;
-}
+import { useRecordFormContext } from '@/contexts/RecordFormProvider';
 
 const SidebarRecordItem = ({
     recordId,
@@ -161,18 +154,15 @@ const SidebarRecordItem = ({
     );
 };
 
-const FormSidebar: FC<SidebarProps> = ({
-    activeRecordId,
-    onSelectRecord,
-    onCreateRecord,
-    deleteRecord,
-    publ_id,
-}) => {
+const FormSidebar: FC = () => {
+    const { state, actions, publ_id } = useRecordFormContext();
+    const { activeRecordId } = state;
+    const { switchTo, create, deleteRecord } = actions;
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-    const recordIds = useAppSelector((state) => {
-        const result = recordAPI.endpoints.recordsList.select({ publ_id })(state);
+    const recordIds = useAppSelector((st) => {
+        const result = recordAPI.endpoints.recordsList.select({ publ_id })(st);
         const data = 'data' in result ? result.data : undefined;
         return data?.items?.map((r) => r.id) ?? [];
     }, shallowEqual);
@@ -212,7 +202,7 @@ const FormSidebar: FC<SidebarProps> = ({
                     <div className="space-y-2 p-4 pb-0">
                         <Button
                             type="button"
-                            onClick={onCreateRecord}
+                            onClick={create}
                             className="flex h-fit w-full items-center gap-2 bg-slate-900 py-2 font-semibold text-white shadow-sm hover:bg-slate-800"
                             size="sm"
                         >
@@ -242,7 +232,7 @@ const FormSidebar: FC<SidebarProps> = ({
                                         key={id}
                                         recordId={id}
                                         isActive={id === activeRecordId}
-                                        onSelectRecord={onSelectRecord}
+                                        onSelectRecord={switchTo}
                                         deleteRecord={deleteRecord}
                                     />
                                 ))}

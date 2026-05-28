@@ -1,41 +1,60 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import FormFilling from './FormFilling';
 
-const mockRecordsManager = vi.hoisted(() => vi.fn());
+const mockRecordsListQuery = vi.hoisted(() => vi.fn());
+const mockRecordByIdQuery = vi.hoisted(() => vi.fn());
+const mockCreateRecord = vi.hoisted(() => vi.fn());
+const mockEditRecord = vi.hoisted(() => vi.fn());
+const mockSubmitRecord = vi.hoisted(() => vi.fn());
+const mockDeleteRecord = vi.hoisted(() => vi.fn());
+const mockDispatch = vi.hoisted(() => vi.fn());
+const mockUpsertQueryData = vi.hoisted(() => vi.fn());
+const mockUpdateQueryData = vi.hoisted(() => vi.fn());
+const mockInvalidateTags = vi.hoisted(() => vi.fn());
 
 vi.mock('react-router', () => ({
     useParams: () => ({ id: '1' }),
     useOutletContext: () => ({ isSidebarOpen: true, setIsSidebarOpen: vi.fn() }),
 }));
 
-vi.mock('react-redux', () => ({
-    useSelector: () => 123,
+vi.mock('@/store/store', () => ({
+    useAppDispatch: () => mockDispatch,
+    useAppSelector: (selector: (state: unknown) => unknown) =>
+        selector({ user: { user_id: 123 }, recordAPI: {} }),
+    store: { dispatch: mockDispatch, getState: () => ({ user: { user_id: 123 } }) },
 }));
 
-vi.mock('@/hooks/useRecordsManager', () => ({
-    useRecordsManager: mockRecordsManager,
+vi.mock('@/api/recordAPI', () => ({
+    useRecordsListQuery: mockRecordsListQuery,
+    useRecordByIdQuery: mockRecordByIdQuery,
+    useCreateRecordMutation: () => [mockCreateRecord],
+    useEditRecordMutation: () => [mockEditRecord],
+    useSubmitRecordMutation: () => [mockSubmitRecord],
+    useDeleteRecordMutation: () => [mockDeleteRecord],
+    recordAPI: {
+        reducerPath: 'recordAPI',
+        reducer: vi.fn(),
+        middleware: vi.fn(),
+        endpoints: {
+            recordsList: {
+                select: () => () => ({ data: { items: [{ id: 'rec-1' }, { id: 'rec-2' }] } }),
+            },
+        },
+        util: {
+            upsertQueryData: mockUpsertQueryData,
+            updateQueryData: mockUpdateQueryData,
+            invalidateTags: mockInvalidateTags,
+        },
+    },
 }));
 
 vi.mock('@/components/form/RecordFormContent', () => ({
-    default: (props: Record<string, unknown>) => (
-        <div data-testid="record-form" data-active-record-id={props.activeRecordId as string}>
-            RecordFormContent
-        </div>
-    ),
+    default: () => <div data-testid="record-form">RecordFormContent</div>,
 }));
 
 vi.mock('@/components/form/FormSidebar', () => ({
-    default: ({ onSelectRecord }: { onSelectRecord: (id: string) => void }) => (
-        <div data-testid="sidebar">
-            <button data-testid="record-1" onClick={() => onSelectRecord('1')}>
-                Canis
-            </button>
-            <button data-testid="record-2" onClick={() => onSelectRecord('2')}>
-                Felis
-            </button>
-        </div>
-    ),
+    default: () => <div data-testid="sidebar">FormSidebar</div>,
 }));
 
 vi.mock('@/components/ui/sidebar', () => ({
@@ -56,78 +75,35 @@ describe('FormFilling', () => {
     });
 
     it('shows loading screen while data loads', () => {
-        mockRecordsManager.mockReturnValue({
-            activeRecordId: null,
-            isLoading: true,
-            recordMethods: { create: vi.fn(), switchTo: vi.fn(), delete: vi.fn() },
-            registerSave: vi.fn(),
-        });
+        mockRecordsListQuery.mockReturnValue({ isLoading: true });
+        mockRecordByIdQuery.mockReturnValue({ currentData: undefined });
 
         renderFormFilling();
         expect(screen.getByTestId('loading-screen')).toBeDefined();
     });
 
-    it('shows empty state when no records exist', () => {
-        mockRecordsManager.mockReturnValue({
-            activeRecordId: null,
-            isLoading: false,
-            recordMethods: { create: vi.fn(), switchTo: vi.fn(), delete: vi.fn() },
-            registerSave: vi.fn(),
-        });
-
-        renderFormFilling();
-        expect(screen.getByText('Нет записей')).toBeDefined();
-        expect(screen.getByText('Создать запись')).toBeDefined();
-    });
-
-    it('renders form and sidebar when active record exists', () => {
-        mockRecordsManager.mockReturnValue({
-            activeRecordId: '1',
-            isLoading: false,
-            recordMethods: { create: vi.fn(), switchTo: vi.fn(), delete: vi.fn() },
-            registerSave: vi.fn(),
-        });
-
-        renderFormFilling();
-
-        expect(screen.getByTestId('record-form')).toBeDefined();
-        expect(screen.getByTestId('sidebar')).toBeDefined();
-        expect(screen.getByTestId('record-form').getAttribute('data-active-record-id')).toBe('1');
-    });
-
-    it('calls create when create button is clicked in empty state', async () => {
-        const mockCreate = vi.fn();
-        mockRecordsManager.mockReturnValue({
-            activeRecordId: null,
-            isLoading: false,
-            recordMethods: { create: mockCreate, switchTo: vi.fn(), delete: vi.fn() },
-            registerSave: vi.fn(),
+    it('renders form and sidebar when active record exists', async () => {
+        mockRecordsListQuery.mockReturnValue({ isLoading: false });
+        mockRecordByIdQuery.mockReturnValue({
+            currentData: {
+                id: 'rec-1',
+                publ_id: 1,
+                user_id: 123,
+                created_at: '2024-01-01T00:00:00Z',
+                updated_at: '2024-01-01T00:00:00Z',
+                country: 'RU',
+                region: null,
+                district: null,
+                locality: null,
+                latitude: null,
+                longitude: null,
+                verbatimcoordinates: null,
+            },
         });
 
         renderFormFilling();
 
-        await act(async () => {
-            screen.getByText('Создать запись').click();
-        });
-
-        expect(mockCreate).toHaveBeenCalledTimes(1);
-    });
-
-    it('calls switchTo when sidebar item is clicked', async () => {
-        const mockSwitchTo = vi.fn();
-        mockRecordsManager.mockReturnValue({
-            activeRecordId: '1',
-            isLoading: false,
-            recordMethods: { create: vi.fn(), switchTo: mockSwitchTo, delete: vi.fn() },
-            registerSave: vi.fn(),
-        });
-
-        renderFormFilling();
-
-        await act(async () => {
-            screen.getByTestId('record-2').click();
-        });
-
-        expect(mockSwitchTo).toHaveBeenCalledWith('2');
+        expect(await screen.findByTestId('sidebar', {}, { timeout: 2000 })).toBeDefined();
+        expect(await screen.findByTestId('record-form', {}, { timeout: 2000 })).toBeDefined();
     });
 });

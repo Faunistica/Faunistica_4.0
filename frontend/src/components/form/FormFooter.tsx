@@ -11,15 +11,7 @@ import {
 import { motion, useScroll, useMotionValueEvent } from 'motion/react';
 import { Save, Send, Trash2, Cloud, CloudOff, Check, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-interface FooterProps {
-    onSave: () => void;
-    onSubmit: () => void;
-    onDelete: () => void;
-    isSaving: boolean;
-    isAutoSaving: boolean;
-    lastSavedTime: Date | null;
-}
+import { useRecordFormContext } from '@/contexts/RecordFormProvider';
 
 function formatTime(date: Date): string {
     return date.toLocaleTimeString('ru-RU', {
@@ -31,14 +23,12 @@ function formatTime(date: Date): string {
 
 const ENABLE_MOTION_ON_DESKTOP = false;
 
-const Footer: FC<FooterProps> = ({
-    onSave,
-    onSubmit,
-    onDelete,
-    isSaving,
-    isAutoSaving,
-    lastSavedTime,
-}) => {
+const Footer: FC = () => {
+    const { state, actions } = useRecordFormContext();
+    const { status, lastSavedTime } = state;
+    const isSaving = status.phase === 'saving';
+    const isAutoSaving = status.phase === 'saving' && status.source === 'auto';
+    const isBusy = status.phase === 'saving' || status.phase === 'syncing';
     const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isHidden, setIsHidden] = useState(false);
@@ -95,7 +85,7 @@ const Footer: FC<FooterProps> = ({
                 <div className="flex items-center gap-4">
                     <Button
                         onClick={() => setIsDeleteDialogOpen(true)}
-                        disabled={isSaving}
+                        disabled={isBusy}
                         variant="destructive"
                         className="gap-2 text-xs"
                     >
@@ -125,8 +115,8 @@ const Footer: FC<FooterProps> = ({
 
                 <div className="flex items-center gap-3">
                     <Button
-                        onClick={onSave}
-                        disabled={isSaving || isAutoSaving}
+                        onClick={actions.save}
+                        disabled={isBusy}
                         variant="outline"
                         className="gap-2 text-xs"
                     >
@@ -139,7 +129,7 @@ const Footer: FC<FooterProps> = ({
                     </Button>
                     <Button
                         onClick={() => setIsSubmitDialogOpen(true)}
-                        disabled={isSaving}
+                        disabled={isBusy}
                         className="gap-2 bg-slate-900 text-xs font-semibold text-white hover:bg-slate-800"
                     >
                         <Send className="size-4" />
@@ -161,19 +151,19 @@ const Footer: FC<FooterProps> = ({
                         <Button
                             variant="outline"
                             onClick={() => setIsSubmitDialogOpen(false)}
-                            disabled={isSaving}
+                            disabled={isBusy}
                         >
                             Отмена
                         </Button>
                         <Button
                             onClick={() => {
-                                onSubmit();
+                                void actions.submit();
                                 setIsSubmitDialogOpen(false);
                             }}
-                            disabled={isSaving}
+                            disabled={isBusy}
                             className="bg-slate-900 text-white hover:bg-slate-800"
                         >
-                            {isSaving ? 'Отправка...' : 'Отправить'}
+                            {isBusy ? 'Отправка...' : 'Отправить'}
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -192,16 +182,16 @@ const Footer: FC<FooterProps> = ({
                         <Button
                             variant="outline"
                             onClick={() => setIsDeleteDialogOpen(false)}
-                            disabled={isSaving}
+                            disabled={isBusy}
                         >
                             Отмена
                         </Button>
                         <Button
                             onClick={() => {
-                                onDelete();
+                                void actions.deleteRecord(state.activeRecordId!);
                                 setIsDeleteDialogOpen(false);
                             }}
-                            disabled={isSaving}
+                            disabled={isBusy}
                             variant="destructive"
                         >
                             Удалить
