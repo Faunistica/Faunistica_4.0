@@ -2,7 +2,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.enums import UserState
+from core.enums import RecordType, UserState
 from core.model import Action, EventRecord, User
 from schema.common import ProjectStats, UserStats
 
@@ -22,13 +22,13 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
     total_records = await session.scalar(
         select(func.count())
         .select_from(EventRecord)
-        .where(EventRecord.type == "rec_ok")
+        .where(EventRecord.type == RecordType.REC_OK)
     )
 
     species_count = await session.scalar(
         select(func.count(func.distinct(EventRecord.genus + " " + EventRecord.species)))
         .select_from(EventRecord)
-        .where(EventRecord.type == "rec_ok")
+        .where(EventRecord.type == RecordType.REC_OK)
     )
 
     processed_publications = await session.scalar(
@@ -39,7 +39,7 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
 
     most_common_family = await session.scalar(
         select(EventRecord.family)
-        .where(EventRecord.type == "rec_ok")
+        .where(EventRecord.type == RecordType.REC_OK)
         .group_by(EventRecord.family)
         .order_by(func.count().desc())
         .limit(1)
@@ -47,7 +47,7 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
 
     most_common_genus = await session.scalar(
         select(EventRecord.genus)
-        .where(EventRecord.type == "rec_ok")
+        .where(EventRecord.type == RecordType.REC_OK)
         .group_by(EventRecord.genus)
         .order_by(func.count().desc())
         .limit(1)
@@ -55,7 +55,7 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
 
     most_common_species = await session.scalar(
         select(EventRecord.genus + " " + EventRecord.species)
-        .where(EventRecord.type == "rec_ok")
+        .where(EventRecord.type == RecordType.REC_OK)
         .group_by(EventRecord.genus, EventRecord.species)
         .order_by(func.count().desc())
         .limit(1)
@@ -84,18 +84,18 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     records_entered = await session.scalar(
         select(func.count())
         .select_from(EventRecord)
-        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
     )
 
     publications_processed = await session.scalar(
         select(func.count(func.distinct(EventRecord.publ_id)))
         .select_from(EventRecord)
-        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
     )
 
     most_common_family = await session.scalar(
         select(EventRecord.family)
-        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
         .group_by(EventRecord.family)
         .order_by(func.count().desc())
         .limit(1)
@@ -103,7 +103,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
 
     most_common_genus = await session.scalar(
         select(EventRecord.genus)
-        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
         .group_by(EventRecord.genus)
         .order_by(func.count().desc())
         .limit(1)
@@ -111,7 +111,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
 
     most_common_species = await session.scalar(
         select(EventRecord.genus + " " + EventRecord.species)
-        .where(EventRecord.user_id == user_id, EventRecord.type == "rec_ok")
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
         .group_by(EventRecord.genus, EventRecord.species)
         .order_by(func.count().desc())
         .limit(1)

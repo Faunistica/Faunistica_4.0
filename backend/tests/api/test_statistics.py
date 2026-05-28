@@ -7,7 +7,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.enums import UserState
+from core.enums import RecordType, UserState
 from core.model import Action, EventRecord, Publication, User
 
 
@@ -46,7 +46,7 @@ async def test_get_project_statistics(
             id=uuid4(),
             publ_id=test_publ_id,
             user_id=test_user_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="TestGenus",
             species="test_species",
             family="TestFamily",
@@ -99,7 +99,7 @@ async def test_get_user_statistics_by_id(
             id=uuid4(),
             publ_id=publ_id,
             user_id=user.user_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="GenusA",
             species="species_a",
             family="FamilyA",

@@ -1,16 +1,15 @@
 from datetime import datetime
-from typing import Literal, TypedDict
+from typing import TypedDict
 
 from pydantic import UUID4, BaseModel, ConfigDict, Field
+
+from core.enums import RecordType
 
 
 class SpecimenDbRow(TypedDict, total=False):
     quantity: float | int
     sex: str | None
     life_stage: str | None
-
-
-RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail", "rec_del"]
 
 
 class Specimen(BaseModel):

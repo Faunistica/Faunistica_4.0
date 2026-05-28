@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from core.enums import RecordType
 from core.exceptions import ExpectationError
 from core.model import EventRecord, Publication
 
@@ -58,7 +59,7 @@ async def user_filled_publication(
     if record_type is None:
         return False
 
-    return record_type == "rec_ok"
+    return record_type == RecordType.REC_OK
 
 
 async def get_publications_by_ids(

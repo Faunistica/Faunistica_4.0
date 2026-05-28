@@ -24,7 +24,7 @@ from app import app
 from core.config import settings
 from core.database import get_session
 from core.dependencies import get_http_session
-from core.enums import UserState
+from core.enums import RecordType, UserState
 from core.model import Base, EventRecord, Publication, User
 from core.rate_limiter import limiter
 from core.security import create_access_token, create_refresh_token
@@ -189,7 +189,7 @@ async def seed_data(
             id=uuid4(),
             user_id=users[0].user_id,
             publ_id=publ_id_1,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="Testus",
             latitude="55.5",
             longitude="37.5",
@@ -200,7 +200,7 @@ async def seed_data(
             id=uuid4(),
             user_id=users[0].user_id,
             publ_id=publ_id_1,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="Testus",
             latitude="55.6",
             longitude="37.6",
@@ -211,7 +211,7 @@ async def seed_data(
             id=uuid4(),
             user_id=users[0].user_id,
             publ_id=publ_id_1,
-            type="rec_fail",
+            type=RecordType.REC_FAIL,
             created_at=now,
             updated_at=now,
         ),

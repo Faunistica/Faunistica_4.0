@@ -8,6 +8,7 @@ from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.enums import RecordType
 from core.model import EventRecord
 from schema.records import RecordMetadata, SpecimenDbRow
 
@@ -86,13 +87,13 @@ async def get_records_paginated(
 
     if publ_id is None:
         where_condition = and_(
-            EventRecord.user_id == user_id, EventRecord.type != "rec_del"
+            EventRecord.user_id == user_id, EventRecord.type != RecordType.REC_DEL
         )
     else:
         where_condition = and_(
             EventRecord.user_id == user_id,
             EventRecord.publ_id == publ_id,
-            EventRecord.type != "rec_del",
+            EventRecord.type != RecordType.REC_DEL,
         )
 
     count_stmt = select(func.count()).where(where_condition)

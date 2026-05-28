@@ -11,6 +11,7 @@ from httpx import AsyncClient
 from openpyxl import Workbook
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.enums import RecordType
 from core.model import EventRecord
 
 
@@ -241,7 +242,7 @@ async def test_delete_record_previous_publ_403(
             id=uuid4(),
             user_id=user.user_id,
             publ_id=seed_data["publs"][1].publ_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             created_at=now,
             updated_at=now,
         )

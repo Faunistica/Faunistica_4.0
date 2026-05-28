@@ -9,6 +9,7 @@ from pydantic import BaseModel, Json
 
 from core.config import settings
 from core.dependencies import DBSession
+from core.enums import RecordType
 from core.exceptions import (
     ImportLimitExceededError,
     NoPublicationsAssignedError,
@@ -123,7 +124,7 @@ class RecordService:
         if updated is None:
             raise RecordStaleError(record_id)
 
-        if updated.type == "rec_ok":
+        if updated.type == RecordType.REC_OK:
             await check_and_log_milestone(
                 self.session, user_id, updated, self.action_service
             )
@@ -153,8 +154,8 @@ class RecordService:
         Otherwise, hard-delete.
         """
         record = await self._get_and_check_ownership(record_id, user_id)
-        if record.type == "rec_ok":
-            record.type = "rec_del"
+        if record.type == RecordType.REC_OK:
+            record.type = RecordType.REC_DEL
         else:
             await repo.delete_record(self.session, record.id)
 
@@ -269,7 +270,7 @@ class RecordService:
 
             event_records.append(record)
 
-            if metadata.type == "rec_ok":
+            if metadata.type == RecordType.REC_OK:
                 last_ok = record
 
         # Delete old records, then insert — all in one transaction
