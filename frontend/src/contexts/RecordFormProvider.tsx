@@ -43,7 +43,7 @@ export interface RecordFormState {
 export interface RecordFormActions {
     save: () => Promise<void>;
     submit: () => Promise<void>;
-    switchTo: (targetId: string) => Promise<void>;
+    switchTo: (targetId: string) => void;
     create: () => Promise<void>;
     deleteRecord: (id: string) => Promise<void>;
 }
@@ -308,19 +308,16 @@ export function RecordFormProvider({
     }, [cancelPendingAutoSave, editRecord, submitRecord, publ_id, setPhase]);
 
     const switchTo = useCallback(
-        async (targetId: string) => {
+        (targetId: string) => {
             if (targetId === activeRecordIdRef.current) return;
 
             cancelPendingAutoSave();
 
             if (activeRecordIdRef.current) {
                 setPhase({ phase: 'saving', source: 'manual' });
-                try {
-                    const values = methodsRef.current.getValues();
-                    await performSave('manual', values);
-                } catch {
+                performSave('manual', methodsRef.current.getValues()).catch(() => {
                     toast.error('Не удалось сохранить текущую запись');
-                }
+                });
             }
 
             pendingSyncRef.current = true;

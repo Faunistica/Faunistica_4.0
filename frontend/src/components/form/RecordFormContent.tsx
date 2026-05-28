@@ -11,13 +11,9 @@ import LoadingScreen from '@/components/LoadingScreen';
 
 const RecordFormContent: FC = () => {
     const { state, publ_id } = useRecordFormContext();
-    const { activeRecordId, status, isInitialLoading } = state;
+    const { activeRecordId, isInitialLoading } = state;
 
     if (isInitialLoading || !activeRecordId) {
-        return <LoadingScreen />;
-    }
-
-    if (status.phase === 'syncing') {
         return <LoadingScreen />;
     }
 
