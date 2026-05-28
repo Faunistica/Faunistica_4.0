@@ -1,6 +1,7 @@
-import type { RecordFull, FormRecord } from '@/types/api.dto';
+import type { RecordFull } from '@/types/domain';
+import type { RecordForm } from '@/types/forms';
 
-type SharedField = keyof RecordFull & keyof FormRecord;
+type SharedField = keyof RecordFull & keyof RecordForm;
 
 export const LOCATION_FIELDS: SharedField[] = [
     'country',

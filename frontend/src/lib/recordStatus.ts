@@ -1,5 +1,5 @@
 import type { FormRecord, RecordFull } from '@/types/api.dto';
-import { BLOCKING_FIELDS } from '@/types/forms';
+import { BLOCKING_FIELDS } from '@/types/constants';
 import { toFormPartial } from '@/lib/recordUtils';
 import type { FieldErrors } from 'react-hook-form';
 

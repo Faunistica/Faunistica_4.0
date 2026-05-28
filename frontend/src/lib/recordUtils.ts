@@ -1,6 +1,6 @@
 import type { RecordData, RecordFull, FormRecord, Specimen } from '@/types/api.dto';
-import type { QuantityField } from '@/types/forms';
-import { QUANTITY_FIELDS } from '@/types/forms';
+import type { QuantityField } from '@/types/constants';
+import { QUANTITY_FIELDS } from '@/types/constants';
 
 const NULLISH_NUMBER_FIELDS = new Set<string>(['coordinate_uncertainty', 'sample_size_value']);
 
