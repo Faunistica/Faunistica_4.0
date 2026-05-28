@@ -23,7 +23,7 @@ import {
 } from '@/api/recordAPI';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 
-const AUTO_SAVE_DELAY = 2000;
+export const AUTO_SAVE_DELAY = 2000;
 const SHOULD_AUTO_SAVE = !import.meta.env.VITE_DISABLE_AUTO_SAVE;
 
 export type RecordFormPhase =

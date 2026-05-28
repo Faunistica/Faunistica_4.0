@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import FormFilling from './FormFilling';
+import { render, act, waitFor } from '@testing-library/react';
+import { useForm, FormProvider } from 'react-hook-form';
+import { RecordFormProvider, useRecordFormContext } from '@/contexts/RecordFormProvider';
+import type { RecordFormActions, RecordFormState } from '@/contexts/RecordFormProvider';
+import type { FormRecord } from '@/types/api.dto';
 
 const mockRecordsListQuery = vi.hoisted(() => vi.fn());
 const mockRecordByIdQuery = vi.hoisted(() => vi.fn());
@@ -12,11 +15,6 @@ const mockDispatch = vi.hoisted(() => vi.fn());
 const mockUpsertQueryData = vi.hoisted(() => vi.fn());
 const mockUpdateQueryData = vi.hoisted(() => vi.fn());
 const mockInvalidateTags = vi.hoisted(() => vi.fn());
-
-vi.mock('react-router', () => ({
-    useParams: () => ({ id: '1' }),
-    useOutletContext: () => ({ isSidebarOpen: true, setIsSidebarOpen: vi.fn() }),
-}));
 
 vi.mock('@/store/store', () => ({
     useAppDispatch: () => mockDispatch,
@@ -49,61 +47,309 @@ vi.mock('@/api/recordAPI', () => ({
     },
 }));
 
-vi.mock('@/components/form/RecordFormContent', () => ({
-    default: () => <div data-testid="record-form">RecordFormContent</div>,
-}));
+const RECORD_FIELDS = {
+    publ_id: 1,
+    user_id: 123,
+    created_at: '2024-01-01T00:00:00Z',
+    errors: null,
+    type: 'check_fail' as const,
+    ip: null,
+    region: null,
+    district: null,
+    locality: null,
+    is_manual_location: null,
+    latitude: null,
+    longitude: null,
+    verbatimcoordinates: null,
+    coordinate_uncertainty: null,
+    georef_source: null,
+    location_remarks: null,
+    verbatim_date: null,
+    date_precision: null,
+    is_interval: null,
+    habitat: null,
+    sampling_protocol: null,
+    sampling_effort: null,
+    sample_size_value: null,
+    sample_size_unit: null,
+    event_remarks: null,
+    field_number: null,
+    catalog_number: null,
+    collection_code: null,
+    recorded_by: null,
+    family: null,
+    genus: null,
+    species: null,
+    tax_verbatim: null,
+    taxon_rank: null,
+    type_status: null,
+    accepted_name: null,
+    taxon_remarks: null,
+    identification_remarks: null,
+    quantity_type: null,
+    specimens: null,
+    occurrence_remarks: null,
+};
 
-vi.mock('@/components/form/FormSidebar', () => ({
-    default: () => <div data-testid="sidebar">FormSidebar</div>,
-}));
+const RECORD_1 = { id: 'rec-1', ...RECORD_FIELDS, updated_at: '2024-01-01T00:00:00Z', country: 'RU' };
+const RECORD_2 = { id: 'rec-2', ...RECORD_FIELDS, updated_at: '2024-01-01T00:00:02Z', country: 'DE' };
 
-vi.mock('@/components/ui/sidebar', () => ({
-    SidebarProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
 
-vi.mock('@/components/LoadingScreen', () => ({
-    default: () => <div data-testid="loading-screen">Loading...</div>,
-}));
-
-function renderFormFilling() {
-    return render(<FormFilling />);
+const queryResults: Record<string, { currentData: typeof RECORD_1 | undefined }> = {};
+function setQueryResult(recordId: string | null, data: typeof RECORD_1 | undefined) {
+    const key = recordId ?? '__null__';
+    queryResults[key] = { currentData: data };
 }
 
-describe('FormFilling', () => {
+function queryResult(recordId: string | null) {
+    const key = recordId ?? '__null__';
+    return queryResults[key] ?? { currentData: undefined };
+}
+
+let testState: RecordFormState | null = null;
+let testActions: RecordFormActions | null = null;
+const testMethodsRef: { current: ReturnType<typeof useForm<FormRecord>> | null } = { current: null };
+
+function StateDisplay() {
+    const { state, actions } = useRecordFormContext();
+    testState = state;
+    testActions = actions;
+    return <div data-testid="state-display" />;
+}
+
+function TestHarness({ children }: { children: React.ReactNode }) {
+    const methods = useForm<FormRecord>({ defaultValues: {} });
+    testMethodsRef.current = methods;
+    return (
+        <RecordFormProvider publ_id={1} methods={methods}>
+            <FormProvider {...methods}>{children}</FormProvider>
+        </RecordFormProvider>
+    );
+}
+
+describe('RecordFormProvider', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-    });
+        testState = null;
+        testActions = null;
+        testMethodsRef.current = null;
+        // Reset query result cache
+        for (const k of Object.keys(queryResults)) delete queryResults[k];
 
-    it('shows loading screen while data loads', () => {
-        mockRecordsListQuery.mockReturnValue({ isLoading: true });
-        mockRecordByIdQuery.mockReturnValue({ currentData: undefined });
-
-        renderFormFilling();
-        expect(screen.getByTestId('loading-screen')).toBeDefined();
-    });
-
-    it('renders form and sidebar when active record exists', async () => {
         mockRecordsListQuery.mockReturnValue({ isLoading: false });
-        mockRecordByIdQuery.mockReturnValue({
-            currentData: {
-                id: 'rec-1',
-                publ_id: 1,
-                user_id: 123,
-                created_at: '2024-01-01T00:00:00Z',
-                updated_at: '2024-01-01T00:00:00Z',
-                country: 'RU',
-                region: null,
-                district: null,
-                locality: null,
-                latitude: null,
-                longitude: null,
-                verbatimcoordinates: null,
-            },
+
+        mockRecordByIdQuery.mockImplementation(
+            ({ record_id }: { record_id: string | null }) => queryResult(record_id),
+        );
+
+        mockEditRecord.mockReturnValue({
+            unwrap: () => Promise.resolve({ record: { updated_at: '2024-01-01T00:00:01Z' } }),
+        });
+        mockSubmitRecord.mockReturnValue({
+            unwrap: () => Promise.resolve({ record: { updated_at: '2024-01-01T00:00:01Z' } }),
+        });
+        mockCreateRecord.mockReturnValue({
+            unwrap: () =>
+                Promise.resolve({ id: 'rec-new', ...RECORD_FIELDS, updated_at: '2024-01-01T00:00:00Z', country: null }),
+        });
+        mockDeleteRecord.mockReturnValue({
+            unwrap: () => Promise.resolve(undefined),
+        });
+    });
+
+    it('shows loading state while list is loading', () => {
+        mockRecordsListQuery.mockReturnValue({ isLoading: true });
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        expect(testState!.isInitialLoading).toBe(true);
+    });
+
+    it('auto-selects first record from list', () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        expect(testState!.activeRecordId).toBe('rec-1');
+    });
+
+    it('syncs form with record data', () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+    });
+
+    it('is not loading after data arrives', () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        expect(testState!.isInitialLoading).toBe(false);
+    });
+
+    it('has idle status after sync', () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        expect(testState!.status.phase).toBe('idle');
+    });
+
+    it('switchTo changes active record and loads new data', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+        setQueryResult('rec-2', RECORD_2);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+        expect(testState!.activeRecordId).toBe('rec-1');
+
+        act(() => {
+            testActions!.switchTo('rec-2');
         });
 
-        renderFormFilling();
+        expect(testState!.activeRecordId).toBe('rec-2');
 
-        expect(await screen.findByTestId('sidebar', {}, { timeout: 2000 })).toBeDefined();
-        expect(await screen.findByTestId('record-form', {}, { timeout: 2000 })).toBeDefined();
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+    });
+
+    it('switchTo to same record is no-op', () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+        testMethodsRef.current!.setValue('country', 'DE');
+
+        testActions!.switchTo('rec-1');
+
+        expect(testState!.activeRecordId).toBe('rec-1');
+        expect(testState!.status.phase).toBe('idle');
+        expect(mockEditRecord).not.toHaveBeenCalled();
+    });
+
+    it('save calls editRecord', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        await act(() => testActions!.save());
+
+        expect(mockEditRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ record_id: 'rec-1' }),
+        );
+    });
+
+    it('save updates lastSavedTime on success', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        await act(() => testActions!.save());
+
+        expect(testState!.lastSavedTime).toBeInstanceOf(Date);
+        expect(testState!.status.phase).toBe('idle');
+    });
+
+    it('submit calls editRecord then submitRecord', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        await act(() => testActions!.submit());
+
+        expect(mockEditRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ record_id: 'rec-1' }),
+        );
+        expect(mockSubmitRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ record_id: 'rec-1' }),
+        );
+        expect(testState!.status.phase).toBe('idle');
+    });
+
+    it('create switches to new record', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        await act(() => testActions!.create());
+
+        expect(mockCreateRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ publ_id: 1 }),
+        );
+        expect(testState!.activeRecordId).toBe('rec-new');
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+    });
+
+    it('delete removes record, updates cache, and switches to next', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+        expect(testState!.activeRecordId).toBe('rec-1');
+
+        await act(() => testActions!.deleteRecord('rec-1'));
+
+        expect(mockDeleteRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ record_id: 'rec-1' }),
+        );
+        expect(mockUpdateQueryData).toHaveBeenCalled();
+        expect(testState!.activeRecordId).toBe('rec-2');
+    });
+
+    it('returns to idle on save error', async () => {
+        mockEditRecord.mockReturnValue({
+            unwrap: () => Promise.reject(new Error('save failed')),
+        });
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        await act(() => testActions!.save());
+
+        expect(testState!.status.phase).toBe('idle');
+    });
+
+    it('returns to idle on submit error', async () => {
+        mockSubmitRecord.mockReturnValue({
+            unwrap: () => Promise.reject(new Error('submit failed')),
+        });
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        await act(() => testActions!.submit());
+
+        expect(testState!.status.phase).toBe('idle');
+    });
+
+    it('returns to idle on create error', async () => {
+        mockCreateRecord.mockReturnValue({
+            unwrap: () => Promise.reject(new Error('create failed')),
+        });
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        render(<TestHarness><StateDisplay /></TestHarness>);
+
+        await act(() => testActions!.create());
+
+        expect(testState!.status.phase).toBe('idle');
     });
 });
