@@ -1,7 +1,4 @@
-import re
-from datetime import datetime
-
-from aiogram import Router
+from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -13,36 +10,27 @@ from bot.states import RegistrationStates
 from core.config import settings
 from core.dependencies import get_session
 from core.enums import UserState
-from core.exceptions import HandlerError
+from core.exceptions import HandlerError, MsgErr
 from core.model import User
-from repository.user import (
-    count_users_with_name,
-    create_user_or_update,
-    get_user,
-    update_user,
-)
-from schema.user import UserLanguage, UserUpdate
+from service.user import UserService
 
 router = Router()
 
 
 @router.message(Command("register"))
-async def registration_start(message: Message, state: FSMContext) -> None:
+async def registration_start(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None:
         raise HandlerError
 
     async for session in get_session():
-        user = await get_user(session, message.from_user.id)
+        user_service = UserService(session, bot)
+        user = await user_service.get(message.from_user.id)
 
         if not user or user.reg_stat == UserState.DATA_CLEARED:
             if user is not None:
                 await message.answer(Messages.old_user(user.name))
 
-            await create_user_or_update(
-                session,
-                user_id=message.from_user.id,
-                reg_stat=UserState.REG_AGREEMENT,
-            )
+            await user_service.start_registration(message.from_user.id)
             await message.answer(
                 Messages.registration_start(),
                 reply_markup=keyboards.yes_no(),
@@ -107,14 +95,13 @@ async def continue_registration(
     RegistrationStates.waiting_for_agreement,
     lambda msg: msg.text and msg.text.lower() in YES_WORDS,
 )
-async def reg_accept_agreement(message: Message, state: FSMContext) -> None:
+async def reg_accept_agreement(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
     async for session in get_session():
-        await update_user(
-            session, message.from_user.id, UserUpdate(reg_stat=UserState.REG_NAME)
-        )
+        user_service = UserService(session, bot)
+        await user_service.accept_agreement(message.from_user.id)
 
     await message.answer(Messages.consent_taken())
     await message.answer(Messages.ask_name())
@@ -131,88 +118,63 @@ async def reg_decline_agreement(message: Message, state: FSMContext) -> None:
 
 
 @router.message(RegistrationStates.waiting_for_name)
-async def reg_set_name(message: Message, state: FSMContext) -> None:
+async def reg_set_name(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
     name_msg = message.text
 
     async for session in get_session():
-        other_users = await count_users_with_name(session, name_msg)
+        user_service = UserService(session, bot)
+        result = await user_service.set_name(message.from_user.id, name_msg)
 
-        if other_users > 0:
-            await message.answer(Messages.name_already_exists())
-        elif len(name_msg) < 3:
-            await message.answer(Messages.message_too_short())
-        elif len(name_msg) > 40:
-            await message.answer(Messages.message_too_long())
-        elif not re.fullmatch(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$", name_msg):
-            await message.answer(Messages.invalid_characters())
-        else:
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(
-                    name=name_msg,
-                    reg_stat=UserState.REG_AGE,
-                ),
-            )
-            await message.answer(Messages.greeting(name_msg))
-            await message.answer(Messages.ask_age())
-            await state.set_state(RegistrationStates.waiting_for_age)
+        if isinstance(result, MsgErr):
+            await message.answer(result.error)
+            return
+
+    await message.answer(Messages.greeting(name_msg))
+    await message.answer(Messages.ask_age())
+    await state.set_state(RegistrationStates.waiting_for_age)
 
 
 @router.message(RegistrationStates.waiting_for_age)
-async def reg_set_age(message: Message, state: FSMContext) -> None:
+async def reg_set_age(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
     age_msg = message.text
 
-    if len(age_msg) > 5:
-        await message.answer(Messages.message_too_long())
-    elif not age_msg.isdigit():
-        await message.answer(Messages.message_no_digits())
-    elif int(age_msg) > 99:
-        await message.answer(
-            Messages.age_too_high(),
-            parse_mode="Markdown",
-            disable_web_page_preview=True,
-        )
-    elif int(age_msg) < 14:
-        await message.answer(Messages.age_too_low())
-    else:
-        async for session in get_session():
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(
-                    age=int(age_msg),
-                    reg_stat=UserState.REG_PREFERENCES,
-                ),
+    async for session in get_session():
+        user_service = UserService(session, bot)
+        result = await user_service.set_age(message.from_user.id, age_msg)
+
+        if isinstance(result, MsgErr):
+            await message.answer(
+                result.error,
+                parse_mode="Markdown",
+                disable_web_page_preview=True,
             )
-        await message.answer(Messages.age_accepted())
+            return
 
-        if int(age_msg) < 18:
-            await message.answer(Messages.age_under_18_warning())
+    await message.answer(Messages.age_accepted())
 
-        await message.answer(Messages.ask_publication_preferences())
-        await state.set_state(RegistrationStates.waiting_for_preferences)
+    if age_msg.isdigit() and int(age_msg) < 18:
+        await message.answer(Messages.age_under_18_warning())
+
+    await message.answer(Messages.ask_publication_preferences())
+    await state.set_state(RegistrationStates.waiting_for_preferences)
 
 
 @router.message(RegistrationStates.waiting_for_preferences)
-async def reg_set_preferences(message: Message, state: FSMContext) -> None:
+async def reg_set_preferences(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
     comm_msg = message.text.strip()
 
     async for session in get_session():
-        await update_user(
-            session,
-            message.from_user.id,
-            UserUpdate(comm=comm_msg, reg_stat=UserState.REG_LANGUAGE),
-        )
+        user_service = UserService(session, bot)
+        await user_service.set_preferences(message.from_user.id, comm_msg)
 
     await message.answer(Messages.publication_preferences_accepted(comm_msg))
     await message.answer(Messages.ask_language())
@@ -220,30 +182,22 @@ async def reg_set_preferences(message: Message, state: FSMContext) -> None:
 
 
 @router.message(RegistrationStates.waiting_for_language)
-async def reg_set_language(message: Message, state: FSMContext) -> None:
+async def reg_set_language(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
-    lang_msg = message.text.strip().replace(" ", "").replace(",", "").replace(".", "")
-
-    if len(lang_msg) > 1 or lang_msg not in ["1", "2", "3"]:
-        await message.answer(Messages.selection_not_recognized())
-        await message.answer(Messages.ask_language())
-        return
-
-    lang_map: dict[str, UserLanguage] = {"1": "all", "2": "eng", "3": "rus"}
-    lang_value = lang_map[lang_msg]
+    lang_msg = message.text.strip()
 
     async for session in get_session():
-        await update_user(
-            session,
-            message.from_user.id,
-            UserUpdate(
-                lng=lang_value,
-                reg_stat=UserState.REG_COMPLETED,
-                reg_end=datetime.now(),
-            ),
+        user_service = UserService(session, bot)
+        result = await user_service.set_language_and_complete(
+            message.from_user.id, lang_msg
         )
+
+        if isinstance(result, MsgErr):
+            await message.answer(result.error)
+            await message.answer(Messages.ask_language())
+            return
 
     await message.answer(Messages.registration_complete())
     await state.clear()

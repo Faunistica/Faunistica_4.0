@@ -1,22 +1,15 @@
 import logging
-from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from core.config import settings
-from core.dependencies import ClientIP, DBSession
-from core.enums import UserState
+from core.dependencies import ClientIP
 from core.rate_limiter import limiter
 from core.security import check_password, set_response_token_cookies
-from repository.user import (
-    UserUpdate,
-    find_user_by_username,
-    update_user,
-)
 from schema.common import LoginRequest, UserLoginResponse
 from schema.jwt import TokenPayload
 from service.actions import ActionService
+from service.user import REGISTERED_STATES, UserService
 
 logger = logging.getLogger(__name__)
 
@@ -29,32 +22,16 @@ async def login(
     request: Request,
     response: Response,
     data: LoginRequest,
-    session: DBSession,
     ip: ClientIP,
     action_service: Annotated[ActionService, Depends()],
+    user_service: Annotated[UserService, Depends()],
 ) -> UserLoginResponse:
-    """
-    Аутентификация пользователя по логину и паролю.
-
-    При успешной проверке устанавливает JWT токены в HTTP-only cookies
-    """
-    user = await find_user_by_username(session, data.username)
+    user = await user_service.find_by_username(data.username)
     if user is None:
         logger.info("User not found: %s", data.username)
         raise HTTPException(status_code=404, detail="User not found")
 
-    if user.name is None or user.reg_stat not in (
-        UserState.REG_COMPLETED,
-        UserState.SUPPORT,
-        UserState.SURVEY_AGE,
-        UserState.SURVEY_PREFERENCES,
-        UserState.SURVEY_LANGUAGE,
-        UserState.SURVEY_RATING,
-        UserState.SURVEY_REGION,
-        UserState.SURVEY_EMAIL,
-        UserState.SURVEY_SEX,
-        UserState.RENAME,
-    ):
+    if user.name is None or user.reg_stat not in REGISTERED_STATES:
         logger.info("User not fully registered: %s", data.username)
         raise HTTPException(status_code=403, detail="Registration not completed")
 
@@ -68,14 +45,11 @@ async def login(
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if result.new_hash:
-        await update_user(session, user.user_id, UserUpdate(hash=result.new_hash))
+        await user_service.update_user_data(user.user_id, hash=result.new_hash)
 
-    if user.hash_date is not None:
-        now = datetime.now()
-        minutes_since_hash = (now - user.hash_date).total_seconds() / 60
-        if minutes_since_hash > settings.PASSWORD_EXPIRE_MINUTES:
-            logger.info("Password expired for user: %s", data.username)
-            raise HTTPException(status_code=401, detail="Password expired")
+    if UserService.is_password_expired(user):
+        logger.info("Password expired for user: %s", data.username)
+        raise HTTPException(status_code=401, detail="Password expired")
 
     token_payload = TokenPayload(
         sub=str(user.user_id), username=data.username, version=user.token_version
