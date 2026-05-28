@@ -96,7 +96,7 @@ class RecordData(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator("specimens", mode="before")
+    @field_validator("specimens", mode="after")
     @classmethod
     def filter_invalid_specimen_combinations(
         cls, v: list[Specimen] | None
@@ -113,10 +113,9 @@ class RecordData(BaseModel):
         """
         if v is None:
             return None
-        filtered = [
-            s for s in v if (s.sex, s.life_stage) in VALID_SPECIMEN_COMBINATIONS
-        ]
-        return filtered if filtered else None
+        if any((s.sex, s.life_stage) not in VALID_SPECIMEN_COMBINATIONS for s in v):
+            raise ValueError("Invalid specimen sex/life_stage combination")
+        return v
 
 
 class RecordFull(RecordData, RecordMetadata): ...
