@@ -20,16 +20,23 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
 
     return (
         <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="flex justify-between pb-2">
-                <div className="flex items-center gap-2">
-                    <span className="size-8 rounded-lg bg-amber-50 p-2 text-amber-600">
-                        <CalendarDays className="size-4" />
-                    </span>
-                    <CardTitle className="text-lg font-semibold">
-                        Параметры сбора материала
-                    </CardTitle>
+            <CardHeader className="pb-2">
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className="size-8 shrink-0 self-start rounded-lg bg-amber-50 p-2 text-amber-600">
+                            <CalendarDays className="size-4" />
+                        </span>
+                        <CardTitle className="min-w-0 text-lg font-semibold">
+                            Параметры сбора материала
+                        </CardTitle>
+                    </div>
+                    <SavedPresetSelect
+                        type="event"
+                        publ_id={publ_id}
+                        activeRecordId={activeRecordId}
+                        className="w-full md:w-auto"
+                    />
                 </div>
-                <SavedPresetSelect type="event" publ_id={publ_id} activeRecordId={activeRecordId} />
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

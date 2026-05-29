@@ -44,7 +44,7 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
                             <Badge className="border-none bg-slate-100 text-slate-700 hover:bg-slate-200">
                                 Источник данных
                             </Badge>
-                            <span className="font-mono text-xs text-slate-500">
+                            <span className="pt-1 font-mono text-xs text-slate-500">
                                 ID: PUB-{publication.publ_id}
                             </span>
                         </div>

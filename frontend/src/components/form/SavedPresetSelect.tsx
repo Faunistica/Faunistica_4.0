@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { type FC, useCallback } from 'react';
 import { useFormContext, type FieldPath } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ interface Props {
     type: PresetType;
     publ_id: number;
     activeRecordId: string | null;
+    className?: string;
 }
 
 interface Preset {
@@ -38,7 +40,7 @@ const LABEL_BUILDERS: Record<PresetType, (d: RecordFull) => string> = {
     event: eventSummary,
 };
 
-const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
+const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className }) => {
     const { setValue } = useFormContext<FormRecord>();
 
     const presets = useAppSelector(
@@ -131,7 +133,10 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="my-auto border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+                    className={cn(
+                        'my-auto border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800',
+                        className,
+                    )}
                 >
                     <History className="size-4" />
                     Заполнить как у другой записи

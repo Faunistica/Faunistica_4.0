@@ -77,20 +77,23 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
 
     return (
         <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="flex justify-between pb-2">
-                <div className="flex items-center gap-2">
-                    <span className="size-8 rounded-lg bg-emerald-50 p-2 text-emerald-600">
-                        <MapPin className="size-4" />
-                    </span>
-                    <CardTitle className="text-lg font-semibold">
-                        Пространственная локализация
-                    </CardTitle>
+            <CardHeader className="pb-2">
+                <div className="flex flex-col items-center gap-2 md:flex-row md:justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className="size-8 shrink-0 rounded-lg bg-emerald-50 p-2 text-emerald-600">
+                            <MapPin className="size-4" />
+                        </span>
+                        <CardTitle className="text-lg font-semibold">
+                            Пространственная локализация
+                        </CardTitle>
+                    </div>
+                    <SavedPresetSelect
+                        type="location"
+                        publ_id={publ_id}
+                        activeRecordId={activeRecordId}
+                        className="w-full md:w-auto"
+                    />
                 </div>
-                <SavedPresetSelect
-                    type="location"
-                    publ_id={publ_id}
-                    activeRecordId={activeRecordId}
-                />
             </CardHeader>
 
             <CardContent className="space-y-6">
