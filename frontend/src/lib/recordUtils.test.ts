@@ -204,10 +204,10 @@ describe('toFormPartial', () => {
         expect(result.males).toBe(3);
         expect(result.females).toBe(5);
         expect(result.juveniles).toBe(6);
-        // Fields without matching specimens are omitted (reset fills from defaultValues)
-        expect(result.subadultMales).toBeUndefined();
-        expect(result.subadultFemales).toBeUndefined();
-        expect(result.adults).toBeUndefined();
+        // Fields without matching specimens are set to 0
+        expect(result.subadultMales).toBe(0);
+        expect(result.subadultFemales).toBe(0);
+        expect(result.adults).toBe(0);
     });
 
     it('maps all six specimen types', () => {
@@ -233,16 +233,16 @@ describe('toFormPartial', () => {
         expect(result.juveniles).toBe(6);
     });
 
-    it('handles null specimens by omitting all count fields', () => {
+    it('handles null specimens by setting all count fields to 0', () => {
         const record = { ...baseRecord, specimens: null };
         const result = toFormPartial(record);
 
-        expect(result.males).toBeUndefined();
-        expect(result.females).toBeUndefined();
-        expect(result.subadultMales).toBeUndefined();
-        expect(result.subadultFemales).toBeUndefined();
-        expect(result.adults).toBeUndefined();
-        expect(result.juveniles).toBeUndefined();
+        expect(result.males).toBe(0);
+        expect(result.females).toBe(0);
+        expect(result.subadultMales).toBe(0);
+        expect(result.subadultFemales).toBe(0);
+        expect(result.adults).toBe(0);
+        expect(result.juveniles).toBe(0);
     });
 
     it('preserves quantity_type', () => {
