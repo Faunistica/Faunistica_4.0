@@ -79,7 +79,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
         <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-2">
                 <div className="flex flex-col items-center gap-2 md:flex-row md:justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex gap-2 md:items-center">
                         <span className="size-8 shrink-0 rounded-lg bg-emerald-50 p-2 text-emerald-600">
                             <MapPin className="size-4" />
                         </span>

@@ -87,7 +87,7 @@ const Footer: FC = () => {
                         onClick={() => setIsDeleteDialogOpen(true)}
                         disabled={isBusy}
                         variant="destructive"
-                        className="gap-2 text-xs"
+                        className="hidden gap-2 text-xs md:inline-flex"
                     >
                         <Trash2 className="size-4" />
                         Удалить
