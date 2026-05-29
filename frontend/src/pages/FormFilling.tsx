@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import { useOutletContext, useParams } from 'react-router';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RecordFormProvider, useRecordFormContext } from '@/contexts/RecordFormProvider';
 import type { FormRecord } from '@/types/api.dto';

@@ -14,10 +14,16 @@ export const recordFormSchema = z.object({
     locality: z.string().min(1, 'Обязательное поле'),
     is_manual_location: z.boolean().nullish(),
     verbatimcoordinates: z.string().nullish(),
-    latitude: z.number('Число').min(LAT_MIN, `Мин. ${LAT_MIN}`).max(LAT_MAX, `Макс. ${LAT_MAX}`),
-    longitude: z.number('Число').min(LNG_MIN, `Мин. ${LNG_MIN}`).max(LNG_MAX, `Макс. ${LNG_MAX}`),
-    coordinate_uncertainty: z
-        .number()
+    latitude: z.coerce
+        .number<number>('Число')
+        .min(LAT_MIN, `Мин. ${LAT_MIN}`)
+        .max(LAT_MAX, `Макс. ${LAT_MAX}`),
+    longitude: z.coerce
+        .number<number>('Число')
+        .min(LNG_MIN, `Мин. ${LNG_MIN}`)
+        .max(LNG_MAX, `Макс. ${LNG_MAX}`),
+    coordinate_uncertainty: z.coerce
+        .number<number>()
         .min(UNCERTAINTY_MIN, `Мин. ${UNCERTAINTY_MIN}`)
         .max(UNCERTAINTY_MAX, `Макс. ${UNCERTAINTY_MAX}`)
         .nullish(),
@@ -30,7 +36,7 @@ export const recordFormSchema = z.object({
     habitat: z.string().nullish(),
     sampling_protocol: z.string().min(1, 'Обязательное поле'),
     sampling_effort: z.string().nullish(),
-    sample_size_value: z.number().nullish(),
+    sample_size_value: z.coerce.number<number>().nullish(),
     sample_size_unit: z.string().nullish(),
     event_remarks: z.string().nullish(),
     field_number: z.string().nullish(),
@@ -52,12 +58,12 @@ export const recordFormSchema = z.object({
     // ═══ QUANTITIES ═══
     quantity_type: z.string().nullish(),
     occurrence_remarks: z.string().nullish(),
-    males: z.coerce.number().min(0).nullish(),
-    subadultMales: z.coerce.number().min(0).nullish(),
-    females: z.coerce.number().min(0).nullish(),
-    subadultFemales: z.coerce.number().min(0).nullish(),
-    adults: z.coerce.number().min(0).nullish(),
-    juveniles: z.coerce.number().min(0).nullish(),
+    males: z.coerce.number<number>().min(0).nullish(),
+    subadultMales: z.coerce.number<number>().min(0).nullish(),
+    females: z.coerce.number<number>().min(0).nullish(),
+    subadultFemales: z.coerce.number<number>().min(0).nullish(),
+    adults: z.coerce.number<number>().min(0).nullish(),
+    juveniles: z.coerce.number<number>().min(0).nullish(),
 });
 
 export type RecordForm = z.infer<typeof recordFormSchema>;

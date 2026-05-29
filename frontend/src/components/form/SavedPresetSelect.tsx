@@ -38,19 +38,13 @@ const LABEL_BUILDERS: Record<PresetType, (d: RecordFull) => string> = {
     event: eventSummary,
 };
 
-const EMPTY_PRESETS: Preset[] = [];
-
 const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
     const { setValue } = useFormContext<FormRecord>();
 
     const presets = useAppSelector(
         (state) => {
-            const userId = state.user.user_id;
-            if (!userId) return EMPTY_PRESETS;
-
             const result = recordAPI.endpoints.recordsList.select({
                 publ_id,
-                user_id: userId,
             })(state);
             const items = 'data' in result ? (result.data?.items ?? []) : [];
             const fields = FIELD_KEYS[type];
@@ -71,7 +65,10 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
                 if (seen.has(hash)) continue;
                 seen.add(hash);
 
-                resultList.push({ label: buildLabel(record), recordId: record.id });
+                const label = buildLabel(record);
+                if (label.length === 0) continue;
+
+                resultList.push({ label: label, recordId: record.id });
             }
 
             return resultList;
@@ -91,7 +88,6 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId }) => {
 
             const result = recordAPI.endpoints.recordsList.select({
                 publ_id,
-                user_id: userId,
             })(state);
             const items = 'data' in result ? (result.data?.items ?? []) : [];
             return new Map(items.map((r) => [r.id, r]));

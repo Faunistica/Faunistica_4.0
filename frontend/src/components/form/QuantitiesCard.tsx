@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const QuantitiesCard: FC = () => {
     const { control } = useFormContext<FormRecord>();
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const total = useWatch<FormRecord>({
         name: ['males', 'subadultMales', 'females', 'subadultFemales', 'adults', 'juveniles'],
         compute: (data) =>
@@ -31,7 +32,7 @@ const QuantitiesCard: FC = () => {
                 const num = typeof v === 'string' ? parseFloat(v) : v;
                 return sum + (num || 0);
             }, 0),
-    });
+    }) as number;
 
     const quantityFields = [
         { key: 'males' as const, label: QUANTITY_FIELD_LABELS.males, color: 'text-blue-600' },

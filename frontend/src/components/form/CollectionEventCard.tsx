@@ -1,5 +1,6 @@
 import { type FC } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -66,6 +67,24 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     </TooltipProvider>
 
                     <Controller
+                        name="date_precision"
+                        control={control}
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
+                                <FieldLabel htmlFor="date_precision">Точность даты</FieldLabel>
+                                <Input
+                                    id="date_precision"
+                                    placeholder="день, месяц, год…"
+                                    aria-invalid={invalid}
+                                    {...field}
+                                    value={field.value?.toString()}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
+                    />
+
+                    <Controller
                         name="recorded_by"
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
@@ -81,7 +100,32 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                             </Field>
                         )}
                     />
+                </div>
 
+                <div>
+                    <Controller
+                        name="is_interval"
+                        control={control}
+                        render={({ field, fieldState }) => (
+                            <Field orientation="horizontal" data-invalid={fieldState.invalid}>
+                                <Checkbox
+                                    id="is_interval"
+                                    checked={field.value ?? false}
+                                    onCheckedChange={field.onChange}
+                                />
+                                <FieldLabel
+                                    htmlFor="is_interval"
+                                    className="cursor-pointer font-normal"
+                                >
+                                    Дата является интервалом
+                                </FieldLabel>
+                                <FieldError errors={[fieldState.error]} />
+                            </Field>
+                        )}
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 lg:grid-cols-3">
                     <Controller
                         name="sampling_protocol"
                         control={control}
@@ -93,6 +137,44 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="ловушки Барбера, кошение сачком…"
                                     aria-invalid={invalid}
                                     {...field}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
+                    />
+
+                    <Controller
+                        name="sample_size_value"
+                        control={control}
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
+                                <FieldLabel htmlFor="sample_size_value">Объём выборки</FieldLabel>
+                                <Input
+                                    id="sample_size_value"
+                                    type="number"
+                                    min={0}
+                                    placeholder="Число"
+                                    aria-invalid={invalid}
+                                    {...field}
+                                    value={field.value?.toString()}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
+                    />
+
+                    <Controller
+                        name="sample_size_unit"
+                        control={control}
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
+                                <FieldLabel htmlFor="sample_size_unit">Единица выборки</FieldLabel>
+                                <Input
+                                    id="sample_size_unit"
+                                    placeholder="ловушки, взмахи сачком…"
+                                    aria-invalid={invalid}
+                                    {...field}
+                                    value={field.value?.toString()}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -152,24 +234,28 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     />
                 </div>
 
-                <Controller
-                    name="event_remarks"
-                    control={control}
-                    render={({ field, fieldState: { error, invalid } }) => (
-                        <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor="event_remarks">Примечания к событию</FieldLabel>
-                            <Textarea
-                                id="event_remarks"
-                                className="min-h-20 resize-none"
-                                placeholder="Погодные условия, методика и т.п."
-                                aria-invalid={invalid}
-                                {...field}
-                                value={field.value?.toString()}
-                            />
-                            <FieldError errors={[error]} />
-                        </Field>
-                    )}
-                />
+                <div className="border-t border-slate-100 pt-5">
+                    <Controller
+                        name="event_remarks"
+                        control={control}
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
+                                <FieldLabel htmlFor="event_remarks">
+                                    Примечания к событию
+                                </FieldLabel>
+                                <Textarea
+                                    id="event_remarks"
+                                    className="min-h-20 resize-none"
+                                    placeholder="Погодные условия, методика и т.п."
+                                    aria-invalid={invalid}
+                                    {...field}
+                                    value={field.value?.toString()}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
+                    />
+                </div>
 
                 <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-3">
                     <Controller

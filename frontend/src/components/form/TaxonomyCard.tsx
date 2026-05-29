@@ -193,7 +193,7 @@ const TaxonomyCard: FC = () => {
                     />
                 </div>
 
-                <div className="flex flex-wrap gap-6 border-t border-slate-100 pt-4">
+                <div className="flex flex-wrap gap-6">
                     <Controller
                         name="tax_verbatim"
                         control={control}
@@ -216,7 +216,7 @@ const TaxonomyCard: FC = () => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 lg:grid-cols-2">
                     <Controller
                         name="taxon_remarks"
                         control={control}
