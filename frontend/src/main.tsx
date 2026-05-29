@@ -10,6 +10,8 @@ import { routes } from './router.tsx';
 
 import LoadingScreen from './components/LoadingScreen.tsx';
 import NetworkErrorAlert from './components/alerts/NetworkErrorAlert.tsx';
+import { ThemeProvider } from 'next-themes';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 import type * as Types from '@/types/api.dto';
 
@@ -74,7 +76,16 @@ const App = () => {
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <Provider store={store}>
-            <App />
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+            >
+                <TooltipProvider>
+                    <App />
+                </TooltipProvider>
+            </ThemeProvider>
         </Provider>
     </StrictMode>,
 );

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarDays, Info } from 'lucide-react';
 import type { FormRecord } from '@/types/api.dto';
 import SavedPresetSelect from '@/components/form/SavedPresetSelect';
@@ -40,38 +40,36 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <TooltipProvider>
-                        <Controller
-                            name="verbatim_date"
-                            control={control}
-                            render={({ field, fieldState: { error, invalid } }) => (
-                                <Field data-invalid={invalid}>
-                                    <div className="flex items-center gap-1">
-                                        <FieldLabel htmlFor="verbatim_date">
-                                            Дата сбора (как в статье)
-                                        </FieldLabel>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Info className="size-3.5 cursor-help text-slate-400" />
-                                            </TooltipTrigger>
-                                            <TooltipContent side="top" className="max-w-xs text-xs">
-                                                Укажите дату точно так, как она приведена в статье.
-                                                Примеры: «19.08.2018», «19.08–02.09.2018», «лето
-                                                2017», «VIII.2019».
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </div>
-                                    <Input
-                                        id="verbatim_date"
-                                        placeholder="19.08-02.09.2018"
-                                        aria-invalid={invalid}
-                                        {...field}
-                                    />
-                                    <FieldError errors={[error]} />
-                                </Field>
-                            )}
-                        />
-                    </TooltipProvider>
+                    <Controller
+                        name="verbatim_date"
+                        control={control}
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
+                                <div className="flex items-center gap-1">
+                                    <FieldLabel htmlFor="verbatim_date">
+                                        Дата сбора (как в статье)
+                                    </FieldLabel>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Info className="size-3.5 cursor-help text-slate-400" />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="max-w-xs text-xs">
+                                            Укажите дату точно так, как она приведена в статье.
+                                            Примеры: «19.08.2018», «19.08–02.09.2018», «лето 2017»,
+                                            «VIII.2019».
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <Input
+                                    id="verbatim_date"
+                                    placeholder="19.08-02.09.2018"
+                                    aria-invalid={invalid}
+                                    {...field}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
+                    />
 
                     <Controller
                         name="date_precision"
@@ -190,37 +188,35 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <TooltipProvider>
-                        <Controller
-                            name="habitat"
-                            control={control}
-                            render={({ field, fieldState: { error, invalid } }) => (
-                                <Field data-invalid={invalid}>
-                                    <div className="flex items-center gap-1">
-                                        <FieldLabel htmlFor="habitat">Биотоп</FieldLabel>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Info className="size-3.5 cursor-help text-slate-400" />
-                                            </TooltipTrigger>
-                                            <TooltipContent side="top" className="max-w-xs text-xs">
-                                                Если биотопов несколько, разделяйте их точкой с
-                                                запятой «;».
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </div>
-                                    <Input
-                                        id="habitat"
-                                        className="min-h-8 resize-none"
-                                        placeholder="Описание местообитания; второе местообитание"
-                                        aria-invalid={invalid}
-                                        {...field}
-                                        value={field.value?.toString()}
-                                    />
-                                    <FieldError errors={[error]} />
-                                </Field>
-                            )}
-                        />
-                    </TooltipProvider>
+                    <Controller
+                        name="habitat"
+                        control={control}
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
+                                <div className="flex items-center gap-1">
+                                    <FieldLabel htmlFor="habitat">Биотоп</FieldLabel>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Info className="size-3.5 cursor-help text-slate-400" />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="max-w-xs text-xs">
+                                            Если биотопов несколько, разделяйте их точкой с запятой
+                                            «;».
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <Input
+                                    id="habitat"
+                                    className="min-h-8 resize-none"
+                                    placeholder="Описание местообитания; второе местообитание"
+                                    aria-invalid={invalid}
+                                    {...field}
+                                    value={field.value?.toString()}
+                                />
+                                <FieldError errors={[error]} />
+                            </Field>
+                        )}
+                    />
 
                     <Controller
                         name="sampling_effort"

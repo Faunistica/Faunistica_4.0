@@ -16,7 +16,7 @@ import { Hash } from 'lucide-react';
 import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/types/constants';
 import type { FormRecord } from '@/types/api.dto';
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const QuantitiesCard: FC = () => {
     const { control } = useFormContext<FormRecord>();
@@ -68,49 +68,47 @@ const QuantitiesCard: FC = () => {
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-                <TooltipProvider>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-                        {quantityFields.map(({ key, label, color }) => (
-                            <Controller
-                                name={key}
-                                key={key}
-                                control={control}
-                                render={({ field, fieldState: { error, invalid } }) => (
-                                    <Field data-invalid={invalid} className="gap-1.5">
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <FieldLabel
-                                                    htmlFor={key}
-                                                    className={cn(
-                                                        'text-[10px] font-semibold tracking-wider uppercase',
-                                                        color,
-                                                        'cursor-help truncate',
-                                                    )}
-                                                >
-                                                    {label}
-                                                </FieldLabel>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="top" className="text-xs">
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+                    {quantityFields.map(({ key, label, color }) => (
+                        <Controller
+                            name={key}
+                            key={key}
+                            control={control}
+                            render={({ field, fieldState: { error, invalid } }) => (
+                                <Field data-invalid={invalid} className="gap-1.5">
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <FieldLabel
+                                                htmlFor={key}
+                                                className={cn(
+                                                    'text-[10px] font-semibold tracking-wider uppercase',
+                                                    color,
+                                                    'cursor-help truncate',
+                                                )}
+                                            >
                                                 {label}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                        <Input
-                                            id={key}
-                                            type="number"
-                                            min={0}
-                                            placeholder="0"
-                                            className="h-9 text-center focus-visible:ring-1 focus-visible:ring-slate-300"
-                                            aria-invalid={invalid}
-                                            {...field}
-                                            value={field.value?.toString()}
-                                        />
-                                        <FieldError errors={[error]} />
-                                    </Field>
-                                )}
-                            />
-                        ))}
-                    </div>
-                </TooltipProvider>
+                                            </FieldLabel>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="text-xs">
+                                            {label}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    <Input
+                                        id={key}
+                                        type="number"
+                                        min={0}
+                                        placeholder="0"
+                                        className="h-9 text-center focus-visible:ring-1 focus-visible:ring-slate-300"
+                                        aria-invalid={invalid}
+                                        {...field}
+                                        value={field.value?.toString()}
+                                    />
+                                    <FieldError errors={[error]} />
+                                </Field>
+                            )}
+                        />
+                    ))}
+                </div>
 
                 <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-2">
                     <Controller
