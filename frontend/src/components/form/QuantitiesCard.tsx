@@ -20,13 +20,18 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const QuantitiesCard: FC = () => {
     const { control } = useFormContext<FormRecord>();
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const total = useWatch<FormRecord>({
         name: ['males', 'subadultMales', 'females', 'subadultFemales', 'adults', 'juveniles'],
-        // v is actually always a number
-        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-        compute: (data) => data.reduce<number>((sum, v) => sum + ((v as number) || 0), 0),
-    }) as number;
+        compute: (data) =>
+            data.reduce<number>((sum, v) => {
+                // Handle both numbers and strings from form inputs
+                if (typeof v == 'boolean') {
+                    return 0;
+                }
+                const num = typeof v === 'string' ? parseFloat(v) : v;
+                return sum + (num || 0);
+            }, 0),
+    });
 
     const quantityFields = [
         { key: 'males' as const, label: QUANTITY_FIELD_LABELS.males, color: 'text-blue-600' },

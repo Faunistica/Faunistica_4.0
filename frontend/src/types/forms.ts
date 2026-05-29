@@ -52,12 +52,12 @@ export const recordFormSchema = z.object({
     // ═══ QUANTITIES ═══
     quantity_type: z.string().nullish(),
     occurrence_remarks: z.string().nullish(),
-    males: z.number().min(0).nullish(),
-    subadultMales: z.number().min(0).nullish(),
-    females: z.number().min(0).nullish(),
-    subadultFemales: z.number().min(0).nullish(),
-    adults: z.number().min(0).nullish(),
-    juveniles: z.number().min(0).nullish(),
+    males: z.coerce.number().min(0).nullish(),
+    subadultMales: z.coerce.number().min(0).nullish(),
+    females: z.coerce.number().min(0).nullish(),
+    subadultFemales: z.coerce.number().min(0).nullish(),
+    adults: z.coerce.number().min(0).nullish(),
+    juveniles: z.coerce.number().min(0).nullish(),
 });
 
 export type RecordForm = z.infer<typeof recordFormSchema>;

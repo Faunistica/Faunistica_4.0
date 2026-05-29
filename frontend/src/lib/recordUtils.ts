@@ -90,9 +90,11 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
     const specimens: Specimen[] = [];
     for (const field of QUANTITY_FIELDS) {
         const count = draft[field];
-        if (typeof count === 'number' && count > 0) {
+        // Handle both numbers and strings (HTML inputs return strings)
+        const numCount = typeof count === 'string' ? parseFloat(count) : count;
+        if (typeof numCount === 'number' && !isNaN(numCount) && numCount > 0) {
             const { sex, life_stage } = getSexAndLifestageFromField(field);
-            specimens.push({ sex, life_stage, count });
+            specimens.push({ sex, life_stage, count: numCount });
         }
     }
     if (specimens.length > 0) {
@@ -111,8 +113,11 @@ export function toFormPartial(record: RecordFull): Partial<FormRecord> {
         const spec = record.specimens?.find(
             (s) => s.sex === mapping.sex && s.life_stage === mapping.life_stage,
         );
-        if (spec?.count != null) {
-            result[mapping.formField] = spec.count;
+        const numCount = typeof spec?.count === 'string' ? parseFloat(spec.count) : spec?.count;
+        if (numCount != null && !isNaN(numCount)) {
+            result[mapping.formField] = numCount;
+        } else {
+            result[mapping.formField] = 0;
         }
     }
     return result as Partial<FormRecord>;

@@ -26,7 +26,7 @@ import { useAppDispatch, useAppSelector } from '@/store/store';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 export const AUTO_SAVE_DELAY = 2000;
-const SHOULD_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE !== 'true';
+const SHOULD_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE;
 
 export type RecordFormPhase =
     | { phase: 'idle' }
