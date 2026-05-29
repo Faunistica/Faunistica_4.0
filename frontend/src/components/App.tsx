@@ -13,7 +13,7 @@ import LoadingScreen from '@/components/LoadingScreen.tsx';
 import type * as Types from '@/types/api.dto';
 
 function isUserInfo(value: unknown): value is Types.UserInfo {
-    return typeof value === 'object' && value !== null && 'user_id' in value && 'username' in value;
+    return typeof value === 'object' && value !== null && 'user_id' in value && 'name' in value;
 }
 
 async function verifyAuthInBackground(setNetworkError: (value: boolean) => void) {

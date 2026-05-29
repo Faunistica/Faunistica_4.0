@@ -7,8 +7,6 @@ export function NavigationWrapper() {
     const isNavigating = Boolean(navigation.location);
     const context = useOutletContext();
 
-    console.log(navigation.location);
-
     if (isNavigating) {
         return <LoadingScreen />;
     }

@@ -20,7 +20,7 @@ export const authAPI = createApi({
                     const { data } = await queryFulfilled;
                     dispatch(
                         login({
-                            username: data.username,
+                            name: data.name,
                             user_id: data.user_id,
                         }),
                     );
@@ -51,7 +51,7 @@ export const authAPI = createApi({
                     const { data } = await queryFulfilled;
                     dispatch(
                         login({
-                            username: data.username,
+                            name: data.name,
                             user_id: data.user_id,
                         }),
                     );
