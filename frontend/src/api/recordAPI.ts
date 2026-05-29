@@ -48,7 +48,7 @@ export const recordAPI = createApi({
             }),
             invalidatesTags: ['records-list'],
         }),
-        editRecord: build.mutation<Types.UpdateRecordResponse, Types.EditRecordRequest>({
+        editRecord: build.mutation<Types.RecordFull, Types.EditRecordRequest>({
             query: ({ record_id, data }) => ({
                 url: `/records/${record_id}`,
                 method: 'PUT',
@@ -57,9 +57,9 @@ export const recordAPI = createApi({
             onQueryStarted: async ({ record_id }, { dispatch, queryFulfilled }) => {
                 try {
                     const { data } = await queryFulfilled;
-                    if (data.record) {
-                        const user_id = data.record.user_id;
-                        const publ_id = data.record.publ_id;
+                    if (data) {
+                        const user_id = data.user_id;
+                        const publ_id = data.publ_id;
                         dispatch(
                             recordAPI.util.updateQueryData(
                                 'recordsList',
@@ -67,17 +67,13 @@ export const recordAPI = createApi({
                                 (draft) => {
                                     const idx = draft.items.findIndex((r) => r.id === record_id);
                                     if (idx !== -1) {
-                                        draft.items[idx] = data.record;
+                                        draft.items[idx] = data;
                                     }
                                 },
                             ),
                         );
                         await dispatch(
-                            recordAPI.util.upsertQueryData(
-                                'recordById',
-                                { record_id },
-                                data.record,
-                            ),
+                            recordAPI.util.upsertQueryData('recordById', { record_id }, data),
                         );
                     }
                 } catch {
@@ -92,7 +88,7 @@ export const recordAPI = createApi({
             }),
             invalidatesTags: ['records-list'],
         }),
-        submitRecord: build.mutation<Types.UpdateRecordResponse, Types.EditRecordRequest>({
+        submitRecord: build.mutation<Types.RecordFull, Types.EditRecordRequest>({
             query: ({ record_id, data }) => ({
                 url: `/records/${record_id}/submit`,
                 method: 'PUT',

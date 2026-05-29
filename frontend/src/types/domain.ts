@@ -47,7 +47,7 @@ export interface RecordFull extends RecordData {
     id: string;
     publ_id: number;
     user_id: number;
-    errors?: string | null;
+    errors?: RecordValidationError[] | null;
     type?: string | null;
     created_at: string;
     updated_at: string;

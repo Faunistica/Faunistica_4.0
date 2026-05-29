@@ -118,4 +118,20 @@ class RecordData(BaseModel):
         return v
 
 
-class RecordFull(RecordData, RecordMetadata): ...
+class RecordValidationError(BaseModel):
+    fields: list[str]
+    code: str
+    message: str
+    category: str | None = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RecordFull(RecordData, RecordMetadata):
+    errors: list[RecordValidationError] | None = None
+
+    @field_validator("errors", mode="before")
+    @classmethod
+    def discard_db_string(cls, v: str | list | None) -> list | None:
+        if isinstance(v, str):
+            return None
+        return v

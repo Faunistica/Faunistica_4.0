@@ -10,7 +10,7 @@ export type {
     ImportError,
 } from './domain';
 
-import type { RecordFull, RecordData, UserInfo, ImportError } from './domain';
+import type { RecordData, UserInfo, ImportError } from './domain';
 
 export interface ApiErrorBody {
     // TODO: type detail properly as FastAPI validation errors (PydanticValidationError[])
@@ -25,11 +25,6 @@ export interface LoginRequest {
 }
 
 export type UserLoginResponse = UserInfo;
-
-export interface UpdateRecordResponse {
-    record: RecordFull;
-    errors: import('./domain').RecordValidationError[];
-}
 
 export interface CreateRecordRequest {
     publ_id: number;

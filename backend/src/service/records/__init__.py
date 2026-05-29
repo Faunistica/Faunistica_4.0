@@ -25,17 +25,24 @@ from repository.publication import get_publication
 from repository.record import count_records_by_user_publ
 from repository.user import get_user_expect
 from schema.common import PaginatedResponse
-from schema.records import (
-    RecordData,
-    RecordFull,
-)
+from schema.records import RecordData, RecordFull, RecordValidationError
 from service.actions import ActionService
 from service.export import ParseResult, is_row_empty
 from service.milestone import check_and_log_milestone
 from service.publications import PublicationService
+from service.records.validation import validate_record
 from service.records.validation.errors import ErrorCollection
 
 from .util import _create_record_metadata, _enrich_record, _flatten_for_db
+
+
+def _errors_to_schema(
+    errors: ErrorCollection,
+) -> list[RecordValidationError] | None:
+    lst = errors.to_list()
+    if not lst:
+        return None
+    return [RecordValidationError.model_validate(e) for e in lst]
 
 
 class ImportError(BaseModel):
@@ -130,7 +137,9 @@ class RecordService:
             )
         await self.session.commit()
 
-        return _enrich_record(updated), errors
+        full = _enrich_record(updated)
+        full.errors = _errors_to_schema(errors)
+        return full, errors
 
     async def get_record(
         self,
@@ -141,7 +150,13 @@ class RecordService:
         if record is None:
             raise RecordNotFoundError(record_id)
 
-        return _enrich_record(record)
+        full = _enrich_record(record)
+        publ = await get_publication(self.session, record.publ_id)
+        language = publ.language if publ else None
+        record_data = RecordData.model_validate(record)
+        errors = validate_record(record_data, language=language)
+        full.errors = _errors_to_schema(errors)
+        return full
 
     async def delete_record(
         self,
@@ -174,11 +189,24 @@ class RecordService:
             self.session, user_id, publ_id, page=page, page_size=page_size, sort=sort
         )
 
-        # TODO: Check math
+        # Fetch language once — all records in a list share the same publ_id
+        language = None
+        if records:
+            publ = await get_publication(self.session, records[0].publ_id)
+            language = publ.language if publ else None
+
+        items: list[RecordFull] = []
+        for r in records:
+            full = _enrich_record(r)
+            record_data = RecordData.model_validate(r)
+            errors = validate_record(record_data, language=language)
+            full.errors = _errors_to_schema(errors)
+            items.append(full)
+
         pages = (total + page_size - 1) // page_size if page_size > 0 else 0
 
         return PaginatedResponse(
-            items=[_enrich_record(r) for r in records],
+            items=items,
             total=total,
             page=page,
             page_size=page_size,

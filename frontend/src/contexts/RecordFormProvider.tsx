@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import type { UseFormReturn } from 'react-hook-form';
-import type { FormRecord, UpdateRecordResponse } from '@/types/api.dto';
+import type { FormRecord, RecordFull } from '@/types/api.dto';
 import { draftToRecordData, toFormPartial } from '@/lib/recordUtils';
 import { FORM_DEFAULT_VALUES } from '@/types/forms';
 import { syncServerErrors } from '@/lib/syncServerErrors';
@@ -105,7 +105,7 @@ export function RecordFormProvider({
                 lastSnapshotRef.current = currentSnapshot;
                 lastKnownRef.current = {
                     id: activeRecordIdRef.current!,
-                    updatedAt: response.record.updated_at,
+                    updatedAt: response.updated_at,
                 };
                 setLastSavedTime(new Date());
                 setPhase({ phase: 'idle' });
@@ -184,6 +184,8 @@ export function RecordFormProvider({
             keepTouched: false,
             keepDirty: false,
         });
+        const nonField = syncServerErrors(activeRecord.errors ?? [], m);
+        setNonFieldErrors(nonField);
 
         lastSnapshotRef.current = JSON.stringify(toFormPartial(activeRecord));
 
@@ -225,7 +227,7 @@ export function RecordFormProvider({
         async (
             source: 'manual' | 'submit',
             values: Partial<FormRecord>,
-        ): Promise<UpdateRecordResponse | undefined> => {
+        ): Promise<RecordFull | undefined> => {
             const id = activeRecordIdRef.current;
             if (!id) return undefined;
 
@@ -239,7 +241,7 @@ export function RecordFormProvider({
                 if (activeRecordIdRef.current === id) {
                     lastKnownRef.current = {
                         id,
-                        updatedAt: response.record.updated_at,
+                        updatedAt: response.updated_at,
                     };
                 }
                 return response;
@@ -264,7 +266,7 @@ export function RecordFormProvider({
         const response = await performSave('manual', values);
         if (response) {
             setLastSavedTime(new Date());
-            const nonField = syncServerErrors(response, methodsRef.current);
+            const nonField = syncServerErrors(response.errors ?? [], methodsRef.current);
             setNonFieldErrors(nonField);
         }
         setPhase({ phase: 'idle' });
@@ -290,10 +292,10 @@ export function RecordFormProvider({
             }).unwrap();
             lastKnownRef.current = {
                 id: activeRecordIdRef.current!,
-                updatedAt: response.record.updated_at,
+                updatedAt: response.updated_at,
             };
             setLastSavedTime(new Date());
-            const nonField = syncServerErrors(response, methodsRef.current);
+            const nonField = syncServerErrors(response.errors ?? [], methodsRef.current);
             setNonFieldErrors(nonField);
             setPhase({ phase: 'idle' });
         } catch {
