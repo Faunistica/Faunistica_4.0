@@ -18,8 +18,10 @@ interface OutletContextType {
 }
 
 const FormFillingInner: FC<OutletContextType> = ({ isSidebarOpen, setIsSidebarOpen }) => {
-    const { state, actions } = useRecordFormContext();
-    const { activeRecordId, isInitialLoading } = state;
+    const {
+        state: { activeRecordId, isInitialLoading },
+        actions,
+    } = useRecordFormContext();
 
     if (isInitialLoading) return <LoadingScreen />;
 

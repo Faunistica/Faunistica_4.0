@@ -1,4 +1,4 @@
-import { type FC, useState, useRef, useCallback } from 'react';
+import { type FC, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Upload, FileSpreadsheet, X, AlertTriangle, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -47,25 +47,25 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
         setSelectedFile(file);
     };
 
-    const handleDragOver = useCallback((e: React.DragEvent) => {
+    const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(true);
-    }, []);
+    };
 
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
+    const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
-    }, []);
+    };
 
-    const handleDrop = useCallback((e: React.DragEvent) => {
+    const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
         const file = e.dataTransfer.files[0];
         if (file) handleFileSelect(file);
-    }, []);
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

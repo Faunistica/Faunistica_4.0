@@ -1,4 +1,4 @@
-import { type FC, useState, useRef } from 'react';
+import { type FC, useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     AlertDialog,
@@ -24,8 +24,10 @@ function formatTime(date: Date): string {
 const ENABLE_MOTION_ON_DESKTOP = false;
 
 const Footer: FC = () => {
-    const { state, actions } = useRecordFormContext();
-    const { status, lastSavedTime } = state;
+    const {
+        state: { status, lastSavedTime, activeRecordId },
+        actions,
+    } = useRecordFormContext();
     const isSaving = status.phase === 'saving';
     const isAutoSaving = status.phase === 'saving' && status.source === 'auto';
     const isBusy = status.phase === 'saving' || status.phase === 'syncing';
@@ -188,7 +190,7 @@ const Footer: FC = () => {
                         </Button>
                         <Button
                             onClick={() => {
-                                void actions.deleteRecord(state.activeRecordId!);
+                                void actions.deleteRecord(activeRecordId!);
                                 setIsDeleteDialogOpen(false);
                             }}
                             disabled={isBusy}

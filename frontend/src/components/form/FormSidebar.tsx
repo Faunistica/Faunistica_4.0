@@ -1,4 +1,4 @@
-import { type FC, useState, useCallback } from 'react';
+import { type FC, useState } from 'react';
 import { shallowEqual } from 'react-redux';
 import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -27,40 +27,48 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { recordAPI, useRecordByIdQuery } from '@/api/recordAPI';
+import { recordAPI } from '@/api/recordAPI';
 import { computeInactiveStatus } from '@/lib/recordStatus';
 import { useAppSelector } from '@/store/store';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 import ExcelUploadModal from '@/components/form/ExcelUploadModal';
 import { useRecordFormContext } from '@/contexts/RecordFormProvider';
+import { createSelector } from '@reduxjs/toolkit';
+
+const sidebarItemState = (record_id: string) =>
+    createSelector([recordAPI.endpoints.recordById.select({ record_id })], ({ data: record }) => {
+        return {
+            status: record ? computeInactiveStatus(record) : 'empty',
+            recordName: capitalizeFirstLetter(
+                record?.species || record?.genus || record?.family || 'Новая запись',
+            ),
+            recordLocation: record?.locality || record?.region || 'Нет данных о месте',
+        };
+    });
 
 const SidebarRecordItem = ({
-    recordId,
+    record_id,
     isActive,
     onSelectRecord,
     deleteRecord,
 }: {
-    recordId: string;
+    record_id: string;
     isActive: boolean;
     onSelectRecord: (id: string) => void;
     deleteRecord: (id: string) => void;
 }) => {
     // Only use blocking fields?
-    const { currentData: record } = useRecordByIdQuery({ record_id: recordId });
     const { isMobile, setOpenMobile } = useSidebar();
-    const status = record ? computeInactiveStatus(record) : 'empty';
-    const recordName = capitalizeFirstLetter(
-        record?.species || record?.genus || record?.family || 'Новая запись',
-    );
+    const { status, recordName, recordLocation } = useAppSelector(sidebarItemState(record_id));
 
-    const handleSelect = useCallback(() => {
-        onSelectRecord(recordId);
+    const handleSelect = () => {
+        onSelectRecord(record_id);
         if (isMobile) setOpenMobile(false);
-    }, [onSelectRecord, recordId, isMobile, setOpenMobile]);
+    };
 
-    const handleDelete = useCallback(() => {
-        deleteRecord(recordId);
-    }, [deleteRecord, recordId]);
+    const handleDelete = () => {
+        deleteRecord(record_id);
+    };
 
     return (
         <SidebarMenuItem>
@@ -143,9 +151,7 @@ const SidebarRecordItem = ({
                     ) : (
                         <>
                             <MapPin className="size-2.5 shrink-0" />
-                            <span className="truncate pl-1">
-                                {record?.locality || record?.region || 'Нет данных о месте'}
-                            </span>
+                            <span className="truncate pl-1">{recordLocation}</span>
                         </>
                     )}
                 </div>
@@ -155,9 +161,11 @@ const SidebarRecordItem = ({
 };
 
 const FormSidebar: FC = () => {
-    const { state, actions, publ_id } = useRecordFormContext();
-    const { activeRecordId } = state;
-    const { switchTo, create, deleteRecord } = actions;
+    const {
+        state: { activeRecordId },
+        actions: { switchTo, create, deleteRecord },
+        publ_id,
+    } = useRecordFormContext();
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
@@ -230,7 +238,7 @@ const FormSidebar: FC = () => {
                                 {recordIds.map((id) => (
                                     <SidebarRecordItem
                                         key={id}
-                                        recordId={id}
+                                        record_id={id}
                                         isActive={id === activeRecordId}
                                         onSelectRecord={switchTo}
                                         deleteRecord={deleteRecord}

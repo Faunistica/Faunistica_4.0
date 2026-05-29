@@ -179,6 +179,8 @@ export function RecordFormProvider({
                 setStatus({ phase: 'idle' });
             }
             if (!initialRecordLoaded) {
+                // TODO: maybe this can be rewritten in a better way
+                // oxlint-disable-next-line react-hooks-js/set-state-in-effect
                 setInitialRecordLoaded(true);
             }
             return;
