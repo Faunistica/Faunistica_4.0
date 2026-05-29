@@ -243,13 +243,13 @@ export function RecordFormProvider({
                     };
                 }
                 return response;
-            } catch (error) {
+            } catch {
                 toast.error(
                     source === 'submit'
                         ? 'Ошибка при отправке данных'
                         : 'Ошибка при сохранении данных',
                 );
-                throw error;
+                return undefined;
             }
         },
         [editRecord, publ_id],
@@ -260,18 +260,14 @@ export function RecordFormProvider({
         if (statusRef.current.phase === 'saving' || statusRef.current.phase === 'syncing') return;
 
         setPhase({ phase: 'saving', source: 'manual' });
-        try {
-            const values = methodsRef.current.getValues();
-            const response = await performSave('manual', values);
-            if (response) {
-                setLastSavedTime(new Date());
-                const nonField = syncServerErrors(response, methodsRef.current);
-                setNonFieldErrors(nonField);
-            }
-            setPhase({ phase: 'idle' });
-        } catch {
-            setPhase({ phase: 'idle' });
+        const values = methodsRef.current.getValues();
+        const response = await performSave('manual', values);
+        if (response) {
+            setLastSavedTime(new Date());
+            const nonField = syncServerErrors(response, methodsRef.current);
+            setNonFieldErrors(nonField);
         }
+        setPhase({ phase: 'idle' });
     }, [cancelPendingAutoSave, performSave, setPhase]);
 
     const submit = useCallback(async () => {
@@ -314,9 +310,7 @@ export function RecordFormProvider({
 
             if (activeRecordIdRef.current) {
                 setPhase({ phase: 'saving', source: 'manual' });
-                performSave('manual', methodsRef.current.getValues()).catch(() => {
-                    toast.error('Не удалось сохранить текущую запись');
-                });
+                void performSave('manual', methodsRef.current.getValues());
             }
 
             pendingSyncRef.current = true;
@@ -333,7 +327,7 @@ export function RecordFormProvider({
             cancelPendingAutoSave();
 
             if (activeRecordIdRef.current) {
-                await performSave('manual', methodsRef.current.getValues()).catch(() => {});
+                await performSave('manual', methodsRef.current.getValues());
             }
 
             const created = await createRecord({ publ_id }).unwrap();
