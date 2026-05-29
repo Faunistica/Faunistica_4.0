@@ -21,12 +21,10 @@ import { Textarea } from '../ui/textarea';
 const TaxonomyCard: FC = () => {
     const { control, setValue, getValues, getFieldState } = useFormContext<FormRecord>();
 
-    const [searchFamily, { isLoading: familyLoading }] = useLazySuggestTaxonQuery();
-    const [searchGenus, { isLoading: genusLoading }] = useLazySuggestTaxonQuery();
-    const [searchSpecies, { isLoading: speciesLoading }] = useLazySuggestTaxonQuery();
+    const [suggestTaxon] = useLazySuggestTaxonQuery();
 
     const familySearchFn = (query: string) =>
-        searchFamily({ field: 'family', query })
+        suggestTaxon({ field: 'family', query })
             .unwrap()
             .then((r) => r.suggestions ?? []);
 
@@ -42,7 +40,7 @@ const TaxonomyCard: FC = () => {
             extra.family = family;
         }
 
-        return searchGenus({ field: 'genus', query, ...extra })
+        return suggestTaxon({ field: 'genus', query, ...extra })
             .unwrap()
             .then((r) => r.suggestions ?? []);
     };
@@ -67,7 +65,7 @@ const TaxonomyCard: FC = () => {
             extra.genus = genus;
         }
 
-        return searchSpecies({ field: 'species', query, ...extra })
+        return suggestTaxon({ field: 'species', query, ...extra })
             .unwrap()
             .then((r) => r.suggestions ?? []);
     };
@@ -96,7 +94,6 @@ const TaxonomyCard: FC = () => {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <FormAutocomplete
                         name="family"
-                        isLoading={familyLoading}
                         label="Семейство (Familia)"
                         searchFn={familySearchFn}
                         placeholder="Начните вводить…"
@@ -105,7 +102,6 @@ const TaxonomyCard: FC = () => {
                     />
                     <FormAutocomplete
                         name="genus"
-                        isLoading={genusLoading}
                         label="Род (Genus)"
                         searchFn={genusSearchFn}
                         placeholder="Название рода"
@@ -114,7 +110,6 @@ const TaxonomyCard: FC = () => {
                     />
                     <FormAutocomplete
                         name="species"
-                        isLoading={speciesLoading}
                         label="Видовое название (эпитет)"
                         searchFn={speciesSearchFn}
                         placeholder="Только эпитет, без рода"
