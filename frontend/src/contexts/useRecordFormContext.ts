@@ -1,6 +1,9 @@
-import { useContext } from 'react';
-import { ActionsContext, StateContext, PublIdContext } from './RecordFormProvider';
+import { createContext, useContext } from 'react';
 import type { RecordFormActions, RecordFormState } from './RecordFormProvider';
+
+export const ActionsContext = createContext<RecordFormActions | null>(null);
+export const StateContext = createContext<RecordFormState | null>(null);
+export const PublIdContext = createContext<number | null>(null);
 
 export function useRecordFormContext(): {
     state: RecordFormState;

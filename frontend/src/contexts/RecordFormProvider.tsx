@@ -1,12 +1,4 @@
-import {
-    createContext,
-    type ReactNode,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormRecord, RecordFull } from '@/types/api.dto';
@@ -25,6 +17,8 @@ import {
 import { skipToken } from '@reduxjs/toolkit/query';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
+import { useNavigate, useParams } from 'react-router';
+import { ActionsContext, PublIdContext, StateContext } from './useRecordFormContext';
 
 export const AUTO_SAVE_DELAY = 2000;
 const SHOULD_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE;
@@ -58,11 +52,10 @@ interface RecordFormProviderProps {
     children: ReactNode;
 }
 
-export const ActionsContext = createContext<RecordFormActions | null>(null);
-export const StateContext = createContext<RecordFormState | null>(null);
-export const PublIdContext = createContext<number | null>(null);
-
 export {
+    ActionsContext,
+    StateContext,
+    PublIdContext,
     useRecordFormContext,
     useRecordFormActions,
     useRecordFormState,
@@ -75,8 +68,9 @@ export function RecordFormProvider({
     children,
 }: RecordFormProviderProps) {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
-    const [explicitRecordId, setExplicitRecordId] = useState<string | null>(null);
+    const params = useParams();
     const [status, setStatus] = useState<RecordFormPhase>({ phase: 'idle' });
     const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
     const [nonFieldErrors, setNonFieldErrors] = useState<string[]>([]);
@@ -91,6 +85,7 @@ export function RecordFormProvider({
         (a, b) => a.length === b.length && a.every((v, i) => v === b[i]),
     );
 
+    const explicitRecordId = params.record;
     const activeRecordId = explicitRecordId ?? recordIds[0] ?? null;
 
     const activeRecordIdRef = useRef(activeRecordId);
@@ -182,6 +177,7 @@ export function RecordFormProvider({
                 // TODO: maybe this can be rewritten in a better way
                 // oxlint-disable-next-line react-hooks-js/set-state-in-effect
                 setInitialRecordLoaded(true);
+                void navigate(`/publication/${publ_id}/${activeRecord.id}`, { replace: true });
             }
             return;
         }
@@ -200,13 +196,14 @@ export function RecordFormProvider({
 
         if (!initialRecordLoaded) {
             setInitialRecordLoaded(true);
+            void navigate(`/publication/${publ_id}/${activeRecord.id}`, { replace: true });
         }
 
         if (pendingSyncRef.current) {
             pendingSyncRef.current = false;
             setStatus({ phase: 'idle' });
         }
-    }, [activeRecord, shouldSkipSync, initialRecordLoaded]);
+    }, [activeRecord, shouldSkipSync, initialRecordLoaded, navigate, publ_id]);
 
     const isInitialLoading = isListLoading || (activeRecordId !== null && !initialRecordLoaded);
 
@@ -321,12 +318,12 @@ export function RecordFormProvider({
             }
 
             pendingSyncRef.current = true;
-            setExplicitRecordId(targetId);
+            void navigate(`/publication/${publ_id}/${targetId}`, { replace: true });
             setPhase({ phase: 'syncing' });
             setLastSavedTime(null);
             setNonFieldErrors([]);
         },
-        [cancelPendingAutoSave, performSave, setPhase],
+        [cancelPendingAutoSave, performSave, setPhase, navigate, publ_id],
     );
 
     const create = useCallback(async () => {
@@ -354,13 +351,13 @@ export function RecordFormProvider({
                 keepDirty: false,
             });
 
-            setExplicitRecordId(created.id);
+            void navigate(`/publication/${publ_id}/${created.id}`, { replace: true });
             setLastSavedTime(null);
             setNonFieldErrors([]);
         } catch {
             toast.error('Ошибка при создании записи');
         }
-    }, [publ_id, createRecord, dispatch, cancelPendingAutoSave, performSave]);
+    }, [publ_id, createRecord, dispatch, cancelPendingAutoSave, performSave, navigate]);
 
     const deleteRecordAction = useCallback(
         async (id: string) => {
@@ -383,7 +380,7 @@ export function RecordFormProvider({
             try {
                 await deleteRecord({ record_id: id }).unwrap();
                 if (isActive) {
-                    setExplicitRecordId(nextId);
+                    void navigate(`/publication/${publ_id}/${nextId}`, { replace: true });
                     if (nextId === null) {
                         setInitialRecordLoaded(false);
                     }
@@ -393,7 +390,7 @@ export function RecordFormProvider({
                 toast.error('Ошибка при удалении записи');
             }
         },
-        [publ_id, dispatch, deleteRecord, recordIds],
+        [publ_id, dispatch, deleteRecord, recordIds, navigate],
     );
 
     const state: RecordFormState = useMemo(

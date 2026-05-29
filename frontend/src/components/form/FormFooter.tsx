@@ -1,4 +1,4 @@
-import { type FC, useState, useRef, useEffect } from 'react';
+import { type FC, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     AlertDialog,

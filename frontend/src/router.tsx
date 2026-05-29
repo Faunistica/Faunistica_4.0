@@ -1,36 +1,8 @@
-import {
-    Navigate,
-    Outlet,
-    redirect,
-    useNavigation,
-    useOutletContext,
-    ScrollRestoration,
-    type LoaderFunctionArgs,
-    type RouteObject,
-} from 'react-router';
+import { Navigate, redirect, type LoaderFunctionArgs, type RouteObject } from 'react-router';
 import { store } from './store/store';
 import LoadingScreen from './components/LoadingScreen';
 import Layout from './layout/Layout';
-
-import { Toaster } from 'sonner';
-
-function NavigationWrapper() {
-    const navigation = useNavigation();
-    const isNavigating = Boolean(navigation.location);
-    const context = useOutletContext();
-
-    if (isNavigating) {
-        return <LoadingScreen />;
-    }
-
-    return (
-        <>
-            <Toaster position="bottom-right" />
-            <ScrollRestoration />
-            <Outlet context={context} />
-        </>
-    );
-}
+import { NavigationWrapper } from './components/NavigationWrapper';
 
 const requireAuth = ({ request }: LoaderFunctionArgs) => {
     const { auth } = store.getState().user;
@@ -143,7 +115,7 @@ export const routes: RouteObject[] = [
                                 handle: { isNavigateEnabled: false },
                             },
                             {
-                                path: 'publication/:id',
+                                path: 'publication/:id/:record?',
                                 lazy: () =>
                                     import('./pages/FormFilling').then((m) => ({
                                         Component: m.default,

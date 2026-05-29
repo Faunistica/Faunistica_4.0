@@ -8,17 +8,12 @@ export default defineConfig({
     },
     plugins: ['react', 'react-perf', 'import', 'typescript', 'unicorn', 'oxc', 'promise'],
     jsPlugins: [
+        'eslint-plugin-react-refresh',
+        'eslint-plugin-better-tailwindcss',
+        'eslint-plugin-react-compiler',
         {
             name: 'react-hooks-js',
             specifier: 'eslint-plugin-react-hooks',
-        },
-        {
-            name: 'better-tailwindcss',
-            specifier: 'eslint-plugin-better-tailwindcss',
-        },
-        {
-            name: 'react-compiler',
-            specifier: 'eslint-plugin-react-compiler',
         },
     ],
     settings: {
