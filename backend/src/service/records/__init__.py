@@ -73,7 +73,7 @@ class RecordService:
         publ_id: int,
         ip: str | None = None,
         submission_type: Literal["submit", "autosave"] = "autosave",
-    ) -> tuple[RecordFull, ErrorCollection]:
+    ) -> RecordFull:
         """Create a new record (autosave by default, or submit)."""
         await self.publication_service.validate_access(publ_id, user_id=user_id)
         count = await count_records_by_user_publ(self.session, user_id, publ_id)
@@ -99,7 +99,9 @@ class RecordService:
         record = await repo.create_record(self.session, metadata)
         await self.session.commit()
 
-        return RecordFull.model_validate(record), errors
+        full = RecordFull.model_validate(record)
+        full.errors = _errors_to_schema(errors)
+        return full
 
     async def update_record(
         self,
@@ -108,7 +110,7 @@ class RecordService:
         data: RecordData,
         ip: str | None = None,
         submission_type: Literal["submit", "autosave"] = "autosave",
-    ) -> tuple[RecordFull, ErrorCollection]:
+    ) -> RecordFull:
         """Update a record with optimistic locking via updated_at."""
         record = await self._get_and_check_ownership(record_id, user_id)
 
@@ -139,7 +141,7 @@ class RecordService:
 
         full = _enrich_record(updated)
         full.errors = _errors_to_schema(errors)
-        return full, errors
+        return full
 
     async def get_record(
         self,

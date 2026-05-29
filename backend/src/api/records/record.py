@@ -28,14 +28,12 @@ async def update_record(
     ip: ClientIP,
     service: Annotated[RecordService, Depends()],
 ) -> RecordFull:
-    record, _ = await service.update_record(
+    return await service.update_record(
         record_id=record_id,
         user_id=user.user_id,
         data=data,
         ip=ip,
     )
-
-    return record
 
 
 @router.put("/submit")
@@ -46,15 +44,13 @@ async def submit_record(
     ip: ClientIP,
     service: Annotated[RecordService, Depends()],
 ) -> RecordFull:
-    record, _ = await service.update_record(
+    return await service.update_record(
         record_id=record_id,
         user_id=user.user_id,
         data=data,
         ip=ip,
         submission_type="submit",
     )
-
-    return record
 
 
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT)
