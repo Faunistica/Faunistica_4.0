@@ -18,10 +18,13 @@ interface TypedFetchBaseQueryError extends Omit<FetchBaseQueryError, 'data'> {
     data?: ApiErrorBody;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
+
 function normalizeErrorData(data: unknown): ApiErrorBody | undefined {
-    if (!data || typeof data !== 'object') return undefined;
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    const body = data as Record<string, unknown>;
+    if (!isRecord(data)) return undefined;
+    const body = data;
 
     let message: string | undefined;
     const detail = body.detail;

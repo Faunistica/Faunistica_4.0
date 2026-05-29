@@ -34,6 +34,5 @@ export function getErrorMessage(
         return api;
     }
 
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    return (error as { message?: string }).message ?? network;
+    return 'message' in error && typeof error.message === 'string' ? error.message : network;
 }

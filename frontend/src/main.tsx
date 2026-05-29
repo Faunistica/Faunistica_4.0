@@ -15,6 +15,15 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 
 import type * as Types from '@/types/api.dto';
 
+function isUserInfo(value: unknown): value is Types.UserInfo {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        'user_id' in value &&
+        'username' in value
+    );
+}
+
 async function verifyAuthInBackground(setNetworkError: (value: boolean) => void) {
     try {
         const API_BASE = import.meta.env.VITE_API_URL;
@@ -24,9 +33,10 @@ async function verifyAuthInBackground(setNetworkError: (value: boolean) => void)
         });
 
         if (response.ok) {
-            // oxlint-disable-next-line typescript/no-unsafe-assignment
-            const user: Types.UserInfo = await response.json();
-            store.dispatch(login(user));
+            const data: unknown = await response.json();
+            if (isUserInfo(data)) {
+                store.dispatch(login(data));
+            }
             return;
         }
 

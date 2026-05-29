@@ -110,8 +110,10 @@ export const recordAPI = createApi({
 
                 if (result.error) return { error: result.error };
 
-                // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-                const blob = result.data as Blob;
+                if (!(result.data instanceof Blob)) {
+                    return { error: { status: 'CUSTOM_ERROR', error: 'Expected Blob response' } };
+                }
+                const blob = result.data;
                 const url = window.URL.createObjectURL(blob);
                 Object.assign(document.createElement('a'), {
                     href: url,

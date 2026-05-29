@@ -39,7 +39,6 @@ export default defineConfig({
         'typescript/no-unsafe-assignment': 'error',
         'react/react-in-jsx-scope': 'off',
         'react-hooks/exhaustive-deps': 'warn',
-        'react-hooks-js/set-state-in-effect': 'off',
         'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
         'import/no-unassigned-import': ['warn', { allow: ['**/*.css'] }],
     },

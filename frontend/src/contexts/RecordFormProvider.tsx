@@ -75,11 +75,22 @@ export function RecordFormProvider({
 }: RecordFormProviderProps) {
     const dispatch = useAppDispatch();
 
-    const [activeRecordId, setActiveRecordId] = useState<string | null>(null);
+    const [explicitRecordId, setExplicitRecordId] = useState<string | null>(null);
     const [status, setStatus] = useState<RecordFormPhase>({ phase: 'idle' });
     const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
     const [nonFieldErrors, setNonFieldErrors] = useState<string[]>([]);
     const [initialRecordLoaded, setInitialRecordLoaded] = useState(false);
+
+    const recordIds = useAppSelector(
+        (state) => {
+            const result = recordAPI.endpoints.recordsList.select({ publ_id })(state);
+            const data = 'data' in result ? result.data : undefined;
+            return data?.items?.map((r) => r.id) ?? [];
+        },
+        (a, b) => a.length === b.length && a.every((v, i) => v === b[i]),
+    );
+
+    const activeRecordId = explicitRecordId ?? recordIds[0] ?? null;
 
     const activeRecordIdRef = useRef(activeRecordId);
     const statusRef = useRef(status);
@@ -139,21 +150,6 @@ export function RecordFormProvider({
     const [editRecord] = useEditRecordMutation();
     const [submitRecord] = useSubmitRecordMutation();
     const [deleteRecord] = useDeleteRecordMutation();
-
-    const recordIds = useAppSelector(
-        (state) => {
-            const result = recordAPI.endpoints.recordsList.select({ publ_id })(state);
-            const data = 'data' in result ? result.data : undefined;
-            return data?.items?.map((r) => r.id) ?? [];
-        },
-        (a, b) => a.length === b.length && a.every((v, i) => v === b[i]),
-    );
-
-    useEffect(() => {
-        if (recordIds.length > 0 && activeRecordId === null) {
-            setActiveRecordId(recordIds[0]);
-        }
-    }, [recordIds, activeRecordId]);
 
     const shouldSkipSync = useCallback((updatedAt: string): boolean => {
         if (!lastKnownRef.current) return false;
@@ -316,7 +312,7 @@ export function RecordFormProvider({
             }
 
             pendingSyncRef.current = true;
-            setActiveRecordId(targetId);
+            setExplicitRecordId(targetId);
             setPhase({ phase: 'syncing' });
             setLastSavedTime(null);
             setNonFieldErrors([]);
@@ -349,7 +345,7 @@ export function RecordFormProvider({
                 keepDirty: false,
             });
 
-            setActiveRecordId(created.id);
+            setExplicitRecordId(created.id);
             setLastSavedTime(null);
             setNonFieldErrors([]);
         } catch {
@@ -378,7 +374,7 @@ export function RecordFormProvider({
             try {
                 await deleteRecord({ record_id: id }).unwrap();
                 if (isActive) {
-                    setActiveRecordId(nextId);
+                    setExplicitRecordId(nextId);
                     if (nextId === null) {
                         setInitialRecordLoaded(false);
                     }

@@ -178,8 +178,9 @@ describe('FormAutocomplete', () => {
 
             const input = screen.getByPlaceholderText('Начните вводить…') as HTMLInputElement;
 
-            // Type to trigger search
+            // Focus and type to trigger search
             await act(async () => {
+                fireEvent.focus(input);
                 fireEvent.change(input, { target: { value: 'Can' } });
             });
 
@@ -214,8 +215,9 @@ describe('FormAutocomplete', () => {
 
             const input = screen.getByPlaceholderText('Начните вводить…') as HTMLInputElement;
 
-            // Trigger search
+            // Focus and trigger search
             await act(async () => {
+                fireEvent.focus(input);
                 fireEvent.change(input, { target: { value: 'Opt' } });
             });
 
@@ -464,6 +466,7 @@ describe('FormAutocomplete', () => {
             const input = screen.getByPlaceholderText('Начните вводить…') as HTMLInputElement;
 
             await act(async () => {
+                fireEvent.focus(input);
                 fireEvent.change(input, { target: { value: 'Sugg' } });
             });
 

@@ -35,38 +35,36 @@ const Autocomplete: FC<AutocompleteProps> = ({
     ref: refProp,
     ...props
 }) => {
-    const [open, setOpen] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
     const [highlightIndex, setHighlightIndex] = useState(-1);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+
+    const open = isFocused && suggestions.length > 0;
+
+    // Clamp highlight index to always be valid for the current suggestions array
+    // This avoids needing an effect to reset it when suggestions change
+    const clampedHighlightIndex = Math.min(highlightIndex, Math.max(suggestions.length - 1, -1));
 
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
             // oxlint-disable-next-line typescript/no-unsafe-type-assertion
             if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-                setOpen(false);
+                setIsFocused(false);
             }
         };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    // Open dropdown when suggestions arrive
-    useEffect(() => {
-        if (suggestions.length > 0) {
-            setOpen(true);
-            setHighlightIndex(-1);
-        }
-    }, [suggestions]);
-
     // Scroll highlighted item into view
     useEffect(() => {
-        if (highlightIndex >= 0) {
-            itemRefs.current[highlightIndex]?.scrollIntoView({ block: 'nearest' });
+        if (clampedHighlightIndex >= 0) {
+            itemRefs.current[clampedHighlightIndex]?.scrollIntoView({ block: 'nearest' });
         }
-    }, [highlightIndex]);
+    }, [clampedHighlightIndex]);
 
     const handleInputChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,8 +75,6 @@ const Autocomplete: FC<AutocompleteProps> = ({
             const text = e.target.value;
             if (text.length >= minChars) {
                 onSearch(text);
-            } else {
-                setOpen(false);
             }
         },
         [minChars, onChange, onSearch],
@@ -90,7 +86,6 @@ const Autocomplete: FC<AutocompleteProps> = ({
             if (inputRef.current) {
                 inputRef.current.value = item;
             }
-            setOpen(false);
             if (blurOnSelect) {
                 inputRef.current?.blur();
             } else {
@@ -110,12 +105,12 @@ const Autocomplete: FC<AutocompleteProps> = ({
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 setHighlightIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
-            } else if (e.key === 'Enter' && highlightIndex >= 0) {
+            } else if (e.key === 'Enter' && clampedHighlightIndex >= 0) {
                 e.preventDefault();
-                handleSelect(suggestions[highlightIndex]);
+                handleSelect(suggestions[clampedHighlightIndex]);
             }
         },
-        [suggestions, open, handleSelect, highlightIndex, setHighlightIndex],
+        [suggestions, open, handleSelect, clampedHighlightIndex, setHighlightIndex],
     );
 
     return (
@@ -125,12 +120,10 @@ const Autocomplete: FC<AutocompleteProps> = ({
                     className={className}
                     onChange={handleInputChange}
                     onFocus={() => {
-                        if (suggestions.length > 0) {
-                            setOpen(true);
-                        }
+                        setIsFocused(true);
                     }}
                     onBlur={(e) => {
-                        setOpen(false);
+                        setIsFocused(false);
                         onBlurProp?.(e);
                     }}
                     autoComplete="off"
@@ -162,7 +155,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
                                 itemRefs.current[i] = el;
                             }}
                             role="option"
-                            aria-selected={i === highlightIndex}
+                            aria-selected={i === clampedHighlightIndex}
                             onMouseDown={(e) => {
                                 e.preventDefault();
                                 handleSelect(item);
@@ -170,7 +163,7 @@ const Autocomplete: FC<AutocompleteProps> = ({
                             onMouseEnter={() => setHighlightIndex(i)}
                             className={cn(
                                 'cursor-pointer px-4 py-2 text-sm transition-all duration-150',
-                                i === highlightIndex
+                                i === clampedHighlightIndex
                                     ? 'bg-slate-100 pl-5 font-medium text-slate-900'
                                     : 'text-slate-700 hover:bg-slate-50',
                             )}

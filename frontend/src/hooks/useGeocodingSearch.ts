@@ -11,6 +11,18 @@ interface SearchResult {
 const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 500;
 
+function isSearchResultArray(value: unknown): value is SearchResult[] {
+    return (
+        Array.isArray(value) &&
+        value.every(
+            (item) =>
+                typeof item === 'object' &&
+                item !== null &&
+                'display_name' in item,
+        )
+    );
+}
+
 function useGeocodingSearch() {
     const [results, setResults] = useState<SearchResult[]>([]);
 
@@ -20,9 +32,8 @@ function useGeocodingSearch() {
                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=ru`,
                 { signal },
             );
-            // oxlint-disable-next-line typescript/no-unsafe-assignment
-            const data: SearchResult[] = await res.json();
-            return data;
+            const data: unknown = await res.json();
+            return isSearchResultArray(data) ? data : [];
         },
         setResults,
         DEBOUNCE_MS,
