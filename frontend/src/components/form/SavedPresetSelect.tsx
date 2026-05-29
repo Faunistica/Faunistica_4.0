@@ -103,8 +103,6 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className
         },
     );
 
-    if (presets.length === 0) return null;
-
     const handleSelect = useCallback(
         (recordId: string) => {
             const source = recordMap.get(recordId);
@@ -125,6 +123,8 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className
         },
         [recordMap, setValue, type],
     );
+
+    if (presets.length === 0) return null;
 
     return (
         <DropdownMenu>

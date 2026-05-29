@@ -16,12 +16,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import type * as Types from '@/types/api.dto';
 
 function isUserInfo(value: unknown): value is Types.UserInfo {
-    return (
-        typeof value === 'object' &&
-        value !== null &&
-        'user_id' in value &&
-        'username' in value
-    );
+    return typeof value === 'object' && value !== null && 'user_id' in value && 'username' in value;
 }
 
 async function verifyAuthInBackground(setNetworkError: (value: boolean) => void) {

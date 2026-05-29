@@ -22,6 +22,7 @@ import {
     useSubmitRecordMutation,
     useDeleteRecordMutation,
 } from '@/api/recordAPI';
+import { skipToken } from '@reduxjs/toolkit/query';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 
@@ -99,8 +100,38 @@ export function RecordFormProvider({
     const methodsRef = useRef(methods);
     const pendingSyncRef = useRef(false);
 
+    const { isLoading: isListLoading } = useRecordsListQuery({ publ_id }, { skip: !publ_id });
+
+    const { currentData: activeRecord } = useRecordByIdQuery(
+        activeRecordId ? { record_id: activeRecordId } : skipToken,
+        { refetchOnMountOrArgChange: true },
+    );
+
+    const [createRecord] = useCreateRecordMutation();
+    const [editRecord] = useEditRecordMutation();
+    const [submitRecord] = useSubmitRecordMutation();
+    const [deleteRecord] = useDeleteRecordMutation();
+
+    const shouldSkipSync = useCallback((updatedAt: string): boolean => {
+        if (!lastKnownRef.current) return false;
+        return (
+            lastKnownRef.current.id === activeRecordIdRef.current &&
+            lastKnownRef.current.updatedAt === updatedAt
+        );
+    }, []);
+
+    const setPhase = useCallback((phase: RecordFormPhase) => {
+        setStatus(phase);
+        if (phase.phase !== 'idle') {
+            setNonFieldErrors([]);
+        }
+    }, []);
+
     const { fn: debouncedAutoSave, cancel: cancelPendingAutoSave } = useDebouncedCallback(
         async () => {
+            const id = activeRecordIdRef.current;
+            if (!id) return;
+
             const currentValues = methods.getValues();
             const currentSnapshot = JSON.stringify(currentValues);
             if (currentSnapshot === lastSnapshotRef.current) return;
@@ -109,13 +140,13 @@ export function RecordFormProvider({
             try {
                 const payload = draftToRecordData(currentValues);
                 const response = await editRecord({
-                    record_id: activeRecordIdRef.current!,
+                    record_id: id,
                     data: payload,
                     publ_id,
                 }).unwrap();
                 lastSnapshotRef.current = currentSnapshot;
                 lastKnownRef.current = {
-                    id: activeRecordIdRef.current!,
+                    id,
                     updatedAt: response.updated_at,
                 };
                 setLastSavedTime(new Date());
@@ -138,26 +169,6 @@ export function RecordFormProvider({
     useEffect(() => {
         methodsRef.current = methods;
     });
-
-    const { isLoading: isListLoading } = useRecordsListQuery({ publ_id }, { skip: !publ_id });
-
-    const { currentData: activeRecord } = useRecordByIdQuery(
-        { record_id: activeRecordId! },
-        { skip: !activeRecordId, refetchOnMountOrArgChange: true },
-    );
-
-    const [createRecord] = useCreateRecordMutation();
-    const [editRecord] = useEditRecordMutation();
-    const [submitRecord] = useSubmitRecordMutation();
-    const [deleteRecord] = useDeleteRecordMutation();
-
-    const shouldSkipSync = useCallback((updatedAt: string): boolean => {
-        if (!lastKnownRef.current) return false;
-        return (
-            lastKnownRef.current.id === activeRecordIdRef.current &&
-            lastKnownRef.current.updatedAt === updatedAt
-        );
-    }, []);
 
     useEffect(() => {
         if (!activeRecord) return;
@@ -196,13 +207,6 @@ export function RecordFormProvider({
     }, [activeRecord, shouldSkipSync, initialRecordLoaded]);
 
     const isInitialLoading = isListLoading || (activeRecordId !== null && !initialRecordLoaded);
-
-    const setPhase = useCallback((phase: RecordFormPhase) => {
-        setStatus(phase);
-        if (phase.phase !== 'idle') {
-            setNonFieldErrors([]);
-        }
-    }, []);
 
     useEffect(() => {
         if (!SHOULD_AUTO_SAVE) return () => {};
@@ -273,21 +277,24 @@ export function RecordFormProvider({
         const s = statusRef.current;
         if (s.phase === 'saving' || s.phase === 'syncing') return;
 
+        const id = activeRecordIdRef.current;
+        if (!id) return;
+
         setPhase({ phase: 'saving', source: 'submit' });
         try {
             const values = methodsRef.current.getValues();
             const payload = draftToRecordData(values);
             await editRecord({
-                record_id: activeRecordIdRef.current!,
+                record_id: id,
                 data: payload,
                 publ_id,
             }).unwrap();
             const response = await submitRecord({
-                record_id: activeRecordIdRef.current!,
+                record_id: id,
                 data: payload,
             }).unwrap();
             lastKnownRef.current = {
-                id: activeRecordIdRef.current!,
+                id,
                 updatedAt: response.updated_at,
             };
             setLastSavedTime(new Date());

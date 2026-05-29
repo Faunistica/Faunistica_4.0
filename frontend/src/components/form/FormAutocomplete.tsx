@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useController, useFormContext } from 'react-hook-form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
@@ -10,7 +10,7 @@ interface FormAutocompleteProps {
     isLoading?: boolean;
     label: string;
     placeholder?: string;
-    searchFn: (text: string) => Promise<string[]>;
+    searchFn: (text: string, signal?: AbortSignal) => Promise<string[]>;
     debounceMs?: number;
     onSelectSuggestion?: (value: string) => void;
     onCommitTyped?: (value: string) => void;
@@ -46,26 +46,22 @@ export function FormAutocomplete({
     }, [field.value]);
 
     const { fn: handleSearch, cancel: cancelSearch } = useDebouncedRaceSafe(
-        async (text: string, _signal: AbortSignal) => {
-            return await searchFn(text);
+        async (text: string, signal: AbortSignal) => {
+            return await searchFn(text, signal);
         },
         setSuggestions,
         debounceMs,
     );
 
-    const handleBlur = useCallback(
-        async (_: React.FocusEvent<HTMLInputElement>) => {
-            const normalizedLast = lastCommittedRef.current;
+    const handleBlur = useCallback(async () => {
+        const normalizedLast = lastCommittedRef.current;
 
-            if (field.value !== normalizedLast) {
-                lastCommittedRef.current = field.value ?? '';
-                // User typed and blurred without selecting from dropdown
-                onCommitTyped?.(field.value ?? '');
-            }
-            // await field.onBlur(e);
-        },
-        [field, onCommitTyped],
-    );
+        if (field.value !== normalizedLast) {
+            lastCommittedRef.current = field.value ?? '';
+            // User typed and blurred without selecting from dropdown
+            onCommitTyped?.(field.value ?? '');
+        }
+    }, [field, onCommitTyped]);
 
     return (
         <Field data-invalid={!!error}>

@@ -14,12 +14,7 @@ const DEBOUNCE_MS = 500;
 function isSearchResultArray(value: unknown): value is SearchResult[] {
     return (
         Array.isArray(value) &&
-        value.every(
-            (item) =>
-                typeof item === 'object' &&
-                item !== null &&
-                'display_name' in item,
-        )
+        value.every((item) => typeof item === 'object' && item !== null && 'display_name' in item)
     );
 }
 
