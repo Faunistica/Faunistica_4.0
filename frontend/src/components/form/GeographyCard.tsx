@@ -249,8 +249,8 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     </Field>
                                 </div>
 
-                                {coordFormat === 'DM' && <DMInputGroup prefix="" />}
-                                {coordFormat === 'DMS' && <DMSInputGroup prefix="" />}
+                                {coordFormat === 'DM' && <DMInputGroup />}
+                                {coordFormat === 'DMS' && <DMSInputGroup />}
                             </div>
                         )}
 
