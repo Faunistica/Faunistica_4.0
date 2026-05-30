@@ -13,8 +13,8 @@ createRoot(document.getElementById('root')!).render(
         <Provider store={store}>
             <ThemeProvider
                 attribute="class"
-                defaultTheme="system"
-                enableSystem
+                defaultTheme="light"
+                enableSystem={false}
                 disableTransitionOnChange
             >
                 <TooltipProvider>
