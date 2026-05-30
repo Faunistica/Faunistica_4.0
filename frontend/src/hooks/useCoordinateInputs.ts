@@ -12,6 +12,16 @@ import type { FormRecord } from '@/types/api.dto';
 
 type Mode = 'dm' | 'dms';
 
+function deriveFromDD(
+    dd: number,
+    isLat: true,
+    mode: Mode,
+): { degrees: number; minutes: number; seconds: number | undefined; direction: 'N' | 'S' };
+function deriveFromDD(
+    dd: number,
+    isLat: false,
+    mode: Mode,
+): { degrees: number; minutes: number; seconds: number | undefined; direction: 'E' | 'W' };
 function deriveFromDD(dd: number, isLat: boolean, mode: Mode) {
     if (mode === 'dm') {
         const r = isLat ? convertDDToDM(dd, true) : convertDDToDM(dd, false);
@@ -19,16 +29,11 @@ function deriveFromDD(dd: number, isLat: boolean, mode: Mode) {
             degrees: r.degrees,
             minutes: r.minutes,
             direction: r.direction,
-            seconds: undefined as number | undefined,
+            seconds: undefined,
         };
     }
     const r = isLat ? convertDDToDMS(dd, true) : convertDDToDMS(dd, false);
-    return {
-        degrees: r.degrees,
-        minutes: r.minutes,
-        seconds: r.seconds,
-        direction: r.direction,
-    };
+    return { degrees: r.degrees, minutes: r.minutes, seconds: r.seconds, direction: r.direction };
 }
 
 export function useCoordinateInputs(mode: Mode) {
@@ -56,76 +61,54 @@ export function useCoordinateInputs(mode: Mode) {
     const [lonSec, setLonSec] = useState<number | ''>('');
     const [lonDir, setLonDir] = useState<'E' | 'W'>('E');
 
-    // Refs mirror state so handlers always read latest values (no stale closures)
-    const ref = useRef({
-        latDeg: '' as number | '',
-        latMin: '' as number | '',
-        latSec: '' as number | '',
-        latDir: 'N' as 'N' | 'S',
-        lonDeg: '' as number | '',
-        lonMin: '' as number | '',
-        lonSec: '' as number | '',
-        lonDir: 'E' as 'E' | 'W',
-    });
+    const ref = useRef<{
+        latDeg?: number;
+        latMin?: number;
+        latSec?: number;
+        latDir: 'N' | 'S';
+        lonDeg?: number;
+        lonMin?: number;
+        lonSec?: number;
+        lonDir: 'E' | 'W';
+    }>({ latDir: 'N', lonDir: 'E' });
 
-    const lastLatRef = useRef(latField.value);
-    const lastLonRef = useRef(lonField.value);
+    const lastLatRef = useRef<number | null>(null);
+    const lastLonRef = useRef<number | null>(null);
 
     const syncRefs = () => {
-        ref.current.latDeg = latDeg;
-        ref.current.latMin = latMin;
-        ref.current.latSec = latSec;
+        ref.current.latDeg = latDeg === '' ? undefined : latDeg;
+        ref.current.latMin = latMin === '' ? undefined : latMin;
+        ref.current.latSec = latSec === '' ? undefined : latSec;
         ref.current.latDir = latDir;
-        ref.current.lonDeg = lonDeg;
-        ref.current.lonMin = lonMin;
-        ref.current.lonSec = lonSec;
+        ref.current.lonDeg = lonDeg === '' ? undefined : lonDeg;
+        ref.current.lonMin = lonMin === '' ? undefined : lonMin;
+        ref.current.lonSec = lonSec === '' ? undefined : lonSec;
         ref.current.lonDir = lonDir;
     };
     syncRefs();
 
-    // Mount: initialize local state from existing form values
-    useEffect(() => {
-        const lat = deriveFromDD(latField.value, true, mode);
-        setLatDeg(lat.degrees);
-        setLatMin(lat.minutes);
-        setLatDir(lat.direction as 'N' | 'S');
-        if (mode === 'dms') setLatSec(lat.seconds!);
-
-        const lon = deriveFromDD(lonField.value, false, mode);
-        setLonDeg(lon.degrees);
-        setLonMin(lon.minutes);
-        setLonDir(lon.direction as 'E' | 'W');
-        if (mode === 'dms') setLonSec(lon.seconds!);
-
-        lastLatRef.current = latField.value;
-        lastLonRef.current = lonField.value;
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // External change detection: latitude
+    // Mount init + external change detection
     useEffect(() => {
         if (latField.value !== lastLatRef.current) {
             lastLatRef.current = latField.value;
             const d = deriveFromDD(latField.value, true, mode);
             setLatDeg(d.degrees);
             setLatMin(d.minutes);
-            setLatDir(d.direction as 'N' | 'S');
-            if (mode === 'dms') setLatSec(d.seconds!);
+            setLatDir(d.direction);
+            // oxlint-disable-next-line react-hooks-js/set-state-in-effect
+            if (mode === 'dms') setLatSec(d.seconds ?? 0);
         }
-    }, [latField.value, mode]);
-
-    // External change detection: longitude
-    useEffect(() => {
         if (lonField.value !== lastLonRef.current) {
             lastLonRef.current = lonField.value;
             const d = deriveFromDD(lonField.value, false, mode);
             setLonDeg(d.degrees);
             setLonMin(d.minutes);
-            setLonDir(d.direction as 'E' | 'W');
-            if (mode === 'dms') setLonSec(d.seconds!);
+            setLonDir(d.direction);
+            if (mode === 'dms') setLonSec(d.seconds ?? 0);
         }
-    }, [lonField.value, mode]);
+    }, [latField.value, lonField.value, mode]);
 
-    const writeAll = () => {
+    const syncForm = () => {
         const {
             latDeg: ld,
             latMin: lm,
@@ -136,17 +119,17 @@ export function useCoordinateInputs(mode: Mode) {
             lonSec: lns,
             lonDir: lod,
         } = ref.current;
-        if (ld === '' || lm === '' || lnd === '' || lnm === '') return;
-        if (mode === 'dms' && (ls === '' || lns === '')) return;
+        if (ld === undefined || lm === undefined || lnd === undefined || lnm === undefined) return;
+        if (mode === 'dms' && (ls === undefined || lns === undefined)) return;
 
         const latitude =
-            mode === 'dm' ? convertDMToDD(ld, lm, lad) : convertDMSToDD(ld, lm, ls, lad);
+            mode === 'dm' ? convertDMToDD(ld, lm, lad) : convertDMSToDD(ld, lm, ls!, lad);
         const longitude =
-            mode === 'dm' ? convertDMToDD(lnd, lnm, lod) : convertDMSToDD(lnd, lnm, lns, lod);
+            mode === 'dm' ? convertDMToDD(lnd, lnm, lod) : convertDMSToDD(lnd, lnm, lns!, lod);
         const verbatim =
             mode === 'dm'
                 ? formatDMVerbatim(ld, lm, lad, lnd, lnm, lod)
-                : formatDMSVerbatim(ld, lm, ls, lad, lnd, lnm, lns, lod);
+                : formatDMSVerbatim(ld, lm, ls!, lad, lnd, lnm, lns!, lod);
 
         latField.onChange(latitude);
         lastLatRef.current = latitude;
@@ -156,53 +139,53 @@ export function useCoordinateInputs(mode: Mode) {
     };
 
     const handleLatDegChange = (val: number | '') => {
-        ref.current.latDeg = val;
+        ref.current.latDeg = val === '' ? undefined : val;
         setLatDeg(val);
-        writeAll();
+        syncForm();
     };
 
     const handleLatMinChange = (val: number | '') => {
-        ref.current.latMin = val;
+        ref.current.latMin = val === '' ? undefined : val;
         setLatMin(val);
-        writeAll();
+        syncForm();
     };
 
     const handleLatSecChange = (val: number | '') => {
-        ref.current.latSec = val;
+        ref.current.latSec = val === '' ? undefined : val;
         setLatSec(val);
-        writeAll();
+        syncForm();
     };
 
     const handleLatDirChange = (val: string) => {
         if (val !== 'N' && val !== 'S') return;
         ref.current.latDir = val;
         setLatDir(val);
-        writeAll();
+        syncForm();
     };
 
     const handleLonDegChange = (val: number | '') => {
-        ref.current.lonDeg = val;
+        ref.current.lonDeg = val === '' ? undefined : val;
         setLonDeg(val);
-        writeAll();
+        syncForm();
     };
 
     const handleLonMinChange = (val: number | '') => {
-        ref.current.lonMin = val;
+        ref.current.lonMin = val === '' ? undefined : val;
         setLonMin(val);
-        writeAll();
+        syncForm();
     };
 
     const handleLonSecChange = (val: number | '') => {
-        ref.current.lonSec = val;
+        ref.current.lonSec = val === '' ? undefined : val;
         setLonSec(val);
-        writeAll();
+        syncForm();
     };
 
     const handleLonDirChange = (val: string) => {
         if (val !== 'E' && val !== 'W') return;
         ref.current.lonDir = val;
         setLonDir(val);
-        writeAll();
+        syncForm();
     };
 
     return {
