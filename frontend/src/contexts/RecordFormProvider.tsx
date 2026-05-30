@@ -93,11 +93,6 @@ export function RecordFormProvider({
 
     // Sync activeRecordId + isInitialLoading to store
     const isInitialLoading = isListLoading || (activeRecordId !== null && !initialRecordLoaded);
-    const prevActiveId = store.getState().activeRecordId;
-    const prevLoading = store.getState().isInitialLoading;
-    if (prevActiveId !== activeRecordId || prevLoading !== isInitialLoading) {
-        store.setState({ activeRecordId, isInitialLoading });
-    }
 
     const shouldSkipSync = useCallback(
         (updatedAt: string): boolean => {
@@ -141,6 +136,10 @@ export function RecordFormProvider({
     useEffect(() => {
         methodsRef.current = methods;
     });
+
+    useEffect(() => {
+        store.setState({ activeRecordId, isInitialLoading });
+    }, [activeRecordId, isInitialLoading, store]);
 
     useEffect(() => {
         if (!activeRecord) return;
