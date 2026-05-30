@@ -19,7 +19,17 @@ import { skipToken } from '@reduxjs/toolkit/query';
 import { useAppDispatch } from '@/store/store';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useNavigate, useParams } from 'react-router';
-import { ActionsContext, PublIdContext, StateContext } from './useRecordFormContext';
+import { ActionsContext, PublIdContext } from './useRecordFormContext';
+import {
+    setState as storeSetState,
+    getState,
+    getLastKnown,
+    getLastSnapshot,
+    getPendingSync,
+    setLastKnown,
+    setLastSnapshot,
+    setPendingSync,
+} from './recordFormStore';
 
 export const AUTO_SAVE_DELAY = 2000;
 const SHOULD_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE;
@@ -29,14 +39,6 @@ export type RecordFormPhase =
     | { phase: 'saving'; source: 'manual' | 'submit' | 'auto' }
     | { phase: 'syncing' }
     | { phase: 'error'; message: string };
-
-export interface RecordFormState {
-    activeRecordId: string | null;
-    status: RecordFormPhase;
-    lastSavedTime: Date | null;
-    nonFieldErrors: string[];
-    isInitialLoading: boolean;
-}
 
 export interface RecordFormActions {
     save: () => Promise<void>;
@@ -53,14 +55,8 @@ interface RecordFormProviderProps {
     children: ReactNode;
 }
 
-export {
-    ActionsContext,
-    StateContext,
-    PublIdContext,
-    useRecordFormContext,
-    useRecordFormActions,
-    useRecordFormState,
-} from './useRecordFormContext';
+export { ActionsContext, PublIdContext, useRecordFormActions } from './useRecordFormContext';
+export { useFormSelector } from './useFormSelector';
 
 export function RecordFormProvider({
     publ_id,
@@ -72,9 +68,6 @@ export function RecordFormProvider({
     const navigate = useNavigate();
 
     const params = useParams();
-    const [status, setStatus] = useState<RecordFormPhase>({ phase: 'idle' });
-    const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
-    const [nonFieldErrors, setNonFieldErrors] = useState<string[]>([]);
     const [initialRecordLoaded, setInitialRecordLoaded] = useState(false);
 
     const { recordIds } = useRecordsListQuery(
@@ -89,12 +82,7 @@ export function RecordFormProvider({
     const explicitRecordId = params.record;
     const activeRecordId = explicitRecordId ?? recordIds[0] ?? null;
 
-    const activeRecordIdRef = useRef(activeRecordId);
-    const statusRef = useRef(status);
-    const lastSnapshotRef = useRef<string>('');
-    const lastKnownRef = useRef<{ id: string; updatedAt: string } | null>(null);
     const methodsRef = useRef(methods);
-    const pendingSyncRef = useRef(false);
 
     const { isLoading: isListLoading } = useRecordsListQuery({ publ_id }, { skip: !publ_id });
 
@@ -108,31 +96,33 @@ export function RecordFormProvider({
     const [submitRecord] = useSubmitRecordMutation();
     const [deleteRecord] = useDeleteRecordMutation();
 
-    const shouldSkipSync = useCallback((updatedAt: string): boolean => {
-        if (!lastKnownRef.current) return false;
-        return (
-            lastKnownRef.current.id === activeRecordIdRef.current &&
-            lastKnownRef.current.updatedAt === updatedAt
-        );
-    }, []);
+    // Sync activeRecordId + isInitialLoading to store
+    const isInitialLoading = isListLoading || (activeRecordId !== null && !initialRecordLoaded);
+    const prevActiveId = getState().activeRecordId;
+    const prevLoading = getState().isInitialLoading;
+    if (prevActiveId !== activeRecordId || prevLoading !== isInitialLoading) {
+        storeSetState({ activeRecordId, isInitialLoading });
+    }
 
-    const setPhase = useCallback((phase: RecordFormPhase) => {
-        setStatus(phase);
-        if (phase.phase !== 'idle') {
-            setNonFieldErrors([]);
-        }
-    }, []);
+    const shouldSkipSync = useCallback(
+        (updatedAt: string): boolean => {
+            const known = getLastKnown();
+            if (!known) return false;
+            return known.id === activeRecordId && known.updatedAt === updatedAt;
+        },
+        [activeRecordId],
+    );
 
     const { fn: debouncedAutoSave, cancel: cancelPendingAutoSave } = useDebouncedCallback(
         async () => {
-            const id = activeRecordIdRef.current;
+            const id = getState().activeRecordId;
             if (!id) return;
 
             const currentValues = methods.getValues();
             const currentSnapshot = JSON.stringify(currentValues);
-            if (currentSnapshot === lastSnapshotRef.current) return;
+            if (currentSnapshot === getLastSnapshot()) return;
 
-            setPhase({ phase: 'saving', source: 'auto' });
+            storeSetState({ status: { phase: 'saving', source: 'auto' } });
             try {
                 const payload = draftToRecordData(currentValues);
                 const response = await editRecord({
@@ -140,27 +130,18 @@ export function RecordFormProvider({
                     data: payload,
                     publ_id,
                 }).unwrap();
-                lastSnapshotRef.current = currentSnapshot;
-                lastKnownRef.current = {
+                setLastKnown({
                     id,
                     updatedAt: response.updated_at,
-                };
-                setLastSavedTime(new Date());
-                setPhase({ phase: 'idle' });
+                });
+                storeSetState({ lastSavedTime: new Date(), status: { phase: 'idle' } });
+                setLastSnapshot(currentSnapshot);
             } catch {
-                setPhase({ phase: 'idle' });
+                storeSetState({ status: { phase: 'idle' } });
             }
         },
         autoSaveDelay,
     );
-
-    useEffect(() => {
-        activeRecordIdRef.current = activeRecordId;
-    }, [activeRecordId]);
-
-    useEffect(() => {
-        statusRef.current = status;
-    }, [status]);
 
     useEffect(() => {
         methodsRef.current = methods;
@@ -170,12 +151,11 @@ export function RecordFormProvider({
         if (!activeRecord) return;
 
         if (shouldSkipSync(activeRecord.updated_at)) {
-            if (pendingSyncRef.current) {
-                pendingSyncRef.current = false;
-                setStatus({ phase: 'idle' });
+            if (getPendingSync()) {
+                setPendingSync(false);
+                storeSetState({ status: { phase: 'idle' } });
             }
             if (!initialRecordLoaded) {
-                // TODO: maybe this can be rewritten in a better way
                 // oxlint-disable-next-line react-hooks-js/set-state-in-effect
                 setInitialRecordLoaded(true);
                 void navigate(`/publication/${publ_id}/${activeRecord.id}`, { replace: true });
@@ -191,28 +171,26 @@ export function RecordFormProvider({
             keepDirty: false,
         });
         const nonField = syncServerErrors(activeRecord.errors ?? [], m);
-        setNonFieldErrors(nonField);
+        storeSetState({ nonFieldErrors: nonField });
 
-        lastSnapshotRef.current = JSON.stringify(toFormPartial(activeRecord));
+        setLastSnapshot(JSON.stringify(toFormPartial(activeRecord)));
 
         if (!initialRecordLoaded) {
             setInitialRecordLoaded(true);
             void navigate(`/publication/${publ_id}/${activeRecord.id}`, { replace: true });
         }
 
-        if (pendingSyncRef.current) {
-            pendingSyncRef.current = false;
-            setStatus({ phase: 'idle' });
+        if (getPendingSync()) {
+            setPendingSync(false);
+            storeSetState({ status: { phase: 'idle' } });
         }
     }, [activeRecord, shouldSkipSync, initialRecordLoaded, navigate, publ_id]);
-
-    const isInitialLoading = isListLoading || (activeRecordId !== null && !initialRecordLoaded);
 
     useEffect(() => {
         if (!SHOULD_AUTO_SAVE) return () => {};
 
         const subscription = methods.watch(() => {
-            if (statusRef.current.phase === 'saving') return;
+            if (getState().status.phase === 'saving') return;
 
             debouncedAutoSave();
         });
@@ -228,7 +206,7 @@ export function RecordFormProvider({
             source: 'manual' | 'submit',
             values: Partial<FormRecord>,
         ): Promise<RecordFull | undefined> => {
-            const id = activeRecordIdRef.current;
+            const id = getState().activeRecordId;
             if (!id) return undefined;
 
             try {
@@ -238,11 +216,11 @@ export function RecordFormProvider({
                     data: payload,
                     publ_id,
                 }).unwrap();
-                if (activeRecordIdRef.current === id) {
-                    lastKnownRef.current = {
+                if (getState().activeRecordId === id) {
+                    setLastKnown({
                         id,
                         updatedAt: response.updated_at,
-                    };
+                    });
                 }
                 return response;
             } catch {
@@ -259,28 +237,28 @@ export function RecordFormProvider({
 
     const save = useCallback(async () => {
         cancelPendingAutoSave();
-        if (statusRef.current.phase === 'saving' || statusRef.current.phase === 'syncing') return;
+        if (getState().status.phase === 'saving' || getState().status.phase === 'syncing') return;
 
-        setPhase({ phase: 'saving', source: 'manual' });
+        storeSetState({ status: { phase: 'saving', source: 'manual' } });
         const values = methodsRef.current.getValues();
         const response = await performSave('manual', values);
         if (response) {
-            setLastSavedTime(new Date());
+            storeSetState({ lastSavedTime: new Date() });
             const nonField = syncServerErrors(response.errors ?? [], methodsRef.current);
-            setNonFieldErrors(nonField);
+            storeSetState({ nonFieldErrors: nonField });
         }
-        setPhase({ phase: 'idle' });
-    }, [cancelPendingAutoSave, performSave, setPhase]);
+        storeSetState({ status: { phase: 'idle' } });
+    }, [cancelPendingAutoSave, performSave]);
 
     const submit = useCallback(async () => {
         cancelPendingAutoSave();
-        const s = statusRef.current;
+        const s = getState().status;
         if (s.phase === 'saving' || s.phase === 'syncing') return;
 
-        const id = activeRecordIdRef.current;
+        const id = getState().activeRecordId;
         if (!id) return;
 
-        setPhase({ phase: 'saving', source: 'submit' });
+        storeSetState({ status: { phase: 'saving', source: 'submit' } });
         try {
             const values = methodsRef.current.getValues();
             const payload = draftToRecordData(values);
@@ -293,45 +271,47 @@ export function RecordFormProvider({
                 record_id: id,
                 data: payload,
             }).unwrap();
-            lastKnownRef.current = {
+            setLastKnown({
                 id,
                 updatedAt: response.updated_at,
-            };
-            setLastSavedTime(new Date());
+            });
+            storeSetState({ lastSavedTime: new Date() });
             const nonField = syncServerErrors(response.errors ?? [], methodsRef.current);
-            setNonFieldErrors(nonField);
-            setPhase({ phase: 'idle' });
+            storeSetState({ nonFieldErrors: nonField });
+            storeSetState({ status: { phase: 'idle' } });
         } catch {
-            setPhase({ phase: 'idle' });
+            storeSetState({ status: { phase: 'idle' } });
         }
-    }, [cancelPendingAutoSave, editRecord, submitRecord, publ_id, setPhase]);
+    }, [cancelPendingAutoSave, editRecord, submitRecord, publ_id]);
 
     const switchTo = useCallback(
         (targetId: string) => {
-            if (targetId === activeRecordIdRef.current) return;
+            if (targetId === getState().activeRecordId) return;
 
             cancelPendingAutoSave();
-            lastKnownRef.current = null;
+            setLastKnown(null);
 
-            if (activeRecordIdRef.current) {
-                setPhase({ phase: 'saving', source: 'manual' });
+            if (getState().activeRecordId) {
+                storeSetState({ status: { phase: 'saving', source: 'manual' } });
                 void performSave('manual', methodsRef.current.getValues());
             }
 
-            pendingSyncRef.current = true;
+            setPendingSync(true);
             void navigate(`/publication/${publ_id}/${targetId}`, { replace: true });
-            setPhase({ phase: 'syncing' });
-            setLastSavedTime(null);
-            setNonFieldErrors([]);
+            storeSetState({
+                status: { phase: 'syncing' },
+                lastSavedTime: null,
+                nonFieldErrors: [],
+            });
         },
-        [cancelPendingAutoSave, performSave, setPhase, navigate, publ_id],
+        [cancelPendingAutoSave, performSave, navigate, publ_id],
     );
 
     const create = useCallback(async () => {
         try {
             cancelPendingAutoSave();
 
-            if (activeRecordIdRef.current) {
+            if (getState().activeRecordId) {
                 await performSave('manual', methodsRef.current.getValues());
             }
 
@@ -340,10 +320,10 @@ export function RecordFormProvider({
                 recordAPI.util.upsertQueryData('recordById', { record_id: created.id }, created),
             );
 
-            lastKnownRef.current = {
+            setLastKnown({
                 id: created.id,
                 updatedAt: created.updated_at,
-            };
+            });
 
             methodsRef.current.reset(FORM_DEFAULT_VALUES, {
                 keepValues: false,
@@ -353,8 +333,7 @@ export function RecordFormProvider({
             });
 
             void navigate(`/publication/${publ_id}/${created.id}`, { replace: true });
-            setLastSavedTime(null);
-            setNonFieldErrors([]);
+            storeSetState({ lastSavedTime: null, nonFieldErrors: [] });
         } catch {
             toast.error('Ошибка при создании записи');
         }
@@ -363,7 +342,7 @@ export function RecordFormProvider({
     const deleteRecordAction = useCallback(
         async (id: string) => {
             const listArgs = { publ_id };
-            const isActive = id === activeRecordIdRef.current;
+            const isActive = id === getState().activeRecordId;
 
             let nextId: string | null = null;
             if (isActive) {
@@ -394,17 +373,6 @@ export function RecordFormProvider({
         [publ_id, dispatch, deleteRecord, recordIds, navigate],
     );
 
-    const state: RecordFormState = useMemo(
-        () => ({
-            activeRecordId,
-            status,
-            lastSavedTime,
-            nonFieldErrors,
-            isInitialLoading,
-        }),
-        [activeRecordId, status, lastSavedTime, nonFieldErrors, isInitialLoading],
-    );
-
     const actions: RecordFormActions = useMemo(
         () => ({ save, submit, switchTo, create, deleteRecord: deleteRecordAction }),
         [save, submit, switchTo, create, deleteRecordAction],
@@ -412,9 +380,7 @@ export function RecordFormProvider({
 
     return (
         <ActionsContext.Provider value={actions}>
-            <StateContext.Provider value={state}>
-                <PublIdContext.Provider value={publ_id}>{children}</PublIdContext.Provider>
-            </StateContext.Provider>
+            <PublIdContext.Provider value={publ_id}>{children}</PublIdContext.Provider>
         </ActionsContext.Provider>
     );
 }

@@ -1,5 +1,4 @@
 import { type FC, useState } from 'react';
-import { shallowEqual } from 'react-redux';
 import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Plus, LogOut, FileText, MapPin, X, FileSpreadsheet, Trash2 } from 'lucide-react';
@@ -31,7 +30,8 @@ import { selectRecordIds, useRecordByIdQuery, useRecordsListQuery } from '@/api/
 import { computeInactiveStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 import ExcelUploadModal from '@/components/form/ExcelUploadModal';
-import { useRecordFormContext } from '@/contexts/RecordFormProvider';
+import { useFormSelector, useRecordFormActions, PublIdContext } from '@/contexts/RecordFormProvider';
+import { useContext } from 'react';
 
 const SidebarRecordItem = ({
     record_id,
@@ -159,11 +159,9 @@ const SidebarRecordItem = ({
 };
 
 const FormSidebar: FC = () => {
-    const {
-        state: { activeRecordId },
-        actions: { switchTo, create, deleteRecord },
-        publ_id,
-    } = useRecordFormContext();
+    const activeRecordId = useFormSelector((s) => s.activeRecordId);
+    const { switchTo, create, deleteRecord } = useRecordFormActions();
+    const publ_id = useContext(PublIdContext);
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 

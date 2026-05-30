@@ -1,10 +1,10 @@
 import { type FC } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useRecordFormState } from '@/contexts/useRecordFormContext';
+import { useFormSelector } from '@/contexts/RecordFormProvider';
 
 const ServerErrorDisplay: FC = () => {
-    const { nonFieldErrors } = useRecordFormState();
+    const nonFieldErrors = useFormSelector((s) => s.nonFieldErrors);
     if (nonFieldErrors.length === 0) return null;
 
     return (

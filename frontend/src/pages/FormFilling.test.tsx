@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act, waitFor, renderHook } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { RecordFormProvider, useRecordFormContext } from '@/contexts/RecordFormProvider';
-import type { RecordFormActions, RecordFormState } from '@/contexts/RecordFormProvider';
+import { RecordFormProvider, useFormSelector, useRecordFormActions } from '@/contexts/RecordFormProvider';
+import type { RecordFormActions } from '@/contexts/RecordFormProvider';
 import type { FormRecord } from '@/types/api.dto';
 
 const mockRecordsListQuery = vi.hoisted(() => vi.fn());
@@ -115,16 +115,15 @@ function queryResult(recordId: string | null) {
     return queryResults[key] ?? { currentData: undefined };
 }
 
-let testState: RecordFormState | null = null;
+let testState: ReturnType<typeof import('@/contexts/recordFormStore').getState> | null = null;
 let testActions: RecordFormActions | null = null;
 const testMethodsRef: { current: ReturnType<typeof useForm<FormRecord>> | null } = {
     current: null,
 };
 
 function StateDisplay() {
-    const { state, actions } = useRecordFormContext();
-    testState = state;
-    testActions = actions;
+    testState = useFormSelector((s) => s);
+    testActions = useRecordFormActions();
     return <div data-testid="state-display" />;
 }
 

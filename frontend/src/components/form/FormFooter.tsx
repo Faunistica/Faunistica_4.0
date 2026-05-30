@@ -1,4 +1,5 @@
 import { type FC, useState, useRef } from 'react';
+import { shallowEqual } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import {
     AlertDialog,
@@ -11,7 +12,7 @@ import {
 import { motion, useScroll, useMotionValueEvent } from 'motion/react';
 import { Save, Send, Trash2, Cloud, CloudOff, Check, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useRecordFormContext } from '@/contexts/RecordFormProvider';
+import { useFormSelector, useRecordFormActions } from '@/contexts/RecordFormProvider';
 
 function formatTime(date: Date): string {
     return date.toLocaleTimeString('ru-RU', {
@@ -24,10 +25,12 @@ function formatTime(date: Date): string {
 const ENABLE_MOTION_ON_DESKTOP = false;
 
 const Footer: FC = () => {
-    const {
-        state: { status, lastSavedTime, activeRecordId },
-        actions,
-    } = useRecordFormContext();
+    const { status, lastSavedTime } = useFormSelector(
+        (s) => ({ status: s.status, lastSavedTime: s.lastSavedTime }),
+        shallowEqual,
+    );
+    const activeRecordId = useFormSelector((s) => s.activeRecordId);
+    const actions = useRecordFormActions();
     const isSaving = status.phase === 'saving';
     const isAutoSaving = status.phase === 'saving' && status.source === 'auto';
     const isBusy = status.phase === 'saving' || status.phase === 'syncing';

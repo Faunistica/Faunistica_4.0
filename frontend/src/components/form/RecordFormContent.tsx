@@ -1,5 +1,5 @@
-import { type FC } from 'react';
-import { useRecordFormContext } from '@/contexts/RecordFormProvider';
+import { type FC, useContext } from 'react';
+import { useFormSelector, PublIdContext } from '@/contexts/RecordFormProvider';
 import ArticleSourceCard from '@/components/form/ArticleSourceCard';
 import GeographyCard from '@/components/form/GeographyCard';
 import CollectionEventCard from '@/components/form/CollectionEventCard';
@@ -10,10 +10,10 @@ import Footer from '@/components/form/FormFooter';
 import LoadingScreen from '@/components/LoadingScreen';
 
 const RecordFormContent: FC = () => {
-    const { state, publ_id } = useRecordFormContext();
-    const { activeRecordId, isInitialLoading } = state;
+    const activeRecordId = useFormSelector((s) => s.activeRecordId);
+    const publ_id = useContext(PublIdContext);
 
-    if (isInitialLoading || !activeRecordId) {
+    if (!activeRecordId) {
         return <LoadingScreen />;
     }
 
