@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
+import { createSelector } from '@reduxjs/toolkit';
 
 export const recordAPI = createApi({
     reducerPath: 'recordAPI',
@@ -135,6 +136,11 @@ export const recordAPI = createApi({
         }),
     }),
 });
+
+export const selectRecordIds = createSelector(
+    [(result: { data?: Types.PaginatedResponse<Types.RecordFull> }) => result.data],
+    (data) => data?.items?.map((r) => r.id) ?? [],
+);
 
 export const {
     useRecordsListQuery,

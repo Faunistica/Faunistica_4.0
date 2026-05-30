@@ -27,24 +27,11 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { recordAPI } from '@/api/recordAPI';
+import { selectRecordIds, useRecordByIdQuery, useRecordsListQuery } from '@/api/recordAPI';
 import { computeInactiveStatus } from '@/lib/recordStatus';
-import { useAppSelector } from '@/store/store';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 import ExcelUploadModal from '@/components/form/ExcelUploadModal';
 import { useRecordFormContext } from '@/contexts/RecordFormProvider';
-import { createSelector } from '@reduxjs/toolkit';
-
-const sidebarItemState = (record_id: string) =>
-    createSelector([recordAPI.endpoints.recordById.select({ record_id })], ({ data: record }) => {
-        return {
-            status: record ? computeInactiveStatus(record) : 'empty',
-            recordName: capitalizeFirstLetter(
-                record?.species || record?.genus || record?.family || 'Новая запись',
-            ),
-            recordLocation: record?.locality || record?.region || 'Нет данных о месте',
-        };
-    });
 
 const SidebarRecordItem = ({
     record_id,
@@ -59,7 +46,18 @@ const SidebarRecordItem = ({
 }) => {
     // Only use blocking fields?
     const { isMobile, setOpenMobile } = useSidebar();
-    const { status, recordName, recordLocation } = useAppSelector(sidebarItemState(record_id));
+    const { status, recordName, recordLocation } = useRecordByIdQuery(
+        { record_id },
+        {
+            selectFromResult: ({ data: record }) => ({
+                status: record ? computeInactiveStatus(record) : 'empty',
+                recordName: capitalizeFirstLetter(
+                    record?.species || record?.genus || record?.family || 'Новая запись',
+                ),
+                recordLocation: record?.locality || record?.region || 'Нет данных о месте',
+            }),
+        },
+    );
 
     const handleSelect = () => {
         onSelectRecord(record_id);
@@ -169,11 +167,14 @@ const FormSidebar: FC = () => {
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-    const recordIds = useAppSelector((st) => {
-        const result = recordAPI.endpoints.recordsList.select({ publ_id })(st);
-        const data = 'data' in result ? result.data : undefined;
-        return data?.items?.map((r) => r.id) ?? [];
-    }, shallowEqual);
+    const { recordIds } = useRecordsListQuery(
+        { publ_id },
+        {
+            selectFromResult: ({ data }) => ({
+                recordIds: selectRecordIds({ data }),
+            }),
+        },
+    );
 
     return (
         <>

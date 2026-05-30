@@ -13,9 +13,10 @@ import {
     useEditRecordMutation,
     useSubmitRecordMutation,
     useDeleteRecordMutation,
+    selectRecordIds,
 } from '@/api/recordAPI';
 import { skipToken } from '@reduxjs/toolkit/query';
-import { useAppDispatch, useAppSelector } from '@/store/store';
+import { useAppDispatch } from '@/store/store';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useNavigate, useParams } from 'react-router';
 import { ActionsContext, PublIdContext, StateContext } from './useRecordFormContext';
@@ -76,13 +77,13 @@ export function RecordFormProvider({
     const [nonFieldErrors, setNonFieldErrors] = useState<string[]>([]);
     const [initialRecordLoaded, setInitialRecordLoaded] = useState(false);
 
-    const recordIds = useAppSelector(
-        (state) => {
-            const result = recordAPI.endpoints.recordsList.select({ publ_id })(state);
-            const data = 'data' in result ? result.data : undefined;
-            return data?.items?.map((r) => r.id) ?? [];
+    const { recordIds } = useRecordsListQuery(
+        { publ_id },
+        {
+            selectFromResult: ({ data }) => ({
+                recordIds: selectRecordIds({ data }),
+            }),
         },
-        (a, b) => a.length === b.length && a.every((v, i) => v === b[i]),
     );
 
     const explicitRecordId = params.record;
