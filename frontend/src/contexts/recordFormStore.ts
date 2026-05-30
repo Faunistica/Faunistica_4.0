@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react';
 import type { RecordFormPhase } from './RecordFormProvider';
 
 export interface FormStoreState {
@@ -8,61 +9,71 @@ export interface FormStoreState {
     isInitialLoading: boolean;
 }
 
-type Listener = () => void;
+export interface FormStore {
+    getState: () => FormStoreState;
+    subscribe: (listener: () => void) => () => void;
+    setState: (partial: Partial<FormStoreState>) => void;
+    getSnapshotRef: () => string;
+    setSnapshotRef: (val: string) => void;
+    getKnownRef: () => { id: string; updatedAt: string } | null;
+    setKnownRef: (val: { id: string; updatedAt: string } | null) => void;
+    getPendingSync: () => boolean;
+    setPendingSync: (val: boolean) => void;
+}
 
-let storeState: FormStoreState = {
-    activeRecordId: null,
-    status: { phase: 'idle' },
-    lastSavedTime: null,
-    nonFieldErrors: [],
-    isInitialLoading: true,
-};
+export function createFormStore(): FormStore {
+    let state: FormStoreState = {
+        activeRecordId: null,
+        status: { phase: 'idle' },
+        lastSavedTime: null,
+        nonFieldErrors: [],
+        isInitialLoading: true,
+    };
+    const listeners = new Set<() => void>();
+    let snapshotRef = '';
+    let knownRef: { id: string; updatedAt: string } | null = null;
+    let pendingSync = false;
 
-const listeners = new Set<Listener>();
+    return {
+        getState: () => state,
+        subscribe: (listener) => {
+            listeners.add(listener);
+            return () => listeners.delete(listener);
+        },
+        setState: (partial) => {
+            let changed = false;
+            // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+            for (const key of Object.keys(partial) as Array<keyof FormStoreState>) {
+                if (!Object.is(state[key], partial[key])) {
+                    changed = true;
+                    break;
+                }
+            }
+            if (!changed) return;
+            state = { ...state, ...partial };
+            listeners.forEach((l) => l());
+        },
+        getSnapshotRef: () => snapshotRef,
+        setSnapshotRef: (val) => {
+            snapshotRef = val;
+        },
+        getKnownRef: () => knownRef,
+        setKnownRef: (val) => {
+            knownRef = val;
+        },
+        getPendingSync: () => pendingSync,
+        setPendingSync: (val) => {
+            pendingSync = val;
+        },
+    };
+}
 
-export const getState = (): FormStoreState => storeState;
+export const StoreContext = createContext<FormStore | null>(null);
 
-export const subscribe = (listener: Listener): (() => void) => {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-};
-
-export function setState(partial: Partial<FormStoreState>): void {
-    let changed = false;
-    const prev = storeState;
-    for (const [key, value] of Object.entries(partial)) {
-        if (!Object.is(prev[key], value)) {
-            changed = true;
-            break;
-        }
+export function useFormStore(): FormStore {
+    const store = useContext(StoreContext);
+    if (!store) {
+        throw new Error('useFormStore must be used within a RecordFormProvider');
     }
-    if (!changed) return;
-    storeState = { ...prev, ...partial };
-    listeners.forEach((l) => l());
-}
-
-// Module-level tracking vars (replacements for useRef)
-let _lastSnapshotRef = '';
-let _lastKnown: { id: string; updatedAt: string } | null = null;
-let _pendingSync = false;
-
-export function getLastSnapshot(): string {
-    return _lastSnapshotRef;
-}
-export function setLastSnapshot(val: string): void {
-    _lastSnapshotRef = val;
-}
-
-export function getLastKnown(): { id: string; updatedAt: string } | null {
-    return _lastKnown;
-}
-export function setLastKnown(val: { id: string; updatedAt: string } | null): void {
-    _lastKnown = val;
-}
-
-export function getPendingSync(): boolean {
-    return _pendingSync;
-}
-export function setPendingSync(val: boolean): void {
-    _pendingSync = val;
+    return store;
 }

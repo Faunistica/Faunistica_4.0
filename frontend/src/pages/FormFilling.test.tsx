@@ -115,7 +115,7 @@ function queryResult(recordId: string | null) {
     return queryResults[key] ?? { currentData: undefined };
 }
 
-let testState: ReturnType<typeof import('@/contexts/recordFormStore').getState> | null = null;
+let testState: import('@/contexts/recordFormStore').FormStoreState | null = null;
 let testActions: RecordFormActions | null = null;
 const testMethodsRef: { current: ReturnType<typeof useForm<FormRecord>> | null } = {
     current: null,
