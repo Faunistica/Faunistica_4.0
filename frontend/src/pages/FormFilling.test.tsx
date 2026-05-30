@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act, waitFor, renderHook } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { RecordFormProvider, useFormSelector, useRecordFormActions } from '@/contexts/RecordFormProvider';
+import {
+    RecordFormProvider,
+    useFormSelector,
+    useRecordFormActions,
+} from '@/contexts/RecordFormProvider';
 import type { RecordFormActions } from '@/contexts/RecordFormProvider';
 import type { FormRecord } from '@/types/api.dto';
 

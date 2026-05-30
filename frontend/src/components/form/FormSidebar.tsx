@@ -30,7 +30,11 @@ import { selectRecordIds, useRecordByIdQuery, useRecordsListQuery } from '@/api/
 import { computeInactiveStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 import ExcelUploadModal from '@/components/form/ExcelUploadModal';
-import { useFormSelector, useRecordFormActions, PublIdContext } from '@/contexts/RecordFormProvider';
+import {
+    useFormSelector,
+    useRecordFormActions,
+    PublIdContext,
+} from '@/contexts/RecordFormProvider';
 import { useContext } from 'react';
 
 const SidebarRecordItem = ({

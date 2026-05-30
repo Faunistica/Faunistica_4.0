@@ -2,7 +2,11 @@ import { type FC } from 'react';
 import { useOutletContext, useParams } from 'react-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RecordFormProvider, useFormSelector, useRecordFormActions } from '@/contexts/RecordFormProvider';
+import {
+    RecordFormProvider,
+    useFormSelector,
+    useRecordFormActions,
+} from '@/contexts/RecordFormProvider';
 import type { FormRecord } from '@/types/api.dto';
 import { recordFormSchema, FORM_DEFAULT_VALUES } from '@/types/forms';
 import RecordFormContent from '@/components/form/RecordFormContent';

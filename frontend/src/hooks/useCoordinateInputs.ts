@@ -1,6 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
-import { useDebouncedCallback } from '@/hooks/useDebounce';
+import { useState, useEffect, useRef } from 'react';
+import { useFormContext, useController } from 'react-hook-form';
 import {
     convertDMToDD,
     convertDMSToDD,
@@ -13,17 +12,40 @@ import type { FormRecord } from '@/types/api.dto';
 
 type Mode = 'dm' | 'dms';
 
-function isRecord(val: unknown): val is Record<string, unknown> {
-    return typeof val === 'object' && val !== null;
+function deriveFromDD(dd: number, isLat: boolean, mode: Mode) {
+    if (mode === 'dm') {
+        const r = isLat ? convertDDToDM(dd, true) : convertDDToDM(dd, false);
+        return {
+            degrees: r.degrees,
+            minutes: r.minutes,
+            direction: r.direction,
+            seconds: undefined as number | undefined,
+        };
+    }
+    const r = isLat ? convertDDToDMS(dd, true) : convertDDToDMS(dd, false);
+    return {
+        degrees: r.degrees,
+        minutes: r.minutes,
+        seconds: r.seconds,
+        direction: r.direction,
+    };
 }
 
-export function useCoordinateInputs(prefix: string, mode: Mode) {
-    const {
-        setValue,
-        trigger,
-        formState: { errors },
+export function useCoordinateInputs(mode: Mode) {
+    const { control } = useFormContext<FormRecord>();
+
+    const { field: latField, fieldState: latFieldState } = useController({
+        name: 'latitude',
         control,
-    } = useFormContext<FormRecord>();
+    });
+    const { field: lonField, fieldState: lonFieldState } = useController({
+        name: 'longitude',
+        control,
+    });
+    const { field: verbField } = useController({
+        name: 'verbatimcoordinates',
+        control,
+    });
 
     const [latDeg, setLatDeg] = useState<number | ''>('');
     const [latMin, setLatMin] = useState<number | ''>('');
@@ -34,180 +56,154 @@ export function useCoordinateInputs(prefix: string, mode: Mode) {
     const [lonSec, setLonSec] = useState<number | ''>('');
     const [lonDir, setLonDir] = useState<'E' | 'W'>('E');
 
-    const prevValuesRef = useRef<string>('');
-    const internalUpdateRef = useRef(false);
+    // Refs mirror state so handlers always read latest values (no stale closures)
+    const ref = useRef({
+        latDeg: '' as number | '',
+        latMin: '' as number | '',
+        latSec: '' as number | '',
+        latDir: 'N' as 'N' | 'S',
+        lonDeg: '' as number | '',
+        lonMin: '' as number | '',
+        lonSec: '' as number | '',
+        lonDir: 'E' as 'E' | 'W',
+    });
 
-    const formLat = useWatch({ name: 'latitude', control });
-    const formLon = useWatch({ name: 'longitude', control });
+    const lastLatRef = useRef(latField.value);
+    const lastLonRef = useRef(lonField.value);
 
-    const updateForm = useCallback(() => {
-        if (mode === 'dm') {
-            if (latDeg === '' || latMin === '' || lonDeg === '' || lonMin === '') return;
+    const syncRefs = () => {
+        ref.current.latDeg = latDeg;
+        ref.current.latMin = latMin;
+        ref.current.latSec = latSec;
+        ref.current.latDir = latDir;
+        ref.current.lonDeg = lonDeg;
+        ref.current.lonMin = lonMin;
+        ref.current.lonSec = lonSec;
+        ref.current.lonDir = lonDir;
+    };
+    syncRefs();
 
-            const currentKey = `${latDeg}-${latMin}-${latDir}-${lonDeg}-${lonMin}-${lonDir}`;
-            if (prevValuesRef.current === currentKey) return;
-            prevValuesRef.current = currentKey;
-
-            const latitude = convertDMToDD(latDeg, latMin, latDir);
-            const longitude = convertDMToDD(lonDeg, lonMin, lonDir);
-            const verbatim = formatDMVerbatim(latDeg, latMin, latDir, lonDeg, lonMin, lonDir);
-
-            const latField = 'latitude' as const;
-            const lonField = 'longitude' as const;
-            const verbField = 'verbatimcoordinates' as const;
-
-            internalUpdateRef.current = true;
-            setValue(latField, latitude, { shouldValidate: false, shouldDirty: true });
-            setValue(lonField, longitude, { shouldValidate: false, shouldDirty: true });
-            setValue(verbField, verbatim, { shouldValidate: false, shouldDirty: true });
-
-            setTimeout(() => {
-                void trigger([latField, lonField]);
-            }, 0);
-        } else {
-            if (
-                latDeg === '' ||
-                latMin === '' ||
-                latSec === '' ||
-                lonDeg === '' ||
-                lonMin === '' ||
-                lonSec === ''
-            )
-                return;
-
-            const currentKey = `${latDeg}-${latMin}-${latSec}-${latDir}-${lonDeg}-${lonMin}-${lonSec}-${lonDir}`;
-            if (prevValuesRef.current === currentKey) return;
-            prevValuesRef.current = currentKey;
-
-            const latitude = convertDMSToDD(latDeg, latMin, latSec, latDir);
-            const longitude = convertDMSToDD(lonDeg, lonMin, lonSec, lonDir);
-            const verbatim = formatDMSVerbatim(
-                latDeg,
-                latMin,
-                latSec,
-                latDir,
-                lonDeg,
-                lonMin,
-                lonSec,
-                lonDir,
-            );
-
-            const latField = 'latitude' as const;
-            const lonField = 'longitude' as const;
-            const verbField = 'verbatimcoordinates' as const;
-
-            internalUpdateRef.current = true;
-            setValue(latField, latitude, { shouldValidate: false, shouldDirty: true });
-            setValue(lonField, longitude, { shouldValidate: false, shouldDirty: true });
-            setValue(verbField, verbatim, { shouldValidate: false, shouldDirty: true });
-
-            setTimeout(() => {
-                void trigger([latField, lonField]);
-            }, 0);
-        }
-    }, [latDeg, latMin, latSec, latDir, lonDeg, lonMin, lonSec, lonDir, setValue, trigger, mode]);
-
-    const { fn: debouncedUpdate } = useDebouncedCallback(updateForm, 300);
-
+    // Mount: initialize local state from existing form values
     useEffect(() => {
-        if (internalUpdateRef.current) {
-            internalUpdateRef.current = false;
-            return;
+        const lat = deriveFromDD(latField.value, true, mode);
+        setLatDeg(lat.degrees);
+        setLatMin(lat.minutes);
+        setLatDir(lat.direction as 'N' | 'S');
+        if (mode === 'dms') setLatSec(lat.seconds!);
+
+        const lon = deriveFromDD(lonField.value, false, mode);
+        setLonDeg(lon.degrees);
+        setLonMin(lon.minutes);
+        setLonDir(lon.direction as 'E' | 'W');
+        if (mode === 'dms') setLonSec(lon.seconds!);
+
+        lastLatRef.current = latField.value;
+        lastLonRef.current = lonField.value;
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // External change detection: latitude
+    useEffect(() => {
+        if (latField.value !== lastLatRef.current) {
+            lastLatRef.current = latField.value;
+            const d = deriveFromDD(latField.value, true, mode);
+            setLatDeg(d.degrees);
+            setLatMin(d.minutes);
+            setLatDir(d.direction as 'N' | 'S');
+            if (mode === 'dms') setLatSec(d.seconds!);
         }
+    }, [latField.value, mode]);
 
-        if (formLat == null || formLon == null) return;
-
-        if (mode === 'dm') {
-            const latDM = convertDDToDM(formLat, true);
-            const lonDM = convertDDToDM(formLon, false);
-            setLatDeg(latDM.degrees);
-            setLatMin(latDM.minutes);
-            setLatDir(latDM.direction);
-            setLonDeg(lonDM.degrees);
-            setLonMin(lonDM.minutes);
-            setLonDir(lonDM.direction);
-        } else {
-            const latDMS = convertDDToDMS(formLat, true);
-            const lonDMS = convertDDToDMS(formLon, false);
-            setLatDeg(latDMS.degrees);
-            setLatMin(latDMS.minutes);
-            setLatSec(latDMS.seconds);
-            setLatDir(latDMS.direction);
-            setLonDeg(lonDMS.degrees);
-            setLonMin(lonDMS.minutes);
-            setLonSec(lonDMS.seconds);
-            setLonDir(lonDMS.direction);
+    // External change detection: longitude
+    useEffect(() => {
+        if (lonField.value !== lastLonRef.current) {
+            lastLonRef.current = lonField.value;
+            const d = deriveFromDD(lonField.value, false, mode);
+            setLonDeg(d.degrees);
+            setLonMin(d.minutes);
+            setLonDir(d.direction as 'E' | 'W');
+            if (mode === 'dms') setLonSec(d.seconds!);
         }
-    }, [formLat, formLon, mode]);
+    }, [lonField.value, mode]);
 
-    const handleLatDegChange = useCallback(
-        (val: number | '') => {
-            setLatDeg(val);
-            debouncedUpdate();
-        },
-        [debouncedUpdate],
-    );
-    const handleLatMinChange = useCallback(
-        (val: number | '') => {
-            setLatMin(val);
-            debouncedUpdate();
-        },
-        [debouncedUpdate],
-    );
-    const handleLatSecChange = useCallback(
-        (val: number | '') => {
-            setLatSec(val);
-            debouncedUpdate();
-        },
-        [debouncedUpdate],
-    );
-    const handleLatDirChange = useCallback(
-        (val: string) => {
-            if (val === 'N' || val === 'S') setLatDir(val);
-            debouncedUpdate();
-        },
-        [debouncedUpdate],
-    );
-    const handleLonDegChange = useCallback(
-        (val: number | '') => {
-            setLonDeg(val);
-            debouncedUpdate();
-        },
-        [debouncedUpdate],
-    );
-    const handleLonMinChange = useCallback(
-        (val: number | '') => {
-            setLonMin(val);
-            debouncedUpdate();
-        },
-        [debouncedUpdate],
-    );
-    const handleLonSecChange = useCallback(
-        (val: number | '') => {
-            setLonSec(val);
-            debouncedUpdate();
-        },
-        [debouncedUpdate],
-    );
-    const handleLonDirChange = useCallback(
-        (val: string) => {
-            if (val === 'E' || val === 'W') setLonDir(val);
-            debouncedUpdate();
-        },
-        [debouncedUpdate],
-    );
+    const writeAll = () => {
+        const {
+            latDeg: ld,
+            latMin: lm,
+            latSec: ls,
+            latDir: lad,
+            lonDeg: lnd,
+            lonMin: lnm,
+            lonSec: lns,
+            lonDir: lod,
+        } = ref.current;
+        if (ld === '' || lm === '' || lnd === '' || lnm === '') return;
+        if (mode === 'dms' && (ls === '' || lns === '')) return;
 
-    const errorsAny = errors as Record<string, unknown>;
-    const errVal = errorsAny[prefix];
-    const errPrefix = isRecord(errVal) ? errVal : undefined;
-    const latError =
-        errPrefix && isRecord(errPrefix.latitude)
-            ? (errPrefix.latitude as { message?: string }).message
-            : undefined;
-    const lonError =
-        errPrefix && isRecord(errPrefix.longitude)
-            ? (errPrefix.longitude as { message?: string }).message
-            : undefined;
+        const latitude =
+            mode === 'dm' ? convertDMToDD(ld, lm, lad) : convertDMSToDD(ld, lm, ls, lad);
+        const longitude =
+            mode === 'dm' ? convertDMToDD(lnd, lnm, lod) : convertDMSToDD(lnd, lnm, lns, lod);
+        const verbatim =
+            mode === 'dm'
+                ? formatDMVerbatim(ld, lm, lad, lnd, lnm, lod)
+                : formatDMSVerbatim(ld, lm, ls, lad, lnd, lnm, lns, lod);
+
+        latField.onChange(latitude);
+        lastLatRef.current = latitude;
+        lonField.onChange(longitude);
+        lastLonRef.current = longitude;
+        verbField.onChange(verbatim);
+    };
+
+    const handleLatDegChange = (val: number | '') => {
+        ref.current.latDeg = val;
+        setLatDeg(val);
+        writeAll();
+    };
+
+    const handleLatMinChange = (val: number | '') => {
+        ref.current.latMin = val;
+        setLatMin(val);
+        writeAll();
+    };
+
+    const handleLatSecChange = (val: number | '') => {
+        ref.current.latSec = val;
+        setLatSec(val);
+        writeAll();
+    };
+
+    const handleLatDirChange = (val: string) => {
+        if (val !== 'N' && val !== 'S') return;
+        ref.current.latDir = val;
+        setLatDir(val);
+        writeAll();
+    };
+
+    const handleLonDegChange = (val: number | '') => {
+        ref.current.lonDeg = val;
+        setLonDeg(val);
+        writeAll();
+    };
+
+    const handleLonMinChange = (val: number | '') => {
+        ref.current.lonMin = val;
+        setLonMin(val);
+        writeAll();
+    };
+
+    const handleLonSecChange = (val: number | '') => {
+        ref.current.lonSec = val;
+        setLonSec(val);
+        writeAll();
+    };
+
+    const handleLonDirChange = (val: string) => {
+        if (val !== 'E' && val !== 'W') return;
+        ref.current.lonDir = val;
+        setLonDir(val);
+        writeAll();
+    };
 
     return {
         latitude: {
@@ -219,7 +215,7 @@ export function useCoordinateInputs(prefix: string, mode: Mode) {
             setMinutes: handleLatMinChange,
             setSeconds: handleLatSecChange,
             setDirection: handleLatDirChange,
-            error: latError,
+            error: latFieldState.error?.message,
         },
         longitude: {
             degrees: lonDeg,
@@ -230,7 +226,7 @@ export function useCoordinateInputs(prefix: string, mode: Mode) {
             setMinutes: handleLonMinChange,
             setSeconds: handleLonSecChange,
             setDirection: handleLonDirChange,
-            error: lonError,
+            error: lonFieldState.error?.message,
         },
     };
 }

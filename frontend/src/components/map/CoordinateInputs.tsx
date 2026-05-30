@@ -12,7 +12,6 @@ import {
 import { useCoordinateInputs } from '@/hooks/useCoordinateInputs';
 
 interface Props {
-    prefix: string;
     disabled?: boolean;
 }
 
@@ -169,8 +168,8 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
     );
 };
 
-export const DMSInputGroup: FC<Props> = ({ prefix, disabled }) => {
-    const { latitude, longitude } = useCoordinateInputs(prefix, 'dms');
+export const DMSInputGroup: FC<Props> = ({ disabled }) => {
+    const { latitude, longitude } = useCoordinateInputs('dms');
 
     return (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

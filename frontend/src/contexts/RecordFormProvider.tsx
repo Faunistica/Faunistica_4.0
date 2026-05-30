@@ -232,7 +232,10 @@ export function RecordFormProvider({
 
     const save = useCallback(async () => {
         cancelPendingAutoSave();
-        if (store.getState().status.phase === 'saving' || store.getState().status.phase === 'syncing')
+        if (
+            store.getState().status.phase === 'saving' ||
+            store.getState().status.phase === 'syncing'
+        )
             return;
 
         store.setState({ status: { phase: 'saving', source: 'manual' } });
