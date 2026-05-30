@@ -10,32 +10,67 @@ import {
 } from '@/lib/geoUtils';
 import type { FormRecord } from '@/types/api.dto';
 
+type Axis = 'lat' | 'lng';
 type Mode = 'dm' | 'dms';
 
-function deriveFromDD(
-    dd: number,
-    isLat: true,
-    mode: Mode,
-): { degrees: number; minutes: number; seconds: number | undefined; direction: 'N' | 'S' };
-function deriveFromDD(
-    dd: number,
-    isLat: false,
-    mode: Mode,
-): { degrees: number; minutes: number; seconds: number | undefined; direction: 'E' | 'W' };
-function deriveFromDD(dd: number, isLat: boolean, mode: Mode) {
+type CoordinateParts<A extends Axis> = {
+    degrees: number | '';
+    minutes: number | '';
+    seconds: number | '';
+    direction: A extends 'lat' ? 'N' | 'S' : 'E' | 'W';
+};
+
+function deriveFromDD(dd: number, axis: 'lat', mode: Mode): CoordinateParts<'lat'>;
+function deriveFromDD(dd: number, axis: 'lng', mode: Mode): CoordinateParts<'lng'>;
+function deriveFromDD(dd: number, axis: Axis, mode: Mode): CoordinateParts<Axis> {
     if (mode === 'dm') {
-        const r = isLat ? convertDDToDM(dd, true) : convertDDToDM(dd, false);
+        const result = axis === 'lat' ? convertDDToDM(dd, true) : convertDDToDM(dd, false);
         return {
-            degrees: r.degrees,
-            minutes: r.minutes,
-            direction: r.direction,
-            seconds: undefined,
+            degrees: result.degrees,
+            minutes: result.minutes,
+            seconds: '',
+            direction: result.direction,
         };
     }
-    const r = isLat ? convertDDToDMS(dd, true) : convertDDToDMS(dd, false);
-    return { degrees: r.degrees, minutes: r.minutes, seconds: r.seconds, direction: r.direction };
+    const result = axis === 'lat' ? convertDDToDMS(dd, true) : convertDDToDMS(dd, false);
+    return {
+        degrees: result.degrees,
+        minutes: result.minutes,
+        seconds: result.seconds,
+        direction: result.direction,
+    };
 }
 
+export function useCoordinateInputs(mode: 'dm'): {
+    latitude: {
+        degrees: { value: number | ''; onChange: (value: number | '') => void };
+        minutes: { value: number | ''; onChange: (value: number | '') => void };
+        direction: { value: 'N' | 'S'; onChange: (value: string) => void };
+        error: string | undefined;
+    };
+    longitude: {
+        degrees: { value: number | ''; onChange: (value: number | '') => void };
+        minutes: { value: number | ''; onChange: (value: number | '') => void };
+        direction: { value: 'E' | 'W'; onChange: (value: string) => void };
+        error: string | undefined;
+    };
+};
+export function useCoordinateInputs(mode: 'dms'): {
+    latitude: {
+        degrees: { value: number | ''; onChange: (value: number | '') => void };
+        minutes: { value: number | ''; onChange: (value: number | '') => void };
+        seconds: { value: number | ''; onChange: (value: number | '') => void };
+        direction: { value: 'N' | 'S'; onChange: (value: string) => void };
+        error: string | undefined;
+    };
+    longitude: {
+        degrees: { value: number | ''; onChange: (value: number | '') => void };
+        minutes: { value: number | ''; onChange: (value: number | '') => void };
+        seconds: { value: number | ''; onChange: (value: number | '') => void };
+        direction: { value: 'E' | 'W'; onChange: (value: string) => void };
+        error: string | undefined;
+    };
+};
 export function useCoordinateInputs(mode: Mode) {
     const { control } = useFormContext<FormRecord>();
 
@@ -52,163 +87,186 @@ export function useCoordinateInputs(mode: Mode) {
         control,
     });
 
-    const [latDeg, setLatDeg] = useState<number | ''>('');
-    const [latMin, setLatMin] = useState<number | ''>('');
-    const [latSec, setLatSec] = useState<number | ''>('');
-    const [latDir, setLatDir] = useState<'N' | 'S'>('N');
-    const [lonDeg, setLonDeg] = useState<number | ''>('');
-    const [lonMin, setLonMin] = useState<number | ''>('');
-    const [lonSec, setLonSec] = useState<number | ''>('');
-    const [lonDir, setLonDir] = useState<'E' | 'W'>('E');
-
-    const ref = useRef<{
-        latDeg?: number;
-        latMin?: number;
-        latSec?: number;
-        latDir: 'N' | 'S';
-        lonDeg?: number;
-        lonMin?: number;
-        lonSec?: number;
-        lonDir: 'E' | 'W';
-    }>({ latDir: 'N', lonDir: 'E' });
+    const latRef = useRef<CoordinateParts<'lat'>>({
+        degrees: '',
+        minutes: '',
+        seconds: '',
+        direction: 'N',
+    });
+    const lonRef = useRef<CoordinateParts<'lng'>>({
+        degrees: '',
+        minutes: '',
+        seconds: '',
+        direction: 'E',
+    });
+    const [latParts, setLatParts] = useState<CoordinateParts<'lat'>>({
+        degrees: '',
+        minutes: '',
+        seconds: '',
+        direction: 'N',
+    });
+    const [lonParts, setLonParts] = useState<CoordinateParts<'lng'>>({
+        degrees: '',
+        minutes: '',
+        seconds: '',
+        direction: 'E',
+    });
 
     const lastLatRef = useRef<number | null>(null);
     const lastLonRef = useRef<number | null>(null);
-
-    const syncRefs = () => {
-        ref.current.latDeg = latDeg === '' ? undefined : latDeg;
-        ref.current.latMin = latMin === '' ? undefined : latMin;
-        ref.current.latSec = latSec === '' ? undefined : latSec;
-        ref.current.latDir = latDir;
-        ref.current.lonDeg = lonDeg === '' ? undefined : lonDeg;
-        ref.current.lonMin = lonMin === '' ? undefined : lonMin;
-        ref.current.lonSec = lonSec === '' ? undefined : lonSec;
-        ref.current.lonDir = lonDir;
-    };
-    syncRefs();
 
     // Mount init + external change detection
     useEffect(() => {
         if (latField.value !== lastLatRef.current) {
             lastLatRef.current = latField.value;
-            const d = deriveFromDD(latField.value, true, mode);
-            setLatDeg(d.degrees);
-            setLatMin(d.minutes);
-            setLatDir(d.direction);
-            // oxlint-disable-next-line react-hooks-js/set-state-in-effect
-            if (mode === 'dms') setLatSec(d.seconds ?? 0);
+            const parts = deriveFromDD(latField.value, 'lat', mode);
+            latRef.current = parts;
+            setLatParts(parts);
         }
         if (lonField.value !== lastLonRef.current) {
             lastLonRef.current = lonField.value;
-            const d = deriveFromDD(lonField.value, false, mode);
-            setLonDeg(d.degrees);
-            setLonMin(d.minutes);
-            setLonDir(d.direction);
-            if (mode === 'dms') setLonSec(d.seconds ?? 0);
+            const parts = deriveFromDD(lonField.value, 'lng', mode);
+            lonRef.current = parts;
+            setLonParts(parts);
         }
     }, [latField.value, lonField.value, mode]);
 
     const syncForm = () => {
-        const {
-            latDeg: ld,
-            latMin: lm,
-            latSec: ls,
-            latDir: lad,
-            lonDeg: lnd,
-            lonMin: lnm,
-            lonSec: lns,
-            lonDir: lod,
-        } = ref.current;
-        if (ld === undefined || lm === undefined || lnd === undefined || lnm === undefined) return;
-        if (mode === 'dms' && (ls === undefined || lns === undefined)) return;
+        const latDegrees = latRef.current.degrees;
+        const latMinutes = latRef.current.minutes;
+        const latSeconds = latRef.current.seconds;
+        const latDirection = latRef.current.direction;
+        const lonDegrees = lonRef.current.degrees;
+        const lonMinutes = lonRef.current.minutes;
+        const lonSeconds = lonRef.current.seconds;
+        const lonDirection = lonRef.current.direction;
 
-        const latitude =
-            mode === 'dm' ? convertDMToDD(ld, lm, lad) : convertDMSToDD(ld, lm, ls!, lad);
-        const longitude =
-            mode === 'dm' ? convertDMToDD(lnd, lnm, lod) : convertDMSToDD(lnd, lnm, lns!, lod);
+        if (
+            typeof latDegrees !== 'number' ||
+            typeof latMinutes !== 'number' ||
+            typeof lonDegrees !== 'number' ||
+            typeof lonMinutes !== 'number'
+        )
+            return;
+        if (mode === 'dms' && (typeof latSeconds !== 'number' || typeof lonSeconds !== 'number'))
+            return;
+
+        const newLatitude =
+            mode === 'dm'
+                ? convertDMToDD(latDegrees, latMinutes, latDirection)
+                : convertDMSToDD(latDegrees, latMinutes, latSeconds, latDirection);
+        const newLongitude =
+            mode === 'dm'
+                ? convertDMToDD(lonDegrees, lonMinutes, lonDirection)
+                : convertDMSToDD(lonDegrees, lonMinutes, lonSeconds, lonDirection);
         const verbatim =
             mode === 'dm'
-                ? formatDMVerbatim(ld, lm, lad, lnd, lnm, lod)
-                : formatDMSVerbatim(ld, lm, ls!, lad, lnd, lnm, lns!, lod);
+                ? formatDMVerbatim(
+                      latDegrees,
+                      latMinutes,
+                      latDirection,
+                      lonDegrees,
+                      lonMinutes,
+                      lonDirection,
+                  )
+                : formatDMSVerbatim(
+                      latDegrees,
+                      latMinutes,
+                      latSeconds,
+                      latDirection,
+                      lonDegrees,
+                      lonMinutes,
+                      lonSeconds,
+                      lonDirection,
+                  );
 
-        latField.onChange(latitude);
-        lastLatRef.current = latitude;
-        lonField.onChange(longitude);
-        lastLonRef.current = longitude;
+        latField.onChange(newLatitude);
+        lastLatRef.current = newLatitude;
+        lonField.onChange(newLongitude);
+        lastLonRef.current = newLongitude;
         verbField.onChange(verbatim);
     };
 
-    const handleLatDegChange = (val: number | '') => {
-        ref.current.latDeg = val === '' ? undefined : val;
-        setLatDeg(val);
+    const handleLatDegreesChange = (value: number | '') => {
+        latRef.current.degrees = value;
+        setLatParts((previous) => ({ ...previous, degrees: value }));
         syncForm();
     };
 
-    const handleLatMinChange = (val: number | '') => {
-        ref.current.latMin = val === '' ? undefined : val;
-        setLatMin(val);
+    const handleLatMinutesChange = (value: number | '') => {
+        latRef.current.minutes = value;
+        setLatParts((previous) => ({ ...previous, minutes: value }));
         syncForm();
     };
 
-    const handleLatSecChange = (val: number | '') => {
-        ref.current.latSec = val === '' ? undefined : val;
-        setLatSec(val);
+    const handleLatSecondsChange = (value: number | '') => {
+        latRef.current.seconds = value;
+        setLatParts((previous) => ({ ...previous, seconds: value }));
         syncForm();
     };
 
-    const handleLatDirChange = (val: string) => {
-        if (val !== 'N' && val !== 'S') return;
-        ref.current.latDir = val;
-        setLatDir(val);
+    const handleLatDirectionChange = (value: string) => {
+        if (value !== 'N' && value !== 'S') return;
+        latRef.current.direction = value;
+        setLatParts((previous) => ({ ...previous, direction: value }));
         syncForm();
     };
 
-    const handleLonDegChange = (val: number | '') => {
-        ref.current.lonDeg = val === '' ? undefined : val;
-        setLonDeg(val);
+    const handleLonDegreesChange = (value: number | '') => {
+        lonRef.current.degrees = value;
+        setLonParts((previous) => ({ ...previous, degrees: value }));
         syncForm();
     };
 
-    const handleLonMinChange = (val: number | '') => {
-        ref.current.lonMin = val === '' ? undefined : val;
-        setLonMin(val);
+    const handleLonMinutesChange = (value: number | '') => {
+        lonRef.current.minutes = value;
+        setLonParts((previous) => ({ ...previous, minutes: value }));
         syncForm();
     };
 
-    const handleLonSecChange = (val: number | '') => {
-        ref.current.lonSec = val === '' ? undefined : val;
-        setLonSec(val);
+    const handleLonSecondsChange = (value: number | '') => {
+        lonRef.current.seconds = value;
+        setLonParts((previous) => ({ ...previous, seconds: value }));
         syncForm();
     };
 
-    const handleLonDirChange = (val: string) => {
-        if (val !== 'E' && val !== 'W') return;
-        ref.current.lonDir = val;
-        setLonDir(val);
+    const handleLonDirectionChange = (value: string) => {
+        if (value !== 'E' && value !== 'W') return;
+        lonRef.current.direction = value;
+        setLonParts((previous) => ({ ...previous, direction: value }));
         syncForm();
     };
+
+    if (mode === 'dm') {
+        return {
+            latitude: {
+                degrees: { value: latParts.degrees, onChange: handleLatDegreesChange },
+                minutes: { value: latParts.minutes, onChange: handleLatMinutesChange },
+                direction: { value: latParts.direction, onChange: handleLatDirectionChange },
+                error: latFieldState.error?.message,
+            },
+            longitude: {
+                degrees: { value: lonParts.degrees, onChange: handleLonDegreesChange },
+                minutes: { value: lonParts.minutes, onChange: handleLonMinutesChange },
+                direction: { value: lonParts.direction, onChange: handleLonDirectionChange },
+                error: lonFieldState.error?.message,
+            },
+        };
+    }
 
     return {
         latitude: {
-            degrees: latDeg,
-            minutes: latMin,
-            seconds: latSec,
-            direction: latDir,
-            setDegrees: handleLatDegChange,
-            setMinutes: handleLatMinChange,
-            setSeconds: handleLatSecChange,
-            setDirection: handleLatDirChange,
+            degrees: { value: latParts.degrees, onChange: handleLatDegreesChange },
+            minutes: { value: latParts.minutes, onChange: handleLatMinutesChange },
+            seconds: { value: latParts.seconds, onChange: handleLatSecondsChange },
+            direction: { value: latParts.direction, onChange: handleLatDirectionChange },
             error: latFieldState.error?.message,
         },
         longitude: {
-            degrees: lonDeg,
-            minutes: lonMin,
-            seconds: lonSec,
-            direction: lonDir,
-            setDegrees: handleLonDegChange,
-            setMinutes: handleLonMinChange,
-            setSeconds: handleLonSecChange,
-            setDirection: handleLonDirChange,
+            degrees: { value: lonParts.degrees, onChange: handleLonDegreesChange },
+            minutes: { value: lonParts.minutes, onChange: handleLonMinutesChange },
+            seconds: { value: lonParts.seconds, onChange: handleLonSecondsChange },
+            direction: { value: lonParts.direction, onChange: handleLonDirectionChange },
             error: lonFieldState.error?.message,
         },
     };

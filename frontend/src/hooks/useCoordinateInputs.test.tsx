@@ -27,10 +27,10 @@ describe('useCoordinateInputs — DM mode', () => {
         const { result } = renderHook(() => useCoordinateInputs('dm'), { wrapper });
 
         act(() => {
-            result.current.latitude.setDegrees(50);
-            result.current.latitude.setMinutes(30);
-            result.current.longitude.setDegrees(30);
-            result.current.longitude.setMinutes(15);
+            result.current.latitude.degrees.onChange(50);
+            result.current.latitude.minutes.onChange(30);
+            result.current.longitude.degrees.onChange(30);
+            result.current.longitude.minutes.onChange(15);
         });
 
         expect(formRef.current!.getValues('latitude')).toBe(50.5);
@@ -43,11 +43,11 @@ describe('useCoordinateInputs — DM mode', () => {
         const { result } = renderHook(() => useCoordinateInputs('dm'), { wrapper });
 
         act(() => {
-            result.current.latitude.setDegrees(50);
-            result.current.latitude.setMinutes(30);
-            result.current.latitude.setDirection('S');
-            result.current.longitude.setDegrees(30);
-            result.current.longitude.setMinutes(15);
+            result.current.latitude.degrees.onChange(50);
+            result.current.latitude.minutes.onChange(30);
+            result.current.latitude.direction.onChange('S');
+            result.current.longitude.degrees.onChange(30);
+            result.current.longitude.minutes.onChange(15);
         });
 
         expect(formRef.current!.getValues('latitude')).toBe(-50.5);
@@ -58,11 +58,11 @@ describe('useCoordinateInputs — DM mode', () => {
         const { result } = renderHook(() => useCoordinateInputs('dm'), { wrapper });
 
         act(() => {
-            result.current.latitude.setDegrees(50);
-            result.current.latitude.setMinutes(30);
-            result.current.longitude.setDegrees(30);
-            result.current.longitude.setMinutes(15);
-            result.current.longitude.setDirection('W');
+            result.current.latitude.degrees.onChange(50);
+            result.current.latitude.minutes.onChange(30);
+            result.current.longitude.degrees.onChange(30);
+            result.current.longitude.minutes.onChange(15);
+            result.current.longitude.direction.onChange('W');
         });
 
         expect(formRef.current!.getValues('longitude')).toBe(-30.25);
@@ -75,12 +75,12 @@ describe('useCoordinateInputs — DMS mode', () => {
         const { result } = renderHook(() => useCoordinateInputs('dms'), { wrapper });
 
         act(() => {
-            result.current.latitude.setDegrees(50);
-            result.current.latitude.setMinutes(30);
-            result.current.latitude.setSeconds(36);
-            result.current.longitude.setDegrees(30);
-            result.current.longitude.setMinutes(15);
-            result.current.longitude.setSeconds(0);
+            result.current.latitude.degrees.onChange(50);
+            result.current.latitude.minutes.onChange(30);
+            result.current.latitude.seconds.onChange(36);
+            result.current.longitude.degrees.onChange(30);
+            result.current.longitude.minutes.onChange(15);
+            result.current.longitude.seconds.onChange(0);
         });
 
         expect(formRef.current!.getValues('latitude')).toBe(50.51);
@@ -96,10 +96,10 @@ describe('useCoordinateInputs — sync from form to local state', () => {
         const { wrapper } = createWrapper({ latitude: 50.5, longitude: 30.25 });
         const { result } = renderHook(() => useCoordinateInputs('dm'), { wrapper });
 
-        expect(result.current.latitude.degrees).toBe(50);
-        expect(result.current.latitude.minutes).toBe(30);
-        expect(result.current.longitude.degrees).toBe(30);
-        expect(result.current.longitude.minutes).toBe(15);
+        expect(result.current.latitude.degrees.value).toBe(50);
+        expect(result.current.latitude.minutes.value).toBe(30);
+        expect(result.current.longitude.degrees.value).toBe(30);
+        expect(result.current.longitude.minutes.value).toBe(15);
     });
 
     it('updates DM local state when form values change externally', () => {
@@ -111,10 +111,10 @@ describe('useCoordinateInputs — sync from form to local state', () => {
             formRef.current!.setValue('longitude', 30.25);
         });
 
-        expect(result.current.latitude.degrees).toBe(50);
-        expect(result.current.latitude.minutes).toBe(30);
-        expect(result.current.longitude.degrees).toBe(30);
-        expect(result.current.longitude.minutes).toBe(15);
+        expect(result.current.latitude.degrees.value).toBe(50);
+        expect(result.current.latitude.minutes.value).toBe(30);
+        expect(result.current.longitude.degrees.value).toBe(30);
+        expect(result.current.longitude.minutes.value).toBe(15);
     });
 
     it('updates DMS local state when form values change externally', () => {
@@ -126,10 +126,10 @@ describe('useCoordinateInputs — sync from form to local state', () => {
             formRef.current!.setValue('longitude', 30.25);
         });
 
-        expect(result.current.latitude.degrees).toBe(50);
-        expect(result.current.latitude.minutes).toBe(30);
-        expect(result.current.latitude.seconds).toBe(36);
-        expect(result.current.longitude.degrees).toBe(30);
-        expect(result.current.longitude.minutes).toBe(15);
+        expect(result.current.latitude.degrees.value).toBe(50);
+        expect(result.current.latitude.minutes.value).toBe(30);
+        expect(result.current.latitude.seconds.value).toBe(36);
+        expect(result.current.longitude.degrees.value).toBe(30);
+        expect(result.current.longitude.minutes.value).toBe(15);
     });
 });

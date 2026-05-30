@@ -99,8 +99,7 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
                 <div className="flex items-start gap-2">
                     <CoordinateInput
                         id="latitude-deg"
-                        value={latitude.degrees}
-                        onChange={latitude.setDegrees}
+                        {...latitude.degrees}
                         min={0}
                         max={90}
                         placeholder="°"
@@ -109,8 +108,7 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <CoordinateInput
                         id="latitude-min"
-                        value={latitude.minutes}
-                        onChange={latitude.setMinutes}
+                        {...latitude.minutes}
                         min={0}
                         max={59.9999}
                         step={0.0001}
@@ -119,8 +117,7 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <DirectionSelect
                         id="latitude-dir"
-                        value={latitude.direction}
-                        onChange={latitude.setDirection}
+                        {...latitude.direction}
                         options={[
                             { value: 'N', label: 'N (С.Ш.)' },
                             { value: 'S', label: 'S (Ю.Ш.)' },
@@ -134,8 +131,7 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
                 <div className="flex items-start gap-2">
                     <CoordinateInput
                         id="longtitude-deg"
-                        value={longitude.degrees}
-                        onChange={longitude.setDegrees}
+                        {...longitude.degrees}
                         min={0}
                         max={180}
                         placeholder="°"
@@ -144,8 +140,7 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <CoordinateInput
                         id="longtitude-min"
-                        value={longitude.minutes}
-                        onChange={longitude.setMinutes}
+                        {...longitude.minutes}
                         min={0}
                         max={59.9999}
                         step={0.0001}
@@ -154,8 +149,7 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <DirectionSelect
                         id="longtitude-dir"
-                        value={longitude.direction}
-                        onChange={longitude.setDirection}
+                        {...longitude.direction}
                         options={[
                             { value: 'E', label: 'E (В.Д.)' },
                             { value: 'W', label: 'W (З.Д.)' },
@@ -178,8 +172,7 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                 <div className="flex flex-wrap items-start gap-2">
                     <CoordinateInput
                         id="latitude-deg-dms"
-                        value={latitude.degrees}
-                        onChange={latitude.setDegrees}
+                        {...latitude.degrees}
                         min={0}
                         max={90}
                         placeholder="°"
@@ -188,8 +181,7 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <CoordinateInput
                         id="latitude-min-dms"
-                        value={latitude.minutes}
-                        onChange={latitude.setMinutes}
+                        {...latitude.minutes}
                         min={0}
                         max={59}
                         placeholder="'"
@@ -197,8 +189,7 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <CoordinateInput
                         id="latitude-sec-dms"
-                        value={latitude.seconds}
-                        onChange={latitude.setSeconds}
+                        {...latitude.seconds}
                         min={0}
                         max={59.9999}
                         step={0.0001}
@@ -207,8 +198,7 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <DirectionSelect
                         id="latitude-dir-dms"
-                        value={latitude.direction}
-                        onChange={latitude.setDirection}
+                        {...latitude.direction}
                         options={[
                             { value: 'N', label: 'N (С.Ш.)' },
                             { value: 'S', label: 'S (Ю.Ш.)' },
@@ -222,8 +212,7 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                 <div className="flex flex-wrap items-start gap-2">
                     <CoordinateInput
                         id="longtitude-deg-dms"
-                        value={longitude.degrees}
-                        onChange={longitude.setDegrees}
+                        {...longitude.degrees}
                         min={0}
                         max={180}
                         placeholder="°"
@@ -232,8 +221,7 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <CoordinateInput
                         id="longtitude-min-dms"
-                        value={longitude.minutes}
-                        onChange={longitude.setMinutes}
+                        {...longitude.minutes}
                         min={0}
                         max={59}
                         placeholder="'"
@@ -241,8 +229,7 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <CoordinateInput
                         id="longtitude-sec-dms"
-                        value={longitude.seconds}
-                        onChange={longitude.setSeconds}
+                        {...longitude.seconds}
                         min={0}
                         max={59.9999}
                         step={0.0001}
@@ -251,8 +238,7 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                     />
                     <DirectionSelect
                         id="longtitude-dir-dms"
-                        value={longitude.direction}
-                        onChange={longitude.setDirection}
+                        {...longitude.direction}
                         options={[
                             { value: 'E', label: 'E (В.Д.)' },
                             { value: 'W', label: 'W (З.Д.)' },
