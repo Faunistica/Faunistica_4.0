@@ -18,7 +18,7 @@ describe('useDebouncedRaceSafe', () => {
             result.current.fn('c');
         });
 
-        await vi.waitFor(() => expect(onResult).toHaveBeenCalledTimes(1));
+        await act(() => new Promise((r) => setTimeout(r, 100)));
         expect(onResult).toHaveBeenCalledWith('result');
         expect(fetcher).toHaveBeenCalledTimes(1);
         expect(fetcher).toHaveBeenCalledWith('c', expect.any(AbortSignal));
@@ -54,7 +54,7 @@ describe('useDebouncedRaceSafe', () => {
         act(() => {
             result.current.fn('query');
         });
-        await vi.waitFor(() => expect(fetcher).toHaveBeenCalled());
+        await act(() => vi.waitFor(() => expect(fetcher).toHaveBeenCalled()));
 
         act(() => {
             result.current.cancel();
@@ -63,7 +63,7 @@ describe('useDebouncedRaceSafe', () => {
             resolveFetch('stale');
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await act(() => new Promise((r) => setTimeout(r, 10)));
         expect(onResult).not.toHaveBeenCalled();
     });
 
@@ -87,22 +87,26 @@ describe('useDebouncedRaceSafe', () => {
         act(() => {
             result.current.fn('first');
         });
-        await vi.waitFor(() =>
-            expect(fetcher).toHaveBeenCalledWith('first', expect.any(AbortSignal)),
+        await act(() =>
+            vi.waitFor(() =>
+                expect(fetcher).toHaveBeenCalledWith('first', expect.any(AbortSignal)),
+            ),
         );
 
         act(() => {
             result.current.fn('second');
         });
-        await vi.waitFor(() =>
-            expect(fetcher).toHaveBeenCalledWith('second', expect.any(AbortSignal)),
+        await act(() =>
+            vi.waitFor(() =>
+                expect(fetcher).toHaveBeenCalledWith('second', expect.any(AbortSignal)),
+            ),
         );
 
         expect(abortSpy).toHaveBeenCalled();
         act(() => {
             resolveFirst('stale');
         });
-        await new Promise((r) => setTimeout(r, 10));
+        await act(() => new Promise((r) => setTimeout(r, 10)));
         expect(onResult).not.toHaveBeenCalledWith('stale');
     });
 
@@ -121,14 +125,16 @@ describe('useDebouncedRaceSafe', () => {
         act(() => {
             result.current.fn('query');
         });
-        await vi.waitFor(() => expect(fetcher).toHaveBeenCalled());
+        await act(() => vi.waitFor(() => expect(fetcher).toHaveBeenCalled()));
 
         expect(result.current.isPending).toBe(true);
 
-        act(() => {
+        await act(async () => {
             resolveFetch('done');
+            await new Promise((r) => setTimeout(r, 10));
         });
-        await vi.waitFor(() => expect(result.current.isPending).toBe(false));
+
+        expect(result.current.isPending).toBe(false);
     });
 
     it('passes AbortSignal to fetcher', async () => {
@@ -139,7 +145,7 @@ describe('useDebouncedRaceSafe', () => {
         act(() => {
             result.current.fn('query');
         });
-        await vi.waitFor(() => expect(fetcher).toHaveBeenCalled());
+        await act(() => vi.waitFor(() => expect(fetcher).toHaveBeenCalled()));
 
         const signal = fetcher.mock.calls[0][1];
         expect(signal).toBeInstanceOf(AbortSignal);
@@ -177,6 +183,6 @@ describe('useDebouncedRaceSafe', () => {
             result.current.fn('third');
         });
 
-        await vi.waitFor(() => expect(calls).toEqual(['third']));
+        await act(() => vi.waitFor(() => expect(calls).toEqual(['third'])));
     });
 });

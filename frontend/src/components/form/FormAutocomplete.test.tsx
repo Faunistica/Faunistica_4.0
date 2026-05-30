@@ -369,7 +369,7 @@ describe('FormAutocomplete', () => {
             await waitFor(() => {
                 expect(searchFn).toHaveBeenCalledTimes(1);
             });
-            expect(searchFn).toHaveBeenCalledWith('ABC');
+            expect(searchFn).toHaveBeenCalledWith('ABC', expect.any(AbortSignal));
 
             vi.useRealTimers();
         });
@@ -399,7 +399,7 @@ describe('FormAutocomplete', () => {
             });
 
             await waitFor(() => {
-                expect(searchFn).toHaveBeenCalledWith('TestQuery');
+                expect(searchFn).toHaveBeenCalledWith('TestQuery', expect.any(AbortSignal));
             });
 
             vi.useRealTimers();
@@ -529,7 +529,7 @@ describe('FormAutocomplete', () => {
 
             // Should only have been called once with the final value
             expect(searchFn).toHaveBeenCalledTimes(1);
-            expect(searchFn).toHaveBeenCalledWith('Third');
+            expect(searchFn).toHaveBeenCalledWith('Third', expect.any(AbortSignal));
 
             vi.useRealTimers();
         });

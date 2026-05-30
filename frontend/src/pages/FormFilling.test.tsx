@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act, waitFor, renderHook } from '@testing-library/react';
+import { MemoryRouter, Routes, Route } from 'react-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import {
     RecordFormProvider,
@@ -141,9 +142,22 @@ function TestHarness({
     const methods = useForm<FormRecord>({ defaultValues: {} });
     testMethodsRef.current = methods;
     return (
-        <RecordFormProvider publ_id={1} methods={methods} autoSaveDelay={autoSaveDelay}>
-            <FormProvider {...methods}>{children}</FormProvider>
-        </RecordFormProvider>
+        <MemoryRouter initialEntries={['/publication/1/rec-1']}>
+            <Routes>
+                <Route
+                    path="/publication/:publ_id/:record"
+                    element={
+                        <RecordFormProvider
+                            publ_id={1}
+                            methods={methods}
+                            autoSaveDelay={autoSaveDelay}
+                        >
+                            <FormProvider {...methods}>{children}</FormProvider>
+                        </RecordFormProvider>
+                    }
+                />
+            </Routes>
+        </MemoryRouter>
     );
 }
 
@@ -156,7 +170,10 @@ describe('RecordFormProvider', () => {
         // Reset query result cache
         for (const k of Object.keys(queryResults)) delete queryResults[k];
 
-        mockRecordsListQuery.mockReturnValue({ isLoading: false });
+        mockRecordsListQuery.mockReturnValue({
+            isLoading: false,
+            recordIds: ['rec-1', 'rec-2'],
+        });
 
         mockRecordByIdQuery.mockImplementation(({ record_id }: { record_id: string | null }) =>
             queryResult(record_id),
@@ -183,7 +200,10 @@ describe('RecordFormProvider', () => {
     });
 
     it('shows loading state while list is loading', () => {
-        mockRecordsListQuery.mockReturnValue({ isLoading: true });
+        mockRecordsListQuery.mockReturnValue({
+            isLoading: true,
+            recordIds: [],
+        });
 
         render(
             <TestHarness>
@@ -506,9 +526,13 @@ describe('RecordFormProvider', () => {
         );
         const callback = vi.fn();
         result.current.watch(callback);
-        result.current.reset({ country: 'DE' });
+        await act(async () => {
+            result.current.reset({ country: 'DE' });
+        });
         await new Promise((r) => setTimeout(r, 10));
-        result.current.setValue('country', 'US');
+        await act(async () => {
+            result.current.setValue('country', 'US');
+        });
         await new Promise((r) => setTimeout(r, 10));
         expect(callback).toHaveBeenCalled();
     });
