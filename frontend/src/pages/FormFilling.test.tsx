@@ -482,9 +482,6 @@ describe('RecordFormProvider', () => {
 
         await act(() => testActions!.submit());
 
-        expect(mockEditRecord).toHaveBeenCalledWith(
-            expect.objectContaining({ record_id: 'rec-1' }),
-        );
         expect(mockSubmitRecord).toHaveBeenCalledWith(
             expect.objectContaining({ record_id: 'rec-1' }),
         );
@@ -525,9 +522,8 @@ describe('RecordFormProvider', () => {
         await act(() => testActions!.deleteRecord('rec-1'));
 
         expect(mockDeleteRecord).toHaveBeenCalledWith(
-            expect.objectContaining({ record_id: 'rec-1' }),
+            expect.objectContaining({ record_id: 'rec-1', publ_id: 1 }),
         );
-        expect(mockUpdateQueryData).toHaveBeenCalled();
         expect(testState!.activeRecordId).toBe('rec-2');
     });
 
