@@ -170,6 +170,69 @@ function TestHarness({
     );
 }
 
+function TestFields() {
+    const { control } = useFormContext<FormRecord>();
+    return (
+        <>
+            <Controller
+                name="locality"
+                control={control}
+                render={({ field, fieldState: { invalid } }) => (
+                    <Field data-invalid={invalid}>
+                        <FieldLabel htmlFor="locality">Locality</FieldLabel>
+                        <Input id="locality" data-testid="locality" {...field} />
+                    </Field>
+                )}
+            />
+            <Controller
+                name="accepted_name"
+                control={control}
+                render={({ field, fieldState: { invalid } }) => (
+                    <Field data-invalid={invalid}>
+                        <FieldLabel htmlFor="accepted_name">Accepted name</FieldLabel>
+                        <Input
+                            id="accepted_name"
+                            data-testid="accepted_name"
+                            {...field}
+                            value={field.value?.toString()}
+                        />
+                    </Field>
+                )}
+            />
+            <Controller
+                name="location_remarks"
+                control={control}
+                render={({ field, fieldState: { invalid } }) => (
+                    <Field data-invalid={invalid}>
+                        <FieldLabel htmlFor="location_remarks">Location remarks</FieldLabel>
+                        <Textarea
+                            id="location_remarks"
+                            data-testid="location_remarks"
+                            {...field}
+                            value={field.value ?? ''}
+                        />
+                    </Field>
+                )}
+            />
+            <Controller
+                name="is_interval"
+                control={control}
+                render={({ field }) => (
+                    <Field>
+                        <Checkbox
+                            id="is_interval"
+                            data-testid="is_interval"
+                            checked={field.value ?? false}
+                            onCheckedChange={field.onChange}
+                        />
+                        <FieldLabel htmlFor="is_interval">Is interval</FieldLabel>
+                    </Field>
+                )}
+            />
+        </>
+    );
+}
+
 describe('RecordFormProvider', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -711,69 +774,6 @@ describe('RecordFormProvider', () => {
             expect(testState!.status.phase).toBe('idle');
         });
     });
-
-    function TestFields() {
-        const { control } = useFormContext<FormRecord>();
-        return (
-            <>
-                <Controller
-                    name="locality"
-                    control={control}
-                    render={({ field, fieldState: { invalid } }) => (
-                        <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor="locality">Locality</FieldLabel>
-                            <Input id="locality" data-testid="locality" {...field} />
-                        </Field>
-                    )}
-                />
-                <Controller
-                    name="accepted_name"
-                    control={control}
-                    render={({ field, fieldState: { invalid } }) => (
-                        <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor="accepted_name">Accepted name</FieldLabel>
-                            <Input
-                                id="accepted_name"
-                                data-testid="accepted_name"
-                                {...field}
-                                value={field.value?.toString()}
-                            />
-                        </Field>
-                    )}
-                />
-                <Controller
-                    name="location_remarks"
-                    control={control}
-                    render={({ field, fieldState: { invalid } }) => (
-                        <Field data-invalid={invalid}>
-                            <FieldLabel htmlFor="location_remarks">Location remarks</FieldLabel>
-                            <Textarea
-                                id="location_remarks"
-                                data-testid="location_remarks"
-                                {...field}
-                                value={field.value ?? ''}
-                            />
-                        </Field>
-                    )}
-                />
-                <Controller
-                    name="is_interval"
-                    control={control}
-                    render={({ field, fieldState }) => (
-                        <Field>
-                            <Checkbox
-                                id="is_interval"
-                                data-testid="is_interval"
-                                checked={field.value ?? false}
-                                onCheckedChange={field.onChange}
-                            />
-                            <FieldLabel htmlFor="is_interval">Is interval</FieldLabel>
-                        </Field>
-                    )}
-                />
-            </>
-        );
-    }
 
     it('syncing to null record resets input display to empty', async () => {
         const RECORD_WITH_VALUES = {

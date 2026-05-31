@@ -115,7 +115,7 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className
                 if (val == null) {
                     setValue(
                         f as FieldPath<FormRecord>,
-                        FORM_DEFAULT_VALUES[f as keyof typeof FORM_DEFAULT_VALUES] as never,
+                        FORM_DEFAULT_VALUES[f as keyof typeof FORM_DEFAULT_VALUES],
                         { shouldDirty: true },
                     );
                 } else {

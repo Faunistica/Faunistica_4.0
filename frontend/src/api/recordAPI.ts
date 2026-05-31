@@ -1,8 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import type { ThunkDispatch } from '@reduxjs/toolkit';
+import { createSelector, type ThunkDispatch } from '@reduxjs/toolkit';
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
-import { createSelector } from '@reduxjs/toolkit';
 
 async function handleRecordMutationFulfilled(
     record_id: string,

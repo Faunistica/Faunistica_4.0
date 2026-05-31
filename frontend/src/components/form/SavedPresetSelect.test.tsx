@@ -3,11 +3,10 @@ import { render, act, waitFor, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router';
 import { useForm, FormProvider, Controller, useFormContext } from 'react-hook-form';
 import { RecordFormProvider, useRecordForm } from '@/contexts/RecordFormProvider';
-import type { RecordFormActions, RecordFormState } from '@/contexts/RecordFormProvider';
+import type { RecordFormState } from '@/contexts/RecordFormProvider';
 import type { FormRecord } from '@/types/api.dto';
 import { FORM_DEFAULT_VALUES } from '@/types/forms';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel } from '@/components/ui/field';
 import SavedPresetSelect from '@/components/form/SavedPresetSelect';
 
@@ -241,7 +240,7 @@ describe('SavedPresetSelect', () => {
         expect(screen.queryByRole('button', { name: /заполнить/i })).not.toBeNull();
 
         act(() => {
-            testMethodsRef.current!.setValue('locality' as never, FORM_DEFAULT_VALUES.locality);
+            testMethodsRef.current!.setValue('locality', FORM_DEFAULT_VALUES.locality);
         });
 
         expect((getByTestId('locality') as HTMLInputElement).value).toBe('');
