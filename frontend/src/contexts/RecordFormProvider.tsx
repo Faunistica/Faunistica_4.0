@@ -16,7 +16,6 @@ import { draftToRecordData, toFormPartial } from '@/lib/recordUtils';
 import { FORM_DEFAULT_VALUES } from '@/types/forms';
 import { syncServerErrors } from '@/lib/syncServerErrors';
 import {
-    recordAPI,
     useRecordsListQuery,
     useRecordByIdQuery,
     useCreateRecordMutation,
@@ -26,7 +25,6 @@ import {
     selectRecordIds,
 } from '@/api/recordAPI';
 import { skipToken } from '@reduxjs/toolkit/query';
-import { useAppDispatch } from '@/store/store';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useNavigate, useParams } from 'react-router';
 import {
@@ -181,7 +179,6 @@ export function RecordFormProvider({
     autoSaveDelay = AUTO_SAVE_DELAY,
     children,
 }: RecordFormProviderProps) {
-    const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     const params = useParams();
@@ -270,7 +267,6 @@ export function RecordFormProvider({
                 store.setPendingSync(false);
                 store.setState({ status: { phase: 'idle' } });
             }
-            finishInit(record.id);
             return;
         }
 
@@ -285,8 +281,6 @@ export function RecordFormProvider({
 
         store.setSnapshotRef(JSON.stringify(toFormPartial(record)));
 
-        finishInit(record.id);
-
         if (store.getPendingSync()) {
             store.setPendingSync(false);
             store.setState({ status: { phase: 'idle' } });
@@ -295,8 +289,10 @@ export function RecordFormProvider({
 
     useEffect(() => {
         if (!activeRecord) return;
-        // oxlint-disable-next-line react-hooks-js/set-state-in-effect
         onSync(activeRecord);
+
+        // oxlint-disable-next-line react-hooks-js/set-state-in-effect
+        finishInit(activeRecord.id);
     }, [activeRecord]);
 
     useEffect(() => {
@@ -379,11 +375,6 @@ export function RecordFormProvider({
         try {
             const values = methods.getValues();
             const payload = draftToRecordData(values);
-            await editRecord({
-                record_id: id,
-                data: payload,
-                publ_id,
-            }).unwrap();
             const response = await submitRecord({
                 record_id: id,
                 data: payload,
@@ -399,7 +390,7 @@ export function RecordFormProvider({
         } catch {
             store.setState({ status: { phase: 'idle' } });
         }
-    }, [cancelPendingAutoSave, editRecord, methods, submitRecord, publ_id, store]);
+    }, [cancelPendingAutoSave, methods, submitRecord, store]);
 
     const switchTo = useCallback(
         (targetId: string) => {
@@ -433,9 +424,6 @@ export function RecordFormProvider({
             }
 
             const created = await createRecord({ publ_id }).unwrap();
-            void dispatch(
-                recordAPI.util.upsertQueryData('recordById', { record_id: created.id }, created),
-            );
 
             store.setKnownRef({
                 id: created.id,
@@ -454,20 +442,10 @@ export function RecordFormProvider({
         } catch {
             toast.error('Ошибка при создании записи');
         }
-    }, [
-        publ_id,
-        createRecord,
-        dispatch,
-        cancelPendingAutoSave,
-        methods,
-        performSave,
-        navigate,
-        store,
-    ]);
+    }, [publ_id, createRecord, cancelPendingAutoSave, methods, performSave, navigate, store]);
 
     const deleteRecordAction = useCallback(
         async (id: string) => {
-            const listArgs = { publ_id };
             const isActive = id === store.getState().activeRecordId;
 
             let nextId: string | null = null;
@@ -476,15 +454,8 @@ export function RecordFormProvider({
                 nextId = remaining[0] ?? null;
             }
 
-            dispatch(
-                recordAPI.util.updateQueryData('recordsList', listArgs, (draft) => {
-                    draft.items = draft.items.filter((item) => item.id !== id);
-                    draft.total = Math.max(0, draft.total - 1);
-                }),
-            );
-
             try {
-                await deleteRecord({ record_id: id }).unwrap();
+                await deleteRecord({ record_id: id, publ_id }).unwrap();
                 if (isActive) {
                     void navigate(`/publication/${publ_id}/${nextId}`, { replace: true });
                     if (nextId === null) {
@@ -492,11 +463,10 @@ export function RecordFormProvider({
                     }
                 }
             } catch {
-                dispatch(recordAPI.util.invalidateTags(['records-list']));
                 toast.error('Ошибка при удалении записи');
             }
         },
-        [publ_id, dispatch, deleteRecord, recordIds, navigate, store],
+        [publ_id, deleteRecord, recordIds, navigate, store],
     );
 
     const actions: RecordFormActions = useMemo(

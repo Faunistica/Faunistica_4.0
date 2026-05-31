@@ -1,7 +1,37 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
+import type { ThunkDispatch } from '@reduxjs/toolkit';
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
 import { createSelector } from '@reduxjs/toolkit';
+
+async function handleRecordMutationFulfilled(
+    record_id: string,
+    {
+        dispatch,
+        queryFulfilled,
+    }: {
+        dispatch: ThunkDispatch<any, any, any>;
+        queryFulfilled: Promise<{ data: Types.RecordFull }>;
+    },
+) {
+    try {
+        const { data } = await queryFulfilled;
+        if (!data) return;
+        dispatch(
+            recordAPI.util.updateQueryData(
+                'recordsList',
+                { publ_id: data.publ_id } as Types.RecordListRequest,
+                (draft) => {
+                    const idx = draft.items.findIndex((r) => r.id === record_id);
+                    if (idx !== -1) draft.items[idx] = data;
+                },
+            ),
+        );
+        void dispatch(recordAPI.util.upsertQueryData('recordById', { record_id }, data));
+    } catch {
+        // mutation failed — RTK handles rollback automatically
+    }
+}
 
 export const recordAPI = createApi({
     reducerPath: 'recordAPI',
@@ -48,6 +78,16 @@ export const recordAPI = createApi({
                 body: record,
             }),
             invalidatesTags: ['records-list'],
+            onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
+                try {
+                    const { data } = await queryFulfilled;
+                    void dispatch(
+                        recordAPI.util.upsertQueryData('recordById', { record_id: data.id }, data),
+                    );
+                } catch {
+                    // best-effort
+                }
+            },
         }),
         editRecord: build.mutation<Types.RecordFull, Types.EditRecordRequest>({
             query: ({ record_id, data }) => ({
@@ -55,39 +95,33 @@ export const recordAPI = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            onQueryStarted: async ({ record_id }, { dispatch, queryFulfilled }) => {
-                try {
-                    const { data } = await queryFulfilled;
-                    if (data) {
-                        const user_id = data.user_id;
-                        const publ_id = data.publ_id;
-                        dispatch(
-                            recordAPI.util.updateQueryData(
-                                'recordsList',
-                                { publ_id, user_id } as Types.RecordListRequest,
-                                (draft) => {
-                                    const idx = draft.items.findIndex((r) => r.id === record_id);
-                                    if (idx !== -1) {
-                                        draft.items[idx] = data;
-                                    }
-                                },
-                            ),
-                        );
-                        await dispatch(
-                            recordAPI.util.upsertQueryData('recordById', { record_id }, data),
-                        );
-                    }
-                } catch {
-                    // mutation failed — RTK Query handles rollback automatically
-                }
+            onQueryStarted: async ({ record_id }, ctx) => {
+                await handleRecordMutationFulfilled(record_id, ctx);
             },
         }),
-        deleteRecord: build.mutation<void, Types.RecordIdRequest>({
+        deleteRecord: build.mutation<void, Types.RecordIdRequest & { publ_id: number }>({
             query: ({ record_id }) => ({
                 url: `/records/${record_id}`,
                 method: 'DELETE',
             }),
             invalidatesTags: ['records-list'],
+            onQueryStarted: async ({ record_id, publ_id }, { dispatch, queryFulfilled }) => {
+                const patch = dispatch(
+                    recordAPI.util.updateQueryData(
+                        'recordsList',
+                        { publ_id } as Types.RecordListRequest,
+                        (draft) => {
+                            draft.items = draft.items.filter((item) => item.id !== record_id);
+                            draft.total = Math.max(0, draft.total - 1);
+                        },
+                    ),
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patch.undo();
+                }
+            },
         }),
         submitRecord: build.mutation<Types.RecordFull, Types.EditRecordRequest>({
             query: ({ record_id, data }) => ({
@@ -95,7 +129,9 @@ export const recordAPI = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: ['records-list'],
+            onQueryStarted: async ({ record_id }, ctx) => {
+                await handleRecordMutationFulfilled(record_id, ctx);
+            },
         }),
         downloadRecords: build.mutation<
             null,

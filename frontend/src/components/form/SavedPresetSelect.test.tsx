@@ -187,8 +187,8 @@ describe('SavedPresetSelect', () => {
             recordIds: ['rec-1', 'rec-2'],
         });
 
-        mockRecordByIdQuery.mockImplementation(
-            ({ record_id }: { record_id: string | null }) => queryResult(record_id),
+        mockRecordByIdQuery.mockImplementation(({ record_id }: { record_id: string | null }) =>
+            queryResult(record_id),
         );
 
         mockEditRecord.mockReturnValue({

@@ -54,8 +54,6 @@ vi.mock('@/api/recordAPI', () => ({
     },
 }));
 
-
-
 const RECORD_FIELDS = {
     publ_id: 1,
     user_id: 123,
@@ -810,9 +808,7 @@ describe('RecordFormProvider', () => {
 
         expect((getByTestId('locality') as HTMLInputElement).value).toBe('Moscow Valley');
         expect((getByTestId('accepted_name') as HTMLInputElement).value).toBe('Canis lupus');
-        expect((getByTestId('location_remarks') as HTMLTextAreaElement).value).toBe(
-            'Some notes',
-        );
+        expect((getByTestId('location_remarks') as HTMLTextAreaElement).value).toBe('Some notes');
         expect(getByTestId('is_interval').getAttribute('aria-checked')).toBe('true');
 
         act(() => {
