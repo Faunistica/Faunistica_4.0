@@ -82,7 +82,7 @@ function computeFormState(s: FormStoreState): RecordFormState {
         globalErrors: s.globalErrors,
         isInitialLoading: s.isInitialLoading,
         isSaving,
-        isAutoSaving: isSaving && s.status.source === 'auto',
+        isAutoSaving: isSaving && 'source' in s.status && s.status.source === 'auto',
         isBusy: isSaving || s.status.phase === 'syncing',
         hasRecords: s.recordIds.length > 0,
     };
@@ -102,6 +102,8 @@ function statesEqual(a: RecordFormState, b: RecordFormState): boolean {
         a.hasRecords === b.hasRecords
     );
 }
+
+type Snapshot<T> = { kind: 'selected'; value: T } | { kind: 'bulk'; state: RecordFormState };
 
 export function useRecordForm(): {
     state: RecordFormState;
@@ -135,35 +137,38 @@ export function useRecordForm<T>(
         selectorRef.current = selector;
     });
 
-    const prevRef = useRef<unknown>(undefined);
+    const prevRef = useRef<Snapshot<T> | null>(null);
 
-    const getSnapshot = useCallback(() => {
+    const getSnapshot = useCallback((): Snapshot<T> => {
         const raw = store.getState();
         const state = computeFormState(raw);
         const sel = selectorRef.current;
 
         if (sel) {
             const next = sel({ state, actions: actionsRef.current, publId: publIdRef.current });
-            if (prevRef.current !== undefined && Object.is(prevRef.current, next)) {
-                return prevRef.current;
+            const prev = prevRef.current;
+            if (prev?.kind === 'selected' && Object.is(prev.value, next)) {
+                return prev;
             }
-            prevRef.current = next;
-            return next;
+            const result: Snapshot<T> = { kind: 'selected', value: next };
+            prevRef.current = result;
+            return result;
         }
 
-        if (
-            prevRef.current !== undefined &&
-            statesEqual(prevRef.current as RecordFormState, state)
-        ) {
-            return prevRef.current;
+        const prev = prevRef.current;
+        if (prev?.kind === 'bulk' && statesEqual(prev.state, state)) {
+            return prev;
         }
-        prevRef.current = state;
-        return state;
+        const result: Snapshot<T> = { kind: 'bulk', state };
+        prevRef.current = result;
+        return result;
     }, [store]);
 
     const snapshot = useSyncExternalStore(store.subscribe, getSnapshot);
-    if (selector) return snapshot as T;
-    return { state: snapshot as RecordFormState, actions, publId };
+    if (snapshot.kind === 'selected') {
+        return snapshot.value;
+    }
+    return { state: snapshot.state, actions, publId };
 }
 
 export const AUTO_SAVE_DELAY = 2000;
@@ -267,6 +272,7 @@ export function RecordFormProvider({
                 store.setState({ status: { phase: 'idle' } });
             }
             if (!initialRecordLoaded) {
+                // oxlint-disable-next-line react-hooks-js/set-state-in-effect
                 setInitialRecordLoaded(true);
                 void navigate(`/publication/${publ_id}/${activeRecord.id}`, { replace: true });
             }
@@ -286,6 +292,7 @@ export function RecordFormProvider({
         store.setSnapshotRef(JSON.stringify(toFormPartial(activeRecord)));
 
         if (!initialRecordLoaded) {
+            // oxlint-disable-next-line react-hooks-js/set-state-in-effect
             setInitialRecordLoaded(true);
             void navigate(`/publication/${publ_id}/${activeRecord.id}`, { replace: true });
         }

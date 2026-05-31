@@ -105,8 +105,9 @@ const RECORD_2 = {
     country: 'DE',
 };
 
-const queryResults: Record<string, { currentData: typeof RECORD_1 | undefined }> = {};
-function setQueryResult(recordId: string | null, data: typeof RECORD_1 | undefined) {
+type RecordLike = Record<string, unknown>;
+const queryResults: Record<string, { currentData: RecordLike | undefined }> = {};
+function setQueryResult(recordId: string | null, data: RecordLike | undefined) {
     const key = recordId ?? '__null__';
     queryResults[key] = { currentData: data };
 }
@@ -127,6 +128,11 @@ function StateDisplay() {
     testState = state;
     testActions = actions;
     return <div data-testid="state-display" />;
+}
+
+function SelectorDisplay() {
+    const phase = useRecordForm((ctx) => ctx.state.status.phase);
+    return <div data-testid="phase">{phase}</div>;
 }
 
 function TestHarness({
@@ -532,6 +538,91 @@ describe('RecordFormProvider', () => {
         });
         await new Promise((r) => setTimeout(r, 10));
         expect(callback).toHaveBeenCalled();
+    });
+
+    describe('computed booleans', () => {
+        it('hasRecords is true when recordIds has items', () => {
+            setQueryResult(null, undefined);
+            setQueryResult('rec-1', RECORD_1);
+            render(
+                <TestHarness>
+                    <StateDisplay />
+                </TestHarness>,
+            );
+            expect(testState!.hasRecords).toBe(true);
+        });
+
+        it('hasRecords is false when recordIds is empty', () => {
+            mockRecordsListQuery.mockReturnValue({ isLoading: false, recordIds: [] });
+            setQueryResult(null, undefined);
+            render(
+                <TestHarness>
+                    <StateDisplay />
+                </TestHarness>,
+            );
+            expect(testState!.hasRecords).toBe(false);
+        });
+
+        it('isSaving is false after initial sync', () => {
+            setQueryResult(null, undefined);
+            setQueryResult('rec-1', RECORD_1);
+            render(
+                <TestHarness>
+                    <StateDisplay />
+                </TestHarness>,
+            );
+            expect(testState!.isSaving).toBe(false);
+        });
+
+        it('isBusy is false after initial sync', () => {
+            setQueryResult(null, undefined);
+            setQueryResult('rec-1', RECORD_1);
+            render(
+                <TestHarness>
+                    <StateDisplay />
+                </TestHarness>,
+            );
+            expect(testState!.isBusy).toBe(false);
+        });
+    });
+
+    it('globalErrors contains server errors after sync', () => {
+        const recWithErrors = {
+            ...RECORD_1,
+            errors: [{ field: null, message: 'Global error message' }],
+        };
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', recWithErrors);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
+        expect(testState!.globalErrors).toContain('Global error message');
+    });
+
+    it('globalErrors is empty when record has no errors', () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
+        expect(testState!.globalErrors).toEqual([]);
+    });
+
+    it('selector variant returns selected value', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+        const { getByTestId } = render(
+            <TestHarness>
+                <SelectorDisplay />
+            </TestHarness>,
+        );
+        await waitFor(() => {
+            expect(getByTestId('phase').textContent).toBe('idle');
+        });
     });
 
     describe('auto-save', () => {
