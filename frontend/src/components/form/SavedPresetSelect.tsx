@@ -4,6 +4,7 @@ import { useFormContext, type FieldPath } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { History } from 'lucide-react';
 import type { RecordFull, FormRecord } from '@/types/api.dto';
+import { FORM_DEFAULT_VALUES } from '@/types/forms';
 import { LOCATION_FIELDS, EVENT_FIELDS, locationSummary, eventSummary } from '@/types/recordLabels';
 import { recordAPI } from '@/api/recordAPI';
 import { useAppSelector } from '@/store/store';
@@ -111,14 +112,19 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className
             const fields = FIELD_KEYS[type];
             for (const f of fields) {
                 const val = source[f];
-                if (val == null) continue;
-                setValue(
-                    f as FieldPath<FormRecord>,
-                    f === 'latitude' || f === 'longitude' ? Number(val) : val,
-                    {
-                        shouldDirty: true,
-                    },
-                );
+                if (val == null) {
+                    setValue(
+                        f as FieldPath<FormRecord>,
+                        FORM_DEFAULT_VALUES[f as keyof typeof FORM_DEFAULT_VALUES] as never,
+                        { shouldDirty: true },
+                    );
+                } else {
+                    setValue(
+                        f as FieldPath<FormRecord>,
+                        f === 'latitude' || f === 'longitude' ? Number(val) : val,
+                        { shouldDirty: true },
+                    );
+                }
             }
         },
         [recordMap, setValue, type],

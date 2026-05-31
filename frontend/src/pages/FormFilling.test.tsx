@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act, waitFor, renderHook } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, Controller, useFormContext } from 'react-hook-form';
 import { RecordFormProvider, useRecordForm } from '@/contexts/RecordFormProvider';
 import type { RecordFormActions, RecordFormState } from '@/contexts/RecordFormProvider';
 import type { FormRecord } from '@/types/api.dto';
+import { FORM_DEFAULT_VALUES } from '@/types/forms';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field, FieldLabel } from '@/components/ui/field';
 
 const mockRecordsListQuery = vi.hoisted(() => vi.fn());
+const mockRecordListSelect = vi.hoisted(() => vi.fn());
 const mockRecordByIdQuery = vi.hoisted(() => vi.fn());
 const mockCreateRecord = vi.hoisted(() => vi.fn());
 const mockEditRecord = vi.hoisted(() => vi.fn());
@@ -37,7 +43,7 @@ vi.mock('@/api/recordAPI', () => ({
         middleware: vi.fn(),
         endpoints: {
             recordsList: {
-                select: () => () => ({ data: { items: [{ id: 'rec-1' }, { id: 'rec-2' }] } }),
+                select: mockRecordListSelect,
             },
         },
         util: {
@@ -47,6 +53,8 @@ vi.mock('@/api/recordAPI', () => ({
         },
     },
 }));
+
+
 
 const RECORD_FIELDS = {
     publ_id: 1,
@@ -142,7 +150,7 @@ function TestHarness({
     children: React.ReactNode;
     autoSaveDelay?: number;
 }) {
-    const methods = useForm<FormRecord>({ defaultValues: {} });
+    const methods = useForm<FormRecord>({ defaultValues: FORM_DEFAULT_VALUES });
     testMethodsRef.current = methods;
     return (
         <MemoryRouter initialEntries={['/publication/1/rec-1']}>
@@ -172,6 +180,10 @@ describe('RecordFormProvider', () => {
         testMethodsRef.current = null;
         // Reset query result cache
         for (const k of Object.keys(queryResults)) delete queryResults[k];
+
+        mockRecordListSelect.mockImplementation(() => () => ({
+            data: { items: [{ id: 'rec-1' }, { id: 'rec-2' }] },
+        }));
 
         mockRecordsListQuery.mockReturnValue({
             isLoading: false,
@@ -700,5 +712,120 @@ describe('RecordFormProvider', () => {
             );
             expect(testState!.status.phase).toBe('idle');
         });
+    });
+
+    function TestFields() {
+        const { control } = useFormContext<FormRecord>();
+        return (
+            <>
+                <Controller
+                    name="locality"
+                    control={control}
+                    render={({ field, fieldState: { invalid } }) => (
+                        <Field data-invalid={invalid}>
+                            <FieldLabel htmlFor="locality">Locality</FieldLabel>
+                            <Input id="locality" data-testid="locality" {...field} />
+                        </Field>
+                    )}
+                />
+                <Controller
+                    name="accepted_name"
+                    control={control}
+                    render={({ field, fieldState: { invalid } }) => (
+                        <Field data-invalid={invalid}>
+                            <FieldLabel htmlFor="accepted_name">Accepted name</FieldLabel>
+                            <Input
+                                id="accepted_name"
+                                data-testid="accepted_name"
+                                {...field}
+                                value={field.value?.toString()}
+                            />
+                        </Field>
+                    )}
+                />
+                <Controller
+                    name="location_remarks"
+                    control={control}
+                    render={({ field, fieldState: { invalid } }) => (
+                        <Field data-invalid={invalid}>
+                            <FieldLabel htmlFor="location_remarks">Location remarks</FieldLabel>
+                            <Textarea
+                                id="location_remarks"
+                                data-testid="location_remarks"
+                                {...field}
+                                value={field.value ?? ''}
+                            />
+                        </Field>
+                    )}
+                />
+                <Controller
+                    name="is_interval"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                        <Field>
+                            <Checkbox
+                                id="is_interval"
+                                data-testid="is_interval"
+                                checked={field.value ?? false}
+                                onCheckedChange={field.onChange}
+                            />
+                            <FieldLabel htmlFor="is_interval">Is interval</FieldLabel>
+                        </Field>
+                    )}
+                />
+            </>
+        );
+    }
+
+    it('syncing to null record resets input display to empty', async () => {
+        const RECORD_WITH_VALUES = {
+            ...RECORD_1,
+            locality: 'Moscow Valley',
+            accepted_name: 'Canis lupus',
+            location_remarks: 'Some notes',
+            is_interval: true,
+        };
+        const RECORD_WITH_NULLS = {
+            ...RECORD_2,
+            locality: null,
+            accepted_name: null,
+            location_remarks: null,
+            is_interval: null,
+        };
+
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_WITH_VALUES);
+        setQueryResult('rec-2', RECORD_WITH_NULLS);
+
+        const { getByTestId } = render(
+            <TestHarness>
+                <StateDisplay />
+                <TestFields />
+            </TestHarness>,
+        );
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+
+        expect((getByTestId('locality') as HTMLInputElement).value).toBe('Moscow Valley');
+        expect((getByTestId('accepted_name') as HTMLInputElement).value).toBe('Canis lupus');
+        expect((getByTestId('location_remarks') as HTMLTextAreaElement).value).toBe(
+            'Some notes',
+        );
+        expect(getByTestId('is_interval').getAttribute('aria-checked')).toBe('true');
+
+        act(() => {
+            testActions!.switchTo('rec-2');
+        });
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+
+        expect((getByTestId('locality') as HTMLInputElement).value).toBe('');
+        expect((getByTestId('accepted_name') as HTMLInputElement).value).toBe('');
+        expect((getByTestId('location_remarks') as HTMLTextAreaElement).value).toBe('');
+        expect(getByTestId('is_interval').getAttribute('aria-checked')).toBe('false');
     });
 });
