@@ -1,18 +1,15 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { createSelector, type ThunkDispatch } from '@reduxjs/toolkit';
+import type { TypedMutationOnQueryStarted } from '@reduxjs/toolkit/query';
+import { createSelector } from '@reduxjs/toolkit';
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
 
-async function handleRecordMutationFulfilled(
-    record_id: string,
-    {
-        dispatch,
-        queryFulfilled,
-    }: {
-        dispatch: ThunkDispatch<any, any, any>;
-        queryFulfilled: Promise<{ data: Types.RecordFull }>;
-    },
-) {
+const handleRecordMutationFulfilled: TypedMutationOnQueryStarted<
+    Types.RecordFull,
+    Types.EditRecordRequest,
+    typeof baseQueryWithReauth,
+    'recordAPI'
+> = async ({ record_id }, { dispatch, queryFulfilled }) => {
     try {
         const { data } = await queryFulfilled;
         if (!data) return;
@@ -30,7 +27,7 @@ async function handleRecordMutationFulfilled(
     } catch {
         // mutation failed — RTK handles rollback automatically
     }
-}
+};
 
 export const recordAPI = createApi({
     reducerPath: 'recordAPI',
@@ -94,9 +91,7 @@ export const recordAPI = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            onQueryStarted: async ({ record_id }, ctx) => {
-                await handleRecordMutationFulfilled(record_id, ctx);
-            },
+            onQueryStarted: handleRecordMutationFulfilled,
         }),
         deleteRecord: build.mutation<void, Types.RecordIdRequest & { publ_id: number }>({
             query: ({ record_id }) => ({
@@ -128,9 +123,7 @@ export const recordAPI = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            onQueryStarted: async ({ record_id }, ctx) => {
-                await handleRecordMutationFulfilled(record_id, ctx);
-            },
+            onQueryStarted: handleRecordMutationFulfilled,
         }),
         downloadRecords: build.mutation<
             null,
