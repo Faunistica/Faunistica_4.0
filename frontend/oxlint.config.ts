@@ -5,6 +5,7 @@ import reactCompiler from 'eslint-plugin-react-compiler';
 export default defineConfig({
     options: {
         typeAware: true,
+        typeCheck: true,
     },
     plugins: ['react', 'react-perf', 'import', 'typescript', 'unicorn', 'oxc', 'promise'],
     jsPlugins: [
@@ -34,6 +35,7 @@ export default defineConfig({
         'typescript/no-unsafe-assignment': 'error',
         'react/react-in-jsx-scope': 'off',
         'react-hooks-js/set-state-in-effect': 'warn',
+        'react-hooks-js/refs': 'warn',
         'react-hooks-js/exhaustive-deps': 'warn',
         'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
         'import/no-unassigned-import': ['warn', { allow: ['**/*.css'] }],

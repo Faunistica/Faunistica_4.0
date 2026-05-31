@@ -1,44 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { useFormContext, useController } from 'react-hook-form';
-import {
-    convertDMToDD,
-    convertDMSToDD,
-    convertDDToDM,
-    convertDDToDMS,
-    formatDMVerbatim,
-    formatDMSVerbatim,
-} from '@/lib/geoUtils';
+import { convertToDD, convertToDM, convertToDMS, formatCoordinatesVerbatim } from '@/lib/geoUtils';
+import type { CoordinateAxis, CoordinateMode, CoordinateParts } from '@/lib/geoUtils';
 import type { FormRecord } from '@/types/api.dto';
 
-type Axis = 'lat' | 'lng';
-type Mode = 'dm' | 'dms';
-
-type CoordinateParts<A extends Axis> = {
-    degrees: number | '';
-    minutes: number | '';
-    seconds: number | '';
-    direction: A extends 'lat' ? 'N' | 'S' : 'E' | 'W';
-};
-
-function deriveFromDD(dd: number, axis: 'lat', mode: Mode): CoordinateParts<'lat'>;
-function deriveFromDD(dd: number, axis: 'lng', mode: Mode): CoordinateParts<'lng'>;
-function deriveFromDD(dd: number, axis: Axis, mode: Mode): CoordinateParts<Axis> {
+function deriveFromDD(dd: number, axis: 'lat', mode: CoordinateMode): CoordinateParts<'lat'>;
+function deriveFromDD(dd: number, axis: 'lon', mode: CoordinateMode): CoordinateParts<'lon'>;
+function deriveFromDD(
+    dd: number,
+    axis: CoordinateAxis,
+    mode: CoordinateMode,
+): CoordinateParts<CoordinateAxis> {
     if (mode === 'dm') {
-        const result = axis === 'lat' ? convertDDToDM(dd, true) : convertDDToDM(dd, false);
-        return {
-            degrees: result.degrees,
-            minutes: result.minutes,
-            seconds: '',
-            direction: result.direction,
-        };
+        return convertToDM(dd, axis);
     }
-    const result = axis === 'lat' ? convertDDToDMS(dd, true) : convertDDToDMS(dd, false);
-    return {
-        degrees: result.degrees,
-        minutes: result.minutes,
-        seconds: result.seconds,
-        direction: result.direction,
-    };
+    return convertToDMS(dd, axis);
 }
 
 export function useCoordinateInputs(mode: 'dm'): {
@@ -71,7 +47,7 @@ export function useCoordinateInputs(mode: 'dms'): {
         error: string | undefined;
     };
 };
-export function useCoordinateInputs(mode: Mode) {
+export function useCoordinateInputs(mode: CoordinateMode) {
     const { control } = useFormContext<FormRecord>();
 
     const { field: latField, fieldState: latFieldState } = useController({
@@ -93,7 +69,7 @@ export function useCoordinateInputs(mode: Mode) {
         seconds: '',
         direction: 'N',
     });
-    const lonRef = useRef<CoordinateParts<'lng'>>({
+    const lonRef = useRef<CoordinateParts<'lon'>>({
         degrees: '',
         minutes: '',
         seconds: '',
@@ -105,7 +81,7 @@ export function useCoordinateInputs(mode: Mode) {
         seconds: '',
         direction: 'N',
     });
-    const [lonParts, setLonParts] = useState<CoordinateParts<'lng'>>({
+    const [lonParts, setLonParts] = useState<CoordinateParts<'lon'>>({
         degrees: '',
         minutes: '',
         seconds: '',
@@ -125,60 +101,29 @@ export function useCoordinateInputs(mode: Mode) {
         }
         if (lonField.value !== lastLonRef.current) {
             lastLonRef.current = lonField.value;
-            const parts = deriveFromDD(lonField.value, 'lng', mode);
+            const parts = deriveFromDD(lonField.value, 'lon', mode);
             lonRef.current = parts;
             setLonParts(parts);
         }
     }, [latField.value, lonField.value, mode]);
 
     const syncForm = () => {
-        const latDegrees = latRef.current.degrees;
-        const latMinutes = latRef.current.minutes;
-        const latSeconds = latRef.current.seconds;
-        const latDirection = latRef.current.direction;
-        const lonDegrees = lonRef.current.degrees;
-        const lonMinutes = lonRef.current.minutes;
-        const lonSeconds = lonRef.current.seconds;
-        const lonDirection = lonRef.current.direction;
+        const lat = latRef.current;
+        const lon = lonRef.current;
 
         if (
-            typeof latDegrees !== 'number' ||
-            typeof latMinutes !== 'number' ||
-            typeof lonDegrees !== 'number' ||
-            typeof lonMinutes !== 'number'
+            typeof lat.degrees !== 'number' ||
+            typeof lat.minutes !== 'number' ||
+            typeof lon.degrees !== 'number' ||
+            typeof lon.minutes !== 'number'
         )
             return;
-        if (mode === 'dms' && (typeof latSeconds !== 'number' || typeof lonSeconds !== 'number'))
+        if (mode === 'dms' && (typeof lat.seconds !== 'number' || typeof lon.seconds !== 'number'))
             return;
 
-        const newLatitude =
-            mode === 'dm'
-                ? convertDMToDD(latDegrees, latMinutes, latDirection)
-                : convertDMSToDD(latDegrees, latMinutes, latSeconds, latDirection);
-        const newLongitude =
-            mode === 'dm'
-                ? convertDMToDD(lonDegrees, lonMinutes, lonDirection)
-                : convertDMSToDD(lonDegrees, lonMinutes, lonSeconds, lonDirection);
-        const verbatim =
-            mode === 'dm'
-                ? formatDMVerbatim(
-                      latDegrees,
-                      latMinutes,
-                      latDirection,
-                      lonDegrees,
-                      lonMinutes,
-                      lonDirection,
-                  )
-                : formatDMSVerbatim(
-                      latDegrees,
-                      latMinutes,
-                      latSeconds,
-                      latDirection,
-                      lonDegrees,
-                      lonMinutes,
-                      lonSeconds,
-                      lonDirection,
-                  );
+        const newLatitude = convertToDD(lat, mode);
+        const newLongitude = convertToDD(lon, mode);
+        const verbatim = formatCoordinatesVerbatim(lat, lon, mode);
 
         latField.onChange(newLatitude);
         lastLatRef.current = newLatitude;
