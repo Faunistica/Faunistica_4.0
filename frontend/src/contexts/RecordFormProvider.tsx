@@ -1,4 +1,13 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    type ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
+import { createContext, useSyncExternalStore } from 'react';
 import { toast } from 'sonner';
 import type { UseFormReturn } from 'react-hook-form';
 import type { FormRecord, RecordFull } from '@/types/api.dto';
@@ -19,11 +28,12 @@ import { skipToken } from '@reduxjs/toolkit/query';
 import { useAppDispatch } from '@/store/store';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useNavigate, useParams } from 'react-router';
-import { ActionsContext, PublIdContext } from './useRecordFormContext';
-import { createFormStore, StoreContext } from './recordFormStore';
-
-export const AUTO_SAVE_DELAY = 2000;
-const SHOULD_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE;
+import {
+    createFormStore,
+    type FormStoreState,
+    StoreContext,
+    useFormStore,
+} from './recordFormStore';
 
 export type RecordFormPhase =
     | { phase: 'idle' }
@@ -39,6 +49,19 @@ export interface RecordFormActions {
     deleteRecord: (id: string) => Promise<void>;
 }
 
+export interface RecordFormState {
+    activeRecordId: string | null;
+    recordIds: string[];
+    status: RecordFormPhase;
+    lastSavedTime: Date | null;
+    globalErrors: string[];
+    isInitialLoading: boolean;
+    isSaving: boolean;
+    isAutoSaving: boolean;
+    isBusy: boolean;
+    hasRecords: boolean;
+}
+
 interface RecordFormProviderProps {
     publ_id: number;
     methods: UseFormReturn<FormRecord>;
@@ -46,8 +69,105 @@ interface RecordFormProviderProps {
     children: ReactNode;
 }
 
-export { ActionsContext, PublIdContext, useRecordFormActions } from './useRecordFormContext';
-export { useFormSelector } from './useFormSelector';
+const ActionsContext = createContext<RecordFormActions | null>(null);
+export const PublIdContext = createContext<number>(0);
+
+function computeFormState(s: FormStoreState): RecordFormState {
+    const isSaving = s.status.phase === 'saving';
+    return {
+        activeRecordId: s.activeRecordId,
+        recordIds: s.recordIds,
+        status: s.status,
+        lastSavedTime: s.lastSavedTime,
+        globalErrors: s.globalErrors,
+        isInitialLoading: s.isInitialLoading,
+        isSaving,
+        isAutoSaving: isSaving && s.status.source === 'auto',
+        isBusy: isSaving || s.status.phase === 'syncing',
+        hasRecords: s.recordIds.length > 0,
+    };
+}
+
+function statesEqual(a: RecordFormState, b: RecordFormState): boolean {
+    return (
+        a.activeRecordId === b.activeRecordId &&
+        a.recordIds === b.recordIds &&
+        a.status === b.status &&
+        a.lastSavedTime === b.lastSavedTime &&
+        a.globalErrors === b.globalErrors &&
+        a.isInitialLoading === b.isInitialLoading &&
+        a.isSaving === b.isSaving &&
+        a.isAutoSaving === b.isAutoSaving &&
+        a.isBusy === b.isBusy &&
+        a.hasRecords === b.hasRecords
+    );
+}
+
+export function useRecordForm(): {
+    state: RecordFormState;
+    actions: RecordFormActions;
+    publId: number;
+};
+export function useRecordForm<T>(
+    selector: (ctx: { state: RecordFormState; actions: RecordFormActions; publId: number }) => T,
+): T;
+export function useRecordForm<T>(
+    selector?: (ctx: { state: RecordFormState; actions: RecordFormActions; publId: number }) => T,
+): T | { state: RecordFormState; actions: RecordFormActions; publId: number } {
+    const store = useFormStore();
+    const actions = useContext(ActionsContext);
+    const publId = useContext(PublIdContext);
+
+    if (!actions) {
+        throw new Error('useRecordForm must be used within a RecordFormProvider');
+    }
+
+    const actionsRef = useRef(actions);
+    const publIdRef = useRef(publId);
+    const selectorRef = useRef(selector);
+    useEffect(() => {
+        actionsRef.current = actions;
+    });
+    useEffect(() => {
+        publIdRef.current = publId;
+    });
+    useEffect(() => {
+        selectorRef.current = selector;
+    });
+
+    const prevRef = useRef<unknown>(undefined);
+
+    const getSnapshot = useCallback(() => {
+        const raw = store.getState();
+        const state = computeFormState(raw);
+        const sel = selectorRef.current;
+
+        if (sel) {
+            const next = sel({ state, actions: actionsRef.current, publId: publIdRef.current });
+            if (prevRef.current !== undefined && Object.is(prevRef.current, next)) {
+                return prevRef.current;
+            }
+            prevRef.current = next;
+            return next;
+        }
+
+        if (
+            prevRef.current !== undefined &&
+            statesEqual(prevRef.current as RecordFormState, state)
+        ) {
+            return prevRef.current;
+        }
+        prevRef.current = state;
+        return state;
+    }, [store]);
+
+    const snapshot = useSyncExternalStore(store.subscribe, getSnapshot);
+    if (selector) return snapshot as T;
+    return { state: snapshot as RecordFormState, actions, publId };
+}
+
+export const AUTO_SAVE_DELAY = 2000;
+const SHOULD_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE;
 
 export function RecordFormProvider({
     publ_id,
@@ -89,7 +209,6 @@ export function RecordFormProvider({
     const [submitRecord] = useSubmitRecordMutation();
     const [deleteRecord] = useDeleteRecordMutation();
 
-    // Sync activeRecordId + isInitialLoading to store
     const isInitialLoading = isListLoading || (activeRecordId !== null && !initialRecordLoaded);
 
     const shouldSkipSync = useCallback(
@@ -136,8 +255,8 @@ export function RecordFormProvider({
     });
 
     useEffect(() => {
-        store.setState({ activeRecordId, isInitialLoading });
-    }, [activeRecordId, isInitialLoading, store]);
+        store.setState({ activeRecordId, isInitialLoading, recordIds });
+    }, [activeRecordId, isInitialLoading, recordIds, store]);
 
     useEffect(() => {
         if (!activeRecord) return;
@@ -148,7 +267,6 @@ export function RecordFormProvider({
                 store.setState({ status: { phase: 'idle' } });
             }
             if (!initialRecordLoaded) {
-                // oxlint-disable-next-line react-hooks-js/set-state-in-effect
                 setInitialRecordLoaded(true);
                 void navigate(`/publication/${publ_id}/${activeRecord.id}`, { replace: true });
             }
@@ -163,12 +281,11 @@ export function RecordFormProvider({
             keepDirty: false,
         });
         const nonField = syncServerErrors(activeRecord.errors ?? [], m);
-        store.setState({ nonFieldErrors: nonField });
+        store.setState({ globalErrors: nonField });
 
         store.setSnapshotRef(JSON.stringify(toFormPartial(activeRecord)));
 
         if (!initialRecordLoaded) {
-            // oxlint-disable-next-line react-hooks-js/set-state-in-effect
             setInitialRecordLoaded(true);
             void navigate(`/publication/${publ_id}/${activeRecord.id}`, { replace: true });
         }
@@ -242,7 +359,7 @@ export function RecordFormProvider({
         if (response) {
             store.setState({ lastSavedTime: new Date() });
             const nonField = syncServerErrors(response.errors ?? [], methodsRef.current);
-            store.setState({ nonFieldErrors: nonField });
+            store.setState({ globalErrors: nonField });
         }
         store.setState({ status: { phase: 'idle' } });
     }, [cancelPendingAutoSave, performSave, store]);
@@ -274,7 +391,7 @@ export function RecordFormProvider({
             });
             store.setState({ lastSavedTime: new Date() });
             const nonField = syncServerErrors(response.errors ?? [], methodsRef.current);
-            store.setState({ nonFieldErrors: nonField });
+            store.setState({ globalErrors: nonField });
             store.setState({ status: { phase: 'idle' } });
         } catch {
             store.setState({ status: { phase: 'idle' } });
@@ -298,7 +415,7 @@ export function RecordFormProvider({
             store.setState({
                 status: { phase: 'syncing' },
                 lastSavedTime: null,
-                nonFieldErrors: [],
+                globalErrors: [],
             });
         },
         [cancelPendingAutoSave, performSave, navigate, publ_id, store],
@@ -330,7 +447,7 @@ export function RecordFormProvider({
             });
 
             void navigate(`/publication/${publ_id}/${created.id}`, { replace: true });
-            store.setState({ lastSavedTime: null, nonFieldErrors: [] });
+            store.setState({ lastSavedTime: null, globalErrors: [] });
         } catch {
             toast.error('Ошибка при создании записи');
         }

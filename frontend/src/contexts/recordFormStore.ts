@@ -3,9 +3,10 @@ import type { RecordFormPhase } from './RecordFormProvider';
 
 export interface FormStoreState {
     activeRecordId: string | null;
+    recordIds: string[];
     status: RecordFormPhase;
     lastSavedTime: Date | null;
-    nonFieldErrors: string[];
+    globalErrors: string[];
     isInitialLoading: boolean;
 }
 
@@ -24,9 +25,10 @@ export interface FormStore {
 export function createFormStore(): FormStore {
     let state: FormStoreState = {
         activeRecordId: null,
+        recordIds: [],
         status: { phase: 'idle' },
         lastSavedTime: null,
-        nonFieldErrors: [],
+        globalErrors: [],
         isInitialLoading: true,
     };
     const listeners = new Set<() => void>();

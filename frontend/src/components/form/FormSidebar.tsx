@@ -26,16 +26,11 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { selectRecordIds, useRecordByIdQuery, useRecordsListQuery } from '@/api/recordAPI';
+import { useRecordByIdQuery } from '@/api/recordAPI';
 import { computeInactiveStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
 import ExcelUploadModal from '@/components/form/ExcelUploadModal';
-import {
-    useFormSelector,
-    useRecordFormActions,
-    PublIdContext,
-} from '@/contexts/RecordFormProvider';
-import { useContext } from 'react';
+import { useRecordForm } from '@/contexts/RecordFormProvider';
 
 const SidebarRecordItem = ({
     record_id,
@@ -163,20 +158,13 @@ const SidebarRecordItem = ({
 };
 
 const FormSidebar: FC = () => {
-    const activeRecordId = useFormSelector((s) => s.activeRecordId);
-    const { switchTo, create, deleteRecord } = useRecordFormActions();
-    const publ_id = useContext(PublIdContext);
+    const {
+        state: { activeRecordId, recordIds },
+        actions: { switchTo, create, deleteRecord },
+        publId,
+    } = useRecordForm();
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
-
-    const { recordIds } = useRecordsListQuery(
-        { publ_id },
-        {
-            selectFromResult: ({ data }) => ({
-                recordIds: selectRecordIds({ data }),
-            }),
-        },
-    );
 
     return (
         <>
@@ -266,11 +254,7 @@ const FormSidebar: FC = () => {
                 </SidebarFooter>
             </Sidebar>
 
-            <ExcelUploadModal
-                open={isUploadOpen}
-                onOpenChange={setIsUploadOpen}
-                publ_id={publ_id}
-            />
+            <ExcelUploadModal open={isUploadOpen} onOpenChange={setIsUploadOpen} publ_id={publId} />
         </>
     );
 };

@@ -2,11 +2,7 @@ import { type FC } from 'react';
 import { useOutletContext, useParams } from 'react-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-    RecordFormProvider,
-    useFormSelector,
-    useRecordFormActions,
-} from '@/contexts/RecordFormProvider';
+import { RecordFormProvider, useRecordForm } from '@/contexts/RecordFormProvider';
 import type { FormRecord } from '@/types/api.dto';
 import { recordFormSchema, FORM_DEFAULT_VALUES } from '@/types/forms';
 import RecordFormContent from '@/components/form/RecordFormContent';
@@ -22,9 +18,10 @@ interface OutletContextType {
 }
 
 const FormFillingInner: FC<OutletContextType> = ({ isSidebarOpen, setIsSidebarOpen }) => {
-    const activeRecordId = useFormSelector((s) => s.activeRecordId);
-    const isInitialLoading = useFormSelector((s) => s.isInitialLoading);
-    const actions = useRecordFormActions();
+    const {
+        state: { activeRecordId, isInitialLoading },
+        actions: { create },
+    } = useRecordForm();
 
     if (isInitialLoading) return <LoadingScreen />;
 
@@ -41,7 +38,7 @@ const FormFillingInner: FC<OutletContextType> = ({ isSidebarOpen, setIsSidebarOp
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-6 py-24">
                         <p className="text-lg text-slate-500">Нет записей</p>
-                        <Button onClick={actions.create} className="gap-2">
+                        <Button onClick={create} className="gap-2">
                             <Plus className="size-4" />
                             Создать запись
                         </Button>
