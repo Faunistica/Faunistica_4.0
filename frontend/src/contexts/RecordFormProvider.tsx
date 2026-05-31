@@ -61,9 +61,7 @@ export function RecordFormProvider({
     const params = useParams();
     const [initialRecordLoaded, setInitialRecordLoaded] = useState(false);
 
-    const storeRef = useRef<ReturnType<typeof createFormStore> | null>(null);
-    if (!storeRef.current) storeRef.current = createFormStore();
-    const store = storeRef.current;
+    const [store] = useState(() => createFormStore());
 
     const { recordIds } = useRecordsListQuery(
         { publ_id },

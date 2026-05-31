@@ -1,4 +1,4 @@
-import { useCallback, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useFormStore, type FormStoreState } from './recordFormStore';
 
 export function useFormSelector<T>(
@@ -10,8 +10,10 @@ export function useFormSelector<T>(
     const selectorRef = useRef(selector);
     const equalityFnRef = useRef(equalityFn);
 
-    selectorRef.current = selector;
-    equalityFnRef.current = equalityFn;
+    useEffect(() => {
+        selectorRef.current = selector;
+        equalityFnRef.current = equalityFn;
+    });
 
     const getSnapshot = useCallback(() => {
         const next = selectorRef.current(store.getState());
