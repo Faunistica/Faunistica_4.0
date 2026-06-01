@@ -4,7 +4,7 @@ import asyncio
 import logging
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import select
@@ -34,6 +34,26 @@ _SEED_UUIDS: list[UUID] = [
     UUID("77203fce-a3af-434b-a3dc-b78faf455159"),
     UUID("0cee6c03-eaff-4d81-bb61-7815c5b27023"),
     UUID("64c6ca7a-7d3f-468b-a857-17d29bf8f034"),
+    UUID("04c01ad6-8239-4e65-84b3-9fab334a845e"),
+    UUID("37e30d2f-4b5b-4de9-a6ff-1ab2fd94b02c"),
+    UUID("036f7a63-3fb3-4b59-8e58-9caf016c32e4"),
+    UUID("0320d654-f788-4419-9b20-5e7f918a81fe"),
+    UUID("c146e55f-62df-49ee-8b3f-5e6fe57e2c4e"),
+    UUID("cad599b0-2cd6-4847-b78b-aab46ffd1706"),
+    UUID("1aa72d13-1546-4375-bed8-b49a4ae1b366"),
+    UUID("c2717d20-4acb-4370-a93c-0aa7e0ace5dd"),
+    UUID("b3aeead7-c7e1-472d-b9e0-6c07ec601273"),
+    UUID("45a703c1-193c-41ff-8863-27bc647e9b6c"),
+    UUID("99fd10ff-04cd-4b0c-9299-575f3efe9ee2"),
+    UUID("b9190e68-7433-4891-b1eb-f9cbb0745c4a"),
+    UUID("0bdab6a0-7e54-4bd4-8f09-7f67b0d530ee"),
+    UUID("812452bb-092d-45a9-bd8f-05d8c4de439e"),
+    UUID("c9749c0f-b319-47df-bcbf-c6dc90533595"),
+    UUID("3ba32bdc-6a1e-4992-b7f6-848945bdc571"),
+    UUID("048b101e-3126-4261-a7bd-248ba28eaadb"),
+    UUID("c2491762-1e8d-4453-9543-65561f31aad3"),
+    UUID("1ecc4f28-93e7-4109-83a1-4ec133005469"),
+    UUID("7544d4cf-98b3-4057-9d69-c455d75904c0"),
 ]
 
 
@@ -47,8 +67,8 @@ def build_record(i: int, data: dict) -> EventRecord:
         submission_type="submit",
     )
     metadata.id = _SEED_UUIDS[i]
-    metadata.created_at = SEED_DT
-    metadata.updated_at = SEED_DT
+    metadata.created_at = SEED_DT - timedelta(minutes=i)
+    metadata.updated_at = SEED_DT - timedelta(minutes=i)
 
     flat = _flatten_for_db(record_data)
     return EventRecord(**flat, **metadata.model_dump())
@@ -427,7 +447,10 @@ async def seed() -> None:
         if existing.scalar_one_or_none():
             logger.info("Records already exist, skipping")
         else:
-            records = [build_record(i, data) for i, data in enumerate(RECORDS_DATA)]
+            records = [
+                build_record(i, RECORDS_DATA[i % len(RECORDS_DATA)])
+                for i in range(len(_SEED_UUIDS))
+            ]
             session.add_all(records)
             logger.info(f"Inserted {len(records)} event records")
 
