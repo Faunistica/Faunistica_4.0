@@ -6,7 +6,7 @@ import { RecordFormProvider, useRecordForm } from '@/contexts/RecordFormProvider
 import type { FormRecord } from '@/types/api.dto';
 import { recordFormSchema, FORM_DEFAULT_VALUES } from '@/types/forms';
 import RecordFormContent from '@/components/form/RecordFormContent';
-import FormSidebar from '@/components/form/parts/FormSidebar';
+import FormSidebar from '@/components/form/sidebar/FormSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Button } from '@/components/ui/button';
