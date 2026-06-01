@@ -19,7 +19,7 @@ import { FormSidebarFooter } from './FormSidebarFooter';
 
 const FormSidebar: FC = () => {
     const {
-        state: { recordIds },
+        state: { recordIds, activeRecordId },
         actions: { create },
         publ_id,
     } = useRecordForm();
@@ -87,7 +87,11 @@ const FormSidebar: FC = () => {
                         <SidebarGroupContent>
                             <SidebarMenu className="gap-1.5 px-2">
                                 {recordIds.map((id) => (
-                                    <SidebarRecordItem key={id} record_id={id} />
+                                    <SidebarRecordItem
+                                        key={id}
+                                        record_id={id}
+                                        isActive={id === activeRecordId}
+                                    />
                                 ))}
                             </SidebarMenu>
                         </SidebarGroupContent>

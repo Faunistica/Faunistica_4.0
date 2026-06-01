@@ -1,7 +1,7 @@
 import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MapPin, Trash2 } from 'lucide-react';
-import { NavLink, useResolvedPath, useMatch } from 'react-router';
+import { NavLink } from 'react-router';
 import { SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import {
     AlertDialog,
@@ -20,15 +20,18 @@ import { RecordStatusIndicator } from '@/components/form/sidebar/RecordStatusInd
 import { useRecordForm } from '@/contexts/useRecordForm';
 import { useCallback } from 'react';
 
-export const SidebarRecordItem = ({ record_id }: { record_id: string }) => {
+export const SidebarRecordItem = ({
+    record_id,
+    isActive,
+}: {
+    record_id: string;
+    isActive: boolean;
+}) => {
     const { isMobile, setOpenMobile } = useSidebar();
     const {
         actions: { onNavigate, deleteRecord },
         publ_id,
     } = useRecordForm();
-    const resolved = useResolvedPath(`/publication/${publ_id}/${record_id}`);
-    const match = useMatch({ path: resolved.pathname, end: true });
-    const isActive = match !== null;
 
     const { status, recordName, recordLocation } = useRecordByIdQuery(
         { record_id },
