@@ -70,7 +70,8 @@ export interface RecordListRequest {
     user_id?: number;
     page?: number;
     page_size?: number;
-    sort?: string;
+    pivot_record_id?: string;
+    sort?: 'created_at' | 'updated_at';
 }
 
 export interface EditRecordRequest {

@@ -1,7 +1,6 @@
 import { type FC, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, LogOut, FileText, X, FileSpreadsheet } from 'lucide-react';
-import { Link } from 'react-router';
+import { Plus, FileText, X, FileSpreadsheet } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -15,7 +14,8 @@ import {
 } from '@/components/ui/sidebar';
 import ExcelUploadModal from '@/components/form/inputs/ExcelUploadModal';
 import { useRecordForm } from '@/contexts/RecordFormProvider';
-import { SidebarRecordItem } from './SidebarItem';
+import { SidebarRecordItem } from './FormSidebarItem';
+import { FormSidebarFooter } from './FormSidebarFooter';
 
 const FormSidebar: FC = () => {
     const {
@@ -95,16 +95,7 @@ const FormSidebar: FC = () => {
                 </SidebarContent>
 
                 <SidebarFooter className="border-t border-slate-100 p-4">
-                    <Button
-                        asChild
-                        variant="outline"
-                        className="w-full justify-start gap-2 font-medium shadow-sm"
-                    >
-                        <Link to="/dashboard">
-                            <LogOut className="size-4 text-slate-500" />
-                            Вернуться назад
-                        </Link>
-                    </Button>
+                    <FormSidebarFooter />
                 </SidebarFooter>
             </Sidebar>
 

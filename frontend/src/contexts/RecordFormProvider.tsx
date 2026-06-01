@@ -126,15 +126,6 @@ export function useRecordForm<T>(
     const actionsRef = useRef(actions);
     const publIdRef = useRef(publId);
     const selectorRef = useRef(selector);
-    useEffect(() => {
-        actionsRef.current = actions;
-    });
-    useEffect(() => {
-        publIdRef.current = publId;
-    });
-    useEffect(() => {
-        selectorRef.current = selector;
-    });
 
     const prevRef = useRef<Snapshot<T> | null>(null);
 
@@ -180,14 +171,16 @@ export function RecordFormProvider({
     children,
 }: RecordFormProviderProps) {
     const navigate = useNavigate();
+    const { record: recordParam } = useParams();
 
-    const params = useParams();
     const [initialRecordLoaded, setInitialRecordLoaded] = useState(false);
-
     const [store] = useState(() => createFormStore());
 
     const { recordIds, isListLoading } = useRecordsListQuery(
-        { publ_id },
+        {
+            publ_id,
+            pivot_record_id: recordParam && !initialRecordLoaded ? recordParam : undefined,
+        },
         {
             selectFromResult: ({ data, isLoading }) => ({
                 recordIds: selectRecordIds({ data }),
@@ -196,13 +189,17 @@ export function RecordFormProvider({
         },
     );
 
-    const explicitRecordId = params.record;
-    const activeRecordId = explicitRecordId ?? recordIds[0] ?? null;
-
-    const { currentData: activeRecord } = useRecordByIdQuery(
+    const activeRecordId = recordParam ?? recordIds[0] ?? null;
+    const { currentData: activeRecord, error } = useRecordByIdQuery(
         activeRecordId ? { record_id: activeRecordId } : skipToken,
         { refetchOnMountOrArgChange: true },
     );
+
+    useEffect(() => {
+        if (error) {
+            void navigate(`/publication/${publ_id}`, { replace: true });
+        }
+    }, [error, navigate, publ_id]);
 
     const [createRecord] = useCreateRecordMutation();
     const [editRecord] = useEditRecordMutation();
@@ -352,9 +349,8 @@ export function RecordFormProvider({
         const values = methods.getValues();
         const response = await performSave('manual', values);
         if (response) {
-            store.setState({ lastSavedTime: new Date() });
             const nonField = syncServerErrors(response.errors ?? [], methods);
-            store.setState({ globalErrors: nonField });
+            store.setState({ lastSavedTime: new Date(), globalErrors: nonField });
         }
         store.setState({ status: { phase: 'idle' } });
     }, [cancelPendingAutoSave, methods, performSave, store]);
