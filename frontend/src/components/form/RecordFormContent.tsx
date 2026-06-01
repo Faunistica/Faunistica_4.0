@@ -1,12 +1,12 @@
 import { type FC } from 'react';
 import { useRecordForm } from '@/contexts/RecordFormProvider';
-import ArticleSourceCard from '@/components/form/ArticleSourceCard';
-import GeographyCard from '@/components/form/GeographyCard';
-import CollectionEventCard from '@/components/form/CollectionEventCard';
-import TaxonomyCard from '@/components/form/TaxonomyCard';
-import QuantitiesCard from '@/components/form/QuantitiesCard';
+import ArticleSourceCard from '@/components/form/parts/ArticleSourceCard';
+import GeographyCard from '@/components/form/parts/GeographyCard';
+import CollectionEventCard from '@/components/form/parts/CollectionEventCard';
+import TaxonomyCard from '@/components/form/parts/TaxonomyCard';
+import QuantitiesCard from '@/components/form/parts/QuantitiesCard';
 import ServerErrorDisplay from '@/components/form/ServerErrorDisplay';
-import Footer from '@/components/form/FormFooter';
+import Footer from '@/components/form/parts/FormFooter';
 import LoadingScreen from '@/components/LoadingScreen';
 
 const RecordFormContent: FC = () => {

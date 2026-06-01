@@ -10,7 +10,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
-import { FormAutocomplete } from '@/components/form/FormAutocomplete';
+import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import { Button } from '@/components/ui/button';
 
 import 'leaflet/dist/leaflet.css';
@@ -24,7 +24,7 @@ import { GEOREF_OPTIONS, COUNTRY_OPTIONS } from '@/types/constants';
 import type { FormRecord } from '@/types/api.dto';
 
 import { useLazyGeoSearchQuery } from '@/api/utilAPI';
-import SavedPresetSelect from '@/components/form/SavedPresetSelect';
+import SavedPresetSelect from '@/components/form/inputs/SavedPresetSelect';
 
 interface Props {
     publ_id: number;

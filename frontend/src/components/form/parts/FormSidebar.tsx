@@ -29,7 +29,7 @@ import {
 import { useRecordByIdQuery } from '@/api/recordAPI';
 import { computeInactiveStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/sidebar/RecordStatusIndicator';
-import ExcelUploadModal from '@/components/form/ExcelUploadModal';
+import ExcelUploadModal from '@/components/form/inputs/ExcelUploadModal';
 import { useRecordForm } from '@/contexts/RecordFormProvider';
 
 const SidebarRecordItem = ({

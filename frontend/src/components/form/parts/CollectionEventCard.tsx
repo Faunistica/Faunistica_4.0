@@ -8,7 +8,7 @@ import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarDays, Info } from 'lucide-react';
 import type { FormRecord } from '@/types/api.dto';
-import SavedPresetSelect from '@/components/form/SavedPresetSelect';
+import SavedPresetSelect from '@/components/form/inputs/SavedPresetSelect';
 
 interface Props {
     publ_id: number;

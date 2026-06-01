@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { FormAutocomplete } from './inputs/FormAutocomplete';
+import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import type { FormRecord } from '@/types/api.dto';
 import type { ReactNode } from 'react';
 
