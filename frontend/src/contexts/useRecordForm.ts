@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useRef } from 'react';
 import { useSyncExternalStore } from 'react';
 import { type FormStoreState, useFormStore } from './recordFormStore';
+import { ActionsContext } from './FormActionsProvider';
 
 export interface RecordFormActions {
     save: () => Promise<void>;
@@ -52,7 +53,6 @@ function statesEqual(a: RecordFormState, b: RecordFormState): boolean {
 
 type Snapshot<T> = { kind: 'selected'; value: T } | { kind: 'bulk'; state: RecordFormState };
 
-export const ActionsContext = createContext<RecordFormActions | null>(null);
 export const PublIdContext = createContext<number>(0);
 
 export function useRecordForm(): {
@@ -61,21 +61,21 @@ export function useRecordForm(): {
     publ_id: number;
 };
 export function useRecordForm<T>(
-    selector: (ctx: { state: RecordFormState; actions: RecordFormActions; publId: number }) => T,
+    selector: (ctx: { state: RecordFormState; actions: RecordFormActions; publ_id: number }) => T,
 ): T;
 export function useRecordForm<T>(
-    selector?: (ctx: { state: RecordFormState; actions: RecordFormActions; publId: number }) => T,
-): T | { state: RecordFormState; actions: RecordFormActions; publId: number } {
+    selector?: (ctx: { state: RecordFormState; actions: RecordFormActions; publ_id: number }) => T,
+): T | { state: RecordFormState; actions: RecordFormActions; publ_id: number } {
     const store = useFormStore();
     const actions = useContext(ActionsContext);
-    const publId = useContext(PublIdContext);
+    const publ_id = useContext(PublIdContext);
 
     if (!actions) {
         throw new Error('useRecordForm must be used within a RecordFormProvider');
     }
 
     const actionsRef = useRef(actions);
-    const publIdRef = useRef(publId);
+    const publIdRef = useRef(publ_id);
     const selectorRef = useRef(selector);
 
     const prevRef = useRef<Snapshot<T> | null>(null);
@@ -86,7 +86,7 @@ export function useRecordForm<T>(
         const sel = selectorRef.current;
 
         if (sel) {
-            const next = sel({ state, actions: actionsRef.current, publId: publIdRef.current });
+            const next = sel({ state, actions: actionsRef.current, publ_id: publIdRef.current });
             const prev = prevRef.current;
             if (prev?.kind === 'selected' && Object.is(prev.value, next)) {
                 return prev;
@@ -109,5 +109,5 @@ export function useRecordForm<T>(
     if (snapshot.kind === 'selected') {
         return snapshot.value;
     }
-    return { state: snapshot.state, actions, publId };
+    return { state: snapshot.state, actions, publ_id };
 }

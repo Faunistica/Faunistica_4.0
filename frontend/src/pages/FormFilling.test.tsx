@@ -4,8 +4,7 @@ import { MemoryRouter, Routes, Route, useNavigate } from 'react-router';
 import { useForm, FormProvider, Controller, useFormContext } from 'react-hook-form';
 import { RecordFormProvider } from '@/contexts/RecordFormProvider';
 import type { RecordFormActions } from '@/contexts/RecordFormProvider';
-import type { FormRecord } from '@/types/api.dto';
-import { FORM_DEFAULT_VALUES } from '@/types/forms';
+import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -124,7 +123,7 @@ function queryResult(recordId: string | null) {
 
 let testState: RecordFormState | null = null;
 let testActions: RecordFormActions | null = null;
-const testMethodsRef: { current: ReturnType<typeof useForm<FormRecord>> | null } = {
+const testMethodsRef: { current: ReturnType<typeof useForm<RecordForm>> | null } = {
     current: null,
 };
 
@@ -153,7 +152,7 @@ function TestHarness({
     children: React.ReactNode;
     autoSaveDelay?: number;
 }) {
-    const methods = useForm<FormRecord>({ defaultValues: FORM_DEFAULT_VALUES });
+    const methods = useForm<RecordForm>({ defaultValues: FORM_DEFAULT_VALUES });
     testMethodsRef.current = methods;
     return (
         <MemoryRouter initialEntries={['/publication/1/rec-1']}>
@@ -161,16 +160,14 @@ function TestHarness({
                 <Route
                     path="/publication/:publ_id/:record"
                     element={
-                        <RecordFormProvider
-                            publ_id={1}
-                            methods={methods}
-                            autoSaveDelay={autoSaveDelay}
-                        >
-                            <FormProvider {...methods}>
-                                <NavCapture />
-                                {children}
-                            </FormProvider>
-                        </RecordFormProvider>
+                        <FormProvider {...methods}>
+                            <RecordFormProvider publ_id={1} autoSaveDelay={autoSaveDelay}>
+                                <FormProvider {...methods}>
+                                    <NavCapture />
+                                    {children}
+                                </FormProvider>
+                            </RecordFormProvider>
+                        </FormProvider>
                     }
                 />
             </Routes>
@@ -179,7 +176,7 @@ function TestHarness({
 }
 
 function TestFields() {
-    const { control } = useFormContext<FormRecord>();
+    const { control } = useFormContext<RecordForm>();
     return (
         <>
             <Controller
@@ -601,7 +598,7 @@ describe('RecordFormProvider', () => {
     it('RHF watch fires on setValue', async () => {
         const callback = vi.fn();
         const { result } = renderHook(() =>
-            useForm<FormRecord>({ defaultValues: { country: 'RU' } }),
+            useForm<RecordForm>({ defaultValues: { country: 'RU' } }),
         );
         result.current.watch(callback);
         result.current.setValue('country', 'US');
@@ -611,7 +608,7 @@ describe('RecordFormProvider', () => {
 
     it('RHF watch fires after reset + setValue', async () => {
         const { result } = renderHook(() =>
-            useForm<FormRecord>({ defaultValues: { country: 'RU' } }),
+            useForm<RecordForm>({ defaultValues: { country: 'RU' } }),
         );
         const callback = vi.fn();
         result.current.watch(callback);

@@ -7,8 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarDays, Info } from 'lucide-react';
-import type { FormRecord } from '@/types/api.dto';
 import SavedPresetSelect from '@/components/form/inputs/SavedPresetSelect';
+import type { RecordForm } from '@/types/forms';
 
 interface Props {
     publ_id: number;
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
-    const { control } = useFormContext<FormRecord>();
+    const { control } = useFormContext<RecordForm>();
 
     return (
         <Card className="border-slate-200 shadow-sm">

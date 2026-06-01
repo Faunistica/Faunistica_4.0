@@ -1,8 +1,8 @@
 import type { UseFormReturn } from 'react-hook-form';
-import type { FormRecord } from '@/types/api.dto';
 import type { RecordValidationError } from '@/types/api.dto';
+import type { RecordForm } from '@/types/forms';
 
-const FORM_RECORD_FIELDS: (keyof FormRecord)[] = [
+const FORM_RECORD_FIELDS: (keyof RecordForm)[] = [
     'georef_source',
     'country',
     'region',
@@ -48,7 +48,7 @@ const FORM_RECORD_FIELDS: (keyof FormRecord)[] = [
 
 export function syncServerErrors(
     errors: RecordValidationError[],
-    methods: UseFormReturn<FormRecord>,
+    methods: UseFormReturn<RecordForm>,
 ): string[] {
     methods.clearErrors();
 

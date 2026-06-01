@@ -21,10 +21,10 @@ import { Map as MapIcon, MapPin } from 'lucide-react';
 import { GeographyMap } from '@/components/map/GeographyMap';
 import { DMInputGroup, DMSInputGroup } from '@/components/map/CoordinateInputs';
 import { GEOREF_OPTIONS, COUNTRY_OPTIONS } from '@/types/constants';
-import type { FormRecord } from '@/types/api.dto';
 
 import { useLazyGeoSearchQuery } from '@/api/utilAPI';
 import SavedPresetSelect from '@/components/form/inputs/SavedPresetSelect';
+import type { RecordForm } from '@/types/forms';
 
 interface Props {
     publ_id: number;
@@ -32,7 +32,7 @@ interface Props {
 }
 
 const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
-    const { control, setValue, getValues } = useFormContext<FormRecord>();
+    const { control, setValue, getValues } = useFormContext<RecordForm>();
 
     const georefSource = useWatch({ name: 'georef_source', control }) || 'none';
     const latValue = useWatch({ name: 'latitude', control });

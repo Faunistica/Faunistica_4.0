@@ -3,8 +3,8 @@ import { type FC, useCallback } from 'react';
 import { useFormContext, type FieldPath } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { History } from 'lucide-react';
-import type { RecordFull, FormRecord } from '@/types/api.dto';
-import { FORM_DEFAULT_VALUES } from '@/types/forms';
+import type { RecordFull } from '@/types/api.dto';
+import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 import { LOCATION_FIELDS, EVENT_FIELDS, locationSummary, eventSummary } from '@/types/recordLabels';
 import { recordAPI } from '@/api/recordAPI';
 import { useAppSelector } from '@/store/store';
@@ -15,7 +15,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-type SharedField = keyof RecordFull & keyof FormRecord;
+type SharedField = keyof RecordFull & keyof RecordForm;
 
 type PresetType = 'location' | 'event';
 
@@ -42,7 +42,7 @@ const LABEL_BUILDERS: Record<PresetType, (d: RecordFull) => string> = {
 };
 
 const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className }) => {
-    const { setValue } = useFormContext<FormRecord>();
+    const { setValue } = useFormContext<RecordForm>();
 
     const presets = useAppSelector(
         (state) => {
@@ -114,13 +114,13 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className
                 const val = source[f];
                 if (val == null) {
                     setValue(
-                        f as FieldPath<FormRecord>,
+                        f as FieldPath<RecordForm>,
                         FORM_DEFAULT_VALUES[f as keyof typeof FORM_DEFAULT_VALUES],
                         { shouldDirty: true },
                     );
                 } else {
                     setValue(
-                        f as FieldPath<FormRecord>,
+                        f as FieldPath<RecordForm>,
                         f === 'latitude' || f === 'longitude' ? Number(val) : val,
                         { shouldDirty: true },
                     );

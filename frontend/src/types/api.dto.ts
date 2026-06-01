@@ -38,8 +38,6 @@ export interface PaginatedResponse<T> {
     pages: number;
 }
 
-export type { RecordForm as FormRecord } from '@/types/forms';
-
 export interface SuggestTaxonRequest {
     field: 'family' | 'genus' | 'species';
     query: string;

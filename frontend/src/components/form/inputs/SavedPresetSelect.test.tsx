@@ -3,8 +3,7 @@ import { render, act, waitFor, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router';
 import { useForm, FormProvider, Controller, useFormContext } from 'react-hook-form';
 import { RecordFormProvider } from '@/contexts/RecordFormProvider';
-import type { FormRecord } from '@/types/api.dto';
-import { FORM_DEFAULT_VALUES } from '@/types/forms';
+import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 import { Input } from '@/components/ui/input';
 import { Field, FieldLabel } from '@/components/ui/field';
 import SavedPresetSelect from '@/components/form/inputs/SavedPresetSelect';
@@ -121,7 +120,7 @@ function queryResult(recordId: string | null) {
 }
 
 let testState: RecordFormState | null = null;
-const testMethodsRef: { current: ReturnType<typeof useForm<FormRecord>> | null } = {
+const testMethodsRef: { current: ReturnType<typeof useForm<RecordForm>> | null } = {
     current: null,
 };
 
@@ -132,7 +131,7 @@ function StateDisplay() {
 }
 
 function TestHarness({ children }: { children: React.ReactNode }) {
-    const methods = useForm<FormRecord>({ defaultValues: FORM_DEFAULT_VALUES });
+    const methods = useForm<RecordForm>({ defaultValues: FORM_DEFAULT_VALUES });
     testMethodsRef.current = methods;
     return (
         <MemoryRouter initialEntries={['/publication/1/rec-1']}>
@@ -140,9 +139,11 @@ function TestHarness({ children }: { children: React.ReactNode }) {
                 <Route
                     path="/publication/:publ_id/:record"
                     element={
-                        <RecordFormProvider publ_id={1} methods={methods}>
-                            <FormProvider {...methods}>{children}</FormProvider>
-                        </RecordFormProvider>
+                        <FormProvider {...methods}>
+                            <RecordFormProvider publ_id={1}>
+                                <FormProvider {...methods}>{children}</FormProvider>
+                            </RecordFormProvider>
+                        </FormProvider>
                     }
                 />
             </Routes>
@@ -151,7 +152,7 @@ function TestHarness({ children }: { children: React.ReactNode }) {
 }
 
 function TestFields() {
-    const { control } = useFormContext<FormRecord>();
+    const { control } = useFormContext<RecordForm>();
     return (
         <>
             <Controller

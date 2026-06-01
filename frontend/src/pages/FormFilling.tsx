@@ -3,8 +3,7 @@ import { useOutletContext, useParams } from 'react-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RecordFormProvider } from '@/contexts/RecordFormProvider';
-import type { FormRecord } from '@/types/api.dto';
-import { recordFormSchema, FORM_DEFAULT_VALUES } from '@/types/forms';
+import { recordFormSchema, FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 import RecordFormContent from '@/components/form/RecordFormContent';
 import FormSidebar from '@/components/form/sidebar/FormSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -55,7 +54,7 @@ const FormFilling: FC = () => {
     const { id } = useParams<{ id: string }>();
     const publ_id = Number(id);
 
-    const methods = useForm<FormRecord>({
+    const methods = useForm<RecordForm>({
         resolver: zodResolver(recordFormSchema),
         defaultValues: FORM_DEFAULT_VALUES,
         mode: 'onBlur',
@@ -63,11 +62,11 @@ const FormFilling: FC = () => {
     });
 
     return (
-        <RecordFormProvider publ_id={publ_id} methods={methods}>
-            <FormProvider {...methods}>
+        <FormProvider {...methods}>
+            <RecordFormProvider publ_id={publ_id}>
                 <FormFillingInner {...outletContext} />
-            </FormProvider>
-        </RecordFormProvider>
+            </RecordFormProvider>
+        </FormProvider>
     );
 };
 

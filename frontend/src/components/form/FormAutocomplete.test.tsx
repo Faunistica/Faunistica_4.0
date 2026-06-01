@@ -2,17 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { FormAutocomplete } from './inputs/FormAutocomplete';
-import type { FormRecord } from '@/types/api.dto';
 import type { ReactNode } from 'react';
+import type { RecordForm } from '@/types/forms';
 
 const createMockSearch = (suggestions: string[] = []) =>
     vi.fn().mockImplementation(() => Promise.resolve(suggestions));
 
-function createWrapper(defaultValues: Partial<FormRecord> = { family: '' }) {
-    let formMethods: ReturnType<typeof useForm<FormRecord>> | null = null;
+function createWrapper(defaultValues: Partial<RecordForm> = { family: '' }) {
+    let formMethods: ReturnType<typeof useForm<RecordForm>> | null = null;
 
     function Wrapper({ children }: { children: ReactNode }) {
-        const methods = useForm<FormRecord>({
+        const methods = useForm<RecordForm>({
             defaultValues: defaultValues,
             mode: 'onTouched',
         });
@@ -25,7 +25,7 @@ function createWrapper(defaultValues: Partial<FormRecord> = { family: '' }) {
 
 function renderWithForm(
     ui: React.ReactElement,
-    defaultValues: Partial<FormRecord> = { family: '' },
+    defaultValues: Partial<RecordForm> = { family: '' },
 ) {
     const { Wrapper, getFormMethods } = createWrapper(defaultValues);
     const renderResult = render(ui, { wrapper: Wrapper });
@@ -259,7 +259,7 @@ describe('FormAutocomplete', () => {
 
             // Reset form externally
             await act(async () => {
-                getFormMethods().reset({ family: 'NewValue' } as FormRecord);
+                getFormMethods().reset({ family: 'NewValue' } as RecordForm);
             });
 
             // Input should sync to new value

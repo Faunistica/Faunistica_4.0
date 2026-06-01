@@ -1,13 +1,14 @@
-import type { FormRecord, RecordFull } from '@/types/api.dto';
 import { BLOCKING_FIELDS } from '@/types/constants';
 import { toFormPartial } from '@/lib/recordUtils';
 import type { FieldErrors } from 'react-hook-form';
+import type { RecordForm } from '@/types/forms';
+import type { RecordFull } from '@/types/api.dto';
 
 export type RecordStatus = 'empty' | 'draft' | 'valid' | 'error';
 
-function computeFromFormValues(values: Partial<FormRecord>): RecordStatus {
+function computeFromFormValues(values: Partial<RecordForm>): RecordStatus {
     const hasAnyValue = BLOCKING_FIELDS.some((field) => {
-        const val = values[field as keyof FormRecord];
+        const val = values[field as keyof RecordForm];
         return val !== undefined && val !== null && val !== '';
     });
 
@@ -16,7 +17,7 @@ function computeFromFormValues(values: Partial<FormRecord>): RecordStatus {
     }
 
     const allBlockingFilled = BLOCKING_FIELDS.every((field) => {
-        const val = values[field as keyof FormRecord];
+        const val = values[field as keyof RecordForm];
         return val !== undefined && val !== null && val !== '';
     });
 
@@ -26,8 +27,8 @@ function computeFromFormValues(values: Partial<FormRecord>): RecordStatus {
 }
 
 export function computeActiveStatus(
-    values: Partial<FormRecord>,
-    errors: FieldErrors<FormRecord>,
+    values: Partial<RecordForm>,
+    errors: FieldErrors<RecordForm>,
 ): RecordStatus {
     if (Object.keys(errors).length > 0) return 'error';
     return computeFromFormValues(values);

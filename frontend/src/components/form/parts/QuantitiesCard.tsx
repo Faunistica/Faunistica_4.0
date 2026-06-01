@@ -14,14 +14,14 @@ import {
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Hash } from 'lucide-react';
 import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/types/constants';
-import type { FormRecord } from '@/types/api.dto';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { RecordForm } from '@/types/forms';
 
 const QuantitiesCard: FC = () => {
-    const { control } = useFormContext<FormRecord>();
+    const { control } = useFormContext<RecordForm>();
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    const total = useWatch<FormRecord>({
+    const total = useWatch<RecordForm>({
         name: ['males', 'subadultMales', 'females', 'subadultFemales', 'adults', 'juveniles'],
         compute: (data) =>
             data.reduce<number>((sum, v) => {

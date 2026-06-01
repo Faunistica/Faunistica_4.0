@@ -14,12 +14,12 @@ import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import { Bug } from 'lucide-react';
 import { useLazySuggestTaxonQuery } from '@/api/utilAPI';
 import { TYPE_STATUS_OPTIONS, TAXON_RANK_OPTIONS } from '@/types/constants';
-import type { FormRecord } from '@/types/api.dto';
 import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
+import type { RecordForm } from '@/types/forms';
 
 const TaxonomyCard: FC = () => {
-    const { control, setValue, getValues, getFieldState } = useFormContext<FormRecord>();
+    const { control, setValue, getValues, getFieldState } = useFormContext<RecordForm>();
 
     const [suggestTaxon] = useLazySuggestTaxonQuery();
 

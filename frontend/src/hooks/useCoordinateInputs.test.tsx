@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useForm, FormProvider, type UseFormReturn } from 'react-hook-form';
 import { useCoordinateInputs } from './useCoordinateInputs';
-import type { FormRecord } from '@/types/api.dto';
+import type { RecordForm } from '@/types/forms';
 
-function createWrapper(defaults?: Partial<FormRecord>) {
-    const formRef: { current: UseFormReturn<FormRecord> | null } = { current: null };
+function createWrapper(defaults?: Partial<RecordForm>) {
+    const formRef: { current: UseFormReturn<RecordForm> | null } = { current: null };
     const wrapper = ({ children }: { children: React.ReactNode }) => {
-        const methods = useForm<FormRecord>({
+        const methods = useForm<RecordForm>({
             defaultValues: {
                 latitude: 0,
                 longitude: 0,

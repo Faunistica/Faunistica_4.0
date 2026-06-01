@@ -1,6 +1,7 @@
-import type { RecordData, RecordFull, FormRecord, Specimen } from '@/types/api.dto';
+import type { RecordData, RecordFull, Specimen } from '@/types/api.dto';
 import type { QuantityField } from '@/types/constants';
 import { QUANTITY_FIELDS } from '@/types/constants';
+import type { RecordForm } from '@/types/forms';
 
 const NULLISH_NUMBER_FIELDS = new Set<string>(['coordinate_uncertainty', 'sample_size_value']);
 
@@ -38,7 +39,7 @@ export const getSexAndLifestageFromField = (
     }
 };
 
-export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
+export const draftToRecordData = (draft: Partial<RecordForm>): RecordData => {
     const data: RecordData = {
         country: null,
         region: null,
@@ -103,7 +104,7 @@ export const draftToRecordData = (draft: Partial<FormRecord>): RecordData => {
     return data;
 };
 
-export function toFormPartial(record: RecordFull): Partial<FormRecord> {
+export function toFormPartial(record: RecordFull): Partial<RecordForm> {
     const result: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(record)) {
         if (key in QUANTITY_FIELDS || val == null) continue;
@@ -120,5 +121,5 @@ export function toFormPartial(record: RecordFull): Partial<FormRecord> {
             result[mapping.formField] = 0;
         }
     }
-    return result as Partial<FormRecord>;
+    return result as Partial<RecordForm>;
 }

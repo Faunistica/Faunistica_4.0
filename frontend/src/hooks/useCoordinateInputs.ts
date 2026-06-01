@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useFormContext, useController } from 'react-hook-form';
 import { convertToDD, convertToDM, convertToDMS, formatCoordinatesVerbatim } from '@/lib/geoUtils';
 import type { CoordinateAxis, CoordinateMode, CoordinateParts } from '@/lib/geoUtils';
-import type { FormRecord } from '@/types/api.dto';
+import type { RecordForm } from '@/types/forms';
 
 function deriveFromDD(dd: number, axis: 'lat', mode: CoordinateMode): CoordinateParts<'lat'>;
 function deriveFromDD(dd: number, axis: 'lon', mode: CoordinateMode): CoordinateParts<'lon'>;
@@ -48,7 +48,7 @@ export function useCoordinateInputs(mode: 'dms'): {
     };
 };
 export function useCoordinateInputs(mode: CoordinateMode) {
-    const { control } = useFormContext<FormRecord>();
+    const { control } = useFormContext<RecordForm>();
 
     const { field: latField, fieldState: latFieldState } = useController({
         name: 'latitude',
