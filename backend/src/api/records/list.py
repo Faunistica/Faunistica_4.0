@@ -24,6 +24,7 @@ async def list_records(
     publ_id: Annotated[int | None, Query(ge=1, description="Publication ID")] = None,
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     page_size: Annotated[int, Query(ge=1, le=100, description="Page size")] = 20,
+    pivot_record_id: Annotated[str | None, Query(description="Return the page containing this record")] = None,
     sort: Annotated[
         Literal["created_at", "updated_at"],
         Query(description="Sort field"),
@@ -35,6 +36,7 @@ async def list_records(
         page=page,
         page_size=page_size,
         sort=sort,
+        pivot_record_id=pivot_record_id,
     )
 
 

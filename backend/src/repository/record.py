@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import and_, delete, func, select, update
+from sqlalchemy import and_, delete, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -110,6 +110,51 @@ async def get_records_paginated(
 
     result = await session.execute(stmt)
     return result.scalars().all(), total
+
+
+async def get_record_page(
+    session: AsyncSession,
+    record_id: UUID,
+    user_id: int,
+    publ_id: int,
+    page_size: int = 20,
+    sort: Literal["created_at", "updated_at"] = "created_at",
+) -> tuple[int, int] | None:
+    """
+    Find which page a record is on in the sorted list.
+    Returns (page_number, offset_within_page) or None if record not found.
+    Page is 1-indexed, offset is 0-indexed within the page.
+    """
+    order_col = getattr(EventRecord, sort, EventRecord.created_at)
+
+    pivot = (
+        await session.execute(
+            select(order_col, EventRecord.id).where(EventRecord.id == record_id)
+        )
+    ).one_or_none()
+
+    if pivot is None:
+        return None
+
+    pivot_sort_val, pivot_id = pivot
+
+    where = and_(
+        EventRecord.user_id == user_id,
+        EventRecord.publ_id == publ_id,
+        EventRecord.type != RecordType.REC_DEL,
+    )
+    before = or_(
+        order_col > pivot_sort_val,
+        and_(order_col == pivot_sort_val, EventRecord.id < pivot_id),
+    )
+    count_stmt = select(func.count()).where(where, before)
+    count = (await session.execute(count_stmt)).scalar_one()
+
+    offset = count
+    page = offset // page_size + 1
+    offset_in_page = offset % page_size
+
+    return (page, offset_in_page)
 
 
 async def count_records_by_user_publ(

@@ -199,6 +199,106 @@ async def test_list_records_sort_updated_at(authenticated_client, seed_data: See
 
 
 @pytest.mark.asyncio
+async def test_list_records_pivot_first_page(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot a record on page 1 returns page 1."""
+    user = seed_data["users"][0]
+    # record_ids[0] is newest (created with ts=now-0), should be on page 1
+    record_id = seed_data["record_ids"][0]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={record_id}&page_size=10"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["page"] == 1
+    record_ids = [item["id"] for item in data["items"]]
+    assert record_id in record_ids
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_second_page(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot a record on page 2 returns page 2."""
+    user = seed_data["users"][0]
+    # record_ids[10] is at index 10 (0-indexed), should be first on page 2 with page_size=10
+    record_id = seed_data["record_ids"][10]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={record_id}&page_size=10"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["page"] == 2
+    record_ids = [item["id"] for item in data["items"]]
+    assert record_id in record_ids
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_last_page(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot the oldest record returns last page."""
+    user = seed_data["users"][0]
+    # record_ids[-1] (index 24) is oldest, should be on page 3 with page_size=10
+    record_id = seed_data["record_ids"][-1]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={record_id}&page_size=10"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    # 25 records, page_size=10: page 1 (indices 0-9), page 2 (10-19), page 3 (20-24)
+    assert data["page"] == 3
+    record_ids = [item["id"] for item in data["items"]]
+    assert record_id in record_ids
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_not_found(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot with non-existent UUID returns page 1."""
+    user = seed_data["users"][0]
+    fake_uuid = "00000000-0000-0000-0000-000000000000"
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={fake_uuid}"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["page"] == 1
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_invalid_uuid(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot with invalid UUID format falls back to page 1 (graceful degradation)."""
+    user = seed_data["users"][0]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id=not-a-uuid"
+    )
+    # Invalid UUID is caught and ignored, falls back to page 1
+    assert response.status_code == 200
+    data = response.json()
+    assert data["page"] == 1
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_sort_updated_at(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot works with sort=updated_at."""
+    user = seed_data["users"][0]
+    # record_ids[0] is newest, should be on page 1 with updated_at sort too
+    record_id = seed_data["record_ids"][0]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={record_id}&sort=updated_at"
+    )
+    assert response.status_code == 200
+    assert response.json()["page"] == 1
+
+
+@pytest.mark.asyncio
 async def test_get_record_not_found(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
     fake_uuid = "00000000-0000-0000-0000-000000000000"

@@ -2,7 +2,7 @@ import hashlib
 import os
 import random
 from collections.abc import AsyncGenerator, Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import TypedDict, cast
 from uuid import uuid4
 
@@ -184,8 +184,10 @@ async def seed_data(
     now = datetime.now(UTC).replace(tzinfo=None)
 
     record_ids = []
-    records = [
-        EventRecord(
+    records = []
+    for i in range(25):
+        ts = now - timedelta(seconds=i)
+        record = EventRecord(
             id=uuid4(),
             user_id=users[0].user_id,
             publ_id=publ_id_1,
@@ -193,32 +195,12 @@ async def seed_data(
             genus="Testus",
             latitude="55.5",
             longitude="37.5",
-            created_at=now,
-            updated_at=now,
-        ),
-        EventRecord(
-            id=uuid4(),
-            user_id=users[0].user_id,
-            publ_id=publ_id_1,
-            type=RecordType.REC_OK,
-            genus="Testus",
-            latitude="55.6",
-            longitude="37.6",
-            created_at=now,
-            updated_at=now,
-        ),
-        EventRecord(
-            id=uuid4(),
-            user_id=users[0].user_id,
-            publ_id=publ_id_1,
-            type=RecordType.REC_FAIL,
-            created_at=now,
-            updated_at=now,
-        ),
-    ]
-    for record in records:
+            created_at=ts,
+            updated_at=ts,
+        )
         session.add(record)
         record_ids.append(str(record.id))
+        records.append(record)
 
     await session.commit()
     yield SeedData(
