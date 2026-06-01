@@ -13,10 +13,6 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
     const callbackRef = useRef(callback);
 
     useEffect(() => {
-        callbackRef.current = callback;
-    });
-
-    useEffect(() => {
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current);
         };
