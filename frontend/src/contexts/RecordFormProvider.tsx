@@ -43,7 +43,7 @@ export type RecordFormPhase =
 export interface RecordFormActions {
     save: () => Promise<void>;
     submit: () => Promise<void>;
-    switchTo: (targetId: string) => void;
+    onNavigate: (targetId: string) => void;
     create: () => Promise<void>;
     deleteRecord: (id: string) => Promise<void>;
 }
@@ -388,7 +388,7 @@ export function RecordFormProvider({
         }
     }, [cancelPendingAutoSave, methods, submitRecord, store]);
 
-    const switchTo = useCallback(
+    const onNavigate = useCallback(
         (targetId: string) => {
             if (targetId === store.getState().activeRecordId) return;
 
@@ -401,14 +401,13 @@ export function RecordFormProvider({
             }
 
             store.setPendingSync(true);
-            void navigate(`/publication/${publ_id}/${targetId}`, { replace: true });
             store.setState({
                 status: { phase: 'syncing' },
                 lastSavedTime: null,
                 globalErrors: [],
             });
         },
-        [cancelPendingAutoSave, methods, performSave, navigate, publ_id, store],
+        [cancelPendingAutoSave, methods, performSave, store],
     );
 
     const create = useCallback(async () => {
@@ -466,8 +465,8 @@ export function RecordFormProvider({
     );
 
     const actions: RecordFormActions = useMemo(
-        () => ({ save, submit, switchTo, create, deleteRecord: deleteRecordAction }),
-        [save, submit, switchTo, create, deleteRecordAction],
+        () => ({ save, submit, onNavigate, create, deleteRecord: deleteRecordAction }),
+        [save, submit, onNavigate, create, deleteRecordAction],
     );
 
     return (

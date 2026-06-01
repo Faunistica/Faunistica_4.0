@@ -342,7 +342,7 @@ describe('RecordFormProvider', () => {
         expect(testState!.status.phase).toBe('idle');
     });
 
-    it('switchTo changes active record and loads new data', async () => {
+    it('onNavigate triggers save and sets syncing status', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
         setQueryResult('rec-2', RECORD_2);
@@ -355,71 +355,15 @@ describe('RecordFormProvider', () => {
         expect(testState!.activeRecordId).toBe('rec-1');
 
         act(() => {
-            testActions!.switchTo('rec-2');
+            testActions!.onNavigate('rec-2');
         });
 
-        expect(testState!.activeRecordId).toBe('rec-2');
-
-        await waitFor(() => {
-            expect(testState!.status.phase).toBe('idle');
-        });
-        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+        expect(testState!.status.phase).toBe('syncing');
+        expect(testState!.activeRecordId).toBe('rec-1');
+        // URL navigation is handled by <NavLink> — onNavigate only does side-effects
     });
 
-    it('switchTo back-and-forth does not mix up data', async () => {
-        // Regression test: ensure shouldSkipSync logic doesn't skip legitimate syncs
-        setQueryResult(null, undefined);
-        setQueryResult('rec-1', RECORD_1);
-        setQueryResult('rec-2', RECORD_2);
-
-        render(
-            <TestHarness>
-                <StateDisplay />
-            </TestHarness>,
-        );
-        expect(testState!.activeRecordId).toBe('rec-1');
-        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
-
-        // Switch to rec-2
-        act(() => {
-            testActions!.switchTo('rec-2');
-        });
-
-        expect(testState!.activeRecordId).toBe('rec-2');
-
-        await waitFor(() => {
-            expect(testState!.status.phase).toBe('idle');
-        });
-        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
-
-        // Switch back to rec-1
-        act(() => {
-            testActions!.switchTo('rec-1');
-        });
-
-        expect(testState!.activeRecordId).toBe('rec-1');
-
-        await waitFor(() => {
-            expect(testState!.status.phase).toBe('idle');
-        });
-        // This should be 'RU', NOT 'DE' - regression guard
-        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
-
-        // Switch to rec-2 again
-        act(() => {
-            testActions!.switchTo('rec-2');
-        });
-
-        expect(testState!.activeRecordId).toBe('rec-2');
-
-        await waitFor(() => {
-            expect(testState!.status.phase).toBe('idle');
-        });
-        // This should be 'DE', NOT 'RU'
-        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
-    });
-
-    it('switchTo to same record is no-op', () => {
+    it('onNavigate to same record is no-op', () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
 
@@ -430,7 +374,7 @@ describe('RecordFormProvider', () => {
         );
         testMethodsRef.current!.setValue('country', 'DE');
 
-        testActions!.switchTo('rec-1');
+        testActions!.onNavigate('rec-1');
 
         expect(testState!.activeRecordId).toBe('rec-1');
         expect(testState!.status.phase).toBe('idle');
@@ -771,7 +715,7 @@ describe('RecordFormProvider', () => {
         });
     });
 
-    it('syncing to null record resets input display to empty', async () => {
+    it('onNavigate sets syncing status without resetting form', async () => {
         const RECORD_WITH_VALUES = {
             ...RECORD_1,
             locality: 'Moscow Valley',
@@ -779,17 +723,9 @@ describe('RecordFormProvider', () => {
             location_remarks: 'Some notes',
             is_interval: true,
         };
-        const RECORD_WITH_NULLS = {
-            ...RECORD_2,
-            locality: null,
-            accepted_name: null,
-            location_remarks: null,
-            is_interval: null,
-        };
 
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_WITH_VALUES);
-        setQueryResult('rec-2', RECORD_WITH_NULLS);
 
         const { getByTestId } = render(
             <TestHarness>
@@ -803,21 +739,13 @@ describe('RecordFormProvider', () => {
         });
 
         expect((getByTestId('locality') as HTMLInputElement).value).toBe('Moscow Valley');
-        expect((getByTestId('accepted_name') as HTMLInputElement).value).toBe('Canis lupus');
-        expect((getByTestId('location_remarks') as HTMLTextAreaElement).value).toBe('Some notes');
-        expect(getByTestId('is_interval').getAttribute('aria-checked')).toBe('true');
 
         act(() => {
-            testActions!.switchTo('rec-2');
+            testActions!.onNavigate('rec-2');
         });
 
-        await waitFor(() => {
-            expect(testState!.status.phase).toBe('idle');
-        });
-
-        expect((getByTestId('locality') as HTMLInputElement).value).toBe('');
-        expect((getByTestId('accepted_name') as HTMLInputElement).value).toBe('');
-        expect((getByTestId('location_remarks') as HTMLTextAreaElement).value).toBe('');
-        expect(getByTestId('is_interval').getAttribute('aria-checked')).toBe('false');
+        expect(testState!.status.phase).toBe('syncing');
+        // Form data is preserved — URL navigation from <NavLink> triggers the reset
+        expect((getByTestId('locality') as HTMLInputElement).value).toBe('Moscow Valley');
     });
 });

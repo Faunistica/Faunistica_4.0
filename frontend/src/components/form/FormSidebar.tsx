@@ -2,7 +2,7 @@ import { type FC, useState } from 'react';
 import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Plus, LogOut, FileText, MapPin, X, FileSpreadsheet, Trash2 } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, NavLink, useResolvedPath, useMatch } from 'react-router';
 import {
     Sidebar,
     SidebarContent,
@@ -34,17 +34,20 @@ import { useRecordForm } from '@/contexts/RecordFormProvider';
 
 const SidebarRecordItem = ({
     record_id,
-    isActive,
-    onSelectRecord,
+    publId,
+    onNavigate,
     deleteRecord,
 }: {
     record_id: string;
-    isActive: boolean;
-    onSelectRecord: (id: string) => void;
+    publId: number;
+    onNavigate: (id: string) => void;
     deleteRecord: (id: string) => void;
 }) => {
-    // Only use blocking fields?
     const { isMobile, setOpenMobile } = useSidebar();
+    const resolved = useResolvedPath(`/publication/${publId}/${record_id}`);
+    const match = useMatch({ path: resolved.pathname, end: true });
+    const isActive = match !== null;
+
     const { status, recordName, recordLocation } = useRecordByIdQuery(
         { record_id },
         {
@@ -58,8 +61,8 @@ const SidebarRecordItem = ({
         },
     );
 
-    const handleSelect = () => {
-        onSelectRecord(record_id);
+    const handleClick = () => {
+        onNavigate(record_id);
         if (isMobile) setOpenMobile(false);
     };
 
@@ -69,31 +72,21 @@ const SidebarRecordItem = ({
 
     return (
         <SidebarMenuItem>
-            <div
-                role="button"
-                tabIndex={0}
-                data-active={isActive}
-                onClick={handleSelect}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleSelect();
-                    }
-                }}
+            <NavLink
+                to={`/publication/${publId}/${record_id}`}
+                replace
+                onClick={handleClick}
                 className={cn(
-                    'group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-2 text-left transition-all duration-200',
-                    isActive ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200' : 'hover:bg-slate-50',
+                    'group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-2 text-left no-underline transition-all duration-200',
+                    isActive
+                        ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200'
+                        : 'hover:bg-slate-50',
                 )}
             >
                 <div className="flex w-full items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2">
                         <RecordStatusIndicator status={status} />
-                        <span
-                            className={cn(
-                                'truncate text-xs/tight font-bold',
-                                isActive ? 'text-slate-900' : 'text-slate-700',
-                            )}
-                        >
+                        <span className="truncate text-xs/tight font-bold text-slate-700">
                             {recordName}
                         </span>
                     </div>
@@ -152,15 +145,15 @@ const SidebarRecordItem = ({
                         </>
                     )}
                 </div>
-            </div>
+            </NavLink>
         </SidebarMenuItem>
     );
 };
 
 const FormSidebar: FC = () => {
     const {
-        state: { activeRecordId, recordIds },
-        actions: { switchTo, create, deleteRecord },
+        state: { recordIds },
+        actions: { onNavigate, create, deleteRecord },
         publId,
     } = useRecordForm();
     const { setOpenMobile } = useSidebar();
@@ -230,8 +223,8 @@ const FormSidebar: FC = () => {
                                     <SidebarRecordItem
                                         key={id}
                                         record_id={id}
-                                        isActive={id === activeRecordId}
-                                        onSelectRecord={switchTo}
+                                        publId={publId}
+                                        onNavigate={onNavigate}
                                         deleteRecord={deleteRecord}
                                     />
                                 ))}
