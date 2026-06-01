@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act, waitFor, renderHook } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router';
+import { MemoryRouter, Routes, Route, useNavigate } from 'react-router';
 import { useForm, FormProvider, Controller, useFormContext } from 'react-hook-form';
 import { RecordFormProvider, useRecordForm } from '@/contexts/RecordFormProvider';
 import type { RecordFormActions, RecordFormState } from '@/contexts/RecordFormProvider';
@@ -141,6 +141,12 @@ function SelectorDisplay() {
     return <div data-testid="phase">{phase}</div>;
 }
 
+let testNavigate: ((path: string) => void) | null = null;
+function NavCapture() {
+    testNavigate = useNavigate();
+    return null;
+}
+
 function TestHarness({
     children,
     autoSaveDelay,
@@ -161,7 +167,10 @@ function TestHarness({
                             methods={methods}
                             autoSaveDelay={autoSaveDelay}
                         >
-                            <FormProvider {...methods}>{children}</FormProvider>
+                            <FormProvider {...methods}>
+                                <NavCapture />
+                                {children}
+                            </FormProvider>
                         </RecordFormProvider>
                     }
                 />
@@ -342,7 +351,7 @@ describe('RecordFormProvider', () => {
         expect(testState!.status.phase).toBe('idle');
     });
 
-    it('onNavigate triggers save and sets syncing status', () => {
+    it('onNavigate + NavLink changes active record and loads new data', async () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
         setQueryResult('rec-2', RECORD_2);
@@ -359,8 +368,76 @@ describe('RecordFormProvider', () => {
         });
 
         expect(testState!.status.phase).toBe('syncing');
+
+        act(() => {
+            testNavigate!('/publication/1/rec-2');
+        });
+
+        expect(testState!.activeRecordId).toBe('rec-2');
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+    });
+
+    it('onNavigate + NavLink back-and-forth does not mix up data', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+        setQueryResult('rec-2', RECORD_2);
+
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
         expect(testState!.activeRecordId).toBe('rec-1');
-        // URL navigation is handled by <NavLink> — onNavigate only does side-effects
+        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+
+        // Switch to rec-2
+        act(() => {
+            testActions!.onNavigate('rec-2');
+        });
+        act(() => {
+            testNavigate!('/publication/1/rec-2');
+        });
+
+        expect(testState!.activeRecordId).toBe('rec-2');
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+
+        // Switch back to rec-1
+        act(() => {
+            testActions!.onNavigate('rec-1');
+        });
+        act(() => {
+            testNavigate!('/publication/1/rec-1');
+        });
+
+        expect(testState!.activeRecordId).toBe('rec-1');
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+
+        // Switch to rec-2 again
+        act(() => {
+            testActions!.onNavigate('rec-2');
+        });
+        act(() => {
+            testNavigate!('/publication/1/rec-2');
+        });
+
+        expect(testState!.activeRecordId).toBe('rec-2');
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
     });
 
     it('onNavigate to same record is no-op', () => {
@@ -715,7 +792,7 @@ describe('RecordFormProvider', () => {
         });
     });
 
-    it('onNavigate sets syncing status without resetting form', async () => {
+    it('onNavigate + NavLink to null record resets input display to empty', async () => {
         const RECORD_WITH_VALUES = {
             ...RECORD_1,
             locality: 'Moscow Valley',
@@ -723,9 +800,17 @@ describe('RecordFormProvider', () => {
             location_remarks: 'Some notes',
             is_interval: true,
         };
+        const RECORD_WITH_NULLS = {
+            ...RECORD_2,
+            locality: null,
+            accepted_name: null,
+            location_remarks: null,
+            is_interval: null,
+        };
 
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_WITH_VALUES);
+        setQueryResult('rec-2', RECORD_WITH_NULLS);
 
         const { getByTestId } = render(
             <TestHarness>
@@ -739,13 +824,24 @@ describe('RecordFormProvider', () => {
         });
 
         expect((getByTestId('locality') as HTMLInputElement).value).toBe('Moscow Valley');
+        expect((getByTestId('accepted_name') as HTMLInputElement).value).toBe('Canis lupus');
+        expect((getByTestId('location_remarks') as HTMLTextAreaElement).value).toBe('Some notes');
+        expect(getByTestId('is_interval').getAttribute('aria-checked')).toBe('true');
 
         act(() => {
             testActions!.onNavigate('rec-2');
         });
+        act(() => {
+            testNavigate!('/publication/1/rec-2');
+        });
 
-        expect(testState!.status.phase).toBe('syncing');
-        // Form data is preserved — URL navigation from <NavLink> triggers the reset
-        expect((getByTestId('locality') as HTMLInputElement).value).toBe('Moscow Valley');
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+
+        expect((getByTestId('locality') as HTMLInputElement).value).toBe('');
+        expect((getByTestId('accepted_name') as HTMLInputElement).value).toBe('');
+        expect((getByTestId('location_remarks') as HTMLTextAreaElement).value).toBe('');
+        expect(getByTestId('is_interval').getAttribute('aria-checked')).toBe('false');
     });
 });

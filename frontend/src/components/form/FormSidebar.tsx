@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 import { capitalizeFirstLetter, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Plus, LogOut, FileText, MapPin, X, FileSpreadsheet, Trash2 } from 'lucide-react';
@@ -78,9 +78,7 @@ const SidebarRecordItem = ({
                 onClick={handleClick}
                 className={cn(
                     'group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-2 text-left no-underline transition-all duration-200',
-                    isActive
-                        ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200'
-                        : 'hover:bg-slate-50',
+                    isActive ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200' : 'hover:bg-slate-50',
                 )}
             >
                 <div className="flex w-full items-center justify-between gap-2">
