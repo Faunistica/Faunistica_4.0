@@ -35,7 +35,7 @@ import {
 } from './recordFormStore';
 
 export type RecordFormPhase =
-    | { phase: 'idle' }
+    | { phase: 'idle'; submitted: boolean }
     | { phase: 'saving'; source: 'manual' | 'submit' | 'auto' }
     | { phase: 'syncing' }
     | { phase: 'error'; message: string };
@@ -241,10 +241,13 @@ export function RecordFormProvider({
                     id,
                     updatedAt: response.updated_at,
                 });
-                store.setState({ lastSavedTime: new Date(), status: { phase: 'idle' } });
+                store.setState({
+                    lastSavedTime: new Date(),
+                    status: { phase: 'idle', submitted: false },
+                });
                 store.setSnapshotRef(currentSnapshot);
             } catch {
-                store.setState({ status: { phase: 'idle' } });
+                store.setState({ status: { phase: 'idle', submitted: false } });
             }
         },
         autoSaveDelay,
@@ -261,10 +264,16 @@ export function RecordFormProvider({
     });
 
     const onSync = useEffectEvent((record: RecordFull) => {
+        const newState: Partial<FormStoreState> = {
+            status: {
+                phase: 'idle',
+                submitted: record.type === 'rec_ok' || record.type === 'rec_fail',
+            },
+        };
         if (shouldSkipSync(record.updated_at)) {
             if (store.getPendingSync()) {
                 store.setPendingSync(false);
-                store.setState({ status: { phase: 'idle' } });
+                store.setState(newState);
             }
             return;
         }
@@ -283,7 +292,7 @@ export function RecordFormProvider({
 
         if (store.getPendingSync()) {
             store.setPendingSync(false);
-            store.setState({ status: { phase: 'idle' } });
+            store.setState(newState);
         }
     });
 
@@ -318,9 +327,11 @@ export function RecordFormProvider({
             const id = store.getState().activeRecordId;
             if (!id) return undefined;
 
+            const call = source === 'manual' ? editRecord : submitRecord;
+
             try {
                 const payload = draftToRecordData(values);
-                const response = await editRecord({
+                const response = await call({
                     record_id: id,
                     data: payload,
                     publ_id,
@@ -341,72 +352,44 @@ export function RecordFormProvider({
                 return undefined;
             }
         },
-        [editRecord, publ_id, store],
+        [editRecord, submitRecord, publ_id, store],
     );
 
-    const save = useCallback(async () => {
-        cancelPendingAutoSave();
-        const s = store.getState().status;
-        if (s.phase === 'saving' || s.phase === 'syncing') return;
+    const save = useCallback(
+        (mode: 'manual' | 'submit') => async () => {
+            cancelPendingAutoSave();
+            const s = store.getState().status;
+            if (s.phase === 'saving' || s.phase === 'syncing') return;
 
-        store.setState({ status: { phase: 'saving', source: 'manual' } });
-        const values = methods.getValues();
-        const response = await performSave('manual', values);
-        const errorCount = response?.errors?.length || 0;
-        if (response) {
-            const nonField = syncServerErrors(response.errors ?? [], methods);
-            store.setState({
-                lastSavedTime: new Date(),
-                globalErrors: nonField,
-                hasErrors: errorCount > 0,
-            });
-        }
-        store.setState({ status: { phase: 'idle' } });
-    }, [cancelPendingAutoSave, methods, performSave, store]);
-
-    const submit = useCallback(async () => {
-        cancelPendingAutoSave();
-        const s = store.getState().status;
-        if (s.phase === 'saving' || s.phase === 'syncing') return;
-
-        const id = store.getState().activeRecordId;
-        if (!id) return;
-
-        store.setState({ status: { phase: 'saving', source: 'submit' } });
-        try {
+            store.setState({ status: { phase: 'saving', source: mode } });
             const values = methods.getValues();
-            const payload = draftToRecordData(values);
-            const response = await submitRecord({
-                record_id: id,
-                data: payload,
-            }).unwrap();
-            store.setKnownRef({
-                id,
-                updatedAt: response.updated_at,
-            });
-            const nonField = syncServerErrors(response.errors ?? [], methods);
-            const errorCount = response.errors?.length || 0;
-            store.setState({
-                hasErrors: errorCount > 0,
-                lastSavedTime: new Date(),
-                globalErrors: nonField,
-                status: { phase: 'idle' },
-            });
-        } catch {
-            store.setState({ status: { phase: 'idle' } });
-        }
-    }, [cancelPendingAutoSave, methods, submitRecord, store]);
+            const response = await performSave(mode, values);
+            const errorCount = response?.errors?.length || 0;
+            if (response) {
+                const nonField = syncServerErrors(response.errors ?? [], methods);
+                store.setState({
+                    lastSavedTime: new Date(),
+                    globalErrors: nonField,
+                    hasErrors: errorCount > 0,
+                });
+            }
+            store.setState({ status: { phase: 'idle', submitted: mode === 'submit' } });
+        },
+        [cancelPendingAutoSave, methods, performSave, store],
+    );
 
     const onNavigate = useCallback(
         (targetId: string) => {
-            if (targetId === store.getState().activeRecordId) return;
+            const state = store.getState();
+            if (targetId === state.activeRecordId) return;
 
             cancelPendingAutoSave();
             store.setKnownRef(null);
 
-            if (store.getState().activeRecordId) {
-                store.setState({ status: { phase: 'saving', source: 'manual' } });
-                void performSave('manual', methods.getValues());
+            if (state.activeRecordId) {
+                store.setState({ status: { phase: 'saving', source: 'auto' } });
+                const submitted = state.status.phase === 'idle' && state.status.submitted;
+                void performSave(submitted ? 'submit' : 'manual', methods.getValues());
             }
 
             store.setPendingSync(true);
@@ -474,8 +457,14 @@ export function RecordFormProvider({
     );
 
     const actions: RecordFormActions = useMemo(
-        () => ({ save, submit, onNavigate, create, deleteRecord: deleteRecordAction }),
-        [save, submit, onNavigate, create, deleteRecordAction],
+        () => ({
+            save: save('manual'),
+            submit: save('submit'),
+            onNavigate,
+            create,
+            deleteRecord: deleteRecordAction,
+        }),
+        [save, onNavigate, create, deleteRecordAction],
     );
 
     return (
