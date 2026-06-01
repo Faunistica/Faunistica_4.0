@@ -9,13 +9,11 @@ import { createFormStore, type FormStoreState, StoreContext } from './recordForm
 import { PublIdContext } from './useRecordForm';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { TypedFetchBaseQueryError } from '@/api/baseQuery';
-import { useAutoSave } from '@/hooks/useAutoSave';
 import { FormActionsProvider } from './FormActionsProvider';
 import type { RecordForm } from '@/types/forms';
 
 interface RecordFormProviderProps {
     publ_id: number;
-    autoSaveDelay?: number;
     children: ReactNode;
 }
 
@@ -27,13 +25,7 @@ export interface RecordFormActions {
     deleteRecord: (id: string) => Promise<void>;
 }
 
-export const AUTO_SAVE_DELAY = 2000;
-
-export function RecordFormProvider({
-    publ_id,
-    autoSaveDelay = AUTO_SAVE_DELAY,
-    children,
-}: RecordFormProviderProps) {
+export function RecordFormProvider({ publ_id, children }: RecordFormProviderProps) {
     const methods = useFormContext<RecordForm>();
     const navigate = useNavigate();
     const { record: recordParam } = useParams();
@@ -127,8 +119,6 @@ export function RecordFormProvider({
         finishInit(activeRecord.id);
     }, [activeRecord]);
 
-    const cancelAutoSave = useAutoSave({ store, publ_id, autoSaveDelay, ...methods });
-
     const onDelete = useCallback(
         (id: string) => {
             const isActive = id === store.getState().activeRecordId;
@@ -153,7 +143,7 @@ export function RecordFormProvider({
 
     return (
         <StoreContext.Provider value={store}>
-            <FormActionsProvider publ_id={publ_id} onSave={cancelAutoSave} onDelete={onDelete}>
+            <FormActionsProvider publ_id={publ_id} onDelete={onDelete}>
                 <PublIdContext.Provider value={publ_id}>{children}</PublIdContext.Provider>
             </FormActionsProvider>
         </StoreContext.Provider>

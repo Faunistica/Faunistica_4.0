@@ -12,6 +12,7 @@ import {
 } from '@/api/recordAPI';
 import { useNavigate } from 'react-router';
 import { useFormStore } from './recordFormStore';
+import { useAutoSave } from '@/hooks/useAutoSave';
 
 export interface RecordFormActions {
     save: () => Promise<void>;
@@ -21,17 +22,18 @@ export interface RecordFormActions {
     deleteRecord: (id: string) => Promise<void>;
 }
 
+export const AUTO_SAVE_DELAY = 2000;
 export const ActionsContext = createContext<RecordFormActions | null>(null);
 
 export function FormActionsProvider({
     publ_id,
     children,
-    onSave,
+    autoSaveDelay = AUTO_SAVE_DELAY,
     onDelete,
 }: {
     publ_id: number;
     children: ReactNode;
-    onSave: () => void;
+    autoSaveDelay?: number;
     onDelete: (id: string) => () => void;
 }) {
     const navigate = useNavigate();
@@ -42,6 +44,8 @@ export function FormActionsProvider({
     const [deleteRecord] = useDeleteRecordMutation();
 
     const methods = useFormContext<RecordForm>();
+
+    const cancelAutoSave = useAutoSave({ store, publ_id, autoSaveDelay, ...methods });
 
     const performSave = useCallback(
         async (
@@ -72,7 +76,7 @@ export function FormActionsProvider({
 
     const save = useCallback(
         (mode: 'manual' | 'submit') => async () => {
-            onSave();
+            cancelAutoSave();
             const state = store.getState();
             const status = state.status;
             if (!state.activeRecordId || status.phase === 'saving' || status.phase === 'syncing') {
@@ -93,7 +97,7 @@ export function FormActionsProvider({
             }
             store.setState({ status: { phase: 'idle', submitted: mode === 'submit' } });
         },
-        [onSave, methods, performSave, store],
+        [cancelAutoSave, methods, performSave, store],
     );
 
     const onNavigate = useCallback(
@@ -101,7 +105,7 @@ export function FormActionsProvider({
             const state = store.getState();
             if (targetId === state.activeRecordId) return;
 
-            onSave();
+            cancelAutoSave();
 
             if (state.activeRecordId) {
                 store.setState({ status: { phase: 'saving', source: 'auto' } });
@@ -120,12 +124,12 @@ export function FormActionsProvider({
                 globalErrors: [],
             });
         },
-        [onSave, methods, performSave, store],
+        [cancelAutoSave, methods, performSave, store],
     );
 
     const create = useCallback(async () => {
         try {
-            onSave();
+            cancelAutoSave();
 
             const id = store.getState().activeRecordId;
             if (id) {
@@ -146,7 +150,7 @@ export function FormActionsProvider({
         } catch {
             toast.error('Ошибка при создании записи');
         }
-    }, [publ_id, createRecord, onSave, methods, performSave, navigate, store]);
+    }, [publ_id, createRecord, cancelAutoSave, methods, performSave, navigate, store]);
 
     const deleteRecordAction = useCallback(
         async (id: string) => {
