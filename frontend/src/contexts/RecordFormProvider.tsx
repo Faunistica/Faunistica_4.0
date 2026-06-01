@@ -186,19 +186,18 @@ export function RecordFormProvider({
 
     const [store] = useState(() => createFormStore());
 
-    const { recordIds } = useRecordsListQuery(
+    const { recordIds, isListLoading } = useRecordsListQuery(
         { publ_id },
         {
-            selectFromResult: ({ data }) => ({
+            selectFromResult: ({ data, isLoading }) => ({
                 recordIds: selectRecordIds({ data }),
+                isListLoading: isLoading,
             }),
         },
     );
 
     const explicitRecordId = params.record;
     const activeRecordId = explicitRecordId ?? recordIds[0] ?? null;
-
-    const { isLoading: isListLoading } = useRecordsListQuery({ publ_id }, { skip: !publ_id });
 
     const { currentData: activeRecord } = useRecordByIdQuery(
         activeRecordId ? { record_id: activeRecordId } : skipToken,
@@ -346,11 +345,8 @@ export function RecordFormProvider({
 
     const save = useCallback(async () => {
         cancelPendingAutoSave();
-        if (
-            store.getState().status.phase === 'saving' ||
-            store.getState().status.phase === 'syncing'
-        )
-            return;
+        const s = store.getState().status;
+        if (s.phase === 'saving' || s.phase === 'syncing') return;
 
         store.setState({ status: { phase: 'saving', source: 'manual' } });
         const values = methods.getValues();

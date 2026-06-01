@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useUploadExcelMutation, useDownloadRecordsMutation } from '@/api/recordAPI';
 import { getErrorMessage } from '@/utils/error';
+import { cn } from '@/lib/utils';
 
 interface Props {
     open: boolean;
@@ -163,13 +164,14 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        className={`relative flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all duration-200 ${
-                            isDragging
+                        className={cn(
+                            'relative flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all duration-200' +
+                                isDragging
                                 ? 'scale-[1.02] border-emerald-400 bg-emerald-50'
                                 : selectedFile
                                   ? 'border-emerald-300 bg-emerald-50/50'
-                                  : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
-                        }`}
+                                  : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100',
+                        )}
                     >
                         <input
                             ref={fileInputRef}

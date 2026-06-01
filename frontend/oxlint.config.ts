@@ -45,6 +45,7 @@ export default defineConfig({
             files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', '**/tests/**'],
             rules: {
                 'typescript/no-unsafe-type-assertion': 'off',
+                'typescript/no-unnecessary-type-assertion': 'off',
                 'typescript/no-unsafe-assignment': 'off',
                 'typescript/no-misused-promises': 'off',
                 'typescript/strict-void-return': 'off',
