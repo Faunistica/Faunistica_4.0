@@ -14,6 +14,7 @@ import type { RecordForm } from '@/types/forms';
 
 interface RecordFormProviderProps {
     publ_id: number;
+    autoSaveDelay?: number;
     children: ReactNode;
 }
 
@@ -25,7 +26,13 @@ export interface RecordFormActions {
     deleteRecord: (id: string) => Promise<void>;
 }
 
-export function RecordFormProvider({ publ_id, children }: RecordFormProviderProps) {
+export const AUTO_SAVE_DELAY = 2000;
+
+export function RecordFormProvider({
+    publ_id,
+    autoSaveDelay = AUTO_SAVE_DELAY,
+    children,
+}: RecordFormProviderProps) {
     const methods = useFormContext<RecordForm>();
     const navigate = useNavigate();
     const { record: recordParam } = useParams();
@@ -143,7 +150,11 @@ export function RecordFormProvider({ publ_id, children }: RecordFormProviderProp
 
     return (
         <StoreContext.Provider value={store}>
-            <FormActionsProvider publ_id={publ_id} onDelete={onDelete}>
+            <FormActionsProvider
+                publ_id={publ_id}
+                autoSaveDelay={autoSaveDelay}
+                onDelete={onDelete}
+            >
                 <PublIdContext.Provider value={publ_id}>{children}</PublIdContext.Provider>
             </FormActionsProvider>
         </StoreContext.Provider>

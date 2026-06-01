@@ -22,18 +22,17 @@ export interface RecordFormActions {
     deleteRecord: (id: string) => Promise<void>;
 }
 
-export const AUTO_SAVE_DELAY = 2000;
 export const ActionsContext = createContext<RecordFormActions | null>(null);
 
 export function FormActionsProvider({
     publ_id,
     children,
-    autoSaveDelay = AUTO_SAVE_DELAY,
+    autoSaveDelay,
     onDelete,
 }: {
     publ_id: number;
     children: ReactNode;
-    autoSaveDelay?: number;
+    autoSaveDelay: number;
     onDelete: (id: string) => () => void;
 }) {
     const navigate = useNavigate();
