@@ -2,10 +2,11 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response, StreamingResponse
+from pydantic import UUID4
 
 from core.config import settings
 from core.dependencies import TokenUser
-from core.exceptions import AdminOnlyError
+from core.exceptions import AdminOnlyError, PivotWithoutPublID
 from schema.common import PaginatedResponse
 from schema.records import RecordFull
 from service.export import records_to_csv, records_to_excel
@@ -24,12 +25,17 @@ async def list_records(
     publ_id: Annotated[int | None, Query(ge=1, description="Publication ID")] = None,
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     page_size: Annotated[int, Query(ge=1, le=100, description="Page size")] = 20,
-    pivot_record_id: Annotated[str | None, Query(description="Return the page containing this record")] = None,
+    pivot_record_id: Annotated[
+        UUID4 | None, Query(description="Return the page containing this record")
+    ] = None,
     sort: Annotated[
         Literal["created_at", "updated_at"],
         Query(description="Sort field"),
     ] = "created_at",
 ) -> PaginatedResponse[RecordFull]:
+    if pivot_record_id is not None and publ_id is None:
+        raise PivotWithoutPublID(pivot_record_id)
+
     return await service.list_records(
         user_id=user_id or token.user_id,
         publ_id=publ_id,

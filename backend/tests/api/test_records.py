@@ -14,6 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.enums import RecordType
 from core.model import EventRecord
 
+fake_uuid = "ca94c96f-e03b-42d8-8e4c-f4a2fcaa0a5b"
+
 
 @pytest.mark.asyncio
 async def test_create_record(
@@ -257,15 +259,12 @@ async def test_list_records_pivot_last_page(
 async def test_list_records_pivot_not_found(
     authenticated_client: AsyncClient, seed_data: SeedData
 ):
-    """Pivot with non-existent UUID returns page 1."""
+    """Pivot with non-existent UUID returns not found"""
     user = seed_data["users"][0]
-    fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await authenticated_client.get(
         f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={fake_uuid}"
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["page"] == 1
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -277,10 +276,7 @@ async def test_list_records_pivot_invalid_uuid(
     response = await authenticated_client.get(
         f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id=not-a-uuid"
     )
-    # Invalid UUID is caught and ignored, falls back to page 1
-    assert response.status_code == 200
-    data = response.json()
-    assert data["page"] == 1
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio
@@ -301,7 +297,6 @@ async def test_list_records_pivot_sort_updated_at(
 @pytest.mark.asyncio
 async def test_get_record_not_found(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
-    fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await authenticated_client.get(
         f"/api/records/{fake_uuid}?user_id={user.user_id}"
     )
@@ -311,7 +306,6 @@ async def test_get_record_not_found(authenticated_client, seed_data: SeedData):
 @pytest.mark.asyncio
 async def test_update_record_not_found(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
-    fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await authenticated_client.put(
         f"/api/records/{fake_uuid}",
         json={"publ_id": int(user.items.split("|")[0]), "latitude": "55.5"},
