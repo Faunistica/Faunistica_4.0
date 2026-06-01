@@ -34,16 +34,12 @@ export const useAutoSave = ({
         store.setState({ status: { phase: 'saving', source: 'auto' } });
         try {
             const payload = draftToRecordData(currentValues);
-            const response = await updateRecord({
+            await updateRecord({
                 submit: false,
                 record_id: id,
                 data: payload,
                 publ_id,
             }).unwrap();
-            store.setKnownRef({
-                id,
-                updatedAt: response.updated_at,
-            });
             store.setState({
                 lastSavedTime: new Date(),
                 status: { phase: 'idle', submitted: false },

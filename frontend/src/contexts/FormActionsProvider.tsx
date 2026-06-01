@@ -90,10 +90,6 @@ export function FormActionsProvider({
                     globalErrors: nonField,
                     hasErrors: errorCount > 0,
                 });
-                store.setKnownRef({
-                    id: response.id,
-                    updatedAt: response.updated_at,
-                });
             }
             store.setState({ status: { phase: 'idle', submitted: mode === 'submit' } });
         },
@@ -106,7 +102,6 @@ export function FormActionsProvider({
             if (targetId === state.activeRecordId) return;
 
             onSave();
-            store.setKnownRef(null);
 
             if (state.activeRecordId) {
                 store.setState({ status: { phase: 'saving', source: 'auto' } });
@@ -138,11 +133,6 @@ export function FormActionsProvider({
             }
 
             const created = await createRecord({ publ_id }).unwrap();
-
-            store.setKnownRef({
-                id: created.id,
-                updatedAt: created.updated_at,
-            });
 
             methods.reset(FORM_DEFAULT_VALUES, {
                 keepValues: false,

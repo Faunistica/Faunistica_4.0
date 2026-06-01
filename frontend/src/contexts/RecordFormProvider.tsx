@@ -74,15 +74,6 @@ export function RecordFormProvider({
 
     const isInitialLoading = isListLoading || (activeRecordId !== null && !initialRecordLoaded);
 
-    const shouldSkipSync = useCallback(
-        (updatedAt: string): boolean => {
-            const known = store.getKnownRef();
-            if (!known) return false;
-            return known.id === activeRecordId && known.updatedAt === updatedAt;
-        },
-        [activeRecordId, store],
-    );
-
     useEffect(() => {
         store.setState({ activeRecordId, isInitialLoading, recordIds });
     }, [activeRecordId, isInitialLoading, recordIds, store]);
@@ -100,7 +91,9 @@ export function RecordFormProvider({
                 submitted: record.type === 'rec_ok' || record.type === 'rec_fail',
             },
         };
-        if (shouldSkipSync(record.updated_at)) {
+
+        const currentSnapshot = JSON.stringify(toFormPartial(record));
+        if (currentSnapshot === store.getSnapshotRef()) {
             if (store.getPendingSync()) {
                 store.setPendingSync(false);
                 store.setState(newState);
@@ -118,7 +111,7 @@ export function RecordFormProvider({
         const errorCount = record.errors?.length || 0;
         store.setState({ globalErrors: nonField, hasErrors: errorCount > 0 });
 
-        store.setSnapshotRef(JSON.stringify(toFormPartial(record)));
+        store.setSnapshotRef(currentSnapshot);
 
         if (store.getPendingSync()) {
             store.setPendingSync(false);

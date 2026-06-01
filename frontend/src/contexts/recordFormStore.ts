@@ -22,8 +22,6 @@ export interface FormStore {
     setState: (partial: Partial<FormStoreState>) => void;
     getSnapshotRef: () => string;
     setSnapshotRef: (val: string) => void;
-    getKnownRef: () => { id: string; updatedAt: string } | null;
-    setKnownRef: (val: { id: string; updatedAt: string } | null) => void;
     getPendingSync: () => boolean;
     setPendingSync: (val: boolean) => void;
 }
@@ -40,7 +38,6 @@ export function createFormStore(): FormStore {
     };
     const listeners = new Set<() => void>();
     let snapshotRef = '';
-    let knownRef: { id: string; updatedAt: string } | null = null;
     let pendingSync = false;
 
     return {
@@ -65,10 +62,6 @@ export function createFormStore(): FormStore {
         getSnapshotRef: () => snapshotRef,
         setSnapshotRef: (val) => {
             snapshotRef = val;
-        },
-        getKnownRef: () => knownRef,
-        setKnownRef: (val) => {
-            knownRef = val;
         },
         getPendingSync: () => pendingSync,
         setPendingSync: (val) => {
