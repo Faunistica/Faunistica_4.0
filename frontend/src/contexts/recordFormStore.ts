@@ -7,6 +7,7 @@ export interface FormStoreState {
     status: RecordFormPhase;
     lastSavedTime: Date | null;
     globalErrors: string[];
+    hasErrors: boolean;
     isInitialLoading: boolean;
 }
 
@@ -29,6 +30,7 @@ export function createFormStore(): FormStore {
         status: { phase: 'idle' },
         lastSavedTime: null,
         globalErrors: [],
+        hasErrors: false,
         isInitialLoading: true,
     };
     const listeners = new Set<() => void>();

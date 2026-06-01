@@ -33,7 +33,7 @@ export function computeActiveStatus(
     return computeFromFormValues(values);
 }
 
-export function computeInactiveStatus(record: RecordFull): RecordStatus {
+export function computeRecordStatus(record: RecordFull): RecordStatus {
     const serverType = record.type;
 
     if (serverType === 'rec_ok') return 'valid';

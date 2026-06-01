@@ -15,7 +15,7 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useRecordByIdQuery } from '@/api/recordAPI';
-import { computeInactiveStatus } from '@/lib/recordStatus';
+import { computeRecordStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/form/sidebar/RecordStatusIndicator';
 import { useRecordForm } from '@/contexts/RecordFormProvider';
 import { useCallback } from 'react';
@@ -34,7 +34,7 @@ export const SidebarRecordItem = ({ record_id }: { record_id: string }) => {
         { record_id },
         {
             selectFromResult: ({ data: record }) => ({
-                status: record ? computeInactiveStatus(record) : 'empty',
+                status: record ? computeRecordStatus(record) : 'empty',
                 recordName: capitalizeFirstLetter(
                     record?.species || record?.genus || record?.family || 'Новая запись',
                 ),

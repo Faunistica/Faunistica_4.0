@@ -9,9 +9,10 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { motion, useScroll, useMotionValueEvent } from 'motion/react';
-import { Save, Send, Trash2, Cloud, CloudOff, Check, Loader2 } from 'lucide-react';
+import { Send, Trash2, Cloud, CloudOff, Check, Loader2, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRecordForm } from '@/contexts/RecordFormProvider';
+import { cn } from '@/lib/utils';
 
 function formatTime(date: Date): string {
     return date.toLocaleTimeString('ru-RU', {
@@ -25,7 +26,7 @@ const ENABLE_MOTION_ON_DESKTOP = false;
 
 const Footer: FC = () => {
     const {
-        state: { lastSavedTime, activeRecordId, isSaving, isAutoSaving, isBusy },
+        state: { lastSavedTime, activeRecordId, isSaving, isAutoSaving, isBusy, hasErrors },
         actions,
     } = useRecordForm();
     const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
@@ -116,15 +117,21 @@ const Footer: FC = () => {
                     <Button
                         onClick={actions.save}
                         disabled={isBusy}
-                        variant="outline"
-                        className="gap-2 text-xs"
+                        variant={hasErrors ? 'destructive' : 'secondary'}
+                        className={cn(
+                            'gap-2 text-xs transition-colors duration-400',
+                            hasErrors ||
+                                'bg-green-200/50 hover:bg-green-300/80 focus-visible:border-green-400/20 focus-visible:bg-green-400/40',
+                        )}
                     >
                         {isSaving ? (
                             <Loader2 className="size-4 animate-spin" />
+                        ) : hasErrors ? (
+                            <X className="size-4" />
                         ) : (
-                            <Save className="size-4" />
+                            <Check className="size-4" />
                         )}
-                        Сохранить
+                        Проверить
                     </Button>
                     <Button
                         onClick={() => setIsSubmitDialogOpen(true)}

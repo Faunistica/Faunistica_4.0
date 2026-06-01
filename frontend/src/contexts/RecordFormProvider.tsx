@@ -54,6 +54,7 @@ export interface RecordFormState {
     status: RecordFormPhase;
     lastSavedTime: Date | null;
     globalErrors: string[];
+    hasErrors: boolean;
     isInitialLoading: boolean;
     isSaving: boolean;
     isAutoSaving: boolean;
@@ -79,6 +80,7 @@ function computeFormState(s: FormStoreState): RecordFormState {
         status: s.status,
         lastSavedTime: s.lastSavedTime,
         globalErrors: s.globalErrors,
+        hasErrors: s.hasErrors,
         isInitialLoading: s.isInitialLoading,
         isSaving,
         isAutoSaving: isSaving && 'source' in s.status && s.status.source === 'auto',
@@ -94,6 +96,7 @@ function statesEqual(a: RecordFormState, b: RecordFormState): boolean {
         a.status === b.status &&
         a.lastSavedTime === b.lastSavedTime &&
         a.globalErrors === b.globalErrors &&
+        a.hasErrors === b.hasErrors &&
         a.isInitialLoading === b.isInitialLoading &&
         a.isSaving === b.isSaving &&
         a.isAutoSaving === b.isAutoSaving &&
@@ -162,7 +165,7 @@ export function useRecordForm<T>(
 }
 
 export const AUTO_SAVE_DELAY = 2000;
-const SHOULD_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE;
+const ENABLE_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE;
 
 export function RecordFormProvider({
     publ_id,
@@ -273,7 +276,8 @@ export function RecordFormProvider({
             keepDirty: false,
         });
         const nonField = syncServerErrors(record.errors ?? [], methods);
-        store.setState({ globalErrors: nonField });
+        const errorCount = record.errors?.length || 0;
+        store.setState({ globalErrors: nonField, hasErrors: errorCount > 0 });
 
         store.setSnapshotRef(JSON.stringify(toFormPartial(record)));
 
@@ -292,7 +296,7 @@ export function RecordFormProvider({
     }, [activeRecord]);
 
     useEffect(() => {
-        if (!SHOULD_AUTO_SAVE) return () => {};
+        if (!ENABLE_AUTO_SAVE) return () => {};
 
         const subscription = methods.watch(() => {
             if (store.getState().status.phase === 'saving') return;
@@ -348,9 +352,14 @@ export function RecordFormProvider({
         store.setState({ status: { phase: 'saving', source: 'manual' } });
         const values = methods.getValues();
         const response = await performSave('manual', values);
+        const errorCount = response?.errors?.length || 0;
         if (response) {
             const nonField = syncServerErrors(response.errors ?? [], methods);
-            store.setState({ lastSavedTime: new Date(), globalErrors: nonField });
+            store.setState({
+                lastSavedTime: new Date(),
+                globalErrors: nonField,
+                hasErrors: errorCount > 0,
+            });
         }
         store.setState({ status: { phase: 'idle' } });
     }, [cancelPendingAutoSave, methods, performSave, store]);
@@ -375,10 +384,14 @@ export function RecordFormProvider({
                 id,
                 updatedAt: response.updated_at,
             });
-            store.setState({ lastSavedTime: new Date() });
             const nonField = syncServerErrors(response.errors ?? [], methods);
-            store.setState({ globalErrors: nonField });
-            store.setState({ status: { phase: 'idle' } });
+            const errorCount = response.errors?.length || 0;
+            store.setState({
+                hasErrors: errorCount > 0,
+                lastSavedTime: new Date(),
+                globalErrors: nonField,
+                status: { phase: 'idle' },
+            });
         } catch {
             store.setState({ status: { phase: 'idle' } });
         }
