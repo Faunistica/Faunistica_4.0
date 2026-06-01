@@ -168,6 +168,12 @@ export const recordAPI = createApi({
 export const selectRecordIds = createSelector(
     [(result: { data?: Types.PaginatedResponse<Types.RecordFull> }) => result.data],
     (data) => data?.items?.map((r) => r.id) ?? [],
+    {
+        memoizeOptions: {
+            resultEqualityCheck: (a: string[], b: string[]) =>
+                a.length === b.length && a.every((id, i) => id === b[i]),
+        },
+    },
 );
 
 export const {

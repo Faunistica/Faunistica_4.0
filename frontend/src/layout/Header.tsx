@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X, PanelLeft } from 'lucide-react';
 import { Link } from 'react-router';
@@ -9,7 +9,7 @@ interface HeaderProps {
     setSidebarOpen?: (isOpen: boolean) => void;
 }
 
-const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
+const Header: FC<HeaderProps> = React.memo(({ isSidebarEnabled, setSidebarOpen }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const { isLanding, isNavigateEnabled } = useRouteHandle();
@@ -186,6 +186,6 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
             )}
         </header>
     );
-};
+});
 
 export default Header;
