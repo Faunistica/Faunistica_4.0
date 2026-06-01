@@ -2,14 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act, waitFor, renderHook } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useNavigate } from 'react-router';
 import { useForm, FormProvider, Controller, useFormContext } from 'react-hook-form';
-import { RecordFormProvider, useRecordForm } from '@/contexts/RecordFormProvider';
-import type { RecordFormActions, RecordFormState } from '@/contexts/RecordFormProvider';
+import { RecordFormProvider } from '@/contexts/RecordFormProvider';
+import type { RecordFormActions } from '@/contexts/RecordFormProvider';
 import type { FormRecord } from '@/types/api.dto';
 import { FORM_DEFAULT_VALUES } from '@/types/forms';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel } from '@/components/ui/field';
+import { useRecordForm, type RecordFormState } from '@/contexts/useRecordForm';
 
 const mockRecordsListQuery = vi.hoisted(() => vi.fn());
 const mockRecordListSelect = vi.hoisted(() => vi.fn());

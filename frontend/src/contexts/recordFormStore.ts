@@ -1,5 +1,10 @@
 import { createContext, useContext } from 'react';
-import type { RecordFormPhase } from './RecordFormProvider';
+
+export type RecordFormPhase =
+    | { phase: 'idle'; submitted: boolean }
+    | { phase: 'saving'; source: 'manual' | 'submit' | 'auto' }
+    | { phase: 'syncing' }
+    | { phase: 'error'; message: string };
 
 export interface FormStoreState {
     activeRecordId: string | null;

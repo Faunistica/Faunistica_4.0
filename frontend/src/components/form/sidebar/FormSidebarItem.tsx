@@ -17,16 +17,16 @@ import {
 import { useRecordByIdQuery } from '@/api/recordAPI';
 import { computeRecordStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/form/sidebar/RecordStatusIndicator';
-import { useRecordForm } from '@/contexts/RecordFormProvider';
+import { useRecordForm } from '@/contexts/useRecordForm';
 import { useCallback } from 'react';
 
 export const SidebarRecordItem = ({ record_id }: { record_id: string }) => {
     const { isMobile, setOpenMobile } = useSidebar();
     const {
         actions: { onNavigate, deleteRecord },
-        publId,
+        publ_id,
     } = useRecordForm();
-    const resolved = useResolvedPath(`/publication/${publId}/${record_id}`);
+    const resolved = useResolvedPath(`/publication/${publ_id}/${record_id}`);
     const match = useMatch({ path: resolved.pathname, end: true });
     const isActive = match !== null;
 
@@ -55,7 +55,7 @@ export const SidebarRecordItem = ({ record_id }: { record_id: string }) => {
     return (
         <SidebarMenuItem>
             <NavLink
-                to={`/publication/${publId}/${record_id}`}
+                to={`/publication/${publ_id}/${record_id}`}
                 replace
                 onClick={handleClick}
                 className={cn(

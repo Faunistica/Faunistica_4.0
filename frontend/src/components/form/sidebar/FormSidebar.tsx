@@ -13,7 +13,7 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import ExcelUploadModal from '@/components/form/inputs/ExcelUploadModal';
-import { useRecordForm } from '@/contexts/RecordFormProvider';
+import { useRecordForm } from '@/contexts/useRecordForm';
 import { SidebarRecordItem } from './FormSidebarItem';
 import { FormSidebarFooter } from './FormSidebarFooter';
 
@@ -21,7 +21,7 @@ const FormSidebar: FC = () => {
     const {
         state: { recordIds },
         actions: { create },
-        publId,
+        publ_id,
     } = useRecordForm();
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -99,7 +99,11 @@ const FormSidebar: FC = () => {
                 </SidebarFooter>
             </Sidebar>
 
-            <ExcelUploadModal open={isUploadOpen} onOpenChange={setIsUploadOpen} publ_id={publId} />
+            <ExcelUploadModal
+                open={isUploadOpen}
+                onOpenChange={setIsUploadOpen}
+                publ_id={publ_id}
+            />
         </>
     );
 };

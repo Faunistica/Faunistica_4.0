@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { useRecordForm } from '@/contexts/RecordFormProvider';
+import { useRecordForm } from '@/contexts/useRecordForm';
 import ArticleSourceCard from '@/components/form/parts/ArticleSourceCard';
 import GeographyCard from '@/components/form/parts/GeographyCard';
 import CollectionEventCard from '@/components/form/parts/CollectionEventCard';
@@ -10,8 +10,10 @@ import Footer from '@/components/form/parts/FormFooter';
 import LoadingScreen from '@/components/LoadingScreen';
 
 const RecordFormContent: FC = () => {
-    const activeRecordId = useRecordForm((ctx) => ctx.state.activeRecordId);
-    const publ_id = useRecordForm((ctx) => ctx.publId);
+    const {
+        state: { activeRecordId },
+        publ_id,
+    } = useRecordForm();
 
     if (!activeRecordId) {
         return <LoadingScreen />;

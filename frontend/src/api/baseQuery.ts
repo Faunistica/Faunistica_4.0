@@ -14,7 +14,7 @@ const baseQuery = fetchBaseQuery({
     credentials: 'include',
 });
 
-interface TypedFetchBaseQueryError extends Omit<FetchBaseQueryError, 'data'> {
+export interface TypedFetchBaseQueryError extends Omit<FetchBaseQueryError, 'data'> {
     data?: ApiErrorBody;
 }
 
