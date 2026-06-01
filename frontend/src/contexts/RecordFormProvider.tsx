@@ -19,8 +19,7 @@ import {
     useRecordsListQuery,
     useRecordByIdQuery,
     useCreateRecordMutation,
-    useEditRecordMutation,
-    useSubmitRecordMutation,
+    useUpdateRecordMutation,
     useDeleteRecordMutation,
     selectRecordIds,
 } from '@/api/recordAPI';
@@ -205,8 +204,7 @@ export function RecordFormProvider({
     }, [error, navigate, publ_id]);
 
     const [createRecord] = useCreateRecordMutation();
-    const [editRecord] = useEditRecordMutation();
-    const [submitRecord] = useSubmitRecordMutation();
+    const [updateRecord] = useUpdateRecordMutation();
     const [deleteRecord] = useDeleteRecordMutation();
 
     const isInitialLoading = isListLoading || (activeRecordId !== null && !initialRecordLoaded);
@@ -232,7 +230,8 @@ export function RecordFormProvider({
             store.setState({ status: { phase: 'saving', source: 'auto' } });
             try {
                 const payload = draftToRecordData(currentValues);
-                const response = await editRecord({
+                const response = await updateRecord({
+                    submit: false,
                     record_id: id,
                     data: payload,
                     publ_id,
@@ -327,11 +326,10 @@ export function RecordFormProvider({
             const id = store.getState().activeRecordId;
             if (!id) return undefined;
 
-            const call = source === 'manual' ? editRecord : submitRecord;
-
             try {
                 const payload = draftToRecordData(values);
-                const response = await call({
+                const response = await updateRecord({
+                    submit: source === 'submit',
                     record_id: id,
                     data: payload,
                     publ_id,
@@ -352,7 +350,7 @@ export function RecordFormProvider({
                 return undefined;
             }
         },
-        [editRecord, submitRecord, publ_id, store],
+        [updateRecord, publ_id, store],
     );
 
     const save = useCallback(

@@ -14,8 +14,7 @@ const mockRecordsListQuery = vi.hoisted(() => vi.fn());
 const mockRecordListSelect = vi.hoisted(() => vi.fn());
 const mockRecordByIdQuery = vi.hoisted(() => vi.fn());
 const mockCreateRecord = vi.hoisted(() => vi.fn());
-const mockEditRecord = vi.hoisted(() => vi.fn());
-const mockSubmitRecord = vi.hoisted(() => vi.fn());
+const mockUpdateRecord = vi.hoisted(() => vi.fn());
 const mockDeleteRecord = vi.hoisted(() => vi.fn());
 const mockDispatch = vi.hoisted(() => vi.fn());
 const mockUpsertQueryData = vi.hoisted(() => vi.fn());
@@ -33,8 +32,7 @@ vi.mock('@/api/recordAPI', () => ({
     useRecordsListQuery: mockRecordsListQuery,
     useRecordByIdQuery: mockRecordByIdQuery,
     useCreateRecordMutation: () => [mockCreateRecord],
-    useEditRecordMutation: () => [mockEditRecord],
-    useSubmitRecordMutation: () => [mockSubmitRecord],
+    useUpdateRecordMutation: () => [mockUpdateRecord],
     useDeleteRecordMutation: () => [mockDeleteRecord],
     recordAPI: {
         reducerPath: 'recordAPI',
@@ -190,10 +188,7 @@ describe('SavedPresetSelect', () => {
             queryResult(record_id),
         );
 
-        mockEditRecord.mockReturnValue({
-            unwrap: () => Promise.resolve({ record: { updated_at: '2024-01-01T00:00:01Z' } }),
-        });
-        mockSubmitRecord.mockReturnValue({
+        mockUpdateRecord.mockReturnValue({
             unwrap: () => Promise.resolve({ record: { updated_at: '2024-01-01T00:00:01Z' } }),
         });
         mockCreateRecord.mockReturnValue({

@@ -74,10 +74,11 @@ export interface RecordListRequest {
     sort?: 'created_at' | 'updated_at';
 }
 
-export interface EditRecordRequest {
+export interface UpdateRecordRequest {
     record_id: string;
     data: RecordData;
     publ_id?: number;
+    submit: boolean;
 }
 
 export interface GetLocationRequest {

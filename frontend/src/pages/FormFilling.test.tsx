@@ -15,8 +15,7 @@ const mockRecordsListQuery = vi.hoisted(() => vi.fn());
 const mockRecordListSelect = vi.hoisted(() => vi.fn());
 const mockRecordByIdQuery = vi.hoisted(() => vi.fn());
 const mockCreateRecord = vi.hoisted(() => vi.fn());
-const mockEditRecord = vi.hoisted(() => vi.fn());
-const mockSubmitRecord = vi.hoisted(() => vi.fn());
+const mockUpdateRecord = vi.hoisted(() => vi.fn());
 const mockDeleteRecord = vi.hoisted(() => vi.fn());
 const mockDispatch = vi.hoisted(() => vi.fn());
 const mockUpsertQueryData = vi.hoisted(() => vi.fn());
@@ -34,8 +33,7 @@ vi.mock('@/api/recordAPI', () => ({
     useRecordsListQuery: mockRecordsListQuery,
     useRecordByIdQuery: mockRecordByIdQuery,
     useCreateRecordMutation: () => [mockCreateRecord],
-    useEditRecordMutation: () => [mockEditRecord],
-    useSubmitRecordMutation: () => [mockSubmitRecord],
+    useUpdateRecordMutation: () => [mockUpdateRecord],
     useDeleteRecordMutation: () => [mockDeleteRecord],
     recordAPI: {
         reducerPath: 'recordAPI',
@@ -264,10 +262,7 @@ describe('RecordFormProvider', () => {
             queryResult(record_id),
         );
 
-        mockEditRecord.mockReturnValue({
-            unwrap: () => Promise.resolve({ record: { updated_at: '2024-01-01T00:00:01Z' } }),
-        });
-        mockSubmitRecord.mockReturnValue({
+        mockUpdateRecord.mockReturnValue({
             unwrap: () => Promise.resolve({ record: { updated_at: '2024-01-01T00:00:01Z' } }),
         });
         mockCreateRecord.mockReturnValue({
@@ -455,7 +450,7 @@ describe('RecordFormProvider', () => {
 
         expect(testState!.activeRecordId).toBe('rec-1');
         expect(testState!.status.phase).toBe('idle');
-        expect(mockEditRecord).not.toHaveBeenCalled();
+        expect(mockUpdateRecord).not.toHaveBeenCalled();
     });
 
     it('save calls editRecord', async () => {
@@ -470,8 +465,8 @@ describe('RecordFormProvider', () => {
 
         await act(() => testActions!.save());
 
-        expect(mockEditRecord).toHaveBeenCalledWith(
-            expect.objectContaining({ record_id: 'rec-1' }),
+        expect(mockUpdateRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ submit: false, record_id: 'rec-1' }),
         );
     });
 
@@ -503,8 +498,8 @@ describe('RecordFormProvider', () => {
 
         await act(() => testActions!.submit());
 
-        expect(mockSubmitRecord).toHaveBeenCalledWith(
-            expect.objectContaining({ record_id: 'rec-1' }),
+        expect(mockUpdateRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ submit: true, record_id: 'rec-1' }),
         );
         expect(testState!.status.phase).toBe('idle');
     });
@@ -549,7 +544,7 @@ describe('RecordFormProvider', () => {
     });
 
     it('returns to idle on save error', async () => {
-        mockEditRecord.mockReturnValue({
+        mockUpdateRecord.mockReturnValue({
             unwrap: () => Promise.reject(new Error('save failed')),
         });
         setQueryResult(null, undefined);
@@ -567,7 +562,7 @@ describe('RecordFormProvider', () => {
     });
 
     it('returns to idle on submit error', async () => {
-        mockSubmitRecord.mockReturnValue({
+        mockUpdateRecord.mockReturnValue({
             unwrap: () => Promise.reject(new Error('submit failed')),
         });
         setQueryResult(null, undefined);
@@ -732,8 +727,8 @@ describe('RecordFormProvider', () => {
             });
 
             await waitFor(() => {
-                expect(mockEditRecord).toHaveBeenCalledWith(
-                    expect.objectContaining({ record_id: 'rec-1' }),
+                expect(mockUpdateRecord).toHaveBeenCalledWith(
+                    expect.objectContaining({ submit: false, record_id: 'rec-1' }),
                 );
             });
             expect(testState!.status.phase).toBe('idle');
@@ -758,7 +753,7 @@ describe('RecordFormProvider', () => {
 
             await new Promise((r) => setTimeout(r, 200));
 
-            expect(mockEditRecord).toHaveBeenCalledTimes(1);
+            expect(mockUpdateRecord).toHaveBeenCalledTimes(1);
             expect(testState!.status.phase).toBe('idle');
         });
 
@@ -780,10 +775,11 @@ describe('RecordFormProvider', () => {
             });
 
             await waitFor(() => {
-                expect(mockEditRecord).toHaveBeenCalledTimes(1);
+                expect(mockUpdateRecord).toHaveBeenCalledTimes(1);
             });
-            expect(mockEditRecord).toHaveBeenCalledWith(
+            expect(mockUpdateRecord).toHaveBeenCalledWith(
                 expect.objectContaining({
+                    submit: false,
                     record_id: 'rec-1',
                     data: expect.objectContaining({ country: 'DE', locality: 'Moscow' }),
                 }),

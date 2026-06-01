@@ -1,33 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import type { TypedMutationOnQueryStarted } from '@reduxjs/toolkit/query';
 import { createSelector } from '@reduxjs/toolkit';
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
-
-const handleRecordMutationFulfilled: TypedMutationOnQueryStarted<
-    Types.RecordFull,
-    Types.EditRecordRequest,
-    typeof baseQueryWithReauth,
-    'recordAPI'
-> = async ({ record_id }, { dispatch, queryFulfilled }) => {
-    try {
-        const { data } = await queryFulfilled;
-        if (!data) return;
-        dispatch(
-            recordAPI.util.updateQueryData(
-                'recordsList',
-                { publ_id: data.publ_id } as Types.RecordListRequest,
-                (draft) => {
-                    const idx = draft.items.findIndex((r) => r.id === record_id);
-                    if (idx !== -1) draft.items[idx] = data;
-                },
-            ),
-        );
-        void dispatch(recordAPI.util.upsertQueryData('recordById', { record_id }, data));
-    } catch {
-        // mutation failed — RTK handles rollback automatically
-    }
-};
 
 export const recordAPI = createApi({
     reducerPath: 'recordAPI',
@@ -85,13 +59,33 @@ export const recordAPI = createApi({
                 }
             },
         }),
-        editRecord: build.mutation<Types.RecordFull, Types.EditRecordRequest>({
-            query: ({ record_id, data }) => ({
-                url: `/records/${record_id}`,
+        updateRecord: build.mutation<Types.RecordFull, Types.UpdateRecordRequest>({
+            query: ({ record_id, submit, data }) => ({
+                url: `/records/${record_id}` + (submit ? '/submit' : ''),
                 method: 'PUT',
                 body: data,
             }),
-            onQueryStarted: handleRecordMutationFulfilled,
+            onQueryStarted: async ({ record_id }, { dispatch, queryFulfilled }) => {
+                try {
+                    const { data } = await queryFulfilled;
+                    if (!data) return;
+                    dispatch(
+                        recordAPI.util.updateQueryData(
+                            'recordsList',
+                            { publ_id: data.publ_id } as Types.RecordListRequest,
+                            (draft) => {
+                                const idx = draft.items.findIndex((r) => r.id === record_id);
+                                if (idx !== -1) draft.items[idx] = data;
+                            },
+                        ),
+                    );
+                    void dispatch(
+                        recordAPI.util.upsertQueryData('recordById', { record_id }, data),
+                    );
+                } catch {
+                    // mutation failed — RTK handles rollback automatically
+                }
+            },
         }),
         deleteRecord: build.mutation<void, Types.RecordIdRequest & { publ_id: number }>({
             query: ({ record_id }) => ({
@@ -116,14 +110,6 @@ export const recordAPI = createApi({
                     patch.undo();
                 }
             },
-        }),
-        submitRecord: build.mutation<Types.RecordFull, Types.EditRecordRequest>({
-            query: ({ record_id, data }) => ({
-                url: `/records/${record_id}/submit`,
-                method: 'PUT',
-                body: data,
-            }),
-            onQueryStarted: handleRecordMutationFulfilled,
         }),
         downloadRecords: build.mutation<
             null,
@@ -181,9 +167,8 @@ export const {
     useRecordByIdQuery,
     useLazyRecordByIdQuery,
     useCreateRecordMutation,
-    useEditRecordMutation,
+    useUpdateRecordMutation,
     useDeleteRecordMutation,
-    useSubmitRecordMutation,
     useDownloadRecordsMutation,
     useUploadExcelMutation,
 } = recordAPI;
