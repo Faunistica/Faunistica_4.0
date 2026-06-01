@@ -27,7 +27,7 @@ export function createFormStore(): FormStore {
     let state: FormStoreState = {
         activeRecordId: null,
         recordIds: [],
-        status: { phase: 'idle' },
+        status: { phase: 'idle', submitted: false },
         lastSavedTime: null,
         globalErrors: [],
         hasErrors: false,
