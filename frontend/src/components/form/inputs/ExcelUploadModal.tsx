@@ -13,6 +13,7 @@ import {
 import { useUploadExcelMutation, useDownloadRecordsMutation } from '@/api/recordAPI';
 import { getErrorMessage } from '@/lib/error';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
     open: boolean;
@@ -27,6 +28,7 @@ const ACCEPTED_TYPES = [
 const ACCEPTED_EXTENSIONS = ['.xlsx', '.csv'];
 
 const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
+    const isMobile = useIsMobile();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -133,7 +135,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
             <AlertDialog open={open} onOpenChange={handleClose}>
                 <AlertDialogContent className="max-w-lg">
                     <AlertDialogHeader>
-                        <div className="flex w-full items-center justify-between gap-4">
+                        <div className="flex h-fit w-full items-center justify-between gap-4 pb-1">
                             <AlertDialogTitle className="flex items-center gap-2 text-xl">
                                 <FileSpreadsheet className="size-5 text-emerald-600" />
                                 Работа с Excel
@@ -150,7 +152,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                 ) : (
                                     <Download className="mr-2 size-4" />
                                 )}
-                                Скачать XLSX
+                                Скачать {isMobile || ' XLSX'}
                             </Button>
                         </div>
                         <AlertDialogDescription>
@@ -165,8 +167,8 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
                         className={cn(
-                            'relative flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all duration-200' +
-                                isDragging
+                            'relative flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all duration-200',
+                            isDragging
                                 ? 'scale-[1.02] border-emerald-400 bg-emerald-50'
                                 : selectedFile
                                   ? 'border-emerald-300 bg-emerald-50/50'
