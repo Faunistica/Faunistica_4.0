@@ -17,7 +17,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import settings
 from core.database import get_session
 from core.exceptions import AdminOnlyError, InvalidTokenError
-from repository.registration import get_pending_by_code
 from repository.user import get_user
 from schema.jwt import Token, TokenPayload
 from schema.user import UserMinimal
@@ -185,7 +184,7 @@ def validate_user_id_path(
     return validate_user_id(user_id, token.user_id)
 
 
-def generate_code_for_registration(session: DBSession) -> str:
+def generate_code_for_registration() -> str:
     for _ in range(10):
         code = "".join(str(secrets.randbelow(10)) for _ in range(6))
     return code

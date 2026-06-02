@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
-from core.enums import PendingStatus
 from core.config import settings
 from core.dependencies import DBSession
+from core.enums import PendingStatus
 from core.exceptions import (
     RegistrationAlreadyStartedError,
     RegistrationNotFoundError,
@@ -69,7 +69,6 @@ async def start_registration(
     )
 
 
-
 @router.get("/register/status")
 @limiter.limit("30/minute")
 async def registration_status(
@@ -87,7 +86,9 @@ async def registration_status(
         if pending is None:
             raise RegistrationNotFoundError(code)
 
-        if pending.status == PendingStatus.PENDING and is_registration_expired(pending.created_at):
+        if pending.status == PendingStatus.PENDING and is_registration_expired(
+            pending.created_at
+        ):
             pending = await update_pending_by_code(
                 session,
                 code,

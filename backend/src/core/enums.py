@@ -116,7 +116,7 @@ class PendingStatusType(TypeDecorator):
     def process_bind_param(
         self,
         value: "PendingStatus | int | None",
-        dialect,
+        dialect: Dialect,
     ) -> int:
         if value is None:
             return PendingStatus.PENDING
@@ -125,7 +125,7 @@ class PendingStatusType(TypeDecorator):
     def process_result_value(
         self,
         value: int | None,
-        dialect,
+        dialect: Dialect,
     ) -> "PendingStatus | None":
         if value is None:
             return PendingStatus.PENDING

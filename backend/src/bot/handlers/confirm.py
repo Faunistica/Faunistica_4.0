@@ -42,7 +42,9 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
             await message.answer(Messages.confirmation_code_invalid())
             return
 
-        if pending.status == PendingStatus.PENDING and is_registration_expired(pending.created_at):
+        if pending.status == PendingStatus.PENDING and is_registration_expired(
+            pending.created_at
+        ):
             await update_pending_by_code(session, code, status="expired")
             await session.commit()
             await message.answer(Messages.confirmation_code_expired())

@@ -1,9 +1,9 @@
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from service.registration import is_registration_expired
 from core.enums import PendingStatus
 from core.model import PendingRegistration
+from service.registration import is_registration_expired
 
 
 async def create_pending_registration(
@@ -29,10 +29,11 @@ async def get_pending_by_code(
     stmt = select(PendingRegistration).where(PendingRegistration.code == code)
     result = await session.execute(stmt)
     pending = result.scalar_one_or_none()
-    
+
     if pending and is_registration_expired(pending.created_at):
         return None
     return pending
+
 
 async def get_pending_by_username(
     session: AsyncSession, username: str
@@ -45,7 +46,7 @@ async def get_pending_by_username(
     )
     result = await session.execute(stmt)
     pending = result.scalar_one_or_none()
-    
+
     if pending and is_registration_expired(pending.created_at):
         return None
     return pending
