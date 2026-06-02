@@ -135,7 +135,7 @@ function StateDisplay() {
 }
 
 function SelectorDisplay() {
-    const phase = useRecordForm((ctx) => ctx.state.status.phase);
+    const { state: phase } = useRecordForm((ctx) => ctx.state.status.phase);
     return <div data-testid="phase">{phase}</div>;
 }
 
