@@ -26,7 +26,7 @@ class Messages:
         return (
             "Регистрация теперь проходит через сайт. "
             "Заполните форму на https://faunistica.ru/ и отправьте "
-            "код подтверждения командой /confirm <код>."
+            "код подтверждения командой <code>/confirm &lt;код&gt;</code>."
         )
 
     @staticmethod

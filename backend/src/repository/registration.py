@@ -32,7 +32,12 @@ async def get_pending_by_code(
 async def get_pending_by_username(
     session: AsyncSession, username: str
 ) -> PendingRegistration | None:
-    stmt = select(PendingRegistration).where(PendingRegistration.username == username)
+    stmt = (
+        select(PendingRegistration)
+        .where(PendingRegistration.username == username)
+        .order_by(PendingRegistration.created_at.desc(), PendingRegistration.id.desc())
+        .limit(1)
+    )
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -52,4 +57,12 @@ async def update_pending_by_code(
 
 async def delete_pending_by_code(session: AsyncSession, code: str) -> None:
     stmt = delete(PendingRegistration).where(PendingRegistration.code == code)
+    await session.execute(stmt)
+
+
+async def delete_expired_by_username(session: AsyncSession, username: str) -> None:
+    stmt = delete(PendingRegistration).where(
+        PendingRegistration.username == username,
+        PendingRegistration.status == "expired",
+    )
     await session.execute(stmt)

@@ -9,6 +9,7 @@ from core.dependencies import DBSession
 from core.security import get_password_hash
 from repository.registration import (
     create_pending_registration,
+    delete_expired_by_username,
     get_pending_by_code,
     get_pending_by_username,
     update_pending_by_code,
@@ -62,18 +63,22 @@ async def start_registration(
 
     pending_for_username = await get_pending_by_username(session, username)
     if pending_for_username is not None:
-        if pending_for_username.status == "pending" and is_registration_expired(
-            pending_for_username.created_at
-        ):
-            await update_pending_by_code(
-                session,
-                pending_for_username.code,
-                status="expired",
-            )
-            await session.commit()
-        else:
+        if pending_for_username.status == "pending":
+            if is_registration_expired(pending_for_username.created_at):
+                await update_pending_by_code(
+                    session,
+                    pending_for_username.code,
+                    status="expired",
+                )
+                await session.commit()
+            else:
+                raise HTTPException(
+                    status_code=409, detail="Registration already started"
+                )
+        elif pending_for_username.status == "confirmed":
             raise HTTPException(status_code=409, detail="Registration already started")
 
+    await delete_expired_by_username(session, username)
     code = await _generate_unique_code(session)
     password_hash = get_password_hash(password)
     await create_pending_registration(
