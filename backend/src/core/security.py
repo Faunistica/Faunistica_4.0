@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import jwt
+import secrets
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from fastapi import Depends, HTTPException, Request, Response, status
@@ -15,7 +16,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
 from core.database import get_session
+from core.dependencies import DBSession
 from core.exceptions import AdminOnlyError, InvalidTokenError
+from repository.registration import get_pending_by_code
 from repository.user import get_user
 from schema.jwt import Token, TokenPayload
 from schema.user import UserMinimal
@@ -181,3 +184,14 @@ def validate_user_id_path(
     token: Annotated[UserMinimal, Depends(get_jwt_user)],
 ) -> int:
     return validate_user_id(user_id, token.user_id)
+
+async def generate_unique_code(session: DBSession) -> str:
+    for _ in range(10):
+        code = ''.join(str(secrets.randbelow(10)) for _ in range(6))
+        existing = await get_pending_by_code(session, code)
+        if existing is None:
+            return code
+    raise HTTPException(
+        status_code=500,
+        detail="Failed to generate registration code",
+    )

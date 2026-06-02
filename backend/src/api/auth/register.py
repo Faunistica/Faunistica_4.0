@@ -1,12 +1,12 @@
 import asyncio
 import re
-import secrets
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Query
 
 from core.dependencies import DBSession
-from core.security import get_password_hash
+from core.security import get_password_hash, generate_unique_code
+
 from repository.registration import (
     create_pending_registration,
     delete_expired_by_username,
@@ -30,19 +30,6 @@ from service.registration import (
 router = APIRouter()
 
 _USERNAME_PATTERN = re.compile(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$")
-
-
-async def _generate_unique_code(session: DBSession) -> str:
-    for _ in range(10):
-        code = secrets.token_hex(3).upper()
-        existing = await get_pending_by_code(session, code)
-        if existing is None:
-            return code
-    raise HTTPException(
-        status_code=500,
-        detail="Failed to generate registration code",
-    )
-
 
 @router.post("/register")
 async def start_registration(
@@ -79,7 +66,7 @@ async def start_registration(
             raise HTTPException(status_code=409, detail="Registration already started")
 
     await delete_expired_by_username(session, username)
-    code = await _generate_unique_code(session)
+    code = await generate_unique_code(session)
     password_hash = get_password_hash(password)
     await create_pending_registration(
         session, username=username, password_hash=password_hash, code=code
