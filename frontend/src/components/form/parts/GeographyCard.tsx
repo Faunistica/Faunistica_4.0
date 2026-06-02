@@ -20,7 +20,7 @@ import { Map as MapIcon, MapPin } from 'lucide-react';
 
 import { GeographyMap } from '@/components/map/GeographyMap';
 import { DMInputGroup, DMSInputGroup } from '@/components/map/CoordinateInputs';
-import { GEOREF_OPTIONS, COUNTRY_OPTIONS } from '@/types/constants';
+import { GEOREF_OPTIONS, COUNTRY_OPTIONS } from '@/lib/constants';
 
 import { useLazyGeoSearchQuery } from '@/api/utilAPI';
 import SavedPresetSelect from '@/components/form/inputs/SavedPresetSelect';

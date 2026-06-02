@@ -13,7 +13,7 @@ import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import { Bug } from 'lucide-react';
 import { useLazySuggestTaxonQuery } from '@/api/utilAPI';
-import { TYPE_STATUS_OPTIONS, TAXON_RANK_OPTIONS } from '@/types/constants';
+import { TYPE_STATUS_OPTIONS, TAXON_RANK_OPTIONS } from '@/lib/constants';
 import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 import type { RecordForm } from '@/types/forms';

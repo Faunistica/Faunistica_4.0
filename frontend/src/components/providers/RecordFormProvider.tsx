@@ -6,7 +6,7 @@ import { syncServerErrors } from '@/lib/syncServerErrors';
 import { useRecordsListQuery, useRecordByIdQuery } from '@/api/recordAPI';
 import { useRecordIDs } from '@/hooks/useRecordIDs';
 import { useNavigate, useParams } from 'react-router';
-import { createFormStore, type FormState, StoreContext } from './formStore';
+import { createFormStore, type FormState, StoreContext } from '@/store/formStore';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { TypedFetchBaseQueryError } from '@/api/baseQuery';
 import type { RecordForm } from '@/types/forms';

@@ -1,4 +1,3 @@
-// hooks/useRouteHandle.ts
 import { useMatches } from 'react-router';
 
 export interface RouteHandle {

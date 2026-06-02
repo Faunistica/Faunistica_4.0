@@ -1,8 +1,13 @@
-// Form types — Zod schema, form types, and defaults
-
 import { z } from 'zod';
-import { LAT_MIN, LAT_MAX, LNG_MIN, LNG_MAX, UNCERTAINTY_MIN, UNCERTAINTY_MAX } from './constants';
-import type { QuantityField } from './constants';
+import {
+    LAT_MIN,
+    LAT_MAX,
+    LNG_MIN,
+    LNG_MAX,
+    UNCERTAINTY_MIN,
+    UNCERTAINTY_MAX,
+} from '@/lib/constants';
+import type { QuantityField } from '@/lib/constants';
 
 export const recordFormSchema = z.object({
     // ═══ LOCATION ═══

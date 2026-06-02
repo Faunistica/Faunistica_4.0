@@ -13,7 +13,7 @@ import {
 } from '@/api/recordAPI';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useRecordIDs } from '@/hooks/useRecordIDs';
-import { type FormStore } from './formStore';
+import { type FormStore } from '@/store/formStore';
 
 export interface RecordFormActions {
     save: () => Promise<void>;

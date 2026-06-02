@@ -1,7 +1,7 @@
 import { Navigate, redirect, type LoaderFunctionArgs, type RouteObject } from 'react-router';
 import { store } from './store/store';
 import LoadingScreen from './components/LoadingScreen';
-import Layout from './layout/Layout';
+import Layout from './components/layout/Layout';
 import { NavigationWrapper } from './components/NavigationWrapper';
 
 const requireAuth = ({ request }: LoaderFunctionArgs) => {

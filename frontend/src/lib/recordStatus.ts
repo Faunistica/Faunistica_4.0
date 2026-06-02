@@ -1,4 +1,4 @@
-import { BLOCKING_FIELDS } from '@/types/constants';
+import { BLOCKING_FIELDS } from '@/lib/constants';
 import { toFormPartial } from '@/lib/recordUtils';
 import type { FieldErrors } from 'react-hook-form';
 import type { RecordForm } from '@/types/forms';

@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { useRecordForm } from '@/contexts/useRecordForm';
+import { useRecordForm } from '@/hooks/useRecordForm';
 import ArticleSourceCard from '@/components/form/parts/ArticleSourceCard';
 import GeographyCard from '@/components/form/parts/GeographyCard';
 import CollectionEventCard from '@/components/form/parts/CollectionEventCard';

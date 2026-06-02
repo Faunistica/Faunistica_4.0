@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Hash } from 'lucide-react';
-import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/types/constants';
+import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/lib/constants';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { RecordForm } from '@/types/forms';

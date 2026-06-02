@@ -11,7 +11,7 @@ import {
 import { motion, useScroll, useMotionValueEvent } from 'motion/react';
 import { Send, Trash2, Cloud, CloudOff, Check, Loader2, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useRecordForm } from '@/contexts/useRecordForm';
+import { useRecordForm } from '@/hooks/useRecordForm';
 import { cn } from '@/lib/utils';
 
 function formatTime(date: Date): string {

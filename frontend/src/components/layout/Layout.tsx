@@ -2,7 +2,7 @@ import { type FC, useState } from 'react';
 import { Outlet } from 'react-router';
 import { cn } from '@/lib/utils';
 import { useRouteHandle } from '@/hooks/useRouteMeta.ts';
-import Header from '@/layout/Header';
+import Header from '@/components/layout/Header';
 
 const Layout: FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);

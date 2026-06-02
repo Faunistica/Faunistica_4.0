@@ -11,7 +11,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useUploadExcelMutation, useDownloadRecordsMutation } from '@/api/recordAPI';
-import { getErrorMessage } from '@/utils/error';
+import { getErrorMessage } from '@/lib/error';
 import { cn } from '@/lib/utils';
 
 interface Props {

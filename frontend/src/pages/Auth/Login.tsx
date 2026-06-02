@@ -2,7 +2,7 @@ import { type FC } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Send } from 'lucide-react';
-import { getErrorMessage } from '@/utils/error';
+import { getErrorMessage } from '@/lib/error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

@@ -1,5 +1,5 @@
-import { useFormStore, type FormState } from './formStore';
-import { useRecordFormActions, type RecordFormActions } from './useRecordFormActions';
+import { useFormStore, type FormState } from '@/store/formStore';
+import { useRecordFormActions, type RecordFormActions } from '@/hooks/useRecordFormActions';
 import { useStore } from 'zustand';
 import { useShallow } from 'zustand/shallow';
 

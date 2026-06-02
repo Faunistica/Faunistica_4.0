@@ -2,7 +2,7 @@ import { type FC } from 'react';
 import { useOutletContext, useParams } from 'react-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RecordFormProvider } from '@/contexts/RecordFormProvider';
+import { RecordFormProvider } from '@/components/providers/RecordFormProvider';
 import { recordFormSchema, FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 import RecordFormContent from '@/components/form/RecordFormContent';
 import FormSidebar from '@/components/form/sidebar/FormSidebar';
@@ -10,7 +10,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useRecordForm } from '@/contexts/useRecordForm';
+import { useRecordForm } from '@/hooks/useRecordForm';
 
 interface OutletContextType {
     isSidebarOpen: boolean;

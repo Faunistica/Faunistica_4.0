@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { locationSummary, eventSummary } from './recordLabels';
-import type { RecordFull } from './api.dto';
+import type { RecordFull } from '@/types/api.dto';
 
 function makeRecord(overrides: Partial<RecordFull> = {}): RecordFull {
     return {

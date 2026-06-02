@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useRecordForm } from '@/contexts/useRecordForm';
+import { useRecordForm } from '@/hooks/useRecordForm';
 
 const ServerErrorDisplay: FC = () => {
     const { state: globalErrors } = useRecordForm((ctx) => ctx.state.globalErrors);

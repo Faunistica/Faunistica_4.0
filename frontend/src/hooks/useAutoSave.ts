@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { draftToRecordData } from '@/lib/recordUtils';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
-import type { FormStore } from '@/contexts/formStore';
+import type { FormStore } from '@/store/formStore';
 import type { RecordForm } from '@/types/forms';
 import { useUpdateRecordMutation } from '@/api/recordAPI';
 import type { UseFormWatch, UseFormGetValues } from 'react-hook-form';

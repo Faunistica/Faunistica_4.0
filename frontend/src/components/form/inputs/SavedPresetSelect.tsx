@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { History } from 'lucide-react';
 import type { RecordFull } from '@/types/api.dto';
 import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
-import { LOCATION_FIELDS, EVENT_FIELDS, locationSummary, eventSummary } from '@/types/recordLabels';
+import { LOCATION_FIELDS, EVENT_FIELDS, locationSummary, eventSummary } from '@/lib/recordLabels';
 import { recordAPI } from '@/api/recordAPI';
 import { useAppSelector } from '@/store/store';
 import {
