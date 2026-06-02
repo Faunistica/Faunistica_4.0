@@ -10,13 +10,11 @@ const ENABLE_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE;
 
 export const useAutoSave = ({
     store,
-    autoSaveDelay,
     getValues,
     publ_id,
     watch,
 }: {
     store: FormStore;
-    autoSaveDelay: number;
     publ_id: number;
     getValues: UseFormGetValues<RecordForm>;
     watch: UseFormWatch<RecordForm>;
@@ -29,7 +27,7 @@ export const useAutoSave = ({
 
         const currentValues = getValues();
         const currentSnapshot = JSON.stringify(currentValues);
-        if (currentSnapshot === store.getState()._snapshotRef) return;
+        if (currentSnapshot === store.getState().snapshot) return;
 
         store.setState({ status: { phase: 'saving', source: 'auto' } });
         try {
@@ -44,11 +42,11 @@ export const useAutoSave = ({
                 lastSavedTime: new Date(),
                 status: { phase: 'idle', submitted: false },
             });
-            store.setState({ _snapshotRef: currentSnapshot });
+            store.setState({ snapshot: currentSnapshot });
         } catch {
             store.setState({ status: { phase: 'idle', submitted: false } });
         }
-    }, autoSaveDelay);
+    }, store.getState().autoSaveDelay);
 
     useEffect(() => {
         if (!ENABLE_AUTO_SAVE) return () => {};

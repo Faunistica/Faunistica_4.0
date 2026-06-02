@@ -17,11 +17,12 @@ export interface FormState {
     hasErrors: boolean;
     isInitialLoading: boolean;
     // Internal optimization state - not part of reactive equality checks
-    _snapshotRef: string;
-    _pendingSync: boolean;
+    snapshot: string;
+    pendingSync: boolean;
+    autoSaveDelay: number;
 }
 
-export const getInitialState = (publ_id: number): FormState => ({
+export const getInitialState = (publ_id: number, autoSaveDelay: number): FormState => ({
     publ_id,
     activeRecordId: null,
     recordIds: [],
@@ -30,14 +31,15 @@ export const getInitialState = (publ_id: number): FormState => ({
     globalErrors: [],
     hasErrors: false,
     isInitialLoading: true,
-    _snapshotRef: '',
-    _pendingSync: false,
+    snapshot: '',
+    pendingSync: false,
+    autoSaveDelay,
 });
 
 export type FormStore = StoreApi<FormState>;
 
-export function createFormStore(publ_id: number): FormStore {
-    return createStore<FormState>(() => getInitialState(publ_id));
+export function createFormStore(publ_id: number, autoSaveDelay: number): FormStore {
+    return createStore<FormState>(() => getInitialState(publ_id, autoSaveDelay));
 }
 
 export const StoreContext = createContext<FormStore | null>(null);

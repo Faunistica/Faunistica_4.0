@@ -28,7 +28,7 @@ export function RecordFormProvider({
     const { record: recordParam } = useParams();
 
     const [initialRecordLoaded, setInitialRecordLoaded] = useState(false);
-    const [store] = useState(() => createFormStore(publ_id));
+    const [store] = useState(() => createFormStore(publ_id, autoSaveDelay));
 
     const { recordIds, isListLoading } = useRecordsListQuery(
         {
@@ -82,9 +82,9 @@ export function RecordFormProvider({
         };
 
         const currentSnapshot = JSON.stringify(toFormPartial(record));
-        if (currentSnapshot === store.getState()._snapshotRef) {
-            if (store.getState()._pendingSync) {
-                store.setState({ _pendingSync: false, ...newState });
+        if (currentSnapshot === store.getState().snapshot) {
+            if (store.getState().pendingSync) {
+                store.setState({ pendingSync: false, ...newState });
             }
             return;
         }
@@ -99,10 +99,10 @@ export function RecordFormProvider({
         const errorCount = record.errors?.length || 0;
         store.setState({ globalErrors: nonField, hasErrors: errorCount > 0 });
 
-        store.setState({ _snapshotRef: currentSnapshot });
+        store.setState({ snapshot: currentSnapshot });
 
-        if (store.getState()._pendingSync) {
-            store.setState({ _pendingSync: false, ...newState });
+        if (store.getState().pendingSync) {
+            store.setState({ pendingSync: false, ...newState });
         }
     });
 
@@ -110,6 +110,7 @@ export function RecordFormProvider({
         if (!activeRecord) return;
         onSync(activeRecord);
 
+        // oxlint-disable-next-line react-hooks-js/set-state-in-effect
         finishInit(activeRecord.id);
     }, [activeRecord]);
 

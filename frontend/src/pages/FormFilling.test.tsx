@@ -3,7 +3,7 @@ import { render, act, waitFor, renderHook } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useNavigate } from 'react-router';
 import { useForm, FormProvider, Controller, useFormContext } from 'react-hook-form';
 import { RecordFormProvider } from '@/contexts/RecordFormProvider';
-import type { RecordFormActions } from '@/contexts/RecordFormProvider';
+import type { RecordFormActions } from '@/contexts/useRecordFormActions';
 import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
