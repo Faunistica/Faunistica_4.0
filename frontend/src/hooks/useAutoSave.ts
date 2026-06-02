@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { draftToRecordData } from '@/lib/recordUtils';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
-import type { FormStore } from '@/contexts/recordFormStore';
+import type { FormStore } from '@/contexts/formStore';
 import type { RecordForm } from '@/types/forms';
 import { useUpdateRecordMutation } from '@/api/recordAPI';
-import type { UseFormWatch } from 'react-hook-form';
+import type { UseFormWatch, UseFormGetValues } from 'react-hook-form';
 
 const ENABLE_AUTO_SAVE = import.meta.env.VITE_DISABLE_AUTO_SAVE;
 
@@ -18,7 +18,7 @@ export const useAutoSave = ({
     store: FormStore;
     autoSaveDelay: number;
     publ_id: number;
-    getValues: () => RecordForm;
+    getValues: UseFormGetValues<RecordForm>;
     watch: UseFormWatch<RecordForm>;
 }): (() => void) => {
     const [updateRecord] = useUpdateRecordMutation();
@@ -29,7 +29,7 @@ export const useAutoSave = ({
 
         const currentValues = getValues();
         const currentSnapshot = JSON.stringify(currentValues);
-        if (currentSnapshot === store.getSnapshotRef()) return;
+        if (currentSnapshot === store.getState()._snapshotRef) return;
 
         store.setState({ status: { phase: 'saving', source: 'auto' } });
         try {
@@ -44,7 +44,7 @@ export const useAutoSave = ({
                 lastSavedTime: new Date(),
                 status: { phase: 'idle', submitted: false },
             });
-            store.setSnapshotRef(currentSnapshot);
+            store.setState({ _snapshotRef: currentSnapshot });
         } catch {
             store.setState({ status: { phase: 'idle', submitted: false } });
         }
