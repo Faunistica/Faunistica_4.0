@@ -1,0 +1,6 @@
+api
+bot
+core
+repository
+schema
+service

@@ -18,7 +18,7 @@ lint:
 	uv run ty check src/ alembic/ tests/ scripts/
 
 check-schema:
-	uv run scripts/check_schema.py
+	uv run python -m scripts.check_schema
 
 migrate:
 	uv run alembic upgrade head

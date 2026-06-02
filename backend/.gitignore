@@ -4,7 +4,6 @@
 pyvenv.cfg
 
 __pycache__
-*.egg-info
 
 .coverage
 htmlcov
@@ -12,5 +11,5 @@ htmlcov
 .env
 
 logs
-NOTES/
+NOTES
 *xlsx*

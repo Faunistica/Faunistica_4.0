@@ -64,13 +64,21 @@ async def get_code(message: Message, bot: Bot) -> None:
                     disable_web_page_preview=True,
                 )
 
-            password = await user_service.generate_password(message.from_user.id)
+            should_reset_password = user.hash is None
+            if user.hash_date is not None:
+                now = datetime.now()
+                minutes_since_hash = (now - user.hash_date).total_seconds() / 60
+                if minutes_since_hash > settings.PASSWORD_EXPIRE_MINUTES:
+                    should_reset_password = True
 
-            await message.answer(
-                Messages.new_password(password, user.name),
-                parse_mode="Markdown",
-                disable_web_page_preview=True,
-            )
+            if should_reset_password:
+                password = await user_service.generate_password(message.from_user.id)
+
+                await message.answer(
+                    Messages.new_password(password, user.name),
+                    parse_mode="Markdown",
+                    disable_web_page_preview=True,
+                )
 
         await user_service.set_state(message.from_user.id, UserState.REG_COMPLETED)
         await action_service.log_bot_auth(
