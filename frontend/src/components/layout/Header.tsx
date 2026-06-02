@@ -1,21 +1,52 @@
-import React, { type FC, useState } from 'react';
+import { type FC, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, PanelLeft } from 'lucide-react';
-import { Link } from 'react-router';
+import { Menu, X, PanelLeft, Globe, LogOut, Settings as SettingsIcon, Check } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
 import { useRouteHandle } from '@/hooks/useRouteMeta';
+import { useAppSelector } from '@/store/store';
+import { useLogoutMutation } from '@/api/authAPI';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface HeaderProps {
     isSidebarEnabled?: boolean;
     setSidebarOpen?: (isOpen: boolean) => void;
 }
 
-const Header: FC<HeaderProps> = React.memo(({ isSidebarEnabled, setSidebarOpen }) => {
+const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { isLanding, isNavigateEnabled = true } = useRouteHandle();
 
-    const { isLanding, isNavigateEnabled } = useRouteHandle();
+    const { username, auth } = useAppSelector((state) => state.user);
+    const [logout] = useLogoutMutation();
+    const navigate = useNavigate();
+
+    const [language, setLanguage] = useState(localStorage.getItem('language') || 'ru');
+
+    const handleLanguageChange = (lang: string) => {
+        setLanguage(lang);
+        localStorage.setItem('language', lang);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logout().unwrap();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            void navigate('/');
+        }
+    };
 
     return (
-        <header className="sticky top-0 z-200 w-full overflow-x-clip border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+        <header className="sticky top-0 z-100 w-full overflow-x-clip border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
             <div className="relative flex h-16 items-center justify-between px-4 md:px-8">
                 <div className="flex items-center gap-4">
                     {isSidebarEnabled && setSidebarOpen && (
@@ -39,7 +70,7 @@ const Header: FC<HeaderProps> = React.memo(({ isSidebarEnabled, setSidebarOpen }
                             {isMobileMenuOpen ? (
                                 <X className="size-5" />
                             ) : (
-                                <Menu className="size-5" />
+                                <Menu className="h-5 w-5" />
                             )}
                         </Button>
                     )}
@@ -73,8 +104,14 @@ const Header: FC<HeaderProps> = React.memo(({ isSidebarEnabled, setSidebarOpen }
                                     >
                                         Научная база
                                     </a>
+                                    <Link
+                                        to="/instructions"
+                                        className="transition-colors hover:text-slate-900"
+                                    >
+                                        Инструкция
+                                    </Link>
                                 </>
-                            ) : (
+                            ) : auth ? (
                                 <>
                                     <Link
                                         to="/dashboard"
@@ -101,10 +138,51 @@ const Header: FC<HeaderProps> = React.memo(({ isSidebarEnabled, setSidebarOpen }
                                         Поддержка
                                     </Link>
                                 </>
+                            ) : (
+                                <>
+                                    <Link to="/" className="transition-colors hover:text-slate-900">
+                                        На главную
+                                    </Link>
+                                    <Link
+                                        to="/instructions"
+                                        className="transition-colors hover:text-slate-900"
+                                    >
+                                        Инструкция
+                                    </Link>
+                                </>
                             )}
                         </nav>
                         <div className="flex items-center gap-3">
-                            {isLanding ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-9 w-9 rounded-full"
+                                    >
+                                        <Globe className="h-5 w-5 text-slate-600" />
+                                        <span className="sr-only">Сменить язык</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="z-[150]">
+                                    <DropdownMenuItem
+                                        onClick={() => handleLanguageChange('ru')}
+                                        className="cursor-pointer justify-between"
+                                    >
+                                        Русский
+                                        {language === 'ru' && <Check className="ml-4 h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => handleLanguageChange('en')}
+                                        className="cursor-pointer justify-between"
+                                    >
+                                        English
+                                        {language === 'en' && <Check className="ml-4 h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            {!auth ? (
                                 <Button
                                     asChild
                                     variant="default"
@@ -113,9 +191,57 @@ const Header: FC<HeaderProps> = React.memo(({ isSidebarEnabled, setSidebarOpen }
                                     <Link to="/auth/login">Личный кабинет</Link>
                                 </Button>
                             ) : (
-                                <div className="flex size-9 cursor-pointer items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white shadow-sm transition-transform hover:scale-105 hover:bg-slate-800">
-                                    Yu
-                                </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            className="relative h-9 w-9 overflow-hidden rounded-full p-0 transition-transform hover:scale-105"
+                                        >
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarFallback className="bg-slate-900 text-xs font-bold text-white">
+                                                    {username
+                                                        ? username.substring(0, 2).toUpperCase()
+                                                        : 'US'}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="z-[150] w-56">
+                                        <DropdownMenuLabel className="font-normal">
+                                            <div className="flex flex-col space-y-1">
+                                                <p className="text-sm leading-none font-medium text-slate-900">
+                                                    {username || 'Пользователь'}
+                                                </p>
+                                                <p className="text-xs leading-none text-slate-500">
+                                                    Волонтёр
+                                                </p>
+                                            </div>
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onClick={() => navigate('/settings')}
+                                            className="cursor-pointer"
+                                        >
+                                            <SettingsIcon className="mr-2 h-4 w-4" />
+                                            <span>Настройки</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onClick={handleLogout}
+                                            className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+                                        >
+                                            <LogOut className="mr-2 h-4 w-4" />
+                                            <span>Выйти</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={handleLogout}
+                                            className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+                                        >
+                                            <LogOut className="mr-2 h-4 w-4" />
+                                            <span>Выйти везде</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             )}
                         </div>
                     </>
@@ -148,8 +274,15 @@ const Header: FC<HeaderProps> = React.memo(({ isSidebarEnabled, setSidebarOpen }
                                 >
                                     Научная база
                                 </a>
+                                <Link
+                                    to="/instructions"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Инструкция
+                                </Link>
                             </>
-                        ) : (
+                        ) : auth ? (
                             <>
                                 <Link
                                     to="/dashboard"
@@ -180,12 +313,29 @@ const Header: FC<HeaderProps> = React.memo(({ isSidebarEnabled, setSidebarOpen }
                                     Поддержка
                                 </Link>
                             </>
+                        ) : (
+                            <>
+                                <Link
+                                    to="/"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    На главную
+                                </Link>
+                                <Link
+                                    to="/instructions"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Инструкция
+                                </Link>
+                            </>
                         )}
                     </nav>
                 </div>
             )}
         </header>
     );
-});
+};
 
 export default Header;

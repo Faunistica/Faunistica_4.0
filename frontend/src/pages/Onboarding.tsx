@@ -150,7 +150,7 @@ export default function Onboarding() {
                                 <Textarea
                                     id="preferences"
                                     placeholder="Например: предпочтительно семейство Lycosidae, публикации на английском языке, Южный Урал..."
-                                    className="min-h-[150px] resize-y"
+                                    className="min-h-37.5 resize-y"
                                 />
                             </div>
                         </div>
