@@ -22,7 +22,7 @@ jobs:
             display: check-format
           - task: lint
             display: check-lint
-          - task: knip
+          - task: knip:dependencies
             display: check-knip
           - task: test
             display: check-test
