@@ -12,6 +12,7 @@ import {
     useDeleteRecordMutation,
 } from '@/api/recordAPI';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useRecordIDs } from '@/hooks/useRecordIDs';
 import { type FormStore } from './formStore';
 
 export interface RecordFormActions {
@@ -30,6 +31,7 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
     const [deleteRecord] = useDeleteRecordMutation();
 
     const publ_id = store.getState().publ_id;
+    const recordIds = useRecordIDs(publ_id);
     const cancelAutoSave = useAutoSave({ store, publ_id, ...methods });
 
     const performSave = useCallback(
@@ -144,7 +146,7 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
 
             let nextId: string | null = null;
             if (isActive) {
-                const remaining = state.recordIds.filter((rid) => rid !== id);
+                const remaining = recordIds.filter((rid) => rid !== id);
                 nextId = remaining[0] ?? null;
             }
 
@@ -160,7 +162,7 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
                 toast.error('Ошибка при удалении записи');
             }
         },
-        [publ_id, deleteRecord, navigate, store],
+        [publ_id, deleteRecord, navigate, store, recordIds],
     );
 
     return useMemo(

@@ -624,28 +624,6 @@ describe('RecordFormProvider', () => {
     });
 
     describe('computed booleans', () => {
-        it('hasRecords is true when recordIds has items', () => {
-            setQueryResult(null, undefined);
-            setQueryResult('rec-1', RECORD_1);
-            render(
-                <TestHarness>
-                    <StateDisplay />
-                </TestHarness>,
-            );
-            expect(testState!.hasRecords).toBe(true);
-        });
-
-        it('hasRecords is false when recordIds is empty', () => {
-            mockRecordsListQuery.mockReturnValue({ isLoading: false, recordIds: [] });
-            setQueryResult(null, undefined);
-            render(
-                <TestHarness>
-                    <StateDisplay />
-                </TestHarness>,
-            );
-            expect(testState!.hasRecords).toBe(false);
-        });
-
         it('isSaving is false after initial sync', () => {
             setQueryResult(null, undefined);
             setQueryResult('rec-1', RECORD_1);

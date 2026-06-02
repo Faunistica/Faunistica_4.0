@@ -7,7 +7,6 @@ export type RecordFormState = Omit<FormState, 'snapshot' | 'pendingSync'> & {
     isSaving: boolean;
     isAutoSaving: boolean;
     isBusy: boolean;
-    hasRecords: boolean;
 };
 
 function computeFormState(s: FormState): RecordFormState {
@@ -15,7 +14,6 @@ function computeFormState(s: FormState): RecordFormState {
     return {
         publ_id: s.publ_id,
         activeRecordId: s.activeRecordId,
-        recordIds: s.recordIds,
         status: s.status,
         lastSavedTime: s.lastSavedTime,
         globalErrors: s.globalErrors,
@@ -24,7 +22,6 @@ function computeFormState(s: FormState): RecordFormState {
         isSaving,
         isAutoSaving: isSaving && 'source' in s.status && s.status.source === 'auto',
         isBusy: isSaving || s.status.phase === 'syncing',
-        hasRecords: s.recordIds.length > 0,
         autoSaveDelay: s.autoSaveDelay,
     };
 }

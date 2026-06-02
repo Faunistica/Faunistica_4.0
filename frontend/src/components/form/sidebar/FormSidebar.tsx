@@ -14,14 +14,16 @@ import {
 } from '@/components/ui/sidebar';
 import ExcelUploadModal from '@/components/form/inputs/ExcelUploadModal';
 import { useRecordForm } from '@/contexts/useRecordForm';
+import { useRecordIDs } from '@/hooks/useRecordIDs';
 import { SidebarRecordItem } from './FormSidebarItem';
 import { Link } from 'react-router';
 
 const FormSidebar: FC = () => {
     const {
-        state: { publ_id, recordIds, activeRecordId },
+        state: { publ_id, activeRecordId },
         actions: { create },
     } = useRecordForm();
+    const recordIds = useRecordIDs(publ_id);
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 

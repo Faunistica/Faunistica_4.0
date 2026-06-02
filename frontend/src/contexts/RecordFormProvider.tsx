@@ -3,7 +3,8 @@ import { useFormContext } from 'react-hook-form';
 import type { RecordFull } from '@/types/api.dto';
 import { toFormPartial } from '@/lib/recordUtils';
 import { syncServerErrors } from '@/lib/syncServerErrors';
-import { useRecordsListQuery, useRecordByIdQuery, selectRecordIds } from '@/api/recordAPI';
+import { useRecordsListQuery, useRecordByIdQuery } from '@/api/recordAPI';
+import { useRecordIDs } from '@/hooks/useRecordIDs';
 import { useNavigate, useParams } from 'react-router';
 import { createFormStore, type FormState, StoreContext } from './formStore';
 import type { SerializedError } from '@reduxjs/toolkit';
@@ -30,17 +31,10 @@ export function RecordFormProvider({
     const [initialRecordLoaded, setInitialRecordLoaded] = useState(false);
     const [store] = useState(() => createFormStore(publ_id, autoSaveDelay));
 
-    const { recordIds, isListLoading } = useRecordsListQuery(
-        {
-            publ_id,
-            pivot_record_id: recordParam && !initialRecordLoaded ? recordParam : undefined,
-        },
-        {
-            selectFromResult: ({ data, isLoading }) => ({
-                recordIds: selectRecordIds({ data }),
-                isListLoading: isLoading,
-            }),
-        },
+    const recordIds = useRecordIDs(publ_id);
+    const { isLoading: isListLoading } = useRecordsListQuery(
+        { publ_id },
+        { selectFromResult: ({ isLoading }) => ({ isLoading }) },
     );
 
     const activeRecordId = recordParam ?? recordIds[0] ?? null;
@@ -64,8 +58,8 @@ export function RecordFormProvider({
     const isInitialLoading = isListLoading || (activeRecordId !== null && !initialRecordLoaded);
 
     useEffect(() => {
-        store.setState({ activeRecordId, isInitialLoading, recordIds });
-    }, [activeRecordId, isInitialLoading, recordIds, store]);
+        store.setState({ activeRecordId, isInitialLoading });
+    }, [activeRecordId, isInitialLoading, store]);
 
     const finishInit = useEffectEvent((recordId: string) => {
         if (initialRecordLoaded) return;

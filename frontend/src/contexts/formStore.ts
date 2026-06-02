@@ -10,7 +10,6 @@ export type RecordFormPhase =
 export interface FormState {
     publ_id: number;
     activeRecordId: string | null;
-    recordIds: string[];
     status: RecordFormPhase;
     lastSavedTime: Date | null;
     globalErrors: string[];
@@ -25,7 +24,6 @@ export interface FormState {
 export const getInitialState = (publ_id: number, autoSaveDelay: number): FormState => ({
     publ_id,
     activeRecordId: null,
-    recordIds: [],
     status: { phase: 'idle', submitted: false },
     lastSavedTime: null,
     globalErrors: [],

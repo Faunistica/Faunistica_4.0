@@ -151,7 +151,7 @@ export const recordAPI = createApi({
     }),
 });
 
-export const selectRecordIds = createSelector(
+export const selectRecordIDs = createSelector(
     [(result: { data?: Types.PaginatedResponse<Types.RecordFull> }) => result.data],
     (data) => data?.items?.map((r) => r.id) ?? [],
     {
