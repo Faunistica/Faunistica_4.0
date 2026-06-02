@@ -29,8 +29,8 @@ export const SidebarRecordItem = ({
 }) => {
     const { isMobile, setOpenMobile } = useSidebar();
     const {
+        state: { publ_id },
         actions: { onNavigate, deleteRecord },
-        publ_id,
     } = useRecordForm();
 
     const { status, recordName, recordLocation } = useRecordByIdQuery(

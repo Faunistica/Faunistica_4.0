@@ -32,27 +32,23 @@ function computeFormState(s: FormState): RecordFormState {
 export function useRecordForm(): {
     state: RecordFormState;
     actions: RecordFormActions;
-    publ_id: number;
 };
 export function useRecordForm<T>(selector: (ctx: { state: RecordFormState }) => T): {
     state: T;
     actions: RecordFormActions;
-    publ_id: number;
 };
 export function useRecordForm<T>(selector?: (ctx: { state: RecordFormState }) => T): {
     state: RecordFormState | T;
     actions: RecordFormActions;
-    publ_id: number;
 } {
     const store = useFormStore();
     const actions = useRecordFormActions(store);
 
     const state = useStore(store, useShallow(computeFormState));
-    const publ_id = useStore(store, (data) => data.publ_id);
 
     if (selector) {
-        return { state: selector({ state }), actions, publ_id };
+        return { state: selector({ state }), actions };
     }
 
-    return { state, actions, publ_id };
+    return { state, actions };
 }

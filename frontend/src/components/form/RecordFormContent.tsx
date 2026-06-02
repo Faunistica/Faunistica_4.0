@@ -11,8 +11,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 
 const RecordFormContent: FC = () => {
     const {
-        state: { activeRecordId },
-        publ_id,
+        state: { publ_id, activeRecordId },
     } = useRecordForm();
 
     if (!activeRecordId) {

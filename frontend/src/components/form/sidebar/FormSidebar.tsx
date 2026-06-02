@@ -19,9 +19,8 @@ import { Link } from 'react-router';
 
 const FormSidebar: FC = () => {
     const {
-        state: { recordIds, activeRecordId },
+        state: { publ_id, recordIds, activeRecordId },
         actions: { create },
-        publ_id,
     } = useRecordForm();
     const { setOpenMobile } = useSidebar();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
