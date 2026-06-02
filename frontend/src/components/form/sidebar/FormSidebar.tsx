@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText, X, FileSpreadsheet, LogOut } from 'lucide-react';
 import {
@@ -25,7 +25,14 @@ const FormSidebar: FC = () => {
     } = useRecordForm();
     const recordIds = useRecordIDs(publ_id);
     const { setOpenMobile } = useSidebar();
+    const scrollRef = useRef<HTMLDivElement>(null);
     const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+    useEffect(() => {
+        if (!activeRecordId || !scrollRef.current) return;
+        const el = scrollRef.current.querySelector('a[aria-current="page"]');
+        el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, [activeRecordId, recordIds]);
 
     return (
         <>
@@ -58,7 +65,7 @@ const FormSidebar: FC = () => {
                     </div>
                 </SidebarHeader>
 
-                <SidebarContent>
+                <SidebarContent ref={scrollRef}>
                     <div className="space-y-2 p-4 pb-0">
                         <Button
                             type="button"
