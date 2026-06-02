@@ -149,7 +149,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Подробнее о проекте</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+                        <CardContent className="prose prose-sm max-w-none md:prose-base dark:prose-invert">
                             <p>
                                 <strong>
                                     Наш проект направлен на оцифровку данных о биоразнообразии
@@ -174,7 +174,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Начало работы</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Ваша текущая публикация - научная работа, из которой мы будем
                                 извлекать данные. По клику на названии мы можем получить полный
@@ -245,7 +245,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Административное расположение</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 В блок <strong>Административное расположение</strong> вносится вся
                                 информация о месте находки с точки зрения административного деления
@@ -360,7 +360,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Географическое расположение</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Находим в статье координаты находки конкретного паука и вносим их в
                                 том формате, который приведен в публикации.
@@ -424,7 +424,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Сбор материала</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Здесь вводим даты сбора материала - конкретный день / месяц / год
                                 или их интервал - зависит от публикации. Если нужно ввести интервал,
@@ -489,7 +489,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Таксономия</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Здесь записываем латинские названия семейства, рода и вида пауков.
                             </p>
@@ -535,7 +535,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Количество</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Данные о количестве пауков вносим с учетом их пола и возраста.
                                 Вместо слов самка или самец используются символы:
@@ -617,7 +617,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Проверка и запись внесенных данных</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Когда все поля формы заполнены, мы можем убедиться, что ничего не
                                 пропустили, для этого нажимаем <strong>Проверить</strong>. Если
@@ -639,7 +639,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Дополнительные возможности</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <h4 className="mt-0 mb-2 text-lg font-semibold text-foreground">
                                 Замочки
                             </h4>
@@ -685,7 +685,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Завершение работы с публикацией</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Когда вы посчитаете, что взяли из публикации все данные, которые
                                 могли, нажмите кнопку{' '}

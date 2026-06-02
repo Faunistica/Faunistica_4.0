@@ -4,11 +4,17 @@ export interface RouteHandle {
     isLanding?: boolean;
     isNavigateEnabled?: boolean;
     isSidebarEnabled?: boolean;
+    isFullWidth?: boolean;
 }
 
 function isRouteHandle(value: unknown): value is RouteHandle {
     if (typeof value !== 'object' || value === null) return false;
-    if ('isLanding' in value || 'isNavigateEnabled' in value || 'isSidebarEnabled' in value) {
+    if (
+        'isLanding' in value ||
+        'isNavigateEnabled' in value ||
+        'isSidebarEnabled' in value ||
+        'isFullWidth' in value
+    ) {
         return true;
     }
     return false;
