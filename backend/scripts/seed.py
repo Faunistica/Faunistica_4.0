@@ -74,6 +74,103 @@ def build_record(i: int, data: dict) -> EventRecord:
     return EventRecord(**flat, **metadata.model_dump())
 
 
+PUBL_DATA: list[dict] = [
+    {
+        "publ_id": 1,
+        "type": "A",
+        "author": "Сидоров И.И.",
+        "year": 2000,
+        "name": "Сидоров о паукообразных",
+        "external": "Альтернативное название",
+        "language": "rus",
+        "resume": "eng",
+        "ural": True,
+        "coords": True,
+        "occs": True,
+        "spec": True,
+        "pdf_file": "sidorov.pdf",
+    },
+    {
+        "publ_id": 2,
+        "type": "B",
+        "author": "Петров П.П.",
+        "year": 2015,
+        "name": "Фауна Урала: жесткокрылые",
+        "external": None,
+        "language": "rus",
+        "resume": None,
+        "ural": True,
+        "coords": True,
+        "occs": False,
+        "spec": True,
+        "pdf_file": "petrov.pdf",
+    },
+    {
+        "publ_id": 3,
+        "type": "A",
+        "author": "Иванов И.И.",
+        "year": 2020,
+        "name": "Насекомые Южного Урала",
+        "external": None,
+        "language": "rus",
+        "resume": None,
+        "ural": True,
+        "coords": True,
+        "occs": True,
+        "spec": False,
+        "pdf_file": "ivanov.pdf",
+    },
+]
+
+PASSWORDS = ["dev", "test"]
+
+USER_DATA: list[dict] = [
+    {
+        "user_id": 0,
+        "name": "DEV",
+        "tlg_username": "dev_user",
+        "tlg_name": "Dev User",
+        "reg_stat": 1,
+        "age": 30,
+        "lng": "rus",
+        "rating": 5,
+        "items": "2|3",
+        "reg_run": SEED_DT,
+        "reg_end": SEED_DT,
+        "sex": "M",
+        "email": "dev@example.com",
+        "region": "Екатеринбург",
+        "comm": "Основной тестовый пользователь",
+    },
+    {
+        "user_id": 1,
+        "name": "TEST",
+        "tlg_username": "test_user",
+        "tlg_name": "Test User",
+        "reg_stat": 1,
+        "age": 25,
+        "lng": "eng",
+        "rating": 3,
+        "items": "1",
+        "reg_run": SEED_DT,
+        "reg_end": SEED_DT,
+        "sex": "F",
+        "email": "test@example.com",
+        "region": "Москва",
+        "comm": "Второй тестовый пользователь",
+    },
+]
+
+
+def build_user(data: dict, password: str, dev_tg_id: int = 1) -> dict:
+    user = {**data}
+    if user.get("user_id") is None or user["user_id"] == 0:
+        user["user_id"] = dev_tg_id
+    user["hash"] = get_password_hash(password)
+    user["hash_date"] = datetime.now()
+    return user
+
+
 RECORDS_DATA: list[dict] = [
     # User DEV_TG, Publication 2 — Carabidae
     {
@@ -327,55 +424,7 @@ async def seed() -> None:
                 data["user_id"] = dev_tg_id
 
         # Publications
-        publ_data = [
-            {
-                "publ_id": 1,
-                "type": "A",
-                "author": "Сидоров И.И.",
-                "year": 2000,
-                "name": "Сидоров о паукообразных",
-                "external": "Альтернативное название",
-                "language": "rus",
-                "resume": "eng",
-                "ural": True,
-                "coords": True,
-                "occs": True,
-                "spec": True,
-                "pdf_file": "sidorov.pdf",
-            },
-            {
-                "publ_id": 2,
-                "type": "B",
-                "author": "Петров П.П.",
-                "year": 2015,
-                "name": "Фауна Урала: жесткокрылые",
-                "external": None,
-                "language": "rus",
-                "resume": None,
-                "ural": True,
-                "coords": True,
-                "occs": False,
-                "spec": True,
-                "pdf_file": "petrov.pdf",
-            },
-            {
-                "publ_id": 3,
-                "type": "A",
-                "author": "Иванов И.И.",
-                "year": 2020,
-                "name": "Насекомые Южного Урала",
-                "external": None,
-                "language": "rus",
-                "resume": None,
-                "ural": True,
-                "coords": True,
-                "occs": True,
-                "spec": False,
-                "pdf_file": "ivanov.pdf",
-            },
-        ]
-
-        for p in publ_data:
+        for p in PUBL_DATA:
             stmt = (
                 insert(Publication)
                 .values(**p)
@@ -385,61 +434,19 @@ async def seed() -> None:
         logger.info("Publications inserted")
 
         # Users
-        passwords = ["dev", "test"]
-
-        user_data = [
-            {
-                "user_id": dev_tg_id,
-                "name": "DEV",
-                "tlg_username": "dev_user",
-                "tlg_name": "Dev User",
-                "hash": get_password_hash(passwords[0]),
-                "hash_date": datetime.now(),
-                "reg_stat": 1,
-                "age": 30,
-                "lng": "ru",
-                "rating": 5,
-                "items": "2|3",
-                "reg_run": SEED_DT,
-                "reg_end": SEED_DT,
-                "sex": "M",
-                "email": "dev@example.com",
-                "region": "Екатеринбург",
-                "comm": "Основной тестовый пользователь",
-            },
-            {
-                "user_id": 1,
-                "name": "TEST",
-                "tlg_username": "test_user",
-                "tlg_name": "Test User",
-                "hash": get_password_hash(passwords[1]),
-                "hash_date": datetime.now(),
-                "reg_stat": 1,
-                "age": 25,
-                "lng": "en",
-                "rating": 3,
-                "items": "1",
-                "reg_run": SEED_DT,
-                "reg_end": SEED_DT,
-                "sex": "F",
-                "email": "test@example.com",
-                "region": "Москва",
-                "comm": "Второй тестовый пользователь",
-            },
-        ]
-
-        for i, u in enumerate(user_data):
+        for i, u in enumerate(USER_DATA):
+            user_dict = build_user(u, PASSWORDS[i], dev_tg_id=dev_tg_id)
             stmt = (
                 insert(User)
-                .values(**u)
+                .values(**user_dict)
                 .on_conflict_do_nothing(index_elements=["user_id"])
             )
             await session.execute(stmt)
             logger.info(
                 "User inserted: name: %s; password: %s; publications: %s",
-                u["name"],
-                passwords[i],
-                u["items"],
+                user_dict["name"],
+                PASSWORDS[i],
+                user_dict["items"],
             )
 
         # Check if records already exist
