@@ -1,5 +1,4 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { createSelector } from '@reduxjs/toolkit';
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
 
@@ -150,17 +149,6 @@ export const recordAPI = createApi({
         }),
     }),
 });
-
-export const selectRecordIDs = createSelector(
-    [(result: { data?: Types.PaginatedResponse<Types.RecordFull> }) => result.data],
-    (data) => data?.items?.map((r) => r.id) ?? [],
-    {
-        memoizeOptions: {
-            resultEqualityCheck: (a: string[], b: string[]) =>
-                a.length === b.length && a.every((id, i) => id === b[i]),
-        },
-    },
-);
 
 export const {
     useRecordsListQuery,

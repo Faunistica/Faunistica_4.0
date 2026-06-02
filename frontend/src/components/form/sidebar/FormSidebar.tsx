@@ -21,7 +21,7 @@ import { Link } from 'react-router';
 const FormSidebar: FC = () => {
     const {
         state: { publ_id, activeRecordId },
-        actions: { create },
+        actions: { create, onNavigate, deleteRecord },
     } = useRecordForm();
     const recordIds = useRecordIDs(publ_id);
     const { setOpenMobile } = useSidebar();
@@ -90,8 +90,11 @@ const FormSidebar: FC = () => {
                                 {recordIds.map((id) => (
                                     <SidebarRecordItem
                                         key={id}
+                                        publ_id={publ_id}
                                         record_id={id}
                                         isActive={id === activeRecordId}
+                                        onNavigate={onNavigate}
+                                        deleteRecord={deleteRecord}
                                     />
                                 ))}
                             </SidebarMenu>

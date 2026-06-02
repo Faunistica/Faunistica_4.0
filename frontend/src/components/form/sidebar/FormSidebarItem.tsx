@@ -14,36 +14,42 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { createSelector } from '@reduxjs/toolkit';
+import type { RecordFull } from '@/types/domain';
 import { useRecordByIdQuery } from '@/api/recordAPI';
 import { computeRecordStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/form/sidebar/RecordStatusIndicator';
-import { useRecordForm } from '@/contexts/useRecordForm';
 import { useCallback } from 'react';
 
+const selectSidebarRecordItem = createSelector(
+    [(result: { data?: RecordFull }) => result.data],
+    (record) => ({
+        status: record ? computeRecordStatus(record) : 'empty',
+        recordName: capitalizeFirstLetter(
+            record?.species || record?.genus || record?.family || 'Новая запись',
+        ),
+        recordLocation: record?.locality || record?.region || 'Нет данных о месте',
+    }),
+);
+
 export const SidebarRecordItem = ({
+    publ_id,
     record_id,
     isActive,
+    onNavigate,
+    deleteRecord,
 }: {
+    publ_id: number;
     record_id: string;
     isActive: boolean;
+    onNavigate: (targetID: string) => void;
+    deleteRecord: (id: string) => Promise<void>;
 }) => {
     const { isMobile, setOpenMobile } = useSidebar();
-    const {
-        state: { publ_id },
-        actions: { onNavigate, deleteRecord },
-    } = useRecordForm();
 
     const { status, recordName, recordLocation } = useRecordByIdQuery(
         { record_id },
-        {
-            selectFromResult: ({ data: record }) => ({
-                status: record ? computeRecordStatus(record) : 'empty',
-                recordName: capitalizeFirstLetter(
-                    record?.species || record?.genus || record?.family || 'Новая запись',
-                ),
-                recordLocation: record?.locality || record?.region || 'Нет данных о месте',
-            }),
-        },
+        { selectFromResult: selectSidebarRecordItem },
     );
 
     const handleClick = useCallback(() => {
