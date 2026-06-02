@@ -36,8 +36,8 @@ class Messages:
 
     @staticmethod
     def already_registered(first_name: str | None) -> str:
-        if first_name is None:
-            f"Вы уже зарегистрированы под именем {first_name}!"
+        if first_name is not None:
+            return f"Вы уже зарегистрированы под именем {first_name}!"
         return "Вы уже зарегистрированы!"
 
     @staticmethod
@@ -48,13 +48,6 @@ class Messages:
             "как-будто кто-то обнулил 😅\n\n"
             "Чтобы я снова вспомнил вас, попрошу пройти регистрацию снова. "
             "Начнем прямо сейчас!"
-        )
-
-    @staticmethod
-    def started_registered() -> str:
-        return (
-            "Я так и не познакомился с вами 😭. "
-            "Вернитесь к процессу регистрации с помощью команды /register"
         )
 
     @staticmethod
@@ -84,13 +77,6 @@ class Messages:
         return (
             "Ой-ой... кто-то уже выбрал такое имя 🥺\n\n"
             "Попробуйте добавить фамилию, цифру или любимое животное."
-        )
-
-    @staticmethod
-    def no_publication() -> str:
-        return (
-            "К сожалению, публикаций для выбранного языка пока нет. "
-            "Я уже созваниваюсь с разработчиками, чтобы это исправить 🥺"
         )
 
     @staticmethod
@@ -161,39 +147,7 @@ class Messages:
             f"```{temp}```"
         )
 
-    # ========== NEXT PUBLICATION MESSAGE ========== #
-    @staticmethod
-    def not_finished_publ(name: str | None) -> str:
-        first = (
-            f"Простите, {name}, боюсь вы ещё не закончили с текущей публикацией ☹️\n"
-            if name
-            else "Простите, боюсь вы ещё не закончили с текущей публикацией ☹️\n"
-        )
-        return first + (
-            "Как только закончите с ней, возвращайтесь ко мне!\n\n"
-            "Если вы считаете, что произошла ошибка, напишите в поддержку /support, "
-            "указав название текущей статьи."
-        )
-
-    @staticmethod
-    def accept_next_publ() -> str:
-        return (
-            "Уже приготовил для вас новую публикацию! 😋\n\n"
-            "Скорее знакомьтесь с ней с помощью /auth"
-        )
-
-    @staticmethod
-    def not_authorization() -> str:
-        return "Для начала вызовите /auth, а потом возвращайтесь. Жду с нетерпением! 🥹"
-
     # ========== RENAME MESSAGE ========== #
-
-    @staticmethod
-    def rename_prompt() -> str:
-        return (
-            "Понял, вы хотите изменить имя, указанное при регистрации. "
-            "Введите новый вариант, пожалуйста.\n👇👇👇 "
-        )
 
     @staticmethod
     def rename_success(name: str) -> str:
@@ -291,14 +245,6 @@ class Messages:
     # ========== SOCIOLOGY MESSAGE ========== #
 
     @staticmethod
-    def any_question(missing_fields: list[str]) -> str:
-        return f"Для вас имеется вопросов: <b>{len(missing_fields)}</b>"
-
-    @staticmethod
-    def go_back_to_sociology() -> str:
-        return "Вернуться к ответам на вопросы вы можете по команде /sociology"
-
-    @staticmethod
     def not_email() -> str:
         return "Вы уверены, что это email? Я вот не очень 🙃"
 
@@ -358,23 +304,8 @@ class Messages:
         return "Возраст учтен, спасибо!"
 
     @staticmethod
-    def region_accepted() -> str:
-        return "Ваш регион учтен, спасибо!"
-
-    @staticmethod
-    def email_accepted() -> str:
-        return "Теперь знаю кому писать смски (шучу), спасибо!"
-
-    @staticmethod
     def publication_preferences_accepted(preferences: str) -> str:
         return f"Вы указали следующие пожелания: {preferences}"
-
-    @staticmethod
-    def language_selection_accepted() -> str:
-        return (
-            "Спасибо за ответ!\n"
-            "Все следующие публикации будут выданы с учетом вашего выбора"
-        )
 
     @staticmethod
     def sociology_question(question_num: int) -> str:
@@ -523,18 +454,6 @@ class Messages:
     @staticmethod
     def no_access_to_command() -> str:
         return "Простите, не могу позволить вам воспользоваться данной командой 😔"
-
-    @staticmethod
-    def started_unidentified_action() -> str:
-        return (
-            "Вы начали и не закончили какое-то другое действие. "
-            "Завершите это действие, пожалуйста, или отмените "
-            "его с помощью команды /cancel"
-        )
-
-    @staticmethod
-    def gratitude() -> str:
-        return "Спасибо за ответ!"
 
     @staticmethod
     def unknown_content() -> str:

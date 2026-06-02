@@ -1,22 +1,14 @@
 import logging
-from datetime import datetime
 
 from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
 from core.config import settings
 from core.dependencies import get_session
 from core.enums import UserState
 from core.exceptions import HandlerError, MsgErr
-from core.security import get_password_hash
-from repository.user import (
-    get_user_expect,
-    update_user,
-)
-from schema.user import UserUpdate
 from service.actions import ActionService
 from service.publications import PublicationService
 from service.user import UserService
@@ -51,7 +43,7 @@ async def get_code(message: Message, bot: Bot) -> None:
                 )
             return
 
-        user = await get_user_expect(session, message.from_user.id)
+        user = await user_service.get_expect(message.from_user.id)
         pub_service = PublicationService(session, action_service)
 
         await message.answer(text=Messages.auth_success(), parse_mode="HTML")
@@ -72,17 +64,7 @@ async def get_code(message: Message, bot: Bot) -> None:
                     disable_web_page_preview=True,
                 )
 
-            password = generate_secure_password()
-            hashed_password = get_password_hash(password)
-
-            await update_user(
-                session,
-                message.from_user.id,
-                UserUpdate(
-                    hash=hashed_password,
-                    hash_date=datetime.now(),
-                ),
-            )
+            password = await user_service.generate_password(message.from_user.id)
 
             await message.answer(
                 Messages.new_password(password, user.name),
@@ -90,11 +72,7 @@ async def get_code(message: Message, bot: Bot) -> None:
                 disable_web_page_preview=True,
             )
 
-        await update_user(
-            session,
-            message.from_user.id,
-            UserUpdate(reg_stat=UserState.REG_COMPLETED),
-        )
+        await user_service.set_state(message.from_user.id, UserState.REG_COMPLETED)
         await action_service.log_bot_auth(
             message.from_user.id, status="success", ip=None
         )

@@ -13,11 +13,12 @@ isort:
 	uv run ruff check --select I --fix src/ alembic/ tests/ scripts/
 
 lint:
-	uv run ruff check src/ alembic/ tests/ scripts/;\
+	uv run ruff check src/ alembic/ tests/ scripts/ &&\
+	uv run ruff format --check src/ alembic/ tests/ scripts/ &&\
 	uv run ty check src/ alembic/ tests/ scripts/
 
 check-schema:
-	uv run python -m scripts.check_schema
+	uv run scripts/check_schema.py
 
 migrate:
 	uv run alembic upgrade head

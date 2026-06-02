@@ -107,3 +107,11 @@ def rule_cyrillic_event(data: RecordData, ctx: RuleContext) -> str | None:
     ):
         return "Кириллица в блоке Сбор материала для публикации не на русском языке"
     return None
+
+
+@rule(RuleCategory.EVENT, ["sample_size_value"], "out_of_range")
+def rule_sample_size_positive(data: RecordData, ctx: RuleContext) -> str | None:
+    v = data.sample_size_value
+    if v is not None and v <= 0:
+        return "Объём выборки должен быть положительным числом"
+    return None
