@@ -122,14 +122,14 @@ const TaxonomyCard: FC = () => {
                     <Controller
                         name="taxon_rank"
                         control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
                                 <FieldLabel>Ранг таксона</FieldLabel>
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
-                                    <SelectTrigger aria-invalid={fieldState.invalid}>
+                                    <SelectTrigger aria-invalid={invalid}>
                                         <SelectValue placeholder="Выберите ранг" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -140,21 +140,21 @@ const TaxonomyCard: FC = () => {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[error]} />
                             </Field>
                         )}
                     />
                     <Controller
                         name="type_status"
                         control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
                                 <FieldLabel>Типовой статус</FieldLabel>
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
-                                    <SelectTrigger aria-invalid={fieldState.invalid}>
+                                    <SelectTrigger aria-invalid={invalid}>
                                         <SelectValue placeholder="Выберите статус" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -165,7 +165,7 @@ const TaxonomyCard: FC = () => {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[error]} />
                             </Field>
                         )}
                     />
@@ -192,8 +192,8 @@ const TaxonomyCard: FC = () => {
                     <Controller
                         name="tax_verbatim"
                         control={control}
-                        render={({ field, fieldState }) => (
-                            <Field orientation="horizontal" data-invalid={fieldState.invalid}>
+                        render={({ field, fieldState: { invalid, error } }) => (
+                            <Field orientation="horizontal" data-invalid={invalid}>
                                 <Checkbox
                                     id="tax_verbatim"
                                     checked={field.value ?? false}
@@ -205,7 +205,7 @@ const TaxonomyCard: FC = () => {
                                 >
                                     Латинское название введено вручную
                                 </FieldLabel>
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[error]} />
                             </Field>
                         )}
                     />

@@ -31,7 +31,7 @@ export function FormAutocomplete({
     const lastCommittedRef = useRef<string | null>(null);
     const {
         field,
-        fieldState: { error },
+        fieldState: { error, invalid },
     } = useController({ name, control });
 
     const initializedRef = useRef(false);
@@ -64,7 +64,7 @@ export function FormAutocomplete({
     }, [field, onCommitTyped]);
 
     return (
-        <Field data-invalid={!!error}>
+        <Field data-invalid={invalid}>
             <FieldLabel>{label}</FieldLabel>
             <Autocomplete
                 id={name}

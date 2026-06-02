@@ -10,6 +10,7 @@ import { createFormStore, type FormState, StoreContext } from '@/store/formStore
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { TypedFetchBaseQueryError } from '@/api/baseQuery';
 import type { RecordForm } from '@/types/forms';
+import { skipToken } from '@reduxjs/toolkit/query';
 
 interface RecordFormProviderProps {
     publ_id: number;
@@ -37,9 +38,9 @@ export function RecordFormProvider({
         { selectFromResult: ({ isLoading }) => ({ isLoading }) },
     );
 
-    const activeRecordId = recordParam ?? recordIds[0] ?? null;
+    const activeRecordId = recordParam ?? (recordIds.length > 0 ? recordIds[0] : null);
     const { currentData: activeRecord, error: getRecordError } = useRecordByIdQuery(
-        { record_id: activeRecordId },
+        (activeRecordId && { record_id: activeRecordId }) || skipToken,
         { refetchOnMountOrArgChange: true },
     );
 

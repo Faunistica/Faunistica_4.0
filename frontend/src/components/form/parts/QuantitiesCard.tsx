@@ -114,14 +114,14 @@ const QuantitiesCard: FC = () => {
                     <Controller
                         name="quantity_type"
                         control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
+                        render={({ field, fieldState: { invalid, error } }) => (
+                            <Field data-invalid={invalid}>
                                 <FieldLabel>Единицы измерения</FieldLabel>
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
-                                    <SelectTrigger aria-invalid={fieldState.invalid}>
+                                    <SelectTrigger aria-invalid={invalid}>
                                         <SelectValue placeholder="Выберите единицы" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -132,7 +132,7 @@ const QuantitiesCard: FC = () => {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[error]} />
                             </Field>
                         )}
                     />

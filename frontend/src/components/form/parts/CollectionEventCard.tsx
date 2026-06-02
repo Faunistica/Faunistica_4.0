@@ -111,8 +111,8 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     <Controller
                         name="is_interval"
                         control={control}
-                        render={({ field, fieldState }) => (
-                            <Field orientation="horizontal" data-invalid={fieldState.invalid}>
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field orientation="horizontal" data-invalid={invalid}>
                                 <Checkbox
                                     id="is_interval"
                                     checked={field.value ?? false}
@@ -124,7 +124,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                 >
                                     Дата является интервалом
                                 </FieldLabel>
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[error]} />
                             </Field>
                         )}
                     />
@@ -282,7 +282,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         name="catalog_number"
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
-                            <Field data-invalid={error}>
+                            <Field data-invalid={invalid}>
                                 <FieldLabel htmlFor="catalog_number">Каталожный номер</FieldLabel>
                                 <Input
                                     id="catalog_number"

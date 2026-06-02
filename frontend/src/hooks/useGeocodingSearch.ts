@@ -23,6 +23,8 @@ function useGeocodingSearch() {
 
     const { fn: debouncedFetch, isPending } = useDebouncedRaceSafe(
         async (query: string, signal: AbortSignal) => {
+            // TODO: use backend's reverse geocode
+            // https://operations.osmfoundation.org/policies/nominatim/
             const res = await fetch(
                 `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=ru`,
                 { signal },

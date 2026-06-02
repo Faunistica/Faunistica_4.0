@@ -102,14 +102,14 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         name="georef_source"
                         defaultValue={'none'}
                         control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
+                        render={({ field, fieldState: { invalid, error } }) => (
+                            <Field data-invalid={invalid}>
                                 <FieldLabel>Происхождение координат</FieldLabel>
                                 <RadioGroup
                                     value={field.value ?? 'none'}
                                     onValueChange={field.onChange}
                                     className="space-y-2"
-                                    aria-invalid={fieldState.invalid}
+                                    aria-invalid={invalid}
                                 >
                                     {GEOREF_OPTIONS.map((opt) => (
                                         <div
@@ -129,15 +129,15 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                         </div>
                                     ))}
                                 </RadioGroup>
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[error]} />
                             </Field>
                         )}
                     />
                     <Controller
                         control={control}
                         name="location_remarks"
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={!!fieldState.error}>
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
                                 <FieldLabel htmlFor="location_remarks">
                                     Географические примечания
                                 </FieldLabel>
@@ -148,7 +148,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     {...field}
                                     value={field.value ?? ''}
                                 />
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[error]} />
                             </Field>
                         )}
                     />
@@ -158,8 +158,8 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     <Controller
                         name="country"
                         control={control}
-                        render={({ field, fieldState }) => (
-                            <Field data-invalid={fieldState.invalid}>
+                        render={({ field, fieldState: { error, invalid } }) => (
+                            <Field data-invalid={invalid}>
                                 <FieldLabel htmlFor="country">Страна</FieldLabel>
                                 <Select
                                     onValueChange={field.onChange}
@@ -168,7 +168,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     <SelectTrigger
                                         id="country"
                                         className="w-full"
-                                        aria-invalid={fieldState.invalid}
+                                        aria-invalid={invalid}
                                     >
                                         <SelectValue placeholder="Выберите страну" />
                                     </SelectTrigger>
@@ -180,7 +180,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <FieldError errors={[fieldState.error]} />
+                                <FieldError errors={[error]} />
                             </Field>
                         )}
                     />
