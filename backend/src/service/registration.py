@@ -1,5 +1,7 @@
 from datetime import UTC, datetime, timedelta
+
 from core.config import settings
+
 
 def is_registration_expired(created_at: datetime, now: datetime | None = None) -> bool:
     # created_at comes from DB and can be naive (without tz). Treat naive values as UTC.

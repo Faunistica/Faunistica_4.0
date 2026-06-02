@@ -101,3 +101,32 @@ class UserState(IntEnum):
         }
 
         return mapping.get(self)
+
+
+class PendingStatus(IntEnum):
+    PENDING = 0
+    EXPIRED = 1
+    CONFIRMED = 2
+
+
+class PendingStatusType(TypeDecorator):
+    impl = Integer
+    cache_ok = True
+
+    def process_bind_param(
+        self,
+        value: "PendingStatus | int | None",
+        dialect,
+    ) -> int:
+        if value is None:
+            return PendingStatus.PENDING
+        return int(value)
+
+    def process_result_value(
+        self,
+        value: int | None,
+        dialect,
+    ) -> "PendingStatus | None":
+        if value is None:
+            return PendingStatus.PENDING
+        return PendingStatus(value)

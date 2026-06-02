@@ -1,10 +1,9 @@
-from aiogram import Bot, Router
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
 from bot.messages import Messages
 from core.config import settings
-from core.dependencies import get_session
 from core.exceptions import HandlerError
 
 router = Router()

@@ -18,7 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from core.enums import UserState, UserStateType
+from core.enums import PendingStatus, PendingStatusType, UserState, UserStateType
 
 
 class Base(DeclarativeBase):
@@ -65,7 +65,11 @@ class PendingRegistration(Base):
     code: Mapped[str] = mapped_column(String(20), unique=True, index=True)
     username: Mapped[str] = mapped_column(String(255))
     password_hash: Mapped[str] = mapped_column(String(255))
-    status: Mapped[str] = mapped_column(String(32), server_default="pending")
+    status: Mapped[PendingStatus] = mapped_column(
+        PendingStatusType,
+        default=PendingStatus.PENDING,
+        server_default="0",
+    )
     created_at: Mapped[datetime_type] = mapped_column(
         TIMESTAMP, server_default=func.now()
     )

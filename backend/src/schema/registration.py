@@ -3,6 +3,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from core.enums import PendingStatus
+
+
 class RegistrationStartRequest(BaseModel):
     username: str = Field(min_length=3, max_length=40, pattern=r"^[a-zA-Z0-9_]+$")
     password: str = Field(min_length=8, max_length=128)
@@ -14,7 +17,7 @@ class RegistrationStartResponse(BaseModel):
 
 
 class RegistrationStatusResponse(BaseModel):
-    status: Literal["pending", "confirmed", "expired"]
+    status: PendingStatus
     username: str | None = None
     user_id: int | None = None
     confirmed_at: datetime | None = None

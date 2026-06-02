@@ -9,7 +9,7 @@ from bot.messages import Messages
 from bot.states import ConfirmStates
 from core.config import settings
 from core.dependencies import get_session
-from core.enums import UserState
+from core.enums import PendingStatus, UserState
 from core.exceptions import HandlerError
 from core.model import User
 from repository.registration import get_pending_by_code, update_pending_by_code
@@ -18,6 +18,9 @@ from schema.user import UserUpdate
 from service.registration import is_registration_expired
 
 router = Router()
+
+
+@router.message(Command("confirm"))
 async def confirm_registration(message: Message, state: FSMContext) -> None:
     if message.from_user is None:
         raise HandlerError
@@ -39,13 +42,13 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
             await message.answer(Messages.confirmation_code_invalid())
             return
 
-        if pending.status == "pending" and is_registration_expired(pending.created_at):
+        if pending.status == PendingStatus.PENDING and is_registration_expired(pending.created_at):
             await update_pending_by_code(session, code, status="expired")
             await session.commit()
             await message.answer(Messages.confirmation_code_expired())
             return
 
-        if pending.status != "pending":
+        if pending.status != PendingStatus.PENDING:
             await message.answer(Messages.confirmation_code_used())
             return
 
@@ -106,5 +109,3 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
 
     await message.answer(Messages.registration_confirmed(), parse_mode="HTML")
     await state.clear()
-
-

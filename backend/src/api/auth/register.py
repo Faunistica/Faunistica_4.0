@@ -1,14 +1,18 @@
 import asyncio
-
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
+from core.enums import PendingStatus
 from core.config import settings
 from core.dependencies import DBSession
+from core.exceptions import (
+    RegistrationAlreadyStartedError,
+    RegistrationNotFoundError,
+    UsernameAlreadyExistsError,
+)
 from core.rate_limiter import limiter
-from core.security import get_password_hash, generate_unique_code
-
+from core.security import generate_code_for_registration, get_password_hash
 from repository.registration import (
     create_pending_registration,
     delete_expired_by_username,
@@ -26,9 +30,11 @@ from service.registration import is_registration_expired
 
 router = APIRouter()
 
+
 @router.post("/register")
 @limiter.limit("3/minute")
 async def start_registration(
+    request: Request,
     data: RegistrationStartRequest,
     session: DBSession,
 ) -> RegistrationStartResponse:
@@ -37,42 +43,37 @@ async def start_registration(
 
     existing_user = await find_user_by_username(session, username)
     if existing_user is not None:
-        raise HTTPException(status_code=409, detail="Username already exists")
+        raise UsernameAlreadyExistsError(username)
 
     pending_for_username = await get_pending_by_username(session, username)
     if pending_for_username is not None:
-        if pending_for_username.status == "pending":
-            if is_registration_expired(pending_for_username.created_at):
-                await update_pending_by_code(
-                    session,
-                    pending_for_username.code,
-                    status="expired",
-                )
-                await session.commit()
-            else:
-                raise HTTPException(
-                    status_code=409, detail="Registration already started"
-                )
-        elif pending_for_username.status == "confirmed":
-            raise HTTPException(status_code=409, detail="Registration already started")
+        raise RegistrationAlreadyStartedError(username)
 
     await delete_expired_by_username(session, username)
-    code = await generate_unique_code(session)
-    password_hash = get_password_hash(password)
-    await create_pending_registration(
-        session, username=username, password_hash=password_hash, code=code
-    )
-    await session.commit()
+    code = await generate_code_for_registration()
+    existing = await get_pending_by_code(session, code)
+    if existing is None:
+        password_hash = get_password_hash(password)
+        await create_pending_registration(
+            session, username=username, password_hash=password_hash, code=code
+        )
+        await session.commit()
 
-    return RegistrationStartResponse(
-        code=code,
-        expires_in=settings.REGISTRATION_EXPIRE_SECONDS,
+        return RegistrationStartResponse(
+            code=code,
+            expires_in=settings.REGISTRATION_EXPIRE_SECONDS,
+        )
+    raise HTTPException(
+        status_code=500,
+        detail="Failed to generate registration code",
     )
+
 
 
 @router.get("/register/status")
 @limiter.limit("30/minute")
 async def registration_status(
+    request: Request,
     session: DBSession,
     code: str = Query(min_length=4, max_length=20),
     timeout: int = Query(
@@ -81,12 +82,12 @@ async def registration_status(
 ) -> RegistrationStatusResponse:
     deadline = datetime.now() + timedelta(seconds=timeout)
 
-    for _ in range(timeout//settings.REGISTRATION_POLL_INTERVAL_SECONDS):
+    for _ in range(timeout // settings.REGISTRATION_POLL_INTERVAL_SECONDS):
         pending = await get_pending_by_code(session, code)
         if pending is None:
-            raise HTTPException(status_code=404, detail="Registration not found")
+            raise RegistrationNotFoundError(code)
 
-        if pending.status == "pending" and is_registration_expired(pending.created_at):
+        if pending.status == PendingStatus.PENDING and is_registration_expired(pending.created_at):
             pending = await update_pending_by_code(
                 session,
                 code,
@@ -94,7 +95,7 @@ async def registration_status(
             )
             await session.commit()
 
-        if pending.status != "pending":
+        if pending.status != PendingStatus.PENDING:
             return RegistrationStatusResponse(
                 status=pending.status,
                 username=pending.username,
@@ -104,7 +105,7 @@ async def registration_status(
 
         if datetime.now() >= deadline:
             await session.rollback()
-            return RegistrationStatusResponse(status="pending")
+            return RegistrationStatusResponse(status=PendingStatus.PENDING)
 
         await session.rollback()
         await asyncio.sleep(settings.REGISTRATION_POLL_INTERVAL_SECONDS)
