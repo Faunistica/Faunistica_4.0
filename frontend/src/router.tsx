@@ -56,9 +56,19 @@ export const routes: RouteObject[] = [
                     },
 
                     {
+                        path: 'instructions',
+                        lazy: () =>
+                            import('./pages/Instructions').then((m) => ({
+                                Component: m.default,
+                            })),
+                        handle: { isFullWidth: true },
+                    },
+
+                    {
                         path: 'auth',
                         loader: requireGuest,
                         lazy: () => import('./pages/Auth').then((m) => ({ Component: m.default })),
+                        handle: { isNavigateEnabled: false },
                         children: [
                             {
                                 index: true,
@@ -123,13 +133,6 @@ export const routes: RouteObject[] = [
                                 handle: { isSidebarEnabled: true },
                             },
                             {
-                                path: 'instructions',
-                                lazy: () =>
-                                    import('./pages/Instructions').then((m) => ({
-                                        Component: m.default,
-                                    })),
-                            },
-                            {
                                 path: 'support',
                                 lazy: () =>
                                     import('./pages/Support').then((m) => ({
@@ -142,6 +145,14 @@ export const routes: RouteObject[] = [
                                     import('./pages/Statistics').then((m) => ({
                                         Component: m.default,
                                     })),
+                            },
+                            {
+                                path: 'settings',
+                                lazy: () =>
+                                    import('./pages/Settings').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                                handle: { isFullWidth: true },
                             },
                         ],
                     },

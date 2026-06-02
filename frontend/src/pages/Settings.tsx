@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useAppSelector } from '@/store/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -9,8 +9,8 @@ const Settings: FC = () => {
     const { username, user_id } = useAppSelector((state) => state.user);
 
     return (
-        <div className="max-w-4xl mx-auto py-8 px-4 w-full animate-in fade-in duration-500">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-8">
+        <div className="mx-auto w-full max-w-4xl animate-in px-4 py-8 duration-500 fade-in">
+            <h1 className="mb-8 text-3xl font-bold tracking-tight text-slate-900">
                 Настройки профиля
             </h1>
 
@@ -40,7 +40,7 @@ const Settings: FC = () => {
                                 id="userId"
                                 value={user_id || ''}
                                 disabled
-                                className="bg-slate-50 text-slate-500 max-w-[200px]"
+                                className="max-w-[200px] bg-slate-50 text-slate-500"
                             />
                         </div>
                     </CardContent>
@@ -54,7 +54,7 @@ const Settings: FC = () => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="text-sm text-slate-500 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                        <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
                             Дополнительные настройки профиля и системы будут доступны в будущих
                             обновлениях.
                         </div>
