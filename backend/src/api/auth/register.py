@@ -1,10 +1,12 @@
 import asyncio
-import re
+
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Query
 
+from core.config import settings
 from core.dependencies import DBSession
+from core.rate_limiter import limiter
 from core.security import get_password_hash, generate_unique_code
 
 from repository.registration import (
@@ -20,29 +22,18 @@ from schema.registration import (
     RegistrationStartResponse,
     RegistrationStatusResponse,
 )
-from service.registration import (
-    REGISTRATION_EXPIRE_SECONDS,
-    REGISTRATION_POLL_INTERVAL_SECONDS,
-    REGISTRATION_POLL_TIMEOUT_SECONDS,
-    is_registration_expired,
-)
+from service.registration import is_registration_expired
 
 router = APIRouter()
 
-_USERNAME_PATTERN = re.compile(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$")
-
 @router.post("/register")
+@limiter.limit("3/minute")
 async def start_registration(
     data: RegistrationStartRequest,
     session: DBSession,
 ) -> RegistrationStartResponse:
-    username = data.username.strip()
+    username = data.username
     password = data.password
-
-    if len(username) < 3 or len(username) > 40:
-        raise HTTPException(status_code=400, detail="Invalid username length")
-    if not _USERNAME_PATTERN.fullmatch(username):
-        raise HTTPException(status_code=400, detail="Invalid username")
 
     existing_user = await find_user_by_username(session, username)
     if existing_user is not None:
@@ -75,21 +66,22 @@ async def start_registration(
 
     return RegistrationStartResponse(
         code=code,
-        expires_in=REGISTRATION_EXPIRE_SECONDS,
+        expires_in=settings.REGISTRATION_EXPIRE_SECONDS,
     )
 
 
 @router.get("/register/status")
+@limiter.limit("30/minute")
 async def registration_status(
     session: DBSession,
     code: str = Query(min_length=4, max_length=20),
     timeout: int = Query(
-        default=REGISTRATION_POLL_TIMEOUT_SECONDS, ge=5, le=60
+        default=settings.REGISTRATION_POLL_TIMEOUT_SECONDS, ge=5, le=60
     ),
 ) -> RegistrationStatusResponse:
     deadline = datetime.now() + timedelta(seconds=timeout)
 
-    while True:
+    for _ in range(timeout//settings.REGISTRATION_POLL_INTERVAL_SECONDS):
         pending = await get_pending_by_code(session, code)
         if pending is None:
             raise HTTPException(status_code=404, detail="Registration not found")
@@ -115,4 +107,4 @@ async def registration_status(
             return RegistrationStatusResponse(status="pending")
 
         await session.rollback()
-        await asyncio.sleep(REGISTRATION_POLL_INTERVAL_SECONDS)
+        await asyncio.sleep(settings.REGISTRATION_POLL_INTERVAL_SECONDS)
