@@ -70,7 +70,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             {isMobileMenuOpen ? (
                                 <X className="size-5" />
                             ) : (
-                                <Menu className="h-5 w-5" />
+                                <Menu className="size-5 " />
                             )}
                         </Button>
                     )}
@@ -158,26 +158,26 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-9 w-9 rounded-full"
+                                        className="size-9  rounded-full"
                                     >
-                                        <Globe className="h-5 w-5 text-slate-600" />
+                                        <Globe className="size-5  text-slate-600" />
                                         <span className="sr-only">Сменить язык</span>
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="z-[150]">
+                                <DropdownMenuContent align="end" className="z-150">
                                     <DropdownMenuItem
                                         onClick={() => handleLanguageChange('ru')}
                                         className="cursor-pointer justify-between"
                                     >
                                         Русский
-                                        {language === 'ru' && <Check className="ml-4 h-4 w-4" />}
+                                        {language === 'ru' && <Check className="ml-4 size-4 " />}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() => handleLanguageChange('en')}
                                         className="cursor-pointer justify-between"
                                     >
                                         English
-                                        {language === 'en' && <Check className="ml-4 h-4 w-4" />}
+                                        {language === 'en' && <Check className="ml-4 size-4 " />}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -195,9 +195,9 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             variant="ghost"
-                                            className="relative h-9 w-9 overflow-hidden rounded-full p-0 transition-transform hover:scale-105"
+                                            className="relative size-9  overflow-hidden rounded-full p-0 transition-transform hover:scale-105"
                                         >
-                                            <Avatar className="h-9 w-9">
+                                            <Avatar className="size-9 ">
                                                 <AvatarFallback className="bg-slate-900 text-xs font-bold text-white">
                                                     {username
                                                         ? username.substring(0, 2).toUpperCase()
@@ -206,7 +206,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                             </Avatar>
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="z-[150] w-56">
+                                    <DropdownMenuContent align="end" className="z-150 w-56">
                                         <DropdownMenuLabel className="font-normal">
                                             <div className="flex flex-col space-y-1">
                                                 <p className="text-sm leading-none font-medium text-slate-900">
@@ -222,7 +222,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                             onClick={() => navigate('/settings')}
                                             className="cursor-pointer"
                                         >
-                                            <SettingsIcon className="mr-2 h-4 w-4" />
+                                            <SettingsIcon className="mr-2 size-4 " />
                                             <span>Настройки</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
@@ -230,14 +230,14 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                             onClick={handleLogout}
                                             className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
                                         >
-                                            <LogOut className="mr-2 h-4 w-4" />
+                                            <LogOut className="mr-2 size-4 " />
                                             <span>Выйти</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={handleLogout}
                                             className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
                                         >
-                                            <LogOut className="mr-2 h-4 w-4" />
+                                            <LogOut className="mr-2 size-4 " />
                                             <span>Выйти везде</span>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
