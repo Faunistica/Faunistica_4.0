@@ -64,8 +64,9 @@ select = [
     "PL",     # Pylint
 ]
 ignore = [
-    "PLR2004", # ignore magick variables for now
-    "PLR0913", # max 5 arguments
+    "PLR2004",  # ignore magick variables for now
+    "PLR0913",  # max 5 arguments
+    "PLR0911",  # many return statements in state machine
 ]
 
 [tool.ruff.lint.per-file-ignores]

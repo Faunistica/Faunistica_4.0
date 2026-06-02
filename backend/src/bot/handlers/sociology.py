@@ -10,21 +10,10 @@ from core.config import settings
 from core.dependencies import get_session
 from core.enums import UserState
 from core.exceptions import HandlerError, MsgErr
-from core.model import User
-from repository.user import get_user, update_user
-from schema.user import UserLanguage, UserUpdate
 from service.actions import ActionService
 from service.user import UserService
 
 router = Router()
-
-
-def _is_field_missing(user: User, field: str) -> bool:
-    """Check if a field is missing from user profile."""
-    value = getattr(user, field, None)
-    if value is None:
-        return True
-    return field in ("comm", "email", "region") and value == ""
 
 
 _FIELD_TO_STATE = {
@@ -53,8 +42,8 @@ async def _progress_survey(
     user_id: int,
     field: str,
     state: FSMContext,
+    bot: Bot,
 ) -> None:
-    """Progress to next survey state or complete."""
     data = await state.get_data()
     missing_fields: list[str] = data.get("missing_fields", [])
 
@@ -62,29 +51,20 @@ async def _progress_survey(
         missing_fields.remove(field)
 
     async for session in get_session():
-        if missing_fields:
-            await state.update_data(missing_fields=missing_fields)
+        user_service = UserService(session, bot)
 
+        if missing_fields:
             next_field = missing_fields[0]
             next_state = _FIELD_TO_STATE[next_field]
-            await state.set_state(next_state.fsm_state())
 
-            await update_user(
-                session,
-                user_id,
-                UserUpdate(reg_stat=next_state),
-            )
+            await user_service.set_state(user_id, next_state)
+            await state.update_data(missing_fields=missing_fields)
+            await state.set_state(next_state.fsm_state())
 
             await message.answer(_SURVEY_QUESTIONS[next_field])
-
-            await state.set_state(next_state.fsm_state())
             return
 
-        await update_user(
-            session,
-            user_id,
-            UserUpdate(reg_stat=UserState.REG_COMPLETED),
-        )
+        await user_service.update_user_data(user_id, reg_stat=UserState.REG_COMPLETED)
         await state.clear()
 
     await message.answer(Messages.sociology_completed())
@@ -106,93 +86,81 @@ async def sociology_start(message: Message, state: FSMContext, bot: Bot) -> None
     user_id = message.from_user.id
 
     async for session in get_session():
-        user = await get_user(session, user_id)
+        action_service = ActionService(session)
+        user_service = UserService(session, bot, action_service)
+
+        user = await user_service.get(user_id)
         if user is None:
             await message.answer(Messages.not_registered())
             return
 
-        action_service = ActionService(session)
-        user_service = UserService(session, bot, action_service)
         res = await user_service.check_commands_allowed(user=user)
         if isinstance(res, MsgErr):
             await message.answer(res.error)
             return
 
-        missing_fields = [
-            field
-            for field in ["age", "comm", "lng", "rating", "region", "email", "sex"]
-            if _is_field_missing(user, field)
-        ]
+        missing_fields = user_service.get_missing_survey_fields(user)
 
-        # TODO: maybe ask to complete again?
         if not missing_fields:
             await message.answer(Messages.sociology_completed())
             return
 
-        # Store missing fields in FSM context
         await state.update_data(missing_fields=missing_fields)
 
         first_field = missing_fields[0]
         first_state = _FIELD_TO_STATE[first_field]
+        await user_service.set_state(user_id, first_state)
         await state.set_state(first_state.fsm_state())
 
-        await update_user(session, user_id, UserUpdate(reg_stat=first_state))
         await message.answer(_SURVEY_QUESTIONS[first_field])
 
 
 @router.message(SociologyStates.waiting_for_age)
-async def sociology_set_age(message: Message, state: FSMContext) -> None:
+async def sociology_set_age(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
     user_id = message.from_user.id
     age_msg = message.text.strip()
 
-    if len(age_msg) > 5:
-        await message.answer(Messages.message_too_long())
-        return
-
-    try:
-        age = int(age_msg)
-    except ValueError:
-        await message.answer(Messages.message_no_digits())
-        return
-
-    if age > 99:
+    result = UserService.validate_age_str(age_msg)
+    if isinstance(result, MsgErr):
         await message.answer(
-            Messages.age_too_high(),
+            result.error,
             parse_mode="Markdown",
             disable_web_page_preview=True,
         )
-    elif age < 14:
-        await message.answer(Messages.age_too_low())
+        return
 
-    await _progress_survey(message, user_id, "age", state)
+    async for session in get_session():
+        user_service = UserService(session, bot)
+        await user_service.update_user_data(user_id, age=int(age_msg))
+
+    await _progress_survey(message, user_id, "age", state, bot)
 
 
 @router.message(SociologyStates.waiting_for_language)
-async def sociology_set_language(message: Message, state: FSMContext) -> None:
+async def sociology_set_language(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
-    lang_msg = message.text.strip().replace(" ", "").replace(",", "").replace(".", "")
+    lang_msg = message.text.strip()
     user_id = message.from_user.id
 
-    if len(lang_msg) > 1 or lang_msg not in ["1", "2", "3"]:
-        await message.answer(Messages.selection_not_recognized())
+    parsed = UserService.parse_language(lang_msg)
+    if isinstance(parsed, MsgErr):
+        await message.answer(parsed.error)
         return
 
-    lang_map: dict[str, UserLanguage] = {"1": "all", "2": "eng", "3": "rus"}
-    language = lang_map[lang_msg]
-
     async for session in get_session():
-        await update_user(session, user_id, UserUpdate(lng=language))
+        user_service = UserService(session, bot)
+        await user_service.update_user_data(user_id, lng=parsed)
 
-    await _progress_survey(message, user_id, "lng", state)
+    await _progress_survey(message, user_id, "lng", state, bot)
 
 
 @router.message(SociologyStates.waiting_for_comments)
-async def sociology_set_comments(message: Message, state: FSMContext) -> None:
+async def sociology_set_comments(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
@@ -200,13 +168,14 @@ async def sociology_set_comments(message: Message, state: FSMContext) -> None:
     comm_msg = message.text.strip()
 
     async for session in get_session():
-        await update_user(session, user_id, UserUpdate(comm=comm_msg))
+        user_service = UserService(session, bot)
+        await user_service.update_user_data(user_id, comm=comm_msg)
 
-    await _progress_survey(message, user_id, "comm", state)
+    await _progress_survey(message, user_id, "comm", state, bot)
 
 
 @router.message(SociologyStates.waiting_for_gender)
-async def sociology_set_gender(message: Message, state: FSMContext) -> None:
+async def sociology_set_gender(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
@@ -222,13 +191,14 @@ async def sociology_set_gender(message: Message, state: FSMContext) -> None:
         return
 
     async for session in get_session():
-        await update_user(session, user_id, UserUpdate(sex=gender_value))
+        user_service = UserService(session, bot)
+        await user_service.update_user_data(user_id, sex=gender_value)
 
-    await _progress_survey(message, user_id, "gender", state)
+    await _progress_survey(message, user_id, "sex", state, bot)
 
 
 @router.message(SociologyStates.waiting_for_rating_agreement)
-async def sociology_set_rating(message: Message, state: FSMContext) -> None:
+async def sociology_set_rating(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
@@ -244,13 +214,14 @@ async def sociology_set_rating(message: Message, state: FSMContext) -> None:
         return
 
     async for session in get_session():
-        await update_user(session, user_id, UserUpdate(rating=rating_value))
+        user_service = UserService(session, bot)
+        await user_service.update_user_data(user_id, rating=rating_value)
 
-    await _progress_survey(message, user_id, "rating", state)
+    await _progress_survey(message, user_id, "rating", state, bot)
 
 
 @router.message(SociologyStates.waiting_for_region)
-async def sociology_set_region(message: Message, state: FSMContext) -> None:
+async def sociology_set_region(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
@@ -262,13 +233,14 @@ async def sociology_set_region(message: Message, state: FSMContext) -> None:
         return
 
     async for session in get_session():
-        await update_user(session, user_id, UserUpdate(region=region_msg))
+        user_service = UserService(session, bot)
+        await user_service.update_user_data(user_id, region=region_msg)
 
-    await _progress_survey(message, user_id, "region", state)
+    await _progress_survey(message, user_id, "region", state, bot)
 
 
 @router.message(SociologyStates.waiting_for_email)
-async def sociology_set_email(message: Message, state: FSMContext) -> None:
+async def sociology_set_email(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
@@ -280,6 +252,7 @@ async def sociology_set_email(message: Message, state: FSMContext) -> None:
         return
 
     async for session in get_session():
-        await update_user(session, user_id, UserUpdate(email=email_msg))
+        user_service = UserService(session, bot)
+        await user_service.update_user_data(user_id, email=email_msg)
 
-    await _progress_survey(message, user_id, "email", state)
+    await _progress_survey(message, user_id, "email", state, bot)

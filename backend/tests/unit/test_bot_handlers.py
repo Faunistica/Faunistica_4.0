@@ -10,6 +10,10 @@ from bot.handlers.registration import registration_start
 from bot.handlers.start import start_command
 
 
+async def _async_session_gen(session):
+    yield session
+
+
 @pytest.fixture
 def mock_message():
     msg = MagicMock(spec=Message)
@@ -52,28 +56,39 @@ class TestStartCommand:
 
 
 class TestRegisterCommand:
-    async def test_register_new_user(self, mock_message, mock_state):
+    async def test_register_new_user(self, mock_message, mock_state, mock_bot):
         with (
-            patch("bot.handlers.registration.get_user", return_value=None),
-            patch(
-                "bot.handlers.registration.create_user_or_update",
-                new_callable=AsyncMock,
-            ),
-            patch(
-                "bot.handlers.registration.continue_registration",
-                new_callable=AsyncMock,
-            ),
+            patch("bot.handlers.registration.UserService") as mock_user_service_cls,
+            patch("bot.handlers.registration.get_session") as mock_get_session,
         ):
-            await registration_start(mock_message, mock_state)
+            mock_session = AsyncMock()
+            mock_get_session.return_value = _async_session_gen(mock_session)
+            mock_user_service = AsyncMock()
+            mock_user_service_cls.return_value = mock_user_service
+            mock_user_service.get.return_value = None
+
+            await registration_start(mock_message, mock_state, mock_bot)
+            mock_user_service.start_registration.assert_called_once_with(12345)
             mock_state.set_state.assert_called_once()
 
-    async def test_register_existing_completed(self, mock_message, mock_state):
+    async def test_register_existing_completed(
+        self, mock_message, mock_state, mock_bot
+    ):
         user = MagicMock()
         user.reg_stat = MagicMock()
         user.reg_stat.value = "completed"
         user.name = "TestUser"
-        with patch("bot.handlers.registration.get_user", return_value=user):
-            await registration_start(mock_message, mock_state)
+        with (
+            patch("bot.handlers.registration.UserService") as mock_user_service_cls,
+            patch("bot.handlers.registration.get_session") as mock_get_session,
+        ):
+            mock_session = AsyncMock()
+            mock_get_session.return_value = _async_session_gen(mock_session)
+            mock_user_service = AsyncMock()
+            mock_user_service_cls.return_value = mock_user_service
+            mock_user_service.get.return_value = user
+
+            await registration_start(mock_message, mock_state, mock_bot)
             mock_message.answer.assert_called()
 
 
@@ -93,28 +108,22 @@ class TestMenuCommand:
 class TestCancelCommand:
     async def test_cancel_command_success(self, mock_message, mock_state, mock_bot):
         with (
+            patch("bot.handlers.menu.UserService") as mock_user_service_cls,
             patch("bot.handlers.menu.get_session") as mock_get_session,
-            patch(
-                "bot.handlers.menu.get_user", new_callable=AsyncMock
-            ) as mock_get_user,
-            patch("bot.handlers.menu.update_user", new_callable=AsyncMock),
         ):
             mock_session = AsyncMock()
-            mock_get_session.return_value.__aenter__ = AsyncMock(
-                return_value=mock_session
-            )
-            mock_get_session.return_value.__aexit__ = AsyncMock(return_value=False)
+            mock_get_session.return_value = _async_session_gen(mock_session)
+            mock_user_service = AsyncMock()
+            mock_user_service_cls.return_value = mock_user_service
 
-            # Mock user returned by get_user
             mock_user = MagicMock()
             mock_user.reg_stat = MagicMock()
             mock_user.reg_stat.is_in_registration.return_value = False
             mock_user.reg_stat.value = "completed"
-            mock_get_user.return_value = mock_user
+            mock_user_service.get.return_value = mock_user
+            mock_user_service.cancel_action.return_value = None
 
-            # Just verify the function runs without error
-            await cancel(mock_message, mock_state)
-            # Verify that answer was called at least once
+            await cancel(mock_message, mock_state, mock_bot)
             assert mock_message.answer.called
 
 
