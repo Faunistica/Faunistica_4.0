@@ -2,9 +2,11 @@ from datetime import datetime
 
 from aiogram import Router
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from bot.messages import Messages
+from bot.states import ConfirmStates
 from core.config import settings
 from core.dependencies import get_session
 from core.enums import UserState
@@ -16,23 +18,21 @@ from schema.user import UserUpdate
 from service.registration import is_registration_expired
 
 router = Router()
-
-
-@router.message(Command("confirm"))
-async def confirm_registration(message: Message) -> None:
-    if message.from_user is None or message.text is None:
+async def confirm_registration(message: Message, state: FSMContext) -> None:
+    if message.from_user is None:
         raise HandlerError
 
     if message.chat.id == settings.ADMIN_CHAT_ID:
         return
+    await message.answer(Messages.request_confirmation_code())
+    await state.set_state(ConfirmStates.waiting_for_code)
 
-    parts = message.text.split(maxsplit=1)
-    if len(parts) < 2:
-        await message.answer(Messages.confirmation_code_missing())
-        return
 
-    code = parts[1].strip()
-
+@router.message(ConfirmStates.waiting_for_code)
+async def handle_code_input(message: Message, state: FSMContext) -> None:
+    if message.from_user is None or message.text is None:
+        raise HandlerError
+    code = message.text.strip()
     async for session in get_session():
         pending = await get_pending_by_code(session, code)
         if pending is None:
@@ -105,3 +105,6 @@ async def confirm_registration(message: Message) -> None:
         await session.commit()
 
     await message.answer(Messages.registration_confirmed(), parse_mode="HTML")
+    await state.clear()
+
+

@@ -26,12 +26,12 @@ class Messages:
         return (
             "Регистрация теперь проходит через сайт. "
             "Заполните форму на https://faunistica.ru/ и отправьте "
-            "код подтверждения командой <code>/confirm &lt;код&gt;</code>."
+            "код подтверждения командой /confirm"
         )
 
     @staticmethod
-    def confirmation_code_missing() -> str:
-        return "Пожалуйста, отправьте код после команды /confirm <код>."
+    def request_confirmation_code() -> str:
+        return "Пожалуйста, отправьте код подтверждения"
 
     @staticmethod
     def confirmation_code_invalid() -> str:
