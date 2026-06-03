@@ -44,7 +44,7 @@ const Login: FC = () => {
     });
 
     return (
-        <div className="mx-auto w-full max-w-[400px] space-y-6">
+        <div className="mx-auto w-full max-w-100 space-y-6">
             <Card className="border-slate-200 shadow-sm">
                 <CardHeader className="space-y-1 text-center">
                     <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">

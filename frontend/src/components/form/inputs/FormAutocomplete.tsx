@@ -28,7 +28,7 @@ export function FormAutocomplete({
 }: FormAutocompleteProps) {
     const { control, setValue } = useFormContext<RecordForm>();
     const [suggestions, setSuggestions] = useState<string[]>([]);
-    const lastCommittedRef = useRef<string | null>(null);
+    const lastCommittedRef = useRef('');
     const {
         field,
         fieldState: { error, invalid },
@@ -40,7 +40,7 @@ export function FormAutocomplete({
     // This sets the initial "committed" state without tracking every form change
     useEffect(() => {
         if (!initializedRef.current && field.value !== undefined) {
-            lastCommittedRef.current = field.value ?? null;
+            lastCommittedRef.current = field.value ?? '';
             initializedRef.current = true;
         }
     }, [field.value]);
@@ -55,11 +55,11 @@ export function FormAutocomplete({
 
     const handleBlur = useCallback(async () => {
         const normalizedLast = lastCommittedRef.current;
-
-        if (field.value !== normalizedLast) {
-            lastCommittedRef.current = field.value ?? '';
+        const current = field.value ?? '';
+        if (current !== normalizedLast) {
+            lastCommittedRef.current = current;
             // User typed and blurred without selecting from dropdown
-            onCommitTyped?.(field.value ?? '');
+            onCommitTyped?.(current);
         }
     }, [field, onCommitTyped]);
 
