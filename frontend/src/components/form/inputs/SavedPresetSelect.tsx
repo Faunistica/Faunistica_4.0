@@ -42,7 +42,7 @@ const LABEL_BUILDERS: Record<PresetType, (d: RecordFull) => string> = {
 };
 
 const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className }) => {
-    const { setValue } = useFormContext<RecordForm>();
+    const { setValue, clearErrors } = useFormContext<RecordForm>();
 
     const presets = useAppSelector(
         (state) => {
@@ -125,9 +125,10 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className
                         { shouldDirty: true },
                     );
                 }
+                clearErrors(f as FieldPath<RecordForm>);
             }
         },
-        [recordMap, setValue, type],
+        [recordMap, setValue, type, clearErrors],
     );
 
     if (presets.length === 0) return null;
