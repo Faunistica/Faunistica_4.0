@@ -131,6 +131,8 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
                 keepTouched: false,
                 keepDirty: false,
             });
+            cancelAutoSave();
+            store.setState({ snapshot: JSON.stringify(FORM_DEFAULT_VALUES) });
 
             void navigate(`/publication/${publ_id}/${created.id}`, { replace: true });
             store.setState({ lastSavedTime: null, globalErrors: [] });

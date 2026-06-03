@@ -11,7 +11,7 @@ import { ActionsContext } from '@/store/formActionsContext';
 import { useRecordFormActions } from '@/hooks/useRecordFormActions';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { TypedFetchBaseQueryError } from '@/api/baseQuery';
-import type { RecordForm } from '@/types/forms';
+import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 import { skipToken } from '@reduxjs/toolkit/query';
 
 interface RecordFormProviderProps {
@@ -71,6 +71,8 @@ export function RecordFormProvider({
     });
 
     const onSync = useEffectEvent((record: RecordFull) => {
+        if (record.id !== store.getState().activeRecordId) return;
+
         const newState: Partial<FormState> = {
             status: {
                 phase: 'idle',
@@ -78,7 +80,8 @@ export function RecordFormProvider({
             },
         };
 
-        const currentSnapshot = JSON.stringify(toFormPartial(record));
+        const formValues = { ...FORM_DEFAULT_VALUES, ...toFormPartial(record) };
+        const currentSnapshot = JSON.stringify(formValues);
         if (currentSnapshot === store.getState().snapshot) {
             if (store.getState().pendingSync) {
                 store.setState({ pendingSync: false, ...newState });
@@ -86,7 +89,7 @@ export function RecordFormProvider({
             return;
         }
 
-        methods.reset(toFormPartial(record), {
+        methods.reset(formValues, {
             keepValues: false,
             keepErrors: false,
             keepTouched: false,

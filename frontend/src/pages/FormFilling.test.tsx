@@ -522,6 +522,42 @@ describe('RecordFormProvider', () => {
         });
     });
 
+    it('create resets form to blank, does not auto-save', async () => {
+        const RECORD_WITH_VALUES = {
+            ...RECORD_1,
+            locality: 'Moscow Valley',
+            accepted_name: 'Canis lupus',
+        };
+
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_WITH_VALUES);
+
+        render(
+            <TestHarness autoSaveDelay={1}>
+                <StateDisplay />
+            </TestHarness>,
+        );
+
+        await waitFor(() => {
+            expect(testState!.status.phase).toBe('idle');
+        });
+
+        // Verify form has old values initially
+        expect(testMethodsRef.current!.getValues('locality')).toBe('Moscow Valley');
+        expect(testMethodsRef.current!.getValues('accepted_name')).toBe('Canis lupus');
+
+        await act(() => testActions!.create());
+
+        // Form should be reset to defaults
+        expect(testMethodsRef.current!.getValues('locality')).toBe('');
+        expect(testMethodsRef.current!.getValues('accepted_name')).toBe('');
+        expect(testMethodsRef.current!.getValues('country')).toBe('');
+
+        // Auto-save should NOT have fired for the new record
+        // (updateRecord was called only once — the manual save in create())
+        expect(mockUpdateRecord).toHaveBeenCalledTimes(1);
+    });
+
     it('delete removes record, updates cache, and switches to next', async () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);

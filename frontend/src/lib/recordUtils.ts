@@ -1,7 +1,9 @@
 import type { RecordData, RecordFull, Specimen } from '@/types/api.dto';
 import type { QuantityField } from '@/lib/constants';
 import { QUANTITY_FIELDS } from '@/lib/constants';
-import type { RecordForm } from '@/types/forms';
+import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
+
+const RECORD_FORM_KEYS = new Set(Object.keys(FORM_DEFAULT_VALUES));
 
 const NULLISH_NUMBER_FIELDS = new Set<string>(['coordinate_uncertainty', 'sample_size_value']);
 
@@ -107,7 +109,8 @@ export const draftToRecordData = (draft: Partial<RecordForm>): RecordData => {
 export function toFormPartial(record: RecordFull): Partial<RecordForm> {
     const result: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(record)) {
-        if (key in QUANTITY_FIELDS || val == null) continue;
+        if (!RECORD_FORM_KEYS.has(key)) continue;
+        if (val == null) continue;
         result[key] = key === 'latitude' || key === 'longitude' ? Number(val) : val;
     }
     for (const mapping of SPECIMEN_FIELD_MAP) {
