@@ -143,7 +143,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                 </FieldLabel>
                                 <Textarea
                                     id="location_remarks"
-                                    className="h-fit min-h-28"
+                                    className="max-h-fit min-h-28"
                                     placeholder="Примечания к местоположению…"
                                     {...field}
                                     value={field.value ?? ''}
