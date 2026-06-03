@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { draftToRecordData } from '@/lib/recordUtils';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import type { FormStore } from '@/store/formStore';
@@ -25,6 +25,8 @@ export const useAutoSave = ({
     watch: UseFormWatch<RecordForm>;
 }): (() => void) => {
     const [updateRecord] = useUpdateRecordMutation();
+
+    const activeRecordRef = useRef(store.getState().activeRecordId);
 
     const { fn: debouncedAutoSave, cancel: cancelAutoSave } = useDebouncedCallback(async () => {
         const id = store.getState().activeRecordId;
@@ -57,6 +59,11 @@ export const useAutoSave = ({
         if (DISABLE_AUTO_SAVE) return () => {};
 
         const subscription = watch(() => {
+            const currentId = store.getState().activeRecordId;
+            const prevId = activeRecordRef.current;
+            activeRecordRef.current = currentId;
+            if (prevId !== null && prevId !== currentId) return;
+
             if (store.getState().status.phase === 'saving') return;
 
             debouncedAutoSave();
