@@ -19,10 +19,9 @@ describe('useDebouncedCallback', () => {
     it('calls latest callback after rerender, not old one', async () => {
         const oldCb = vi.fn();
         const newCb = vi.fn();
-        const { result, rerender } = renderHook(
-            ({ cb }) => useDebouncedCallback(cb, 300),
-            { initialProps: { cb: oldCb } },
-        );
+        const { result, rerender } = renderHook(({ cb }) => useDebouncedCallback(cb, 300), {
+            initialProps: { cb: oldCb },
+        });
 
         rerender({ cb: newCb });
 

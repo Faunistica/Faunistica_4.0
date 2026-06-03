@@ -445,6 +445,7 @@ async def seed() -> None:
             logger.info(
                 "User inserted: name: %s; password: %s; publications: %s",
                 user_dict["name"],
+                # NOTE: THIS IS OK, THIS PASSWORD IS FOR DEVELOPMENT ONLY
                 PASSWORDS[i],
                 user_dict["items"],
             )
