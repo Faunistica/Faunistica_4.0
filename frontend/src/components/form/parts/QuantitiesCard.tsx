@@ -4,14 +4,8 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
+import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import { Hash } from 'lucide-react';
 import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/lib/constants';
 
@@ -112,30 +106,11 @@ const QuantitiesCard: FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-2">
-                    <Controller
+                    <FormAutocomplete
                         name="quantity_type"
-                        control={control}
-                        render={({ field, fieldState: { invalid, error } }) => (
-                            <Field data-invalid={invalid}>
-                                <FieldLabel>Единицы измерения</FieldLabel>
-                                <Select
-                                    value={field.value || undefined}
-                                    onValueChange={field.onChange}
-                                >
-                                    <SelectTrigger aria-invalid={invalid}>
-                                        <SelectValue placeholder="Выберите единицы" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {QUANTITY_TYPE_OPTIONS.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FieldError errors={[error]} />
-                            </Field>
-                        )}
+                        label="Единицы измерения"
+                        placeholder="Выберите единицы"
+                        options={QUANTITY_TYPE_OPTIONS.map((o) => o.label)}
                     />
                     <Field>
                         <FieldLabel>Общее количество (вычислено)</FieldLabel>

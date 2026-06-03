@@ -187,7 +187,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     <FormAutocomplete
                         name="region"
                         label="Регион (субъект)"
-                        searchFn={regionSearchFn}
+                        options={regionSearchFn}
                         placeholder="Начните вводить…"
                         onSelectSuggestion={handleLocationSuggestionSelect}
                         onCommitTyped={handleLocationTypedCommit}
@@ -195,7 +195,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     <FormAutocomplete
                         name="district"
                         label="Район"
-                        searchFn={districtSearchFn}
+                        options={districtSearchFn}
                         placeholder="Начните вводить…"
                         onSelectSuggestion={handleLocationSuggestionSelect}
                         onCommitTyped={handleLocationTypedCommit}

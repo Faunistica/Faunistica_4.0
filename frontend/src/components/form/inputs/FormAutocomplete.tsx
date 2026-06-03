@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useController, useFormContext } from 'react-hook-form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import Autocomplete from '@/components/ui/autocomplete';
@@ -10,7 +10,7 @@ interface FormAutocompleteProps {
     isLoading?: boolean;
     label: string;
     placeholder?: string;
-    searchFn: (text: string, signal?: AbortSignal) => Promise<string[]>;
+    options: string[] | ((text: string, signal?: AbortSignal) => Promise<string[]>);
     debounceMs?: number;
     onSelectSuggestion?: (value: string) => void;
     onCommitTyped?: (value: string) => void;
@@ -21,7 +21,7 @@ export function FormAutocomplete({
     isLoading,
     label,
     placeholder,
-    searchFn,
+    options,
     debounceMs = 300,
     onSelectSuggestion,
     onCommitTyped,
@@ -35,9 +35,8 @@ export function FormAutocomplete({
     } = useController({ name, control });
 
     const initializedRef = useRef(false);
+    const isStaticArray = useMemo(() => Array.isArray(options), [options]);
 
-    // Only sync on mount (or when currentValue first becomes available)
-    // This sets the initial "committed" state without tracking every form change
     useEffect(() => {
         if (!initializedRef.current && field.value !== undefined) {
             lastCommittedRef.current = field.value ?? '';
@@ -45,12 +44,36 @@ export function FormAutocomplete({
         }
     }, [field.value]);
 
-    const { fn: handleSearch, cancel: cancelSearch } = useDebouncedRaceSafe(
+    useEffect(() => {
+        if (isStaticArray) {
+            setSuggestions(options as string[]);
+        }
+    }, [options, isStaticArray]);
+
+    const { fn: debouncedSearch, cancel: cancelSearch } = useDebouncedRaceSafe(
         async (text: string, signal: AbortSignal) => {
-            return await searchFn(text, signal);
+            if (typeof options === 'function') {
+                return await options(text, signal);
+            }
+            return [];
         },
         setSuggestions,
         debounceMs,
+    );
+
+    const handleSearch = useCallback(
+        (text: string) => {
+            if (isStaticArray) {
+                setSuggestions(
+                    (options as string[]).filter((o) =>
+                        o.toLowerCase().includes(text.toLowerCase()),
+                    ),
+                );
+            } else {
+                debouncedSearch(text);
+            }
+        },
+        [options, isStaticArray, debouncedSearch],
     );
 
     const handleBlur = useCallback(async () => {
@@ -58,7 +81,6 @@ export function FormAutocomplete({
         const current = field.value ?? '';
         if (current !== normalizedLast) {
             lastCommittedRef.current = current;
-            // User typed and blurred without selecting from dropdown
             onCommitTyped?.(current);
         }
     }, [field, onCommitTyped]);
@@ -74,13 +96,17 @@ export function FormAutocomplete({
                     setValue(name, val);
                     lastCommittedRef.current = val;
                     setSuggestions([]);
-                    cancelSearch();
+                    if (!isStaticArray) {
+                        cancelSearch();
+                    }
                     onSelectSuggestion?.(val);
                 }}
                 onBlur={handleBlur}
+                onFocus={isStaticArray ? () => setSuggestions(options as string[]) : undefined}
                 onSearch={handleSearch}
                 suggestions={suggestions}
                 isLoading={isLoading}
+                minChars={isStaticArray ? 0 : undefined}
                 placeholder={placeholder}
                 aria-invalid={!!error}
             />

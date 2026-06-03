@@ -34,21 +34,6 @@ TYPE_STATUSES: frozenset[str] = frozenset(
     }
 )
 
-QUANTITY_TYPES: frozenset[str] = frozenset(
-    {
-        "individuals",
-        "individuals per 10 trap-days",
-        "individuals per 100 trap-days",
-        "individuals per 10 ditch-days",
-        "individuals per 10 net sweps",
-        "individuals per 100 net sweps",
-        "individuals per 20 net sweppings",
-        "individuals per 100 pitfall-traps",
-        "individuals per m2",
-        "Abundance class (Pesenko, 1982)",
-    }
-)
-
 SEX_VALUES: frozenset[str] = frozenset({"none", "male", "female"})
 
 CYRILLIC_LANGUAGES: frozenset[str] = frozenset({"rus", "ukr"})

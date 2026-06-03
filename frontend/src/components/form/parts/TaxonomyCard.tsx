@@ -95,7 +95,7 @@ const TaxonomyCard: FC = () => {
                     <FormAutocomplete
                         name="family"
                         label="Семейство (Familia)"
-                        searchFn={familySearchFn}
+                        options={familySearchFn}
                         placeholder="Начните вводить…"
                         onSelectSuggestion={handleTaxonSuggestionSelect}
                         onCommitTyped={handleTaxonTypedCommit}
@@ -103,7 +103,7 @@ const TaxonomyCard: FC = () => {
                     <FormAutocomplete
                         name="genus"
                         label="Род (Genus)"
-                        searchFn={genusSearchFn}
+                        options={genusSearchFn}
                         placeholder="Название рода"
                         onSelectSuggestion={handleTaxonSuggestionSelect}
                         onCommitTyped={handleTaxonTypedCommit}
@@ -111,7 +111,7 @@ const TaxonomyCard: FC = () => {
                     <FormAutocomplete
                         name="species"
                         label="Видовое название (эпитет)"
-                        searchFn={speciesSearchFn}
+                        options={speciesSearchFn}
                         placeholder="Только эпитет, без рода"
                         onSelectSuggestion={handleTaxonSuggestionSelect}
                         onCommitTyped={handleTaxonTypedCommit}

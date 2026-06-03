@@ -42,7 +42,7 @@ describe('FormAutocomplete', () => {
             <FormAutocomplete
                 name="family"
                 label="Семейство"
-                searchFn={vi.fn().mockResolvedValue([])}
+                options={vi.fn().mockResolvedValue([])}
                 placeholder="Начните вводить…"
             />,
         );
@@ -57,7 +57,7 @@ describe('FormAutocomplete', () => {
             <FormAutocomplete
                 name="family"
                 label="Family"
-                searchFn={vi.fn().mockResolvedValue([])}
+                options={vi.fn().mockResolvedValue([])}
                 placeholder="Type here…"
             />,
         );
@@ -72,7 +72,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                 />,
             );
@@ -106,7 +106,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onCommitTyped={onCommitTyped}
                 />,
@@ -139,7 +139,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onCommitTyped={onCommitTyped}
                 />,
@@ -168,7 +168,7 @@ describe('FormAutocomplete', () => {
             <FormAutocomplete
                 name="location_remarks"
                 label="Заметки"
-                searchFn={searchFn}
+                options={searchFn}
                 placeholder="Начните вводить…"
                 onCommitTyped={onCommitTyped}
             />,
@@ -190,7 +190,7 @@ describe('FormAutocomplete', () => {
             <FormAutocomplete
                 name="location_remarks"
                 label="Заметки"
-                searchFn={searchFn}
+                options={searchFn}
                 placeholder="Начните вводить…"
                 onCommitTyped={onCommitTyped}
             />,
@@ -216,7 +216,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onSelectSuggestion={onSelectSuggestion}
                     debounceMs={0}
@@ -254,7 +254,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     debounceMs={0}
                 />,
@@ -289,7 +289,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                 />,
             );
@@ -319,7 +319,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                 />,
                 { family: 'Initial' },
@@ -348,7 +348,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onCommitTyped={onCommitTyped}
                 />,
@@ -385,7 +385,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     debounceMs={300}
                 />,
@@ -429,7 +429,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     debounceMs={100}
                 />,
@@ -462,7 +462,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onCommitTyped={onCommitTyped}
                 />,
@@ -502,7 +502,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onSelectSuggestion={onSelectSuggestion}
                     onCommitTyped={onCommitTyped}
@@ -542,7 +542,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     debounceMs={100}
                 />,
