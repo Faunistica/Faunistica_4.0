@@ -17,8 +17,6 @@ SHORT_COUNTRY_ALLOWLIST: frozenset[str] = _load_short_countries(
 
 GEOREF_SOURCES: frozenset[str] = frozenset({"lit", "vol", "none"})
 
-DATE_PRECISIONS: frozenset[str] = frozenset({"год", "месяц", "день"})
-
 TAXON_RANKS: frozenset[str] = frozenset({"genus", "species", "subspecies"})
 
 TYPE_STATUSES: frozenset[str] = frozenset(
