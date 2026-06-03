@@ -57,8 +57,8 @@ export const SidebarRecordItem = ({
         if (isMobile) setOpenMobile(false);
     }, [onNavigate, record_id, isMobile, setOpenMobile]);
 
-    const handleDelete = useCallback(() => {
-        void deleteRecord(record_id);
+    const handleDelete = useCallback(async () => {
+        await deleteRecord(record_id);
     }, [deleteRecord, record_id]);
 
     return (

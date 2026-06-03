@@ -1,5 +1,6 @@
 import { useFormStore, type FormState } from '@/store/formStore';
-import { useRecordFormActions, type RecordFormActions } from '@/hooks/useRecordFormActions';
+import { useFormActionsContext } from '@/store/formActionsContext';
+import type { RecordFormActions } from '@/hooks/useRecordFormActions';
 import { useStore } from 'zustand';
 import { useShallow } from 'zustand/shallow';
 
@@ -39,7 +40,7 @@ export function useRecordForm<T>(selector?: (ctx: { state: RecordFormState }) =>
     actions: RecordFormActions;
 } {
     const store = useFormStore();
-    const actions = useRecordFormActions(store);
+    const actions = useFormActionsContext();
 
     const state = useStore(store, useShallow(computeFormState));
 

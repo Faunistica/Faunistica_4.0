@@ -7,6 +7,8 @@ import { useRecordsListQuery, useRecordByIdQuery } from '@/api/recordAPI';
 import { useRecordIDs } from '@/hooks/useRecordIDs';
 import { useNavigate, useParams } from 'react-router';
 import { createFormStore, type FormState, StoreContext } from '@/store/formStore';
+import { ActionsContext } from '@/store/formActionsContext';
+import { useRecordFormActions } from '@/hooks/useRecordFormActions';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { TypedFetchBaseQueryError } from '@/api/baseQuery';
 import type { RecordForm } from '@/types/forms';
@@ -109,5 +111,11 @@ export function RecordFormProvider({
         finishInit(activeRecord.id);
     }, [activeRecord]);
 
-    return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
+    const actions = useRecordFormActions(store);
+
+    return (
+        <StoreContext.Provider value={store}>
+            <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
+        </StoreContext.Provider>
+    );
 }

@@ -26,6 +26,7 @@ const QuantitiesCard: FC = () => {
         compute: (data) =>
             data.reduce<number>((sum, v) => {
                 // Handle both numbers and strings from form inputs
+                // v should never be a boolean, it's a RHF thing
                 if (typeof v == 'boolean') {
                     return 0;
                 }
