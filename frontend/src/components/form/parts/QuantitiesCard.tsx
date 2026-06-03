@@ -27,7 +27,7 @@ const QuantitiesCard: FC = () => {
             data.reduce<number>((sum, v) => {
                 // Handle both numbers and strings from form inputs
                 // v should never be a boolean, it's a RHF thing
-                if (typeof v == 'boolean') {
+                if (typeof v === 'boolean') {
                     return 0;
                 }
                 const num = typeof v === 'string' ? parseFloat(v) : v;
@@ -159,7 +159,7 @@ const QuantitiesCard: FC = () => {
                                 placeholder="Укажите специфические детали экземпляра…"
                                 aria-invalid={invalid}
                                 {...field}
-                                value={field.value?.toString()}
+                                value={field.value?.toString() ?? ''}
                             />
                             <FieldError errors={[error]} />
                         </Field>

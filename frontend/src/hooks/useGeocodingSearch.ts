@@ -25,12 +25,17 @@ function useGeocodingSearch() {
         async (query: string, signal: AbortSignal) => {
             // TODO: use backend's reverse geocode
             // https://operations.osmfoundation.org/policies/nominatim/
-            const res = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=ru`,
-                { signal },
-            );
-            const data: unknown = await res.json();
-            return isSearchResultArray(data) ? data : [];
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=ru`,
+                    { signal },
+                );
+                const data: unknown = await res.json();
+                return isSearchResultArray(data) ? data : [];
+            } catch (e) {
+                if (e instanceof DOMException && e.name === 'AbortError') throw e;
+                return [];
+            }
         },
         setResults,
         DEBOUNCE_MS,

@@ -140,9 +140,7 @@ function TestHarness({ children }: { children: React.ReactNode }) {
                     path="/publication/:publ_id/:record"
                     element={
                         <FormProvider {...methods}>
-                            <RecordFormProvider publ_id={1}>
-                                <FormProvider {...methods}>{children}</FormProvider>
-                            </RecordFormProvider>
+                            <RecordFormProvider publ_id={1}>{children}</RecordFormProvider>
                         </FormProvider>
                     }
                 />

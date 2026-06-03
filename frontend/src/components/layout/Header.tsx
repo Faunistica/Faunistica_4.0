@@ -55,6 +55,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             size="icon"
                             className="size-9 rounded-md text-slate-600 lg:hidden"
                             onClick={() => setSidebarOpen(true)}
+                            aria-label="Открыть боковую панель"
                         >
                             <PanelLeft className="size-5" />
                         </Button>
@@ -66,6 +67,8 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             size="icon"
                             className="size-9 rounded-md text-slate-600 md:hidden"
                             onClick={() => setIsMobileMenuOpen((v) => !v)}
+                            aria-label="Открыть меню"
+                            aria-expanded={isMobileMenuOpen}
                         >
                             {isMobileMenuOpen ? (
                                 <X className="size-5" />
