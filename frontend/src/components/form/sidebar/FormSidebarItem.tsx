@@ -68,54 +68,15 @@ export const SidebarRecordItem = ({
                 replace
                 onClick={handleClick}
                 className={cn(
-                    'group/menu-button flex w-full cursor-pointer flex-col items-start gap-2 rounded-md px-3 py-2 text-left no-underline transition-all duration-200',
+                    'group/menu-button flex h-18 w-full cursor-pointer flex-col items-start justify-center gap-2 rounded-md px-3 py-2 text-left no-underline transition-all duration-200',
                     isActive ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200' : 'hover:bg-slate-50',
                 )}
             >
-                <div className="flex w-full items-center justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-2">
-                        <RecordStatusIndicator status={status} />
-                        <span className="truncate text-xs/tight font-bold text-slate-700">
-                            {recordName}
-                        </span>
-                    </div>
-
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="size-6 shrink-0 rounded-md text-slate-400 opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 data-[active=true]:opacity-100 md:opacity-0 md:group-hover/menu-button:opacity-100 md:data-[active=true]:opacity-100"
-                                onClick={(e) => e.stopPropagation()}
-                                aria-label="Удалить запись"
-                            >
-                                <Trash2 className="size-3.5" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Вы абсолютно уверены?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Это действие нельзя отменить. Запись будет безвозвратно удалена.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
-                                    Отмена
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                    variant="destructive"
-                                    onClick={async (e) => {
-                                        e.stopPropagation();
-                                        await handleDelete();
-                                    }}
-                                >
-                                    Удалить
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                <div className="flex min-w-0 items-center gap-2 pb-1">
+                    <RecordStatusIndicator status={status} />
+                    <span className="truncate text-xs/tight font-bold text-slate-700">
+                        {recordName}
+                    </span>
                 </div>
 
                 <div className="flex w-full items-center gap-1.5 pl-0.5 text-[10px] text-slate-500">
@@ -135,6 +96,39 @@ export const SidebarRecordItem = ({
                     )}
                 </div>
             </NavLink>
+
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2.5 right-1.5 z-10 size-6 shrink-0 rounded-md text-slate-400 opacity-100 transition-opacity group-hover/menu-item:opacity-100 hover:bg-red-100 hover:text-red-600 aria-expanded:opacity-100 md:opacity-0"
+                        aria-label="Удалить запись"
+                    >
+                        <Trash2 className="size-3.5" />
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Вы абсолютно уверены?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Это действие нельзя отменить. Запись будет безвозвратно удалена.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Отмена</AlertDialogCancel>
+                        <AlertDialogAction
+                            variant="destructive"
+                            onClick={async () => {
+                                await handleDelete();
+                            }}
+                        >
+                            Удалить
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </SidebarMenuItem>
     );
 };
