@@ -13,7 +13,6 @@ from core.enums import RecordType
 from core.exceptions import (
     ImportLimitExceededError,
     NoPublicationsAssignedError,
-    PivotWithoutPublID,
     PublicationForbiddenError,
     RecordForbiddenError,
     RecordLimitExceededError,
@@ -182,7 +181,7 @@ class RecordService:
     async def list_records(
         self,
         user_id: int,
-        publ_id: int | None,
+        publ_id: int,
         page: int = 1,
         page_size: int = 20,
         sort: Literal["created_at", "updated_at"] = "created_at",
@@ -190,8 +189,6 @@ class RecordService:
     ) -> PaginatedResponse[RecordFull]:
         """List records with pagination, filtered by user_id and publ_id."""
         if pivot_record_id is not None:
-            if publ_id is None:
-                raise PivotWithoutPublID(pivot_record_id)
             result = await repo.get_record_page(
                 self.session,
                 pivot_record_id,

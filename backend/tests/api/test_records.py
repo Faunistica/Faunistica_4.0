@@ -154,7 +154,9 @@ async def test_get_record_wrong_user(
 @pytest.mark.asyncio
 async def test_list_records_all_publs(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
-    response = await authenticated_client.get(f"/api/records?user_id={user.user_id}")
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}"
+    )
     assert response.status_code == 200
 
 
@@ -371,7 +373,7 @@ async def test_export_records_default(
     """Test export returns Excel file with user's records."""
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}"
+        f"/api/records/export?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}"
     )
     assert response.status_code == 200
     assert (
@@ -388,7 +390,7 @@ async def test_export_records_project_non_admin_403(
     """Test export with scope=project returns 403 for non-admin."""
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}&scope=project"
+        f"/api/records/export?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&scope=project"
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -398,7 +400,7 @@ async def test_export_records_csv(authenticated_client: AsyncClient, seed_data) 
     """Test export returns CSV file with user's records."""
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}&format=csv"
+        f"/api/records/export?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&format=csv"
     )
     assert response.status_code == 200
     assert "text/csv" in response.headers["content-type"]
@@ -415,7 +417,7 @@ async def test_export_records_xlsx_default(
     """Test export returns Excel file by default."""
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}"
+        f"/api/records/export?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}"
     )
     assert response.status_code == 200
     assert (

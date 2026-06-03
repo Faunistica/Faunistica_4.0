@@ -76,7 +76,7 @@ async def delete_record(session: AsyncSession, record_id: UUID) -> EventRecord |
 async def get_records_paginated(
     session: AsyncSession,
     user_id: int,
-    publ_id: int | None,
+    publ_id: int,
     page: int = 1,
     page_size: int = 20,
     sort: Literal["created_at", "updated_at"] = "created_at",
@@ -85,16 +85,11 @@ async def get_records_paginated(
 
     order_col = getattr(EventRecord, sort, EventRecord.created_at)
 
-    if publ_id is None:
-        where_condition = and_(
-            EventRecord.user_id == user_id, EventRecord.type != RecordType.REC_DEL
-        )
-    else:
-        where_condition = and_(
-            EventRecord.user_id == user_id,
-            EventRecord.publ_id == publ_id,
-            EventRecord.type != RecordType.REC_DEL,
-        )
+    where_condition = and_(
+        EventRecord.user_id == user_id,
+        EventRecord.publ_id == publ_id,
+        EventRecord.type != RecordType.REC_DEL,
+    )
 
     count_stmt = select(func.count()).where(where_condition)
     count_result = await session.execute(count_stmt)

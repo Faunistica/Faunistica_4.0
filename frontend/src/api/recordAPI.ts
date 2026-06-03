@@ -112,7 +112,7 @@ export const recordAPI = createApi({
         }),
         downloadRecords: build.mutation<
             null,
-            { user_id?: number; publ_id?: number; scope?: string; format?: string }
+            { user_id?: number; publ_id: number; scope?: string; format?: string }
         >({
             queryFn: async (params, _api, _extraOptions, baseQuery) => {
                 const result = await baseQuery({
