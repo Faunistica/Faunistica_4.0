@@ -42,8 +42,12 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
     const [coordFormat, setCoordFormat] = useState<'DD' | 'DM' | 'DMS' | ''>('');
 
     useEffect(() => {
-        if (georefSource == 'vol' && getValues('verbatimcoordinates') !== null) {
-            setValue('verbatimcoordinates' as const, null, {
+        if (georefSource == 'none') {
+            setValue('latitude', 0, { shouldValidate: true });
+            setValue('longitude', 0, { shouldValidate: true });
+            setValue('verbatimcoordinates', null, { shouldValidate: true });
+        } else if (georefSource == 'vol' && getValues('verbatimcoordinates') !== null) {
+            setValue('verbatimcoordinates', null, {
                 shouldValidate: true,
             });
         }
