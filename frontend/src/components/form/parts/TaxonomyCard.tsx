@@ -225,7 +225,7 @@ const TaxonomyCard: FC = () => {
                                     placeholder="Примечания ко всему таксону…"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -244,7 +244,7 @@ const TaxonomyCard: FC = () => {
                                     placeholder="Примечания к определению…"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>

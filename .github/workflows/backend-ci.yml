@@ -55,6 +55,8 @@ jobs:
       DB_NAME: faunistica
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version-file: "backend/.python-version"

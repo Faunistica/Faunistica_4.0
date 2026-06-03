@@ -82,7 +82,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="день, месяц, год…"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -161,7 +161,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Число"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -179,7 +179,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="ловушки, взмахи сачком…"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -211,7 +211,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Описание местообитания; второе местообитание"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -252,7 +252,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Погодные условия, методика и т.п."
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -272,7 +272,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Полевой №"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -289,7 +289,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Каталожный №"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -306,7 +306,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Код коллекции"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
