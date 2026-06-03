@@ -80,7 +80,7 @@ const Footer: FC = () => {
                 animate={animateMotion && isHidden ? 'hidden' : 'visible'}
                 inert={isHidden}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="fixed inset-x-0 bottom-0 z-90 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10"
+                className="fixed inset-x-0 bottom-0 z-100 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10"
             >
                 <div className="flex items-center gap-4">
                     <Button
