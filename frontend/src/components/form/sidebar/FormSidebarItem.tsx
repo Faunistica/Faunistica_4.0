@@ -106,9 +106,9 @@ export const SidebarRecordItem = ({
                                 </AlertDialogCancel>
                                 <AlertDialogAction
                                     variant="destructive"
-                                    onClick={(e) => {
+                                    onClick={async (e) => {
                                         e.stopPropagation();
-                                        handleDelete();
+                                        await handleDelete();
                                     }}
                                 >
                                     Удалить

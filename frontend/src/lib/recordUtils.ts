@@ -6,6 +6,7 @@ import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 const RECORD_FORM_KEYS = new Set(Object.keys(FORM_DEFAULT_VALUES));
 
 const NULLISH_NUMBER_FIELDS = new Set<string>(['coordinate_uncertainty', 'sample_size_value']);
+const QUANTITY_FIELD_SET = new Set<string>(QUANTITY_FIELDS);
 
 const SPECIMEN_FIELD_MAP: Array<{
     sex: Specimen['sex'];
@@ -81,7 +82,7 @@ export const draftToRecordData = (draft: Partial<RecordForm>): RecordData => {
         identification_remarks: null,
     };
     for (const [key, val] of Object.entries(draft)) {
-        if (key in QUANTITY_FIELDS || val == null) continue;
+        if (QUANTITY_FIELD_SET.has(key) || val == null) continue;
         if (val === undefined) continue;
         if (NULLISH_NUMBER_FIELDS.has(key) && val === 0) continue;
         if ((key === 'latitude' || key === 'longitude') && typeof val === 'number') {
