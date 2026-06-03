@@ -197,7 +197,7 @@ const Footer: FC = () => {
                                 void actions.deleteRecord(activeRecordId!);
                                 setIsDeleteDialogOpen(false);
                             }}
-                            disabled={isBusy}
+                            disabled={isBusy || activeRecordId === null}
                             variant="destructive"
                         >
                             Удалить
