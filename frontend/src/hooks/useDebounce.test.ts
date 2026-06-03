@@ -16,6 +16,24 @@ describe('useDebouncedCallback', () => {
         expect(result.current.fn).toBe(firstFn);
     });
 
+    it('calls latest callback after rerender, not old one', async () => {
+        const oldCb = vi.fn();
+        const newCb = vi.fn();
+        const { result, rerender } = renderHook(
+            ({ cb }) => useDebouncedCallback(cb, 300),
+            { initialProps: { cb: oldCb } },
+        );
+
+        rerender({ cb: newCb });
+
+        result.current.fn('arg');
+        await new Promise((r) => setTimeout(r, 350));
+
+        expect(newCb).toHaveBeenCalledOnce();
+        expect(newCb).toHaveBeenCalledWith('arg');
+        expect(oldCb).not.toHaveBeenCalled();
+    });
+
     it('calls the latest callback when invoked', async () => {
         const fn = vi.fn();
         const { result } = renderHook(({ cb }) => useDebouncedCallback(cb, 10), {

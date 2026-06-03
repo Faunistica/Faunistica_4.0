@@ -1,4 +1,4 @@
-import { type ComponentProps, type FC, useState, useRef, useEffect, useCallback } from 'react';
+import { type ComponentProps, useState, useRef, useEffect, useCallback, forwardRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -22,19 +22,21 @@ type AutocompleteProps = OverrideProps<
  * Text input with a dropdown list of suggestions.
  * Fully controlled: parent provides onChange, suggestions, and search trigger.
  */
-const Autocomplete: FC<AutocompleteProps> = ({
-    onChange,
-    onSelect,
-    onSearch,
-    suggestions,
-    isLoading = false,
-    className,
-    minChars = 2,
-    blurOnSelect = false,
-    onBlur: onBlurProp,
-    ref: refProp,
-    ...props
-}) => {
+const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
+    ({
+        onChange,
+        onSelect,
+        onSearch,
+        suggestions,
+        isLoading = false,
+        className,
+        minChars = 2,
+        blurOnSelect = false,
+        onBlur: onBlurProp,
+        onFocus: onFocusProp,
+        onKeyDown: onKeyDownProp,
+        ...props
+    }, forwardedRef) => {
     const [isFocused, setIsFocused] = useState(false);
     const [highlightIndex, setHighlightIndex] = useState(-1);
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -118,25 +120,29 @@ const Autocomplete: FC<AutocompleteProps> = ({
             <div className="relative">
                 <Input
                     className={className}
+                    {...props}
                     onChange={handleInputChange}
-                    onFocus={() => {
+                    onFocus={(e) => {
                         setIsFocused(true);
+                        onFocusProp?.(e);
                     }}
                     onBlur={(e) => {
                         setIsFocused(false);
                         onBlurProp?.(e);
                     }}
+                    onKeyDown={(e) => {
+                        onKeyDownProp?.(e);
+                        handleKeyDown(e);
+                    }}
                     autoComplete="off"
-                    {...props}
                     ref={(el) => {
                         inputRef.current = el;
-                        if (typeof refProp === 'function') {
-                            refProp(el);
-                        } else if (refProp) {
-                            refProp.current = el;
+                        if (typeof forwardedRef === 'function') {
+                            forwardedRef(el);
+                        } else if (forwardedRef) {
+                            forwardedRef.current = el;
                         }
                     }}
-                    onKeyDown={handleKeyDown}
                 />
                 {isLoading && (
                     <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
@@ -177,6 +183,6 @@ const Autocomplete: FC<AutocompleteProps> = ({
             )}
         </div>
     );
-};
+});
 
 export default Autocomplete;
