@@ -49,6 +49,7 @@ const FORM_RECORD_FIELDS: (keyof RecordForm)[] = [
 export function syncServerErrors(
     errors: RecordValidationError[],
     methods: UseFormReturn<RecordForm>,
+    options?: { excludeRequired?: boolean },
 ): string[] {
     methods.clearErrors();
 
@@ -56,6 +57,9 @@ export function syncServerErrors(
     if (!errors?.length) return nonField;
 
     for (const err of errors) {
+        if (options?.excludeRequired && err.code === 'required') {
+            continue;
+        }
         if (err.fields && err.fields.length > 0) {
             let matched = false;
             for (const field of err.fields) {

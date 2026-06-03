@@ -82,10 +82,7 @@ export function RecordFormProvider({
 
         const formValues = { ...FORM_DEFAULT_VALUES, ...toFormPartial(record) };
         const currentSnapshot = JSON.stringify(formValues);
-        if (currentSnapshot === store.getState().snapshot) {
-            if (store.getState().pendingSync) {
-                store.setState({ pendingSync: false, ...newState });
-            }
+        if (currentSnapshot === store.getState().snapshot && !store.getState().pendingSync) {
             return;
         }
 
@@ -95,7 +92,7 @@ export function RecordFormProvider({
             keepTouched: false,
             keepDirty: false,
         });
-        const nonField = syncServerErrors(record.errors ?? [], methods);
+        const nonField = syncServerErrors(record.errors ?? [], methods, { excludeRequired: true });
         const errorCount = record.errors?.length || 0;
         store.setState({ globalErrors: nonField, hasErrors: errorCount > 0 });
 
