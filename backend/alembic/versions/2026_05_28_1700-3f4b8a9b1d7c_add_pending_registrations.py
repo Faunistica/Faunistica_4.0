@@ -28,9 +28,7 @@ def upgrade() -> None:
         sa.Column("code", sa.String(length=20), nullable=False),
         sa.Column("username", sa.String(length=255), nullable=False),
         sa.Column("password_hash", sa.String(length=255), nullable=False),
-        sa.Column(
-            "status", sa.String(length=32), server_default="pending", nullable=False
-        ),
+        sa.Column("status", sa.Integer(), nullable=False),
         sa.Column(
             "created_at", sa.TIMESTAMP(), server_default=func.now(), nullable=False
         ),

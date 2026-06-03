@@ -8,17 +8,14 @@ from core.dependencies import DBSession
 from core.enums import PendingStatus
 from core.exceptions import (
     RegistrationAlreadyStartedError,
-    RegistrationNotFoundError,
     UsernameAlreadyExistsError,
 )
 from core.rate_limiter import limiter
 from core.security import generate_code_for_registration, get_password_hash
 from repository.registration import (
     create_pending_registration,
-    delete_expired_by_username,
     get_pending_by_code,
     get_pending_by_username,
-    update_pending_by_code,
 )
 from repository.user import find_user_by_username
 from schema.registration import (
@@ -26,7 +23,6 @@ from schema.registration import (
     RegistrationStartResponse,
     RegistrationStatusResponse,
 )
-from service.registration import is_registration_expired
 
 router = APIRouter()
 
@@ -40,7 +36,9 @@ async def start_registration(
 ) -> RegistrationStartResponse:
     username = data.username
     password = data.password
-
+    age = data.age
+    language = data.language
+    comm = data.comm
     existing_user = await find_user_by_username(session, username)
     if existing_user is not None:
         raise UsernameAlreadyExistsError(username)
@@ -48,14 +46,18 @@ async def start_registration(
     pending_for_username = await get_pending_by_username(session, username)
     if pending_for_username is not None:
         raise RegistrationAlreadyStartedError(username)
-
-    await delete_expired_by_username(session, username)
     code = await generate_code_for_registration()
     existing = await get_pending_by_code(session, code)
     if existing is None:
         password_hash = get_password_hash(password)
         await create_pending_registration(
-            session, username=username, password_hash=password_hash, code=code
+            session,
+            username=username,
+            password_hash=password_hash,
+            code=code,
+            age=age,
+            language=language,
+            comm=comm,
         )
         await session.commit()
 
@@ -84,19 +86,10 @@ async def registration_status(
     for _ in range(timeout // settings.REGISTRATION_POLL_INTERVAL_SECONDS):
         pending = await get_pending_by_code(session, code)
         if pending is None:
-            raise RegistrationNotFoundError(code)
+            await session.rollback()
+            return RegistrationStatusResponse(status=PendingStatus.NOT_FOUND)
 
-        if pending.status == PendingStatus.PENDING and is_registration_expired(
-            pending.created_at
-        ):
-            pending = await update_pending_by_code(
-                session,
-                code,
-                status="expired",
-            )
-            await session.commit()
-
-        if pending.status != PendingStatus.PENDING:
+        if pending.status == PendingStatus.CONFIRMED:
             return RegistrationStatusResponse(
                 status=pending.status,
                 username=pending.username,

@@ -3,6 +3,7 @@ import json
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import aiohttp
@@ -15,8 +16,9 @@ from sqlalchemy import Connection, text
 
 from bot import bot
 from core.config import settings
-from core.database import _engine, init_db, ping_db
+from core.database import _engine, get_session, init_db, ping_db
 from core.model import Base
+from repository.registration import delete_confirmed_pending, delete_expired_pending
 from schema.geo import RegionData
 
 _ALEMBIC_CFG_PATH = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
@@ -96,6 +98,36 @@ async def _check_migrations() -> None:
     logger.info("Alembic migrations are up to date (head: %s)", head_rev)
 
 
+async def _cleanup_pending_registrations() -> None:
+    while True:
+        try:
+            async for session in get_session():
+                now = datetime.now()
+                expired_cutoff = now - timedelta(
+                    seconds=settings.REGISTRATION_EXPIRE_SECONDS
+                )
+                confirmed_cutoff = now - timedelta(
+                    seconds=settings.REGISTRATION_CONFIRMED_BACKLOG_SECONDS
+                )
+                expired_count = await delete_expired_pending(session, expired_cutoff)
+                confirmed_count = await delete_confirmed_pending(
+                    session, confirmed_cutoff
+                )
+                if expired_count or confirmed_count:
+                    logger.info(
+                        "Cleaned pending registrations: expired=%d confirmed=%d",
+                        expired_count,
+                        confirmed_count,
+                    )
+                await session.commit()
+        except asyncio.CancelledError:
+            return
+        except Exception:
+            logger.exception("Failed to clean pending registrations")
+
+        await asyncio.sleep(settings.REGISTRATION_CLEANUP_INTERVAL_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     await init_db()
@@ -131,6 +163,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         app.state.location_data = []
 
     bot_task = asyncio.create_task(bot.start())
+    cleanup_task = asyncio.create_task(_cleanup_pending_registrations())
 
     try:
         yield
@@ -140,3 +173,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.info("Shutting down bot...")
         bot_task.cancel()
         await bot_task
+        logger.info("Stopping registration cleanup...")
+        cleanup_task.cancel()
+        await cleanup_task

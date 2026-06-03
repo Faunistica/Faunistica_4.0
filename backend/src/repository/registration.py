@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,11 +14,17 @@ async def create_pending_registration(
     username: str,
     password_hash: str,
     code: str,
+    age: int,
+    language: str,
+    comm: str,
 ) -> PendingRegistration:
     pending = PendingRegistration(
         username=username,
         password_hash=password_hash,
         code=code,
+        age=age,
+        language=language,
+        comm=comm,
     )
     session.add(pending)
     await session.flush()
@@ -46,7 +54,6 @@ async def get_pending_by_username(
     )
     result = await session.execute(stmt)
     pending = result.scalar_one_or_none()
-
     if pending and is_registration_expired(pending.created_at):
         return None
     return pending
@@ -70,9 +77,20 @@ async def delete_pending_by_code(session: AsyncSession, code: str) -> None:
     await session.execute(stmt)
 
 
-async def delete_expired_by_username(session: AsyncSession, username: str) -> None:
+async def delete_expired_pending(session: AsyncSession, cutoff: datetime) -> int:
     stmt = delete(PendingRegistration).where(
-        PendingRegistration.username == username,
-        PendingRegistration.status == PendingStatus.EXPIRED,
+        PendingRegistration.status == PendingStatus.PENDING,
+        PendingRegistration.created_at < cutoff,
     )
-    await session.execute(stmt)
+    result = await session.execute(stmt)
+    return result.rowcount or 0
+
+
+async def delete_confirmed_pending(session: AsyncSession, cutoff: datetime) -> int:
+    stmt = delete(PendingRegistration).where(
+        PendingRegistration.status == PendingStatus.CONFIRMED,
+        PendingRegistration.confirmed_at.is_not(None),
+        PendingRegistration.confirmed_at < cutoff,
+    )
+    result = await session.execute(stmt)
+    return result.rowcount or 0

@@ -65,6 +65,9 @@ class PendingRegistration(Base):
     code: Mapped[str] = mapped_column(String(20), unique=True, index=True)
     username: Mapped[str] = mapped_column(String(255))
     password_hash: Mapped[str] = mapped_column(String(255))
+    age: Mapped[int | None] = mapped_column(Integer)
+    language: Mapped[str | None] = mapped_column(String(10))
+    comm: Mapped[str | None] = mapped_column(String)
     status: Mapped[PendingStatus] = mapped_column(
         PendingStatusType,
         default=PendingStatus.PENDING,

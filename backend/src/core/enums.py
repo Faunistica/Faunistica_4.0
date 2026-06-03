@@ -105,7 +105,7 @@ class UserState(IntEnum):
 
 class PendingStatus(IntEnum):
     PENDING = 0
-    EXPIRED = 1
+    NOT_FOUND = 1
     CONFIRMED = 2
 
 
