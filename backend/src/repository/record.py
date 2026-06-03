@@ -129,7 +129,12 @@ async def get_record_page(
 
     pivot = (
         await session.execute(
-            select(order_col, EventRecord.id).where(EventRecord.id == record_id)
+            select(order_col, EventRecord.id).where(
+                EventRecord.id == record_id,
+                EventRecord.user_id == user_id,
+                EventRecord.publ_id == publ_id,
+                EventRecord.type != RecordType.REC_DEL,
+            )
         )
     ).one_or_none()
 
