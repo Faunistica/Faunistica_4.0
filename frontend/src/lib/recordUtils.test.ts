@@ -176,7 +176,7 @@ describe('toFormPartial', () => {
         expect(result.latitude).toBe(55.5);
         expect(result.longitude).toBe(37.2);
         expect(result.is_manual_location).toBe(false);
-        expect(result.verbatimcoordinates).toBe('');
+        expect(result.verbatimcoordinates).toBe(null);
         expect(result.coordinate_uncertainty).toBe(0);
         expect(result.date_precision).toBe('');
     });

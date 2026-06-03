@@ -92,7 +92,8 @@ export function RecordFormProvider({
             keepTouched: false,
             keepDirty: false,
         });
-        const nonField = syncServerErrors(record.errors ?? [], methods, { excludeRequired: true });
+        const excludeRequired = !initialRecordLoaded || store.getState().pendingSync;
+        const nonField = syncServerErrors(record.errors ?? [], methods, { excludeRequired });
         const errorCount = record.errors?.length || 0;
         store.setState({ globalErrors: nonField, hasErrors: errorCount > 0 });
 
