@@ -45,10 +45,11 @@ export function FormAutocomplete({
     }, [field.value]);
 
     useEffect(() => {
-        if (isStaticArray) {
-            setSuggestions(options as string[]);
+        if (Array.isArray(options)) {
+            // oxlint-disable-next-line react-hooks-js/set-state-in-effect
+            setSuggestions(options);
         }
-    }, [options, isStaticArray]);
+    }, [options]);
 
     const { fn: debouncedSearch, cancel: cancelSearch } = useDebouncedRaceSafe(
         async (text: string, signal: AbortSignal) => {
@@ -63,17 +64,13 @@ export function FormAutocomplete({
 
     const handleSearch = useCallback(
         (text: string) => {
-            if (isStaticArray) {
-                setSuggestions(
-                    (options as string[]).filter((o) =>
-                        o.toLowerCase().includes(text.toLowerCase()),
-                    ),
-                );
+            if (Array.isArray(options)) {
+                setSuggestions(options.filter((o) => o.toLowerCase().includes(text.toLowerCase())));
             } else {
                 debouncedSearch(text);
             }
         },
-        [options, isStaticArray, debouncedSearch],
+        [options, debouncedSearch],
     );
 
     const handleBlur = useCallback(async () => {
@@ -96,13 +93,13 @@ export function FormAutocomplete({
                     setValue(name, val);
                     lastCommittedRef.current = val;
                     setSuggestions([]);
-                    if (!isStaticArray) {
+                    if (Array.isArray(options)) {
                         cancelSearch();
                     }
                     onSelectSuggestion?.(val);
                 }}
                 onBlur={handleBlur}
-                onFocus={isStaticArray ? () => setSuggestions(options as string[]) : undefined}
+                onFocus={Array.isArray(options) ? () => setSuggestions(options) : undefined}
                 onSearch={handleSearch}
                 suggestions={suggestions}
                 isLoading={isLoading}
