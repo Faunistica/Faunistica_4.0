@@ -1,7 +1,6 @@
 import { defineConfig } from 'oxlint';
 import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
 import reactCompiler from 'eslint-plugin-react-compiler';
-
 export default defineConfig({
     options: {
         typeAware: true,
@@ -9,8 +8,7 @@ export default defineConfig({
     },
     plugins: ['react', 'react-perf', 'import', 'typescript', 'unicorn', 'oxc', 'promise'],
     jsPlugins: [
-        'eslint-plugin-react-refresh',
-        'eslint-plugin-better-tailwindcss',
+'eslint-plugin-better-tailwindcss',
         'eslint-plugin-react-compiler',
         {
             name: 'react-hooks-js',
@@ -29,7 +27,7 @@ export default defineConfig({
     rules: {
         ...betterTailwindcss.configs.recommended.rules,
         ...reactCompiler.configs.recommended.rules,
-        'typescript/no-explicit-any': 'warn',
+'typescript/no-explicit-any': 'warn',
         'typescript/no-empty-object-type': 'warn',
         'typescript/no-misused-promises': 'off',
         'typescript/no-unsafe-assignment': 'error',
