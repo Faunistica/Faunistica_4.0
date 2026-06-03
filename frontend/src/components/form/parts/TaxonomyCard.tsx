@@ -223,6 +223,7 @@ const TaxonomyCard: FC = () => {
                                 <Textarea
                                     id="taxon_remarks"
                                     placeholder="Примечания ко всему таксону…"
+                                    className="h-fit"
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString() ?? ''}
@@ -242,6 +243,7 @@ const TaxonomyCard: FC = () => {
                                 <Textarea
                                     id="identification_remarks"
                                     placeholder="Примечания к определению…"
+                                    className="h-fit"
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString() ?? ''}

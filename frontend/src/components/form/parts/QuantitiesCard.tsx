@@ -130,7 +130,7 @@ const QuantitiesCard: FC = () => {
                             </FieldLabel>
                             <Textarea
                                 id="occurrence_remarks"
-                                className="min-h-18 resize-none"
+                                className="h-fit min-h-18"
                                 placeholder="Укажите специфические детали экземпляра…"
                                 aria-invalid={invalid}
                                 {...field}

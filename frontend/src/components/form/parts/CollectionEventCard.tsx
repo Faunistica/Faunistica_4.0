@@ -248,7 +248,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                 </FieldLabel>
                                 <Textarea
                                     id="event_remarks"
-                                    className="min-h-20 resize-none"
+                                    className="h-fit min-h-20"
                                     placeholder="Погодные условия, методика и т.п."
                                     aria-invalid={invalid}
                                     {...field}
