@@ -152,9 +152,10 @@ class UserState(IntEnum):
 
 
 class PendingStatus(IntEnum):
-    PENDING = 0
-    NOT_FOUND = 1
-    CONFIRMED = 2
+    CODE_PROCESSING = 0
+    AUTH = 1
+    REGISTRATION = 2
+    CONFIRMED = 3
 
 
 class PendingStatusType(TypeDecorator):
@@ -167,7 +168,7 @@ class PendingStatusType(TypeDecorator):
         dialect: Dialect,
     ) -> int:
         if value is None:
-            return PendingStatus.PENDING
+            return PendingStatus.CODE_PROCESSING
         return int(value)
 
     def process_result_value(
@@ -176,5 +177,5 @@ class PendingStatusType(TypeDecorator):
         dialect: Dialect,
     ) -> "PendingStatus | None":
         if value is None:
-            return PendingStatus.PENDING
+            return PendingStatus.CODE_PROCESSING
         return PendingStatus(value)

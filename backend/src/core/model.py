@@ -67,23 +67,19 @@ class PendingRegistration(Base):
         server_default=Identity(),
     )
     code: Mapped[str] = mapped_column(String(20), unique=True, index=True)
-    username: Mapped[str] = mapped_column(String(255))
-    password_hash: Mapped[str] = mapped_column(String(255))
-    age: Mapped[int | None] = mapped_column(Integer)
-    lng: Mapped[str | None] = mapped_column(String(10))
-    comm: Mapped[str | None] = mapped_column(String)
+    token: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     status: Mapped[PendingStatus] = mapped_column(
         PendingStatusType,
-        default=PendingStatus.PENDING,
+        default=PendingStatus.CODE_PROCESSING,
         server_default="0",
     )
-    created_at: Mapped[datetime_type] = mapped_column(
+    code_created_at: Mapped[datetime_type] = mapped_column(
+        TIMESTAMP, server_default=func.now()
+    )
+    token_created_at: Mapped[datetime_type] = mapped_column(
         TIMESTAMP, server_default=func.now()
     )
     confirmed_at: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
-    telegram_id: Mapped[int | None] = mapped_column(BigInteger)
-    telegram_username: Mapped[str | None] = mapped_column(String(255))
-    telegram_name: Mapped[str | None] = mapped_column(String(255))
 
 
 class Publication(Base):

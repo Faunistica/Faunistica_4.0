@@ -110,16 +110,18 @@ async def _check_alembic_version() -> None:
     logger.info("Alembic migrations are up to date (head: %s)", head_rev)
 
 
-async def _cleanup_pending_registrations() -> None:
+async def _cleanup_pending_registrations() -> (
+    None
+):  # change deleted by code to deleted by token
     while True:
         try:
             async for session in get_session():
                 now = datetime.now()
                 expired_cutoff = now - timedelta(
-                    seconds=settings.REGISTRATION_EXPIRE_SECONDS
+                    seconds=settings.TG_CODE_EXPIRE_SECONDS
                 )
                 confirmed_cutoff = now - timedelta(
-                    seconds=settings.REGISTRATION_CONFIRMED_BACKLOG_SECONDS
+                    seconds=settings.REGISTRATION_PENDING_CONFIRMED_BACKLOG_SECONDS
                 )
                 expired_count = await delete_expired_pending(session, expired_cutoff)
                 confirmed_count = await delete_confirmed_pending(
@@ -137,7 +139,7 @@ async def _cleanup_pending_registrations() -> None:
         except Exception:
             logger.exception("Failed to clean pending registrations")
 
-        await asyncio.sleep(settings.REGISTRATION_CLEANUP_INTERVAL_SECONDS)
+        await asyncio.sleep(settings.REGISTRATION_PENDING_CLEANUP_INTERVAL_SECONDS)
 
 
 @asynccontextmanager

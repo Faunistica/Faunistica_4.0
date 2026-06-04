@@ -80,12 +80,13 @@ class DataSettings(CamelCaseSettings):
     URAL_BORDER_PATH: Path = Path("data/ural_border.geojson")
 
 
-class RegistrationSettings(CamelCaseSettings):
-    REGISTRATION_EXPIRE_SECONDS: int = 15 * 60  # 15min
-    REGISTRATION_POLL_INTERVAL_SECONDS: int = 1
-    REGISTRATION_POLL_TIMEOUT_SECONDS: int = 25
-    REGISTRATION_CLEANUP_INTERVAL_SECONDS: int = 10 * 60  # 10 min
-    REGISTRATION_CONFIRMED_BACKLOG_SECONDS: int = 5 * 60  # 5 min
+class TGAuthSettings(CamelCaseSettings):
+    TG_TOKEN_EXPIRE_SECONDS: int = 60 * 60  # 60min
+    TG_CODE_EXPIRE_SECONDS: int = 15 * 60  # 15min
+    TG_AUTH_POLL_INTERVAL_SECONDS: int = 1
+    TG_AUTH_POLL_TIMEOUT_SECONDS: int = 25
+    REGISTRATION_PENDING_CLEANUP_INTERVAL_SECONDS: int = 10 * 60  # 10 min
+    REGISTRATION_PENDING_CONFIRMED_BACKLOG_SECONDS: int = 5 * 60  # 5 min
 
 
 class Settings(
@@ -95,7 +96,7 @@ class Settings(
     LoggingSettings,
     AppSettings,
     DataSettings,
-    RegistrationSettings,
+    TGAuthSettings,
 ):
     model_config = SettingsConfigDict(
         yaml_file=Path("config.yaml"),

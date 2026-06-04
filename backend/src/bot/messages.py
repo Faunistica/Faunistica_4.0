@@ -47,10 +47,7 @@ class Messages:
 
     @staticmethod
     def registration_confirmed() -> str:
-        return (
-            "Регистрация подтверждена ✅\n"
-            "Теперь вы можете войти на сайт, используя свой логин и пароль."
-        )
+        return "Пройдите анкету на сайте https://faunistica.ru/\n"
 
     @staticmethod
     def username_conflict() -> str:
@@ -72,10 +69,8 @@ class Messages:
         )
 
     @staticmethod
-    def already_registered(first_name: str | None) -> str:
-        if first_name is not None:
-            return f"Вы уже зарегистрированы под именем {first_name}!"
-        return "Вы уже зарегистрированы!"
+    def already_registered() -> str:
+        return "Вход подтвержден!"
 
     @staticmethod
     def old_user(first_name: str | None) -> str:
