@@ -82,8 +82,9 @@ export const draftToRecordData = (draft: Partial<RecordForm>): RecordData => {
         identification_remarks: null,
     };
     for (const [key, val] of Object.entries(draft)) {
-        if (QUANTITY_FIELD_SET.has(key) || val == null || val === '') continue;
-        if (val === undefined) continue;
+        if (QUANTITY_FIELD_SET.has(key) || val === null || val === undefined || val === '') {
+            continue;
+        }
         if (NULLISH_NUMBER_FIELDS.has(key) && val === 0) continue;
         if ((key === 'latitude' || key === 'longitude') && (val === 0 || val === '0')) continue;
         if ((key === 'latitude' || key === 'longitude') && typeof val === 'number') {

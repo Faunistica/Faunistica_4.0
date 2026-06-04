@@ -93,7 +93,7 @@ export function FormAutocomplete({
                     setValue(name, val);
                     lastCommittedRef.current = val;
                     setSuggestions([]);
-                    if (Array.isArray(options)) {
+                    if (!Array.isArray(options)) {
                         cancelSearch();
                     }
                     onSelectSuggestion?.(val);

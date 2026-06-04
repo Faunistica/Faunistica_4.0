@@ -25,7 +25,7 @@ const InstructionImage = ({
             {hasError ? (
                 <div className="flex flex-col items-center justify-center gap-2 p-8 text-center text-sm text-muted-foreground">
                     <Image />
-                    <span>Изображение загружается: {src}</span>
+                    <span>Не удалось загрузить изображение: {src}</span>
                 </div>
             ) : (
                 <img
