@@ -801,7 +801,7 @@ describe('RecordFormProvider', () => {
             await act(async () => {
                 testMethodsRef.current!.setValue('country', 'США');
                 testMethodsRef.current!.setValue('locality', 'Moscow');
-testMethodsRef.current!.setValue('country', 'Германия');
+                testMethodsRef.current!.setValue('country', 'Германия');
             });
 
             await waitFor(() => {
