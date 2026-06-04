@@ -47,7 +47,7 @@ const Dashboard: FC = () => {
                         <div className="mb-2 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase md:text-base">
-                                    Очередь
+                                    В очереди
                                 </h2>
                                 <Badge className="rounded-md border-none bg-amber-100 px-2 font-bold text-amber-800 hover:bg-amber-100">
                                     {queue.length}
