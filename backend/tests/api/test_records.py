@@ -428,7 +428,9 @@ async def test_export_records_xlsx_default(
 
 
 @pytest.mark.asyncio
-async def test_import_from_excel(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
+async def test_import_from_excel(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing records from Excel file."""
     import io
 
@@ -484,7 +486,9 @@ async def test_import_from_excel(authenticated_client: AsyncClient, seed_data: S
 
 
 @pytest.mark.asyncio
-async def test_import_from_csv(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
+async def test_import_from_csv(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing records from CSV file."""
     from service.export import COLUMN_MAPPING
 
@@ -537,7 +541,9 @@ async def test_import_invalid_file_type(
 
 
 @pytest.mark.asyncio
-async def test_import_empty_file(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
+async def test_import_empty_file(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing empty Excel file."""
     wb = Workbook()
     ws = wb.active
@@ -570,7 +576,9 @@ async def test_import_empty_file(authenticated_client: AsyncClient, seed_data: S
 
 
 @pytest.mark.asyncio
-async def test_import_boolean_fields(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
+async def test_import_boolean_fields(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing records with boolean fields."""
     from openpyxl import Workbook
 
@@ -676,7 +684,9 @@ async def test_import_file_size_limit(authenticated_client: AsyncClient) -> None
 
 
 @pytest.mark.asyncio
-async def test_import_limit_enforcement(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
+async def test_import_limit_enforcement(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test that import limit is enforced."""
     from core.config import settings
 
@@ -734,9 +744,7 @@ async def test_list_records_forbidden_publ(
     assert len(user_items) >= 2, "Need at least 2 publications in queue"
     second_publ_id = int(user_items[1])  # Second publication - not interactable
 
-    response = await authenticated_client.get(
-        f"/api/records?publ_id={second_publ_id}"
-    )
+    response = await authenticated_client.get(f"/api/records?publ_id={second_publ_id}")
     assert response.status_code == 403
     data = response.json()
     assert data["error"] == "PUBL_FORBIDDEN"

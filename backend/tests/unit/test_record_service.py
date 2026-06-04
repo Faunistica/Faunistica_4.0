@@ -205,7 +205,11 @@ class TestImportRecords:
 
             with pytest.raises(NoPublicationsAssignedError):
                 await record_service.import_records(
-                    gen(), user_id=user_id, ip="127.0.0.1", total_count=1, publ_id=publ_id
+                    gen(),
+                    user_id=user_id,
+                    ip="127.0.0.1",
+                    total_count=1,
+                    publ_id=publ_id,
                 )
 
     async def test_import_limit_exceeded(
@@ -332,7 +336,11 @@ class TestImportRecords:
         ):
             records, total = await read_excel(excel_content)
             result = await record_service.import_records(
-                records, user_id=user_id, ip="127.0.0.1", total_count=total, publ_id=publ_id
+                records,
+                user_id=user_id,
+                ip="127.0.0.1",
+                total_count=total,
+                publ_id=publ_id,
             )
 
             assert result.imported >= 1

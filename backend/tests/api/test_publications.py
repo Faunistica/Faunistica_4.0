@@ -39,7 +39,9 @@ async def test_get_publication_by_id(
     seed_data: SeedData,
 ) -> None:
     """GET /api/publications/{publ_id} returns publication when user has access."""
-    publ_id = int(seed_data["users"][0].items.split("|")[0])  # First (interactable) publication
+    publ_id = int(
+        seed_data["users"][0].items.split("|")[0]
+    )  # First (interactable) publication
     response = await authenticated_client.get(f"/api/publications/{publ_id}")
     assert response.status_code == 200
     data = response.json()

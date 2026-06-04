@@ -211,7 +211,9 @@ class TestIsInteractable:
             ([42], 42, 5, True),
         ],
     )
-    def test_is_interactable(self, queue: list[int], publ_id: int, count: int, expected: bool) -> None:
+    def test_is_interactable(
+        self, queue: list[int], publ_id: int, count: int, expected: bool
+    ) -> None:
         """Test _is_interactable with various queue configurations."""
         with patch("service.publications.settings") as mock_settings:
             mock_settings.INTERACTABLE_QUEUE_COUNT = count

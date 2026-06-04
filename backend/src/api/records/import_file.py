@@ -1,7 +1,16 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
 
 from core.config import settings
 from core.dependencies import ClientIP, TokenUser
@@ -51,4 +60,6 @@ async def import_records(
             detail="Couldn't determine file type: file extention is not xlsx or csv",
         )
 
-    return await service.import_records(records, token.user_id, ip, total_count=total, publ_id=publ_id)
+    return await service.import_records(
+        records, token.user_id, ip, total_count=total, publ_id=publ_id
+    )
