@@ -159,34 +159,11 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Controller
+                    <FormAutocomplete
                         name="country"
-                        control={control}
-                        render={({ field, fieldState: { error, invalid } }) => (
-                            <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="country">Страна</FieldLabel>
-                                <Select
-                                    onValueChange={field.onChange}
-                                    value={field.value || undefined}
-                                >
-                                    <SelectTrigger
-                                        id="country"
-                                        className="w-full"
-                                        aria-invalid={invalid}
-                                    >
-                                        <SelectValue placeholder="Выберите страну" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {COUNTRY_OPTIONS.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FieldError errors={[error]} />
-                            </Field>
-                        )}
+                        label="Страна"
+                        options={COUNTRY_OPTIONS as unknown as string[]}
+                        placeholder="Выберите страну"
                     />
                     <FormAutocomplete
                         name="region"

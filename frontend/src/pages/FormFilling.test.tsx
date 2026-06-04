@@ -101,13 +101,13 @@ const RECORD_1 = {
     id: 'rec-1',
     ...RECORD_FIELDS,
     updated_at: '2024-01-01T00:00:00Z',
-    country: 'RU',
+    country: 'Россия',
 };
 const RECORD_2 = {
     id: 'rec-2',
     ...RECORD_FIELDS,
     updated_at: '2024-01-01T00:00:02Z',
-    country: 'DE',
+    country: 'Германия',
 };
 
 type RecordLike = Record<string, unknown>;
@@ -331,7 +331,7 @@ describe('RecordFormProvider', () => {
             </TestHarness>,
         );
 
-        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Россия');
     });
 
     it('is not loading after data arrives', () => {
@@ -387,7 +387,7 @@ describe('RecordFormProvider', () => {
         await waitFor(() => {
             expect(testState!.status.phase).toBe('idle');
         });
-        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Германия');
     });
 
     it('onNavigate + NavLink back-and-forth does not mix up data', async () => {
@@ -401,7 +401,7 @@ describe('RecordFormProvider', () => {
             </TestHarness>,
         );
         expect(testState!.activeRecordId).toBe('rec-1');
-        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Россия');
 
         // Switch to rec-2
         act(() => {
@@ -416,7 +416,7 @@ describe('RecordFormProvider', () => {
         await waitFor(() => {
             expect(testState!.status.phase).toBe('idle');
         });
-        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Германия');
 
         // Switch back to rec-1
         act(() => {
@@ -431,7 +431,7 @@ describe('RecordFormProvider', () => {
         await waitFor(() => {
             expect(testState!.status.phase).toBe('idle');
         });
-        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Россия');
 
         // Switch to rec-2 again
         act(() => {
@@ -446,7 +446,7 @@ describe('RecordFormProvider', () => {
         await waitFor(() => {
             expect(testState!.status.phase).toBe('idle');
         });
-        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Германия');
     });
 
     it('onNavigate to same record is no-op', () => {
@@ -516,7 +516,7 @@ describe('RecordFormProvider', () => {
 
         await waitFor(() => expect(testState!.status.phase).toBe('idle'));
 
-        testMethodsRef.current!.setValue('country', 'RU');
+        testMethodsRef.current!.setValue('country', 'Россия');
         testMethodsRef.current!.setValue('region', 'Region');
         testMethodsRef.current!.setValue('district', 'District');
         testMethodsRef.current!.setValue('locality', 'Locality');
@@ -675,26 +675,26 @@ describe('RecordFormProvider', () => {
     it('RHF watch fires on setValue', async () => {
         const callback = vi.fn();
         const { result } = renderHook(() =>
-            useForm<RecordForm>({ defaultValues: { country: 'RU' } }),
+            useForm<RecordForm>({ defaultValues: { country: 'Россия' } }),
         );
         result.current.watch(callback);
-        result.current.setValue('country', 'US');
+        result.current.setValue('country', 'США');
         await new Promise((r) => setTimeout(r, 10));
         expect(callback).toHaveBeenCalled();
     });
 
     it('RHF watch fires after reset + setValue', async () => {
         const { result } = renderHook(() =>
-            useForm<RecordForm>({ defaultValues: { country: 'RU' } }),
+            useForm<RecordForm>({ defaultValues: { country: 'Россия' } }),
         );
         const callback = vi.fn();
         result.current.watch(callback);
         await act(async () => {
-            result.current.reset({ country: 'DE' });
+            result.current.reset({ country: 'Германия' });
         });
         await new Promise((r) => setTimeout(r, 10));
         await act(async () => {
-            result.current.setValue('country', 'US');
+            result.current.setValue('country', 'США');
         });
         await new Promise((r) => setTimeout(r, 10));
         expect(callback).toHaveBeenCalled();
@@ -776,7 +776,7 @@ describe('RecordFormProvider', () => {
             expect(testState!.activeRecordId).toBe('rec-1');
 
             await act(async () => {
-                testMethodsRef.current!.setValue('country', 'US');
+                testMethodsRef.current!.setValue('country', 'США');
             });
 
             await waitFor(() => {
@@ -799,9 +799,9 @@ describe('RecordFormProvider', () => {
             expect(testState!.activeRecordId).toBe('rec-1');
 
             await act(async () => {
-                testMethodsRef.current!.setValue('country', 'US');
+                testMethodsRef.current!.setValue('country', 'США');
                 testMethodsRef.current!.setValue('locality', 'Moscow');
-                testMethodsRef.current!.setValue('country', 'DE');
+testMethodsRef.current!.setValue('country', 'Германия');
             });
 
             await waitFor(() => {
@@ -811,7 +811,7 @@ describe('RecordFormProvider', () => {
                 expect.objectContaining({
                     submit: false,
                     record_id: 'rec-1',
-                    data: expect.objectContaining({ country: 'DE', locality: 'Moscow' }),
+                    data: expect.objectContaining({ country: 'Германия', locality: 'Moscow' }),
                 }),
             );
             expect(testState!.status.phase).toBe('idle');

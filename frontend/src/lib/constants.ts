@@ -14,16 +14,16 @@ export const BLOCKING_FIELDS = [
 export type BlockingFieldName = (typeof BLOCKING_FIELDS)[number];
 
 export const COUNTRY_OPTIONS = [
-    { value: 'RU', label: 'Россия' },
-    { value: 'BY', label: 'Беларусь' },
-    { value: 'KZ', label: 'Казахстан' },
-    { value: 'UA', label: 'Украина' },
-    { value: 'DE', label: 'Германия' },
-    { value: 'EE', label: 'Эстония' },
-    { value: 'LV', label: 'Латвия' },
-    { value: 'LT', label: 'Литва' },
-    { value: 'US', label: 'США' },
-    { value: 'OTHER', label: 'Другая' },
+    'Россия',
+    'Беларусь',
+    'Казахстан',
+    'Украина',
+    'Германия',
+    'Эстония',
+    'Латвия',
+    'Литва',
+    'США',
+    'Другая',
 ] as const;
 
 export const GEOREF_OPTIONS = [
