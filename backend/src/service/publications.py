@@ -5,6 +5,7 @@ from fastapi import Depends
 from sqlalchemy import update
 
 from core import model
+from core.config import settings
 from core.dependencies import DBSession
 from core.exceptions import (
     NoPublicationsAssignedError,
@@ -33,10 +34,12 @@ class PublicationService:
         self.session = session
         self.actions = action_service
 
-    def _get_current_publ_id(self, user: User) -> int | None:
-        """Return items[0] as current publ_id, or None if items is empty."""
-        queue = self._pipe_to_array(user.items) if user.items else []
-        return queue[0] if queue else None
+    @staticmethod
+    def _is_interactable(publ_id: int, queue: list[int]) -> bool:
+        count = settings.INTERACTABLE_QUEUE_COUNT
+        if count == 0:
+            return publ_id in queue
+        return publ_id in queue[:count]
 
     async def validate_access(
         self,
@@ -66,12 +69,12 @@ class PublicationService:
             user = await get_user_expect(self.session, user_id)
 
         user_id = user.user_id
-        current_publ_id = self._get_current_publ_id(user)
+        queue = self._pipe_to_array(user.items) if user.items else []
 
-        if current_publ_id is None:
+        if not queue:
             raise NoPublicationsAssignedError(user_id)
 
-        if current_publ_id != publ_id:
+        if not self._is_interactable(publ_id, queue):
             raise PublicationForbiddenError(user_id, publ_id)
 
         return Publication.model_validate(publ_db)
@@ -88,18 +91,9 @@ class PublicationService:
 
         await self.actions.log_publ_complete(user_id, level, publ_id, ip)
 
-        # Advance queue: items includes current at position 0, pop it
         queue = self._pipe_to_array(user.items) if user.items else []
-        if queue:
-            if queue[0] != publ_id:
-                logger.warning(
-                    "user %d completed publ %d but queue head is %d;"
-                    "validation passed, popping anyway",
-                    user_id,
-                    publ_id,
-                    queue[0],
-                )
-            queue.pop(0)
+        if publ_id in queue:
+            queue.remove(publ_id)
 
         new_items = self._array_to_pipe(queue)
         next_publ_id = queue[0] if queue else None
@@ -108,6 +102,7 @@ class PublicationService:
         await self.session.execute(stmt)
 
         if next_publ_id is None:
+            await self.session.commit()
             return None
 
         next_publ = await get_publication_expect(self.session, next_publ_id)
@@ -118,20 +113,16 @@ class PublicationService:
     async def assign_current(self, user_id: int) -> Publication | None:
         """Return current publication from items[0], or None if queue empty."""
         user = await get_user_expect(self.session, user_id)
-        current_publ_id = self._get_current_publ_id(user)
+        queue = self._pipe_to_array(user.items) if user.items else []
 
-        if current_publ_id is None:
+        if not queue:
             return None
 
-        publ = await get_publication_expect(self.session, current_publ_id)
+        publ = await get_publication_expect(self.session, queue[0])
         return Publication.model_validate(publ)
 
-    async def get(self, publ_id: int) -> Publication | None:
-        publ = await get_publication(self.session, publ_id)
-        if publ is None:
-            return None
-
-        return Publication.model_validate(publ)
+    async def get(self, publ_id: int, user_id: int) -> Publication:
+        return await self.validate_access(publ_id, user_id=user_id)
 
     async def get_current(
         self,
@@ -151,13 +142,20 @@ class PublicationService:
             if not publ_ids:
                 return []
             publ = await get_publication_expect(self.session, publ_ids[0])
-            return [Publication.model_validate(publ)]
+            pub = Publication.model_validate(publ)
+            pub.interactable = self._is_interactable(pub.publ_id, publ_ids)
+            return [pub]
 
         if not publ_ids:
             return []
 
         publications = await get_publications_by_ids(self.session, publ_ids)
-        return [Publication.model_validate(p) for p in publications]
+        results: list[Publication] = []
+        for p in publications:
+            pub = Publication.model_validate(p)
+            pub.interactable = self._is_interactable(pub.publ_id, publ_ids)
+            results.append(pub)
+        return results
 
     def _pipe_to_array(self, pipe_str: str) -> list[int]:
         """Convert '123|456|789' to [123, 456, 789]"""

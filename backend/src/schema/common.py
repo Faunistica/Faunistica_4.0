@@ -64,6 +64,7 @@ class Publication(BaseModel):
     spec: int | None = None
     e_author: str | None = None
     e_name: str | None = None
+    interactable: bool = True
 
     model_config = ConfigDict(from_attributes=True)
 

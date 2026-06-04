@@ -1,7 +1,7 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 
 from core.config import settings
 from core.dependencies import ClientIP, TokenUser
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @limiter.limit("1/minute")
 async def import_records(
     request: Request,
+    publ_id: Annotated[int, Query(ge=1, description="Publication ID")],
     file: Annotated[
         UploadFile, File(description="xlsx or csv file, same format as import returns")
     ],
@@ -50,4 +51,4 @@ async def import_records(
             detail="Couldn't determine file type: file extention is not xlsx or csv",
         )
 
-    return await service.import_records(records, token.user_id, ip, total_count=total)
+    return await service.import_records(records, token.user_id, ip, total_count=total, publ_id=publ_id)

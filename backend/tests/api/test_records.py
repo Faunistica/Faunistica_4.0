@@ -148,7 +148,7 @@ async def test_get_record_wrong_user(
     response = await authenticated_client_user2.get(
         f"/api/records/{record_id}?user_id={user2.user_id}"
     )
-    assert response.status_code == 200
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -428,7 +428,7 @@ async def test_export_records_xlsx_default(
 
 
 @pytest.mark.asyncio
-async def test_import_from_excel(authenticated_client: AsyncClient) -> None:
+async def test_import_from_excel(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
     """Test importing records from Excel file."""
     import io
 
@@ -467,6 +467,7 @@ async def test_import_from_excel(authenticated_client: AsyncClient) -> None:
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "test.xlsx",
@@ -483,7 +484,7 @@ async def test_import_from_excel(authenticated_client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_import_from_csv(authenticated_client: AsyncClient) -> None:
+async def test_import_from_csv(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
     """Test importing records from CSV file."""
     from service.export import COLUMN_MAPPING
 
@@ -512,6 +513,7 @@ async def test_import_from_csv(authenticated_client: AsyncClient) -> None:
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={"file": ("test.csv", csv_content, "text/csv")},
     )
     assert response.status_code == 200
@@ -528,13 +530,14 @@ async def test_import_invalid_file_type(
     """Test importing invalid file type returns error."""
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={"file": ("test.txt", b"invalid content", "text/plain")},
     )
     assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_import_empty_file(authenticated_client: AsyncClient) -> None:
+async def test_import_empty_file(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
     """Test importing empty Excel file."""
     wb = Workbook()
     ws = wb.active
@@ -551,6 +554,7 @@ async def test_import_empty_file(authenticated_client: AsyncClient) -> None:
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "empty.xlsx",
@@ -566,7 +570,7 @@ async def test_import_empty_file(authenticated_client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_import_boolean_fields(authenticated_client: AsyncClient) -> None:
+async def test_import_boolean_fields(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
     """Test importing records with boolean fields."""
     from openpyxl import Workbook
 
@@ -603,6 +607,7 @@ async def test_import_boolean_fields(authenticated_client: AsyncClient) -> None:
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "test.xlsx",
@@ -619,6 +624,7 @@ async def test_import_boolean_fields(authenticated_client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_import_user_without_publ(
     authenticated_client_user2: AsyncClient,
+    seed_data: SeedData,
 ) -> None:
     """Test importing with user that has no publication returns error."""
     wb = Workbook()
@@ -636,6 +642,7 @@ async def test_import_user_without_publ(
 
     response = await authenticated_client_user2.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "test.xlsx",
@@ -656,6 +663,7 @@ async def test_import_file_size_limit(authenticated_client: AsyncClient) -> None
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": 1},
         files={
             "file": (
                 "large.xlsx",
@@ -668,7 +676,7 @@ async def test_import_file_size_limit(authenticated_client: AsyncClient) -> None
 
 
 @pytest.mark.asyncio
-async def test_import_limit_enforcement(authenticated_client: AsyncClient) -> None:
+async def test_import_limit_enforcement(authenticated_client: AsyncClient, seed_data: SeedData) -> None:
     """Test that import limit is enforced."""
     from core.config import settings
 
@@ -701,6 +709,7 @@ async def test_import_limit_enforcement(authenticated_client: AsyncClient) -> No
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "test.xlsx",
