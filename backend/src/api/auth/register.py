@@ -28,7 +28,7 @@ from schema.registration import (
 router = APIRouter()
 
 
-@router.post("/register")
+@router.post("/form")
 @limiter.limit("3/minute")
 async def start_registration(
     request: Request,
@@ -38,7 +38,7 @@ async def start_registration(
     username = data.username
     password = data.password
     age = data.age
-    language = data.language
+    lng = data.lng
     comm = data.comm
     existing_user = await find_user_by_username(session, username)
     if existing_user is not None:
@@ -57,7 +57,7 @@ async def start_registration(
             password_hash=password_hash,
             code=code,
             age=age,
-            language=language,
+            lng=lng,
             comm=comm,
         )
         await session.commit()

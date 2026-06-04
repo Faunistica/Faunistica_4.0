@@ -15,7 +15,7 @@ async def create_pending_registration(
     password_hash: str,
     code: str,
     age: int,
-    language: str,
+    lng: str,
     comm: str,
 ) -> PendingRegistration:
     pending = PendingRegistration(
@@ -23,7 +23,7 @@ async def create_pending_registration(
         password_hash=password_hash,
         code=code,
         age=age,
-        language=language,
+        lng=lng,
         comm=comm,
     )
     session.add(pending)
