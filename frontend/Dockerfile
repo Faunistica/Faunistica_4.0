@@ -2,11 +2,12 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json ./
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm config set store-dir /root/.local/share/pnpm/store && \
+    pnpm install --frozen-lockfile
 
 COPY . .
 RUN pnpm build
