@@ -18,7 +18,12 @@ export const authAPI = createApi({
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
-                    dispatch(login({ username: data.username, user_id: data.user_id }));
+                    dispatch(
+                        login({
+                            name: data.name,
+                            user_id: data.user_id,
+                        }),
+                    );
                 } catch {
                     dispatch(logout());
                 }
@@ -44,7 +49,12 @@ export const authAPI = createApi({
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
-                    dispatch(login({ username: data.username, user_id: data.user_id }));
+                    dispatch(
+                        login({
+                            name: data.name,
+                            user_id: data.user_id,
+                        }),
+                    );
                 } catch {
                     dispatch(logout());
                 }

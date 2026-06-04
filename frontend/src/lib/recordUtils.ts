@@ -1,138 +1,131 @@
-import type { RecordData, RecordFull } from '@/types/api.dto';
-import type { RecordSchema, QuantityField } from '@/types/forms';
+import type { RecordData, RecordFull, Specimen } from '@/types/api.dto';
+import type { QuantityField } from '@/lib/constants';
+import { QUANTITY_FIELDS } from '@/lib/constants';
+import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 
-export interface DraftRecord extends RecordFull {
-    record_ids?: Record<string, string>;
-    [key: string]: any;
-}
-export const getFieldFromSexAndLifestage = (
-    sex?: string | null,
-    life_stage?: string | null,
-): QuantityField | null => {
-    if (sex === 'male' && life_stage === 'adult') return 'mmm';
-    if (sex === 'male' && life_stage === 'subadult') return 'ssm';
-    if (sex === 'female' && life_stage === 'adult') return 'fff';
-    if (sex === 'female' && life_stage === 'subadult') return 'ssf';
-    if ((sex === 'none' || !sex) && life_stage === 'adult') return 'adu';
-    if ((sex === 'none' || !sex) && life_stage === 'juvenile') return 'juv';
-    return null;
-};
+const RECORD_FORM_KEYS = new Set(Object.keys(FORM_DEFAULT_VALUES));
 
-export const getSexAndLifestageFromField = (field: string): { sex: string; life_stage: string } => {
+const NULLISH_NUMBER_FIELDS = new Set<string>(['coordinate_uncertainty', 'sample_size_value']);
+const QUANTITY_FIELD_SET = new Set<string>(QUANTITY_FIELDS);
+
+const SPECIMEN_FIELD_MAP: Array<{
+    sex: Specimen['sex'];
+    life_stage: Specimen['life_stage'];
+    formField: QuantityField;
+}> = [
+    { sex: 'male', life_stage: 'adult', formField: 'males' },
+    { sex: 'male', life_stage: 'subadult', formField: 'subadultMales' },
+    { sex: 'female', life_stage: 'adult', formField: 'females' },
+    { sex: 'female', life_stage: 'subadult', formField: 'subadultFemales' },
+    { sex: 'none', life_stage: 'adult', formField: 'adults' },
+    { sex: 'none', life_stage: 'juvenile', formField: 'juveniles' },
+];
+
+export const getSexAndLifestageFromField = (
+    field: string,
+): { sex: Specimen['sex']; life_stage: Specimen['life_stage'] } => {
     switch (field) {
-        case 'mmm':
+        case 'males':
             return { sex: 'male', life_stage: 'adult' };
-        case 'ssm':
+        case 'subadultMales':
             return { sex: 'male', life_stage: 'subadult' };
-        case 'fff':
+        case 'females':
             return { sex: 'female', life_stage: 'adult' };
-        case 'ssf':
+        case 'subadultFemales':
             return { sex: 'female', life_stage: 'subadult' };
-        case 'adu':
+        case 'adults':
             return { sex: 'none', life_stage: 'adult' };
-        case 'juv':
+        case 'juveniles':
             return { sex: 'none', life_stage: 'juvenile' };
         default:
             return { sex: 'none', life_stage: 'none' };
     }
 };
 
-/**
- * Groups flat API records (one per sex/lifestage) into DraftRecords
- * where each draft represents a single sample with multiple quantity fields.
- */
-export const groupRecordsIntoDrafts = (records: RecordFull[]): DraftRecord[] => {
-    return records.map((record) => {
-        const draft: DraftRecord = {
-            ...record,
-            record_ids: { base: record.id },
-        };
-
-        if (record.specimens) {
-            record.specimens.forEach((spec) => {
-                const field = getFieldFromSexAndLifestage(spec.sex, spec.life_stage);
-                if (field) {
-                    (draft as any)[field] = spec.count;
-                }
-            });
+export const draftToRecordData = (draft: Partial<RecordForm>): RecordData => {
+    const data: RecordData = {
+        country: null,
+        region: null,
+        district: null,
+        locality: null,
+        is_manual_location: null,
+        latitude: null,
+        longitude: null,
+        verbatimcoordinates: null,
+        coordinate_uncertainty: null,
+        georef_source: null,
+        location_remarks: null,
+        verbatim_date: null,
+        date_precision: null,
+        is_interval: null,
+        habitat: null,
+        sampling_protocol: null,
+        sampling_effort: null,
+        sample_size_value: null,
+        sample_size_unit: null,
+        event_remarks: null,
+        field_number: null,
+        catalog_number: null,
+        collection_code: null,
+        recorded_by: null,
+        family: null,
+        genus: null,
+        species: null,
+        tax_verbatim: null,
+        taxon_rank: null,
+        type_status: null,
+        accepted_name: null,
+        taxon_remarks: null,
+        quantity_type: null,
+        specimens: null,
+        occurrence_remarks: null,
+        identification_remarks: null,
+    };
+    for (const [key, val] of Object.entries(draft)) {
+        if (QUANTITY_FIELD_SET.has(key) || val === null || val === undefined || val === '') {
+            continue;
         }
-
-        return draft;
-    });
-};
-
-/**
- * Convert a form DraftRecord back to the flat RecordData shape expected by the API.
- * Strips quantity fields and record_ids – caller handles those separately.
- */
-export const draftToRecordData = (draft: Partial<RecordSchema>): RecordData => {
-    const data: RecordData = {};
-
-    // Copy all string/number/boolean fields that exist in RecordData
-    const fieldsToCopy: (keyof RecordData)[] = [
-        'country',
-        'region',
-        'district',
-        'locality',
-        'is_manual_location',
-        'latitude',
-        'longitude',
-        'verbatimcoordinates',
-        'coordinate_uncertainty',
-        'georef_source',
-        'location_remarks',
-        'verbatim_date',
-        'date_precision',
-        'is_interval',
-        'habitat',
-        'sampling_protocol',
-        'sampling_effort',
-        'sample_size_value',
-        'sample_size_unit',
-        'event_remarks',
-        'field_number',
-        'catalog_number',
-        'collection_code',
-        'recorded_by',
-        'family',
-        'genus',
-        'species',
-        'tax_verbatim',
-        'taxon_rank',
-        'type_status',
-        'accepted_name',
-        'taxon_remarks',
-        'quantity_type',
-        'occurrence_remarks',
-        'identification_remarks',
-    ];
-
-    for (const key of fieldsToCopy) {
-        const val = (draft as any)[key];
-        if (val !== undefined) {
-            if ((key === 'latitude' || key === 'longitude') && val !== null) {
-                (data as any)[key] = String(val);
-            } else {
-                (data as any)[key] = val;
-            }
+        if (NULLISH_NUMBER_FIELDS.has(key) && val === 0) continue;
+        if ((key === 'latitude' || key === 'longitude') && (val === 0 || val === '0')) continue;
+        if ((key === 'latitude' || key === 'longitude') && typeof val === 'number') {
+            Object.assign(data, { [key]: String(val) });
+        } else {
+            Object.assign(data, { [key]: val });
         }
     }
-
-    // Process specimens
-    const specimens: any[] = [];
-    const quantityFields = ['mmm', 'ssm', 'fff', 'ssf', 'adu', 'juv'] as const;
-
-    for (const field of quantityFields) {
-        const count = (draft as any)[field];
-        if (count !== undefined && count !== null && count > 0) {
+    const specimens: Specimen[] = [];
+    for (const field of QUANTITY_FIELDS) {
+        const count = draft[field];
+        // Handle both numbers and strings (HTML inputs return strings)
+        const numCount = typeof count === 'string' ? parseFloat(count) : count;
+        if (typeof numCount === 'number' && !isNaN(numCount) && numCount > 0) {
             const { sex, life_stage } = getSexAndLifestageFromField(field);
-            specimens.push({ sex, life_stage, count });
+            specimens.push({ sex, life_stage, count: numCount });
         }
     }
-
     if (specimens.length > 0) {
         data.specimens = specimens;
     }
-
     return data;
 };
+
+export function toFormPartial(record: RecordFull): Partial<RecordForm> {
+    const result: Record<string, unknown> = { ...FORM_DEFAULT_VALUES };
+    for (const [key, val] of Object.entries(record)) {
+        if (!RECORD_FORM_KEYS.has(key)) continue;
+        if (val == null) continue;
+        result[key] = key === 'latitude' || key === 'longitude' ? Number(val) : val;
+    }
+    for (const mapping of SPECIMEN_FIELD_MAP) {
+        const spec = record.specimens?.find(
+            (s) => s.sex === mapping.sex && s.life_stage === mapping.life_stage,
+        );
+        const numCount = typeof spec?.count === 'string' ? parseFloat(spec.count) : spec?.count;
+        if (numCount != null && !isNaN(numCount)) {
+            result[mapping.formField] = numCount;
+        } else {
+            result[mapping.formField] = 0;
+        }
+    }
+    return result as Partial<RecordForm>;
+}

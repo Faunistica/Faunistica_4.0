@@ -107,6 +107,15 @@ class ExpectationError(APIException):
         super().__init__("EXPECT_FAIL", message, 500)
 
 
+class PivotWithoutPublID(APIException):
+    def __init__(self, record_id: str | UUID) -> None:
+        super().__init__(
+            "BAD_PARAM",
+            f"Can't search for record {record_id} if publ id is not set",
+            400,
+        )
+
+
 class RecordNotFoundError(APIException):
     def __init__(self, record_id: str | UUID) -> None:
         super().__init__("RECORD_NOT_FOUND", f"Record {record_id} not found", 404)

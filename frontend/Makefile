@@ -8,3 +8,6 @@ lint-fix:
 
 format:
 	pnpm format
+
+test:
+	pnpm test

@@ -1,5 +1,4 @@
-// src/components/form/ExcelUploadModal.tsx
-import { type FC, useState, useRef, useCallback } from 'react';
+import { type FC, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Upload, FileSpreadsheet, X, AlertTriangle, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,15 +10,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useImportRecordsMutation, useExportRecordsMutation } from '@/api/recordAPI';
-import { useSelector } from 'react-redux';
-import { useParams } from 'react-router';
-import type { RootState } from '@/store/store';
+import { useUploadExcelMutation, useDownloadRecordsMutation } from '@/api/recordAPI';
+import { getErrorMessage } from '@/lib/error';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onImportComplete: () => void;
+    publ_id: number;
 }
 
 const ACCEPTED_TYPES = [
@@ -28,18 +27,15 @@ const ACCEPTED_TYPES = [
 ];
 const ACCEPTED_EXTENSIONS = ['.xlsx', '.csv'];
 
-const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) => {
+const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
+    const isMobile = useIsMobile();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [importRecords] = useImportRecordsMutation();
-    const [exportRecords, { isLoading: isExporting }] = useExportRecordsMutation();
-
-    const user_id = useSelector((state: RootState) => state.user.user_id);
-    const { id } = useParams<{ id: string }>();
-    const publ_id = Number(id);
+    const [uploadExcel] = useUploadExcelMutation();
+    const [downloadRecords, { isLoading: isExporting }] = useDownloadRecordsMutation();
 
     const isValidFile = (file: File) => {
         const ext = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -54,30 +50,29 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
         setSelectedFile(file);
     };
 
-    const handleDragOver = useCallback((e: React.DragEvent) => {
+    const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(true);
-    }, []);
+    };
 
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
+    const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
-    }, []);
+    };
 
-    const handleDrop = useCallback((e: React.DragEvent) => {
+    const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragging(false);
         const file = e.dataTransfer.files[0];
         if (file) handleFileSelect(file);
-    }, []);
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) handleFileSelect(file);
-        // Reset so same file can be re-selected
         e.target.value = '';
     };
 
@@ -94,12 +89,11 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        const { data: result, error } = await importRecords(formData);
+        const { data: result, error } = await uploadExcel(formData);
 
         if (error) {
-            const message =
-                (error as any)?.data?.detail || (error as any)?.message || 'Неизвестная ошибка';
-            toast.error('Ошибка при загрузке файла', { description: String(message) });
+            const message = getErrorMessage(error);
+            toast.error('Ошибка при загрузке файла', { description: message });
         } else if (result) {
             toast.success(`Загружено ${result.imported} записей`, { duration: 5000 });
 
@@ -112,7 +106,6 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
 
             setSelectedFile(null);
             onOpenChange(false);
-            onImportComplete();
         }
 
         setIsUploading(false);
@@ -126,9 +119,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
     };
 
     const handleExport = async () => {
-        if (!user_id) return;
-        const { data: blob, error } = await exportRecords({
-            user_id,
+        const { error } = await downloadRecords({
             publ_id,
             scope: 'user',
             format: 'xlsx',
@@ -136,17 +127,6 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
 
         if (error) {
             toast.error('Ошибка при скачивании файла');
-            return;
-        }
-
-        if (blob) {
-            const url = window.URL.createObjectURL(blob);
-            Object.assign(document.createElement('a'), {
-                href: url,
-                download: `данные_faunistica_${publ_id || 'все'}.xlsx`,
-            }).click();
-            window.URL.revokeObjectURL(url);
-            toast.success('Файл успешно скачан');
         }
     };
 
@@ -155,9 +135,9 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
             <AlertDialog open={open} onOpenChange={handleClose}>
                 <AlertDialogContent className="max-w-lg">
                     <AlertDialogHeader>
-                        <div className="flex w-full items-center justify-between gap-4">
+                        <div className="flex h-fit w-full items-center justify-between gap-4 pb-1">
                             <AlertDialogTitle className="flex items-center gap-2 text-xl">
-                                <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                                <FileSpreadsheet className="size-5 text-emerald-600" />
                                 Работа с Excel
                             </AlertDialogTitle>
                             <Button
@@ -165,14 +145,14 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                                 size="sm"
                                 onClick={handleExport}
                                 disabled={isExporting}
-                                className="shrink-0 text-emerald-700 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 shadow-sm transition-all active:scale-95"
+                                className="shrink-0 border-emerald-200 text-emerald-700 shadow-sm transition-all hover:border-emerald-300 hover:bg-emerald-50 active:scale-95"
                             >
                                 {isExporting ? (
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    <Loader2 className="mr-2 size-4 animate-spin" />
                                 ) : (
-                                    <Download className="h-4 w-4 mr-2" />
+                                    <Download className="mr-2 size-4" />
                                 )}
-                                Скачать XLSX
+                                Скачать {isMobile || ' XLSX'}
                             </Button>
                         </div>
                         <AlertDialogDescription>
@@ -181,23 +161,19 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
-                    {/* Drop zone */}
                     <div
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        className={`
-                            relative cursor-pointer rounded-xl border-2 border-dashed p-8
-                            transition-all duration-200 flex flex-col items-center gap-3
-                            ${
-                                isDragging
-                                    ? 'border-emerald-400 bg-emerald-50 scale-[1.02]'
-                                    : selectedFile
-                                      ? 'border-emerald-300 bg-emerald-50/50'
-                                      : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100'
-                            }
-                        `}
+                        className={cn(
+                            'relative flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all duration-200',
+                            isDragging
+                                ? 'scale-[1.02] border-emerald-400 bg-emerald-50'
+                                : selectedFile
+                                  ? 'border-emerald-300 bg-emerald-50/50'
+                                  : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100',
+                        )}
                     >
                         <input
                             ref={fileInputRef}
@@ -209,14 +185,14 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
 
                         {selectedFile ? (
                             <>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                                    <FileSpreadsheet className="h-6 w-6 text-emerald-600" />
+                                <div className="flex size-12 items-center justify-center rounded-full bg-emerald-100">
+                                    <FileSpreadsheet className="size-6 text-emerald-600" />
                                 </div>
                                 <div className="text-center">
                                     <p className="font-medium text-slate-900">
                                         {selectedFile.name}
                                     </p>
-                                    <p className="text-xs text-slate-500 mt-1">
+                                    <p className="mt-1 text-xs text-slate-500">
                                         {(selectedFile.size / 1024).toFixed(1)} КБ
                                     </p>
                                 </div>
@@ -224,26 +200,26 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    className="text-red-500 hover:bg-red-50 hover:text-red-700"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setSelectedFile(null);
                                     }}
                                 >
-                                    <X className="h-4 w-4 mr-1" />
+                                    <X className="mr-1 size-4" />
                                     Убрать файл
                                 </Button>
                             </>
                         ) : (
                             <>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200">
-                                    <Upload className="h-6 w-6 text-slate-500" />
+                                <div className="flex size-12 items-center justify-center rounded-full bg-slate-200">
+                                    <Upload className="size-6 text-slate-500" />
                                 </div>
                                 <div className="text-center">
                                     <p className="font-medium text-slate-700">
                                         Перетащите файл сюда
                                     </p>
-                                    <p className="text-xs text-slate-500 mt-1">
+                                    <p className="mt-1 text-xs text-slate-500">
                                         или нажмите для выбора • .xlsx, .csv
                                     </p>
                                 </div>
@@ -258,16 +234,16 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                         <Button
                             onClick={handleUploadClick}
                             disabled={!selectedFile || isUploading}
-                            className="bg-emerald-600 text-white hover:bg-emerald-700 gap-2"
+                            className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
                         >
                             {isUploading ? (
                                 <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <Loader2 className="size-4 animate-spin" />
                                     Загрузка...
                                 </>
                             ) : (
                                 <>
-                                    <Upload className="h-4 w-4" />
+                                    <Upload className="size-4" />
                                     Загрузить
                                 </>
                             )}
@@ -276,12 +252,11 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, onImportComplete }) =
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Confirmation dialog */}
             <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-amber-500" />
+                            <AlertTriangle className="size-5 text-amber-500" />
                             Подтверждение импорта
                         </AlertDialogTitle>
                         <AlertDialogDescription>

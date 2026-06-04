@@ -9,8 +9,8 @@ class GeoFilters(BaseModel):
 
 class GeoSearchRequest(BaseModel):
     field: str
-    text: str
-    filters: GeoFilters | None = None
+    query: str
+    region: str | None = None
 
 
 class GeoSearchResponse(BaseModel):

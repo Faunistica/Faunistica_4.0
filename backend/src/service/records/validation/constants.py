@@ -17,8 +17,6 @@ SHORT_COUNTRY_ALLOWLIST: frozenset[str] = _load_short_countries(
 
 GEOREF_SOURCES: frozenset[str] = frozenset({"lit", "vol", "none"})
 
-DATE_PRECISIONS: frozenset[str] = frozenset({"год", "месяц", "день"})
-
 TAXON_RANKS: frozenset[str] = frozenset({"genus", "species", "subspecies"})
 
 TYPE_STATUSES: frozenset[str] = frozenset(
@@ -31,21 +29,6 @@ TYPE_STATUSES: frozenset[str] = frozenset(
         "синтип",
         "лектотип",
         "тип",
-    }
-)
-
-QUANTITY_TYPES: frozenset[str] = frozenset(
-    {
-        "individuals",
-        "individuals per 10 trap-days",
-        "individuals per 100 trap-days",
-        "individuals per 10 ditch-days",
-        "individuals per 10 net sweps",
-        "individuals per 100 net sweps",
-        "individuals per 20 net sweppings",
-        "individuals per 100 pitfall-traps",
-        "individuals per m2",
-        "Abundance class (Pesenko, 1982)",
     }
 )
 

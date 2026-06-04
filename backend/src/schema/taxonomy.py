@@ -22,8 +22,9 @@ class TaxonomyFilters(BaseModel):
 
 class SuggestTaxonRequest(BaseModel):
     field: TaxonomyField
-    text: str
-    filters: TaxonomyFilters | None = None
+    query: str
+    family: str | None = None
+    genus: str | None = None
 
 
 class SuggestTaxonResponse(BaseModel):

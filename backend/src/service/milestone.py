@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.enums import RecordType
 from core.model import Action, EventRecord
 from schema.common import MilestoneInfo
 from service.actions import ActionService
@@ -23,7 +24,7 @@ async def check_and_log_milestone(
         .select_from(EventRecord)
         .where(
             EventRecord.user_id == user_id,
-            EventRecord.type == "rec_ok",
+            EventRecord.type == RecordType.REC_OK,
         )
     )
     result = await session.execute(count_stmt)

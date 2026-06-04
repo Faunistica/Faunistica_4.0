@@ -1,3 +1,4 @@
+import type { UserInfo } from '@/types/api.dto';
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 interface UserState {
@@ -23,13 +24,16 @@ export const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        login: (state, action: PayloadAction<{ username: string; user_id: number }>) => {
+        login: (state, action: PayloadAction<UserInfo | undefined>) => {
             state.auth = true;
-            state.username = action.payload.username;
-            state.user_id = action.payload.user_id;
             localStorage.setItem('auth', 'true');
-            localStorage.setItem('username', action.payload.username);
-            localStorage.setItem('user_id', String(action.payload.user_id));
+
+            if (action.payload) {
+                state.username = action.payload.name;
+                state.user_id = action.payload.user_id;
+                localStorage.setItem('username', action.payload.name);
+                localStorage.setItem('user_id', String(action.payload.user_id));
+            }
         },
         logout: (state) => {
             state.auth = false;

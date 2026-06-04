@@ -46,15 +46,15 @@ const Dashboard: FC = () => {
                     <section>
                         <div className="mb-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-sm md:text-base font-bold text-slate-900 uppercase tracking-wide">
+                                <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase md:text-base">
                                     Назначено модератором
                                 </h2>
-                                <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-none px-2 rounded-md font-bold">
+                                <Badge className="rounded-md border-none bg-amber-100 px-2 font-bold text-amber-800 hover:bg-amber-100">
                                     {currentPublications.length}
                                 </Badge>
                             </div>
                         </div>
-                        <Card className="border-amber-200 bg-amber-50/30 shadow-sm overflow-hidden rounded-xl">
+                        <Card className="overflow-hidden rounded-xl border-amber-200 bg-amber-50/30 shadow-sm">
                             <div className="flex flex-col">
                                 {currentPublications.map((pub) => (
                                     <PublicationRow key={pub.publ_id} pub={pub} mode="suggested" />

@@ -1,15 +1,6 @@
 import { type FC, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-    Menu,
-    X,
-    PanelLeft,
-    Globe,
-    User,
-    LogOut,
-    Settings as SettingsIcon,
-    Check,
-} from 'lucide-react';
+import { Menu, X, PanelLeft, Globe, LogOut, Settings as SettingsIcon, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useRouteHandle } from '@/hooks/useRouteMeta';
 import { useAppSelector } from '@/store/store';
@@ -50,22 +41,23 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
         } catch (e) {
             console.error(e);
         } finally {
-            navigate('/');
+            void navigate('/');
         }
     };
 
     return (
-        <header className="sticky top-0 z-[100] w-full overflow-x-clip bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-            <div className="relative h-16 flex items-center justify-between px-4 md:px-8">
+        <header className="sticky top-0 z-100 w-full overflow-x-clip border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+            <div className="relative flex h-16 items-center justify-between px-4 md:px-8">
                 <div className="flex items-center gap-4">
                     {isSidebarEnabled && setSidebarOpen && (
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="lg:hidden rounded-md text-slate-600 h-9 w-9"
+                            className="size-9 rounded-md text-slate-600 lg:hidden"
                             onClick={() => setSidebarOpen(true)}
+                            aria-label="Открыть боковую панель"
                         >
-                            <PanelLeft className="h-5 w-5" />
+                            <PanelLeft className="size-5" />
                         </Button>
                     )}
 
@@ -73,13 +65,15 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="md:hidden rounded-md text-slate-600 h-9 w-9"
+                            className="size-9 rounded-md text-slate-600 md:hidden"
                             onClick={() => setIsMobileMenuOpen((v) => !v)}
+                            aria-label="Открыть меню"
+                            aria-expanded={isMobileMenuOpen}
                         >
                             {isMobileMenuOpen ? (
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             ) : (
-                                <Menu className="h-5 w-5" />
+                                <Menu className="size-5" />
                             )}
                         </Button>
                     )}
@@ -92,30 +86,30 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
 
                 {isNavigateEnabled && (
                     <>
-                        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+                        <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
                             {isLanding ? (
                                 <>
                                     <a
                                         href="#about"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         О проекте
                                     </a>
                                     <a
                                         href="#volunteers"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Волонтерам
                                     </a>
                                     <a
                                         href="#science"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Научная база
                                     </a>
                                     <Link
                                         to="/instructions"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Инструкция
                                     </Link>
@@ -124,37 +118,37 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                 <>
                                     <Link
                                         to="/dashboard"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Публикации
                                     </Link>
                                     <Link
                                         to="/instructions"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Инструкция
                                     </Link>
                                     <Link
                                         to="/statistics"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Статистика
                                     </Link>
                                     <Link
                                         to="/support"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Поддержка
                                     </Link>
                                 </>
                             ) : (
                                 <>
-                                    <Link to="/" className="hover:text-slate-900 transition-colors">
+                                    <Link to="/" className="transition-colors hover:text-slate-900">
                                         На главную
                                     </Link>
                                     <Link
                                         to="/instructions"
-                                        className="hover:text-slate-900 transition-colors"
+                                        className="transition-colors hover:text-slate-900"
                                     >
                                         Инструкция
                                     </Link>
@@ -167,26 +161,26 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-9 w-9 rounded-full"
+                                        className="size-9 rounded-full"
                                     >
-                                        <Globe className="h-5 w-5 text-slate-600" />
+                                        <Globe className="size-5 text-slate-600" />
                                         <span className="sr-only">Сменить язык</span>
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="z-[150]">
+                                <DropdownMenuContent align="end" className="z-150">
                                     <DropdownMenuItem
                                         onClick={() => handleLanguageChange('ru')}
-                                        className="justify-between cursor-pointer"
+                                        className="cursor-pointer justify-between"
                                     >
                                         Русский
-                                        {language === 'ru' && <Check className="h-4 w-4 ml-4" />}
+                                        {language === 'ru' && <Check className="ml-4 size-4" />}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() => handleLanguageChange('en')}
-                                        className="justify-between cursor-pointer"
+                                        className="cursor-pointer justify-between"
                                     >
                                         English
-                                        {language === 'en' && <Check className="h-4 w-4 ml-4" />}
+                                        {language === 'en' && <Check className="ml-4 size-4" />}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -195,7 +189,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                 <Button
                                     asChild
                                     variant="default"
-                                    className="bg-[#229ED9] text-white hover:bg-[#1E8CC0] shadow-sm"
+                                    className="bg-[#229ED9] text-white shadow-sm hover:bg-[#1E8CC0]"
                                 >
                                     <Link to="/auth/login">Личный кабинет</Link>
                                 </Button>
@@ -204,10 +198,10 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             variant="ghost"
-                                            className="relative h-9 w-9 rounded-full p-0 overflow-hidden hover:scale-105 transition-transform"
+                                            className="relative size-9 overflow-hidden rounded-full p-0 transition-transform hover:scale-105"
                                         >
-                                            <Avatar className="h-9 w-9">
-                                                <AvatarFallback className="bg-slate-900 text-white font-bold text-xs">
+                                            <Avatar className="size-9">
+                                                <AvatarFallback className="bg-slate-900 text-xs font-bold text-white">
                                                     {username
                                                         ? username.substring(0, 2).toUpperCase()
                                                         : 'US'}
@@ -215,10 +209,10 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                             </Avatar>
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-56 z-[150]">
+                                    <DropdownMenuContent align="end" className="z-150 w-56">
                                         <DropdownMenuLabel className="font-normal">
                                             <div className="flex flex-col space-y-1">
-                                                <p className="text-sm font-medium leading-none text-slate-900">
+                                                <p className="text-sm leading-none font-medium text-slate-900">
                                                     {username || 'Пользователь'}
                                                 </p>
                                                 <p className="text-xs leading-none text-slate-500">
@@ -231,22 +225,22 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                             onClick={() => navigate('/settings')}
                                             className="cursor-pointer"
                                         >
-                                            <SettingsIcon className="mr-2 h-4 w-4" />
+                                            <SettingsIcon className="mr-2 size-4" />
                                             <span>Настройки</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             onClick={handleLogout}
-                                            className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                                            className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
                                         >
-                                            <LogOut className="mr-2 h-4 w-4" />
+                                            <LogOut className="mr-2 size-4" />
                                             <span>Выйти</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={handleLogout}
-                                            className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                                            className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
                                         >
-                                            <LogOut className="mr-2 h-4 w-4" />
+                                            <LogOut className="mr-2 size-4" />
                                             <span>Выйти везде</span>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -258,34 +252,34 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
             </div>
 
             {isMobileMenuOpen && isNavigateEnabled && (
-                <div className="md:hidden absolute inset-x-0 top-full z-50 bg-white border-b border-slate-200 p-4 shadow-xl animate-in slide-in-from-top-2 overflow-x-clip">
+                <div className="absolute inset-x-0 top-full z-50 animate-in overflow-x-clip border-b border-slate-200 bg-white p-4 shadow-xl slide-in-from-top-2 md:hidden">
                     <nav className="flex flex-col gap-2 text-base font-medium text-slate-700">
                         {isLanding ? (
                             <>
                                 <a
                                     href="#about"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     О проекте
                                 </a>
                                 <a
                                     href="#volunteers"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Волонтерам
                                 </a>
                                 <a
                                     href="#science"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Научная база
                                 </a>
                                 <Link
                                     to="/instructions"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Инструкция
@@ -295,28 +289,28 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             <>
                                 <Link
                                     to="/dashboard"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Публикации
                                 </Link>
                                 <Link
                                     to="/instructions"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Инструкция
                                 </Link>
                                 <Link
                                     to="/statistics"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Статистика
                                 </Link>
                                 <Link
                                     to="/support"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Поддержка
@@ -326,14 +320,14 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             <>
                                 <Link
                                     to="/"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     На главную
                                 </Link>
                                 <Link
                                     to="/instructions"
-                                    className="p-3 hover:bg-slate-50 rounded-md transition-colors"
+                                    className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     Инструкция

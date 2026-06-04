@@ -1,52 +1,8 @@
-import {
-    Navigate,
-    Outlet,
-    redirect,
-    useNavigation,
-    useOutletContext,
-    ScrollRestoration,
-    type LoaderFunctionArgs,
-    type RouteObject,
-} from 'react-router';
+import { Navigate, redirect, type LoaderFunctionArgs, type RouteObject } from 'react-router';
 import { store } from './store/store';
 import LoadingScreen from './components/LoadingScreen';
-import Layout from './layout/Layout';
-
-import Landing from './pages/Landing';
-import AuthLayout from './pages/Auth';
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
-import TelegramAuth from './pages/Auth/Telegram';
-import Recovery from './pages/Auth/Recovery';
-import Dashboard from './pages/Dashboard';
-import FormFilling from './pages/FormFilling';
-import Instructions from './pages/Instructions';
-import Statistics from './pages/Statistics';
-import Support from './pages/Support';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import Onboarding from './pages/Onboarding';
-import Settings from './pages/Settings';
-
-import { Toaster } from 'sonner';
-
-function NavigationWrapper() {
-    const navigation = useNavigation();
-    const isNavigating = Boolean(navigation.location);
-    const context = useOutletContext();
-
-    if (isNavigating) {
-        return <LoadingScreen />;
-    }
-
-    return (
-        <>
-            <Toaster position="bottom-right" />
-            <ScrollRestoration />
-            <Outlet context={context} />
-        </>
-    );
-}
+import Layout from './components/layout/Layout';
+import { NavigationWrapper } from './components/NavigationWrapper';
 
 const requireAuth = ({ request }: LoaderFunctionArgs) => {
     const { auth } = store.getState().user;
@@ -80,56 +36,124 @@ export const routes: RouteObject[] = [
                     {
                         index: true,
                         loader: requireGuest,
-                        element: <Landing />,
-                        handle: { isLanding: true },
+                        lazy: () =>
+                            import('./pages/Landing').then((m) => ({ Component: m.default })),
+                        handle: { isLanding: true, isNavigateEnabled: true },
                     },
 
                     {
                         path: 'privacy-policy',
-                        // handle: { isFullWidth: true },
-                        element: <PrivacyPolicy />,
+                        lazy: () =>
+                            import('./pages/PrivacyPolicy').then((m) => ({ Component: m.default })),
                     },
 
                     {
                         path: 'terms-of-service',
-                        element: <TermsOfService />,
+                        lazy: () =>
+                            import('./pages/TermsOfService').then((m) => ({
+                                Component: m.default,
+                            })),
+                    },
+
+                    {
+                        path: 'instructions',
+                        lazy: () =>
+                            import('./pages/Instructions').then((m) => ({
+                                Component: m.default,
+                            })),
+                        handle: { isFullWidth: true },
                     },
 
                     {
                         path: 'auth',
                         loader: requireGuest,
-                        element: <AuthLayout />,
+                        lazy: () => import('./pages/Auth').then((m) => ({ Component: m.default })),
                         handle: { isNavigateEnabled: false },
                         children: [
-                            { index: true, element: <Navigate to="login" replace /> },
-                            { path: 'login', element: <Login /> },
-                            { path: 'register', element: <Register /> },
-                            { path: 'telegram', element: <TelegramAuth /> },
-                            { path: 'recovery', element: <Recovery /> },
+                            {
+                                index: true,
+                                element: <Navigate to="login" replace />,
+                            },
+                            {
+                                path: 'login',
+                                lazy: () =>
+                                    import('./pages/Auth/Login').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'register',
+                                lazy: () =>
+                                    import('./pages/Auth/Register').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'telegram',
+                                lazy: () =>
+                                    import('./pages/Auth/Telegram').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'recovery',
+                                lazy: () =>
+                                    import('./pages/Auth/Recovery').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
                         ],
                     },
-                    {
-                        path: 'instructions',
-                        element: <Instructions />,
-                        handle: { isFullWidth: true },
-                    },
+
                     {
                         loader: requireAuth,
+                        handle: { isNavigateEnabled: true },
                         children: [
-                            { path: 'dashboard', element: <Dashboard /> },
+                            {
+                                path: 'dashboard',
+                                lazy: () =>
+                                    import('./pages/Dashboard').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
                             {
                                 path: 'onboarding',
-                                element: <Onboarding />,
+                                lazy: () =>
+                                    import('./pages/Onboarding').then((m) => ({
+                                        Component: m.default,
+                                    })),
                                 handle: { isNavigateEnabled: false },
                             },
                             {
-                                path: 'publication/:id',
-                                element: <FormFilling />,
+                                path: 'publication/:id/:record?',
+                                lazy: () =>
+                                    import('./pages/FormFilling').then((m) => ({
+                                        Component: m.default,
+                                    })),
                                 handle: { isSidebarEnabled: true },
                             },
-                            { path: 'support', element: <Support /> },
-                            { path: 'statistics', element: <Statistics /> },
-                            { path: 'settings', element: <Settings /> },
+                            {
+                                path: 'support',
+                                lazy: () =>
+                                    import('./pages/Support').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'statistics',
+                                lazy: () =>
+                                    import('./pages/Statistics').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
+                                path: 'settings',
+                                lazy: () =>
+                                    import('./pages/Settings').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                                handle: { isFullWidth: true },
+                            },
                         ],
                     },
                 ],

@@ -1,16 +1,28 @@
 from datetime import datetime
 from typing import Literal, TypedDict
 
-from pydantic import UUID4, BaseModel, ConfigDict, Field
+from pydantic import UUID4, BaseModel, ConfigDict, Field, field_validator
+
+from core.enums import RecordType
+
+# Valid (sex, life_stage) combinations - only 6 are allowed
+# Matches frontend specimen field mappings in frontend/src/lib/recordUtils.ts
+VALID_SPECIMEN_COMBINATIONS: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("male", "adult"),  # males field
+        ("male", "subadult"),  # subadultMales field
+        ("female", "adult"),  # females field
+        ("female", "subadult"),  # subadultFemales field
+        ("none", "adult"),  # adults field
+        ("none", "juvenile"),  # juveniles field
+    }
+)
 
 
 class SpecimenDbRow(TypedDict, total=False):
     quantity: float | int
     sex: str | None
     life_stage: str | None
-
-
-RecordType = Literal["rec_ok", "rec_fail", "check_ok", "check_fail", "rec_del"]
 
 
 class Specimen(BaseModel):
@@ -84,5 +96,42 @@ class RecordData(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    @field_validator("specimens", mode="after")
+    @classmethod
+    def filter_invalid_specimen_combinations(
+        cls, v: list[Specimen] | None
+    ) -> list[Specimen] | None:
+        """Filter out specimens with invalid sex/life_stage combinations.
 
-class RecordFull(RecordData, RecordMetadata): ...
+        Only 6 combinations are valid, matching frontend specimen fields:
+        - male + adult (males)
+        - male + subadult (subadultMales)
+        - female + adult (females)
+        - female + subadult (subadultFemales)
+        - none + adult (adults)
+        - none + juvenile (juveniles)
+        """
+        if v is None:
+            return None
+        if any((s.sex, s.life_stage) not in VALID_SPECIMEN_COMBINATIONS for s in v):
+            raise ValueError("Invalid specimen sex/life_stage combination")
+        return v
+
+
+class RecordValidationError(BaseModel):
+    fields: list[str]
+    code: str
+    message: str
+    category: str | None = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RecordFull(RecordData, RecordMetadata):
+    errors: list[RecordValidationError] | None = None
+
+    @field_validator("errors", mode="before")
+    @classmethod
+    def discard_db_string(cls, v: str | list | None) -> list | None:
+        if isinstance(v, str):
+            return None
+        return v

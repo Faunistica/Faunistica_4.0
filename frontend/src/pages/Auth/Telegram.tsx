@@ -15,31 +15,31 @@ const TelegramAuth: FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="w-full max-w-[400px] space-y-6 mx-auto">
-            <Card className="border-slate-200 shadow-sm overflow-hidden relative">
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-telegram"></div>
-                <CardHeader className="space-y-1 text-center pl-6">
+        <div className="mx-auto w-full max-w-[400px] space-y-6">
+            <Card className="relative overflow-hidden border-slate-200 shadow-sm">
+                <div className="absolute inset-y-0 left-0 w-1.5 bg-telegram"></div>
+                <CardHeader className="space-y-1 pl-6 text-center">
                     <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
                         Telegram Secure Login
                     </CardTitle>
-                    <CardDescription className="text-slate-500 mt-2">
+                    <CardDescription className="mt-2 text-slate-500">
                         Scan the code with your Telegram app or use the direct link below to access
                         your profile.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="flex justify-center my-4">
-                        <div className="h-40 w-40 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center p-2 shadow-inner">
-                            <div className="w-full h-full border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-400 gap-2">
-                                <Send className="h-8 w-8 opacity-50" />
-                                <span className="text-xs font-mono">QR / Widget Area</span>
+                    <div className="my-4 flex justify-center">
+                        <div className="flex size-40 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 p-2 shadow-inner">
+                            <div className="flex size-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 text-slate-400">
+                                <Send className="size-8 opacity-50" />
+                                <span className="font-mono text-xs">QR / Widget Area</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <Button className="w-full bg-telegram text-white hover:bg-[#1E8CC0] font-semibold shadow-md gap-2">
-                            <Send className="h-4 w-4" />
+                        <Button className="w-full gap-2 bg-telegram font-semibold text-white shadow-md hover:bg-[#1E8CC0]">
+                            <Send className="size-4" />
                             Log in via Telegram
                         </Button>
 
@@ -48,40 +48,40 @@ const TelegramAuth: FC = () => {
                                 <span className="w-full border-t border-slate-200" />
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white px-2 text-slate-500 font-medium">or</span>
+                                <span className="bg-white px-2 font-medium text-slate-500">or</span>
                             </div>
                         </div>
 
                         <Button
                             variant="outline"
-                            className="w-full border-slate-300 text-slate-700 hover:bg-slate-50 gap-2"
+                            className="w-full gap-2 border-slate-300 text-slate-700 hover:bg-slate-50"
                             onClick={() => navigate('/auth/login')}
                         >
-                            <Key className="h-4 w-4 text-slate-500" />
+                            <Key className="size-4 text-slate-500" />
                             Standard Login
                         </Button>
                     </div>
                 </CardContent>
-                <CardFooter className="flex justify-center bg-slate-50 border-t border-slate-100 py-4">
+                <CardFooter className="flex justify-center border-t border-slate-100 bg-slate-50 py-4">
                     <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Loader2 className="h-4 w-4 animate-spin text-telegram" />
+                        <Loader2 className="size-4 animate-spin text-telegram" />
                         <span>Waiting for authentication...</span>
                     </div>
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm text-slate-500 leading-relaxed">
+            <p className="px-4 text-center text-sm/relaxed text-slate-500">
                 By clicking continue, you agree to our{' '}
                 <Link
                     to="#"
-                    className="underline underline-offset-4 hover:text-slate-900 transition-colors"
+                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
                 >
                     Terms of Service
                 </Link>{' '}
                 and{' '}
                 <Link
                     to="#"
-                    className="underline underline-offset-4 hover:text-slate-900 transition-colors"
+                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
                 >
                     Privacy Policy
                 </Link>

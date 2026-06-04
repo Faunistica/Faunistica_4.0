@@ -1,5 +1,6 @@
 import { type FC } from 'react';
 import { FileText, XCircle, FileSearch, FileDown, Calendar, User, Hash } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router';
@@ -13,47 +14,45 @@ interface PublicationRowProps {
 export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
     return (
         <div
-            className={`
-        group relative flex flex-col lg:flex-row gap-4 p-4 sm:p-5
-        bg-white rounded-xl border border-slate-200/70 shadow-sm
-        hover:shadow-md hover:border-slate-300/80 transition-all duration-200
-        ${mode === 'suggested' ? 'bg-amber-50/30 hover:bg-amber-50/50' : ''}
-      `}
+            className={cn(
+                'group relative flex flex-col gap-4 rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row',
+                mode === 'suggested' && 'bg-amber-50/30 hover:bg-amber-50/50',
+            )}
         >
             {/* Левая цветная полоса-индикатор (опционально для разграничения режимов) */}
             <div
-                className={`
-          absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-colors
-          ${mode === 'suggested' ? 'bg-amber-400' : ''}
-          ${mode === 'progress' ? 'bg-blue-400' : ''}
-          ${mode === 'available' ? 'bg-emerald-400' : ''}
-        `}
+                className={cn(
+                    'absolute inset-y-0 left-0 w-1 rounded-l-xl transition-colors',
+                    mode === 'suggested' && 'bg-amber-400',
+                    mode === 'progress' && 'bg-blue-400',
+                    mode === 'available' && 'bg-emerald-400',
+                )}
             />
 
             {/* Блок с метаданными */}
-            <div className="flex-1 min-w-0 space-y-2 w-full pl-1">
+            <div className="w-full min-w-0 flex-1 space-y-2 pl-1">
                 {/* Строка с ID и бейджами */}
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-slate-500 bg-slate-100 rounded-full px-2.5 py-0.5">
-                        <Hash className="h-3 w-3" />
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 font-mono text-xs font-semibold text-slate-500">
+                        <Hash className="size-3" />
                         {pub.publ_id}
                     </span>
 
                     {pub.type && (
                         <Badge
                             variant="outline"
-                            className="h-5 rounded-full text-[10px] px-2.5 font-medium bg-white border-slate-300 text-slate-700"
+                            className="h-5 rounded-full border-slate-300 bg-white px-2.5 text-[10px] font-medium text-slate-700"
                         >
                             {pub.type}
                         </Badge>
                     )}
                     {pub.language && (
-                        <Badge className="h-5 rounded-full text-[10px] px-2.5 font-medium bg-slate-100 text-slate-700">
+                        <Badge className="h-5 rounded-full bg-slate-100 px-2.5 text-[10px] font-medium text-slate-700">
                             {pub.language}
                         </Badge>
                     )}
                     {pub.ural && (
-                        <Badge className="h-5 rounded-full text-[10px] px-2.5 font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                        <Badge className="h-5 rounded-full border border-blue-200 bg-blue-50 px-2.5 text-[10px] font-medium text-blue-700">
                             Урал
                         </Badge>
                     )}
@@ -61,7 +60,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
 
                 {/* Название публикации */}
                 <h4
-                    className="text-sm md:text-base font-semibold text-slate-800 leading-snug line-clamp-2 group-hover:text-slate-900 transition-colors"
+                    className="line-clamp-2 text-sm/snug font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
                     title={pub.name || 'Без названия'}
                 >
                     {pub.name || 'Название публикации отсутствует'}
@@ -70,12 +69,12 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                 {/* Автор и год — с иконками для лучшего считывания */}
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     <span className="inline-flex items-center gap-1">
-                        <User className="h-3.5 w-3.5 text-slate-400" />
+                        <User className="size-3.5 text-slate-400" />
                         {pub.author || 'Автор неизвестен'}
                     </span>
                     {pub.year && (
                         <span className="inline-flex items-center gap-1">
-                            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                            <Calendar className="size-3.5 text-slate-400" />
                             {pub.year}
                         </span>
                     )}
@@ -83,30 +82,28 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
             </div>
 
             {/* Блок управления (кнопки) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 w-full lg:w-auto mt-1 lg:mt-0">
+            <div className="mt-1 flex w-full shrink-0 flex-col items-stretch gap-2.5 sm:flex-row sm:items-center lg:mt-0 lg:w-auto">
                 {/* Кнопка PDF — теперь с иконкой загрузки, если файл есть */}
                 <Button
                     variant="outline"
                     size="sm"
-                    className={`
-            h-9 rounded-lg gap-2 border transition-all w-full sm:w-auto justify-center
-            ${
-                pub.pdf_file
-                    ? 'border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400'
-                    : 'border-slate-200 text-slate-400 cursor-not-allowed bg-slate-50/50'
-            }
-          `}
+                    className={cn(
+                        'h-9 w-full justify-center gap-2 rounded-lg border transition-all sm:w-auto',
+                        pub.pdf_file
+                            ? 'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-100'
+                            : 'cursor-not-allowed border-slate-200 bg-slate-50/50 text-slate-400',
+                    )}
                     disabled={!pub.pdf_file}
                     asChild={!!pub.pdf_file}
                 >
                     {pub.pdf_file ? (
                         <a href={pub.pdf_file} target="_blank" rel="noopener noreferrer">
-                            <FileDown className="h-4 w-4" />
+                            <FileDown className="size-4" />
                             <span>PDF</span>
                         </a>
                     ) : (
                         <>
-                            <FileText className="h-4 w-4" />
+                            <FileText className="size-4" />
                             <span>Нет PDF</span>
                         </>
                     )}
@@ -114,22 +111,22 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
 
                 {/* Режим «suggested» */}
                 {mode === 'suggested' && (
-                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                         <Button
                             variant="destructive"
                             size="sm"
-                            className="h-9 rounded-lg gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto justify-center"
+                            className="h-9 w-full justify-center gap-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto"
                         >
-                            <XCircle className="h-4 w-4" />
+                            <XCircle className="size-4" />
                             <span>Отказаться</span>
                         </Button>
                         <Button
                             asChild
                             size="sm"
-                            className="h-9 rounded-lg gap-2 bg-amber-500 hover:bg-amber-600 text-white w-full sm:w-auto justify-center shadow-sm shadow-amber-200/50"
+                            className="h-9 w-full justify-center gap-2 rounded-lg bg-amber-500 text-white shadow-sm shadow-amber-200/50 hover:bg-amber-600 sm:w-auto"
                         >
                             <Link to={`/publication/${pub.publ_id}`}>
-                                <FileSearch className="h-4 w-4" />
+                                <FileSearch className="size-4" />
                                 <span>Взять в работу</span>
                             </Link>
                         </Button>

@@ -1,6 +1,8 @@
 import { type FC, useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { Image } from 'lucide-react';
 
 const InstructionImage = ({
     src,
@@ -11,31 +13,28 @@ const InstructionImage = ({
     alt: string;
     className?: string;
 }) => {
+    const [hasError, setHasError] = useState(false);
+
     return (
         <div
-            className={`my-4 overflow-hidden rounded-md border border-border bg-muted/30 ${className}`}
+            className={cn(
+                'my-4 overflow-hidden rounded-md border border-border bg-muted/30',
+                className,
+            )}
         >
-            <img
-                src={`/assets/instruction/${src}`}
-                alt={alt}
-                className="w-full h-auto object-contain"
-                onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    if (target.parentElement) {
-                        target.parentElement.innerHTML = `
-                            <div class="p-8 text-center text-muted-foreground text-sm flex flex-col items-center justify-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-50">
-                                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
-                                    <circle cx="9" cy="9" r="2"/>
-                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                                </svg>
-                                <span>Изображение загружается: ${src}</span>
-                            </div>
-                        `;
-                    }
-                }}
-            />
+            {hasError ? (
+                <div className="flex flex-col items-center justify-center gap-2 p-8 text-center text-sm text-muted-foreground">
+                    <Image />
+                    <span>Не удалось загрузить изображение: {src}</span>
+                </div>
+            ) : (
+                <img
+                    src={`/assets/instruction/${src}`}
+                    alt={alt}
+                    className="h-auto w-full object-contain"
+                    onError={() => setHasError(true)}
+                />
+            )}
         </div>
     );
 };
@@ -107,19 +106,19 @@ const Instructions: FC = () => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row gap-8 max-w-screen-2xl mx-auto p-4 md:p-8">
+        <div className="mx-auto flex max-w-screen-2xl flex-col gap-8 p-4 md:flex-row md:p-8">
             {/* Sidebar Navigation */}
-            <aside className="w-full md:w-64 shrink-0">
+            <aside className="w-full shrink-0 md:w-64">
                 <div className="sticky top-24 space-y-1">
-                    <h2 className="text-lg font-semibold mb-4 px-3">Инструкция</h2>
+                    <h2 className="mb-4 px-3 text-lg font-semibold">Инструкция</h2>
                     <nav className="flex flex-col gap-1">
                         {SECTIONS.map((section) => (
                             <button
                                 key={section.id}
                                 onClick={() => scrollToSection(section.id)}
-                                className={`text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                                className={`rounded-md px-3 py-2 text-left text-sm transition-colors ${
                                     activeSection === section.id
-                                        ? 'bg-primary text-primary-foreground font-medium'
+                                        ? 'bg-primary font-medium text-primary-foreground'
                                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                 }`}
                             >
@@ -131,12 +130,12 @@ const Instructions: FC = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 space-y-12 pb-24 min-w-0">
+            <main className="min-w-0 flex-1 space-y-12 pb-24">
                 <div className="space-y-4">
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                    <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
                         Инструкция для волонтеров
                     </h1>
-                    <p className="text-muted-foreground text-lg">
+                    <p className="text-lg text-muted-foreground">
                         Руководство по оцифровке данных о биоразнообразии пауков Урала.
                     </p>
                 </div>
@@ -148,7 +147,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Подробнее о проекте</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+                        <CardContent className="prose prose-sm max-w-none md:prose-base dark:prose-invert">
                             <p>
                                 <strong>
                                     Наш проект направлен на оцифровку данных о биоразнообразии
@@ -173,7 +172,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Начало работы</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Ваша текущая публикация - научная работа, из которой мы будем
                                 извлекать данные. По клику на названии мы можем получить полный
@@ -205,8 +204,8 @@ const Instructions: FC = () => {
                                 <strong>Количество</strong>.
                             </p>
 
-                            <div className="bg-muted p-4 md:p-6 rounded-lg mt-4 border border-border">
-                                <h4 className="font-semibold text-lg mt-0 mb-4 text-foreground">
+                            <div className="mt-4 rounded-lg border border-border bg-muted p-4 md:p-6">
+                                <h4 className="mt-0 mb-4 text-lg font-semibold text-foreground">
                                     Общие рекомендации по работе с публикацией:
                                 </h4>
                                 <ol className="mb-0 space-y-3">
@@ -244,7 +243,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Административное расположение</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 В блок <strong>Административное расположение</strong> вносится вся
                                 информация о месте находки с точки зрения административного деления
@@ -269,7 +268,7 @@ const Instructions: FC = () => {
                             <InstructionImage
                                 src="adm.webp"
                                 alt="Карта Урала"
-                                className="max-w-2xl mx-auto"
+                                className="mx-auto max-w-2xl"
                             />
 
                             <p>
@@ -282,12 +281,12 @@ const Instructions: FC = () => {
 
                             <div className="mt-8 space-y-6">
                                 <div>
-                                    <h4 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                                        <span className="bg-primary/20 text-primary px-2 py-1 rounded text-sm">
+                                    <h4 className="mb-2 flex items-center gap-2 text-lg font-semibold text-foreground">
+                                        <span className="rounded-sm bg-primary/20 px-2 py-1 text-sm text-primary">
                                             Пример 1
                                         </span>
                                     </h4>
-                                    <p className="text-sm italic text-muted-foreground border-l-2 border-primary/50 pl-3 py-1">
+                                    <p className="border-l-2 border-primary/50 py-1 pl-3 text-sm text-muted-foreground italic">
                                         Статья: Esyunin S.L., Tuneva T.K., Farzalieva G.Sh. 2007.
                                         Remarks on the Ural spider fauna... Spiders of the steppe
                                         zone of Orenburg Region...
@@ -326,12 +325,12 @@ const Instructions: FC = () => {
                                 <Separator />
 
                                 <div>
-                                    <h4 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                                        <span className="bg-primary/20 text-primary px-2 py-1 rounded text-sm">
+                                    <h4 className="mb-2 flex items-center gap-2 text-lg font-semibold text-foreground">
+                                        <span className="rounded-sm bg-primary/20 px-2 py-1 text-sm text-primary">
                                             Пример 2
                                         </span>
                                     </h4>
-                                    <p className="text-sm italic text-muted-foreground border-l-2 border-primary/50 pl-3 py-1">
+                                    <p className="border-l-2 border-primary/50 py-1 pl-3 text-sm text-muted-foreground italic">
                                         Статья: Ухова Н.Л., Есюнин С.Л., Семенов В.Б... Численность
                                         почвенных и напочвенных беспозвоночных животных...
                                     </p>
@@ -359,7 +358,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Географическое расположение</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Находим в статье координаты находки конкретного паука и вносим их в
                                 том формате, который приведен в публикации.
@@ -385,7 +384,7 @@ const Instructions: FC = () => {
                                 предупреждение - нажимаем &quot;Да, все верно&quot;.
                             </p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+                            <div className="my-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <InstructionImage src="coord1.webp" alt="Координаты в статье 1" />
                                 <InstructionImage src="coord2.webp" alt="Координаты в статье 2" />
                             </div>
@@ -404,7 +403,7 @@ const Instructions: FC = () => {
                                 GPS). Если значение неизвестно, оставляем поле пустым.
                             </p>
 
-                            <div className="bg-muted p-4 md:p-6 rounded-lg border border-border">
+                            <div className="rounded-lg border border-border bg-muted p-4 md:p-6">
                                 <p className="mb-0 text-foreground">
                                     Собственной геопривязкой на данном этапе развития проекта мы не
                                     занимаемся, так что у нас только два варианта: либо вносить
@@ -423,7 +422,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Сбор материала</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Здесь вводим даты сбора материала - конкретный день / месяц / год
                                 или их интервал - зависит от публикации. Если нужно ввести интервал,
@@ -446,7 +445,7 @@ const Instructions: FC = () => {
                                 площадке.
                             </p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <InstructionImage src="image25.webp" alt="Биотоп пример 1" />
                                 <InstructionImage src="image26.webp" alt="Биотоп пример 2" />
                             </div>
@@ -473,7 +472,7 @@ const Instructions: FC = () => {
                             </p>
                             <InstructionImage src="eve4.webp" alt="Пример заполнения блока" />
 
-                            <div className="bg-primary/10 border-l-4 border-primary p-4 my-4">
+                            <div className="my-4 border-l-4 border-primary bg-primary/10 p-4">
                                 <p className="mb-0 font-medium text-primary">
                                     Всю информацию вводим на языке оригинала публикации!
                                 </p>
@@ -488,7 +487,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Таксономия</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Здесь записываем латинские названия семейства, рода и вида пауков.
                             </p>
@@ -510,7 +509,7 @@ const Instructions: FC = () => {
                                 Такое может быть, если вид со времен выхода публикации был
                                 переименован.
                             </p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <InstructionImage src="tax2.webp" alt="Выпадающий список" />
                                 <InstructionImage src="tax3.webp" alt="Ручной ввод" />
                             </div>
@@ -534,48 +533,48 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Количество</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Данные о количестве пауков вносим с учетом их пола и возраста.
                                 Вместо слов самка или самец используются символы:
                             </p>
-                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 list-none pl-0">
-                                <li className="bg-muted px-4 py-2 rounded-md flex items-center gap-3">
-                                    <span className="text-xl font-bold text-blue-500 w-8 text-center">
+                            <ul className="grid list-none grid-cols-1 gap-2 pl-0 sm:grid-cols-2">
+                                <li className="flex items-center gap-3 rounded-md bg-muted px-4 py-2">
+                                    <span className="w-8 text-center text-xl font-bold text-blue-500">
                                         &#9794;
                                     </span>{' '}
                                     <span>
                                         или <strong>m</strong> - 1 самец
                                     </span>
                                 </li>
-                                <li className="bg-muted px-4 py-2 rounded-md flex items-center gap-3">
-                                    <span className="text-xl font-bold text-blue-500 w-8 text-center">
+                                <li className="flex items-center gap-3 rounded-md bg-muted px-4 py-2">
+                                    <span className="w-8 text-center text-xl font-bold text-blue-500">
                                         &#9794;&#9794;
                                     </span>{' '}
                                     <span>- 2 и более самца</span>
                                 </li>
-                                <li className="bg-muted px-4 py-2 rounded-md flex items-center gap-3">
-                                    <span className="text-xl font-bold text-pink-500 w-8 text-center">
+                                <li className="flex items-center gap-3 rounded-md bg-muted px-4 py-2">
+                                    <span className="w-8 text-center text-xl font-bold text-pink-500">
                                         &#9792;
                                     </span>{' '}
                                     <span>
                                         или <strong>f</strong> - 1 самка
                                     </span>
                                 </li>
-                                <li className="bg-muted px-4 py-2 rounded-md flex items-center gap-3">
-                                    <span className="text-xl font-bold text-pink-500 w-8 text-center">
+                                <li className="flex items-center gap-3 rounded-md bg-muted px-4 py-2">
+                                    <span className="w-8 text-center text-xl font-bold text-pink-500">
                                         &#9792;&#9792;
                                     </span>{' '}
                                     <span>- 2 и более самок</span>
                                 </li>
-                                <li className="bg-muted px-4 py-2 rounded-md flex items-center gap-3">
-                                    <span className="font-mono font-bold text-green-500 w-8 text-center">
+                                <li className="flex items-center gap-3 rounded-md bg-muted px-4 py-2">
+                                    <span className="w-8 text-center font-mono font-bold text-green-500">
                                         juv.
                                     </span>{' '}
                                     <span>- ювенильная (неполовозрелая)</span>
                                 </li>
-                                <li className="bg-muted px-4 py-2 rounded-md flex items-center gap-3">
-                                    <span className="font-mono font-bold text-orange-500 w-8 text-center">
+                                <li className="flex items-center gap-3 rounded-md bg-muted px-4 py-2">
+                                    <span className="w-8 text-center font-mono font-bold text-orange-500">
                                         sub.
                                     </span>{' '}
                                     <span>- субвзрослая (станет взрослой скоро)</span>
@@ -616,7 +615,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Проверка и запись внесенных данных</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Когда все поля формы заполнены, мы можем убедиться, что ничего не
                                 пропустили, для этого нажимаем <strong>Проверить</strong>. Если
@@ -638,8 +637,8 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Дополнительные возможности</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
-                            <h4 className="mt-0 mb-2 text-foreground font-semibold text-lg">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
+                            <h4 className="mt-0 mb-2 text-lg font-semibold text-foreground">
                                 Замочки
                             </h4>
                             <p>
@@ -655,7 +654,7 @@ const Instructions: FC = () => {
 
                             <Separator className="my-6" />
 
-                            <h4 className="mt-6 mb-2 text-foreground font-semibold text-lg">
+                            <h4 className="mt-6 mb-2 text-lg font-semibold text-foreground">
                                 Статистика
                             </h4>
                             <p>
@@ -665,7 +664,7 @@ const Instructions: FC = () => {
 
                             <Separator className="my-6" />
 
-                            <h4 className="mt-6 mb-2 text-foreground font-semibold text-lg">
+                            <h4 className="mt-6 mb-2 text-lg font-semibold text-foreground">
                                 Удаление записей
                             </h4>
                             <p>
@@ -684,7 +683,7 @@ const Instructions: FC = () => {
                         <CardHeader>
                             <CardTitle>Завершение работы с публикацией</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose prose-sm md:prose-base dark:prose-invert max-w-none space-y-4">
+                        <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Когда вы посчитаете, что взяли из публикации все данные, которые
                                 могли, нажмите кнопку{' '}
@@ -703,8 +702,8 @@ const Instructions: FC = () => {
                                 обработанной, а система предложит вам новую.
                             </p>
 
-                            <div className="bg-primary/5 border border-primary/20 p-6 rounded-lg text-center mt-8">
-                                <h3 className="text-xl md:text-2xl font-bold mb-3 text-foreground">
+                            <div className="mt-8 rounded-lg border border-primary/20 bg-primary/5 p-6 text-center">
+                                <h3 className="mb-3 text-xl font-bold text-foreground md:text-2xl">
                                     Спасибо за ваш вклад в наше дело!
                                 </h3>
                                 <p className="mb-0 text-muted-foreground">
