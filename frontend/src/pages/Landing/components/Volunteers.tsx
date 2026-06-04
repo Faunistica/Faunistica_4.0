@@ -5,25 +5,25 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function Volunteers() {
     return (
-        <section id="volunteers" className="w-full py-16 md:py-24 bg-slate-900 text-slate-50">
-            <div className="w-full max-w-7xl px-4 md:px-6 mx-auto">
-                <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <section id="volunteers" className="w-full bg-slate-900 py-16 text-slate-50 md:py-24">
+            <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
+                <div className="grid items-center gap-12 lg:grid-cols-2">
                     <div className="space-y-6">
                         <Badge variant="outline" className="border-slate-700 text-slate-300">
                             Для волонтеров
                         </Badge>
-                        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-white">
+                        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
                             Ваш вклад в большую науку
                         </h2>
-                        <p className="text-slate-400 md:text-lg leading-relaxed">
+                        <p className="leading-relaxed text-slate-400 md:text-lg">
                             Нам нужна помощь в распознавании и структурировании сведений из
                             предложенных научных статей. Мы постарались сделать так, чтобы участие в
                             проекте было для вас не только полезным, но и захватывающим.
                         </p>
 
-                        <div className="pt-4 grid sm:grid-cols-2 gap-4">
+                        <div className="grid gap-4 pt-4 sm:grid-cols-2">
                             <div className="flex items-start gap-3">
-                                <Trophy className="h-6 w-6 text-amber-400 shrink-0" />
+                                <Trophy className="size-6 shrink-0 text-amber-400" />
                                 <div>
                                     <h4 className="font-semibold text-white">Рейтинг и сувениры</h4>
                                     <p className="text-sm text-slate-400">
@@ -33,7 +33,7 @@ export default function Volunteers() {
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <BookOpen className="h-6 w-6 text-blue-400 shrink-0" />
+                                <BookOpen className="size-6 shrink-0 text-blue-400" />
                                 <div>
                                     <h4 className="font-semibold text-white">
                                         Эксклюзивные знания
@@ -45,7 +45,7 @@ export default function Volunteers() {
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <Users className="h-6 w-6 text-emerald-400 shrink-0" />
+                                <Users className="size-6 shrink-0 text-emerald-400" />
                                 <div>
                                     <h4 className="font-semibold text-white">Сообщество</h4>
                                     <p className="text-sm text-slate-400">
@@ -55,7 +55,7 @@ export default function Volunteers() {
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <ShieldCheck className="h-6 w-6 text-purple-400 shrink-0" />
+                                <ShieldCheck className="size-6 shrink-0 text-purple-400" />
                                 <div>
                                     <h4 className="font-semibold text-white">Терапия фобий</h4>
                                     <p className="text-sm text-slate-400">
@@ -67,14 +67,14 @@ export default function Volunteers() {
                         </div>
 
                         <div className="pt-6">
-                            <Button className="bg-white text-slate-900 hover:bg-slate-100 font-semibold w-full sm:w-auto">
+                            <Button className="w-full bg-white font-semibold text-slate-900 hover:bg-slate-100 sm:w-auto">
                                 Смотреть инструкцию волонтера
                             </Button>
                         </div>
                     </div>
 
                     <div className="relative">
-                        <Card className="bg-slate-800 border-slate-700 shadow-2xl relative z-10">
+                        <Card className="relative z-10 border-slate-700 bg-slate-800 shadow-2xl">
                             <CardHeader>
                                 <CardTitle className="text-xl text-white">
                                     Студентам и школьникам
@@ -86,8 +86,8 @@ export default function Volunteers() {
                                     школьную исследовательскую, студенческую курсовую или дипломную
                                     работу на базе реальных научных данных.
                                 </p>
-                                <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700 flex items-center gap-4">
-                                    <FileText className="h-8 w-8 text-[#229ED9]" />
+                                <div className="flex items-center gap-4 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
+                                    <FileText className="size-8 text-[#229ED9]" />
                                     <p className="text-sm">
                                         Наиболее активные и продуктивные волонтеры могут
                                         рассчитывать на соавторство в научных публикациях.
@@ -95,7 +95,7 @@ export default function Volunteers() {
                                 </div>
                             </CardContent>
                         </Card>
-                        <div className="absolute -bottom-6 -right-6 w-full h-full bg-slate-700 rounded-xl -z-10 opacity-50 blur-sm"></div>
+                        <div className="absolute -right-6 -bottom-6 -z-10 size-full rounded-xl bg-slate-700 opacity-50 blur-sm"></div>
                     </div>
                 </div>
             </div>

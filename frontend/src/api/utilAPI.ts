@@ -8,10 +8,10 @@ export const utilAPI = createApi({
     tagTypes: ['util'],
     endpoints: (build) => ({
         suggestTaxon: build.query<Types.SuggestTaxonResponse, Types.SuggestTaxonRequest>({
-            query: ({ field, text, family, genus }) => ({
+            query: ({ field, query, family, genus }) => ({
                 url: '/taxonomy/suggest',
                 method: 'GET',
-                params: { field, text, ...(family ? { family } : {}), ...(genus ? { genus } : {}) },
+                params: { field, query, family, genus },
             }),
         }),
         autofillTaxon: build.query<Types.AutofillTaxonResponse, Types.AutofillTaxonRequest>({
@@ -22,10 +22,14 @@ export const utilAPI = createApi({
             }),
         }),
         geoSearch: build.query<Types.GeoSearchResponse, Types.GeoSearchRequest>({
-            query: ({ field, text, region }) => ({
+            query: ({ field, query, region }) => ({
                 url: '/geo/search',
                 method: 'GET',
-                params: { field, text, ...(region ? { region } : {}) },
+                params: {
+                    field,
+                    query,
+                    region,
+                },
             }),
         }),
         getLocationByCoords: build.query<Types.GetLocationResponse, Types.GetLocationRequest>({

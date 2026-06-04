@@ -126,6 +126,13 @@ class PublicationService:
         publ = await get_publication_expect(self.session, current_publ_id)
         return Publication.model_validate(publ)
 
+    async def get(self, publ_id: int) -> Publication | None:
+        publ = await get_publication(self.session, publ_id)
+        if publ is None:
+            return None
+
+        return Publication.model_validate(publ)
+
     async def get_current(
         self,
         *,

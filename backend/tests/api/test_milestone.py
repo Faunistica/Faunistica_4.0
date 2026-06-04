@@ -7,6 +7,7 @@ from conftest import SeedData
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.enums import RecordType
 from core.model import Action, EventRecord
 from service.actions import ActionService
 from service.milestone import check_and_log_milestone
@@ -23,7 +24,7 @@ async def _seed_records(
             id=uuid4(),
             user_id=user_id,
             publ_id=publ_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="Testus",
             latitude="55.5",
             longitude="37.5",
@@ -51,7 +52,7 @@ async def test_fau50_detected(
             id=uuid4(),
             user_id=user.user_id,
             publ_id=publ_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="Testus",
             latitude="55.5",
             longitude="37.5",
@@ -81,7 +82,7 @@ async def test_fau50_detected(
             id=uuid4(),
             user_id=user.user_id,
             publ_id=publ_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="Testus",
             latitude="55.5",
             longitude="37.5",
@@ -138,7 +139,7 @@ async def test_fau50_not_duplicated(
             id=uuid4(),
             user_id=user.user_id,
             publ_id=publ_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="Testus",
             latitude="55.5",
             longitude="37.5",

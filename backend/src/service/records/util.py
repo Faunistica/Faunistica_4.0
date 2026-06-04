@@ -2,12 +2,12 @@ from datetime import datetime
 from typing import Literal
 from uuid import uuid4
 
+from core.enums import RecordType
 from core.model import EventRecord
 from schema.records import (
     RecordData,
     RecordFull,
     RecordMetadata,
-    RecordType,
     SpecimenDbRow,
 )
 from service.records.convert import specimens_from_record, specimens_to_db
@@ -20,9 +20,9 @@ def _determine_type(
     submission_type: Literal["submit", "autosave"],
 ) -> RecordType:
     if not errors.has_errors():
-        return "rec_ok" if submission_type == "submit" else "check_ok"
+        return RecordType.REC_OK if submission_type == "submit" else RecordType.CHECK_OK
 
-    return "rec_fail" if submission_type == "submit" else "check_fail"
+    return RecordType.REC_FAIL if submission_type == "submit" else RecordType.CHECK_FAIL
 
 
 def _create_record_metadata(

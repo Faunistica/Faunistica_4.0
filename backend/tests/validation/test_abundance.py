@@ -4,7 +4,7 @@ import pytest
 
 from schema.records import RecordData, Specimen
 from service.records.validation import validate_record
-from service.records.validation.constants import QUANTITY_MAX, QUANTITY_TYPES
+from service.records.validation.constants import QUANTITY_MAX
 from service.records.validation.rules import RuleCategory
 
 
@@ -117,25 +117,6 @@ class TestAbundanceValidation:
         )
         errors = validate_record(data, language="rus")
         assert not any(e.code == "count_negative" for e in errors.errors)
-
-    # ── quantity_type invalid ──────────────────────────────────────────
-
-    def test_quantity_type_invalid(self) -> None:
-        data = _valid_data(quantity_type="bogus")
-        errors = validate_record(data, language="rus")
-        assert any(
-            e.code == "invalid" and "quantity_type" in (e.fields or [])
-            for e in errors.errors
-        )
-
-    @pytest.mark.parametrize("qt", list(QUANTITY_TYPES))
-    def test_quantity_type_valid_values(self, qt: str) -> None:
-        data = _valid_data(quantity_type=qt)
-        errors = validate_record(data, language="rus")
-        assert not any(
-            e.code == "invalid" and "quantity_type" in (e.fields or [])
-            for e in errors.errors
-        )
 
     # ── Forbidden chars in occurrence remarks ──────────────────────────
 

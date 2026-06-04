@@ -1,8 +1,8 @@
 from schema.records import RecordData
 
-from ..constants import QUANTITY_MAX, QUANTITY_TYPES
+from ..constants import QUANTITY_MAX
 from ..helpers import contains_forbidden_chars
-from ..rules.base import RuleCategory, RuleContext, in_set, rule
+from ..rules.base import RuleCategory, RuleContext, rule
 
 
 @rule(RuleCategory.ABUNDANCE, ["specimens"], "out_of_range")
@@ -37,16 +37,6 @@ def rule_each_count_positive(data: RecordData, ctx: RuleContext) -> str | None:
         if s.count < 0:
             return "Количество не может быть отрицательным"
     return None
-
-
-rule(
-    RuleCategory.ABUNDANCE,
-    ["quantity_type"],
-    "invalid",
-    in_set(
-        "quantity_type", QUANTITY_TYPES, "Некорректный тип единицы измерения обилия"
-    ),
-)
 
 
 @rule(

@@ -16,7 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from core.enums import UserState, UserStateType
+from core.enums import RecordType, UserState, UserStateType
 
 
 class Base(DeclarativeBase):
@@ -113,7 +113,7 @@ class EventRecord(Base):
     )
     ip: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)
-    type: Mapped[str | None] = mapped_column(Text)
+    type: Mapped[RecordType | None] = mapped_column(Text)
 
     country: Mapped[str | None] = mapped_column("countrycode", Text)
     region: Mapped[str | None] = mapped_column("stateprovince", Text)

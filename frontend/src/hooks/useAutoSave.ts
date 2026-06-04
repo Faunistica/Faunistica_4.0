@@ -1,70 +1,79 @@
-// src/hooks/useAutoSave.ts
-//
-// Автосохранение с debounce и snapshot-сравнением.
-// Пропускает вызов handleSave, если данные не изменились.
+import { useEffect, useRef } from 'react';
+import { draftToRecordData } from '@/lib/recordUtils';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
+import type { FormStore } from '@/store/formStore';
+import type { RecordForm } from '@/types/forms';
+import { useUpdateRecordMutation } from '@/api/recordAPI';
+import type { UseFormWatch, UseFormGetValues } from 'react-hook-form';
 
-import { useEffect, useRef, useState } from 'react';
-import type { UseFormReturn } from 'react-hook-form';
-import type { FormSchema } from '@/types/forms';
+const raw = import.meta.env.VITE_DISABLE_AUTO_SAVE;
+const DISABLE_AUTO_SAVE = (() => {
+    if (raw === '1' || raw === 'true') return true;
+    if (raw === '0' || raw === 'false' || raw === undefined) return false;
+    throw new Error(`Invalid VITE_DISABLE_AUTO_SAVE: ${JSON.stringify(raw)}`);
+})();
 
-interface UseAutoSaveOptions {
-    methods: UseFormReturn<FormSchema>;
-    handleSave: (data: FormSchema, isManual: boolean, targetIndex?: number) => Promise<void>;
-    /** Задержка debounce в мс (по умолчанию 2000). */
-    delay?: number;
-}
+export const useAutoSave = ({
+    store,
+    getValues,
+    publ_id,
+    watch,
+}: {
+    store: FormStore;
+    publ_id: number;
+    getValues: UseFormGetValues<RecordForm>;
+    watch: UseFormWatch<RecordForm>;
+}): (() => void) => {
+    const [updateRecord] = useUpdateRecordMutation();
 
-export function useAutoSave({ methods, handleSave, delay = 2000 }: UseAutoSaveOptions) {
-    const { watch, getValues } = methods;
+    const activeRecordRef = useRef(store.getState().activeRecordId);
 
-    const [isAutoSaving, setIsAutoSaving] = useState(false);
-    const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null);
+    const { fn: debouncedAutoSave, cancel: cancelAutoSave } = useDebouncedCallback(async () => {
+        const id = store.getState().activeRecordId;
+        if (!id) return;
 
-    const timeoutRef = useRef<NodeJS.Timeout>();
-    const lastSnapshotRef = useRef<string>('');
+        const currentValues = getValues();
+        const currentSnapshot = JSON.stringify(currentValues);
+        if (currentSnapshot === store.getState().snapshot) return;
+
+        store.setState({ status: { phase: 'saving', source: 'auto' } });
+        try {
+            const payload = draftToRecordData(currentValues);
+            await updateRecord({
+                submit: false,
+                record_id: id,
+                data: payload,
+                publ_id,
+            }).unwrap();
+            store.setState({
+                lastSavedTime: new Date(),
+                status: { phase: 'idle', submitted: false },
+            });
+            store.setState({ snapshot: currentSnapshot });
+        } catch {
+            store.setState({ status: { phase: 'idle', submitted: false } });
+        }
+    }, store.getState().autoSaveDelay);
 
     useEffect(() => {
-        const subscription = watch((_, { name, type }) => {
-            if (type !== 'change') return;
+        if (DISABLE_AUTO_SAVE) return () => {};
 
-            const match = name?.match(/^samples\.(\d+)/);
-            const changedIndex = match ? parseInt(match[1]) : undefined;
+        const subscription = watch(() => {
+            const currentId = store.getState().activeRecordId;
+            const prevId = activeRecordRef.current;
+            activeRecordRef.current = currentId;
+            if (prevId !== null && prevId !== currentId) return;
 
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-            }
+            if (store.getState().status.phase === 'saving') return;
 
-            timeoutRef.current = setTimeout(async () => {
-                const currentValues = getValues();
-                const currentSnapshot = JSON.stringify(
-                    changedIndex !== undefined
-                        ? currentValues.samples[changedIndex]
-                        : currentValues,
-                );
-
-                // Пропуск, если данные не изменились с последнего сохранения
-                if (currentSnapshot === lastSnapshotRef.current) {
-                    return;
-                }
-
-                setIsAutoSaving(true);
-                try {
-                    await handleSave(currentValues, false, changedIndex);
-                    lastSnapshotRef.current = currentSnapshot;
-                    setLastSavedTime(new Date());
-                } catch (error) {
-                    console.error('Auto-save error:', error);
-                } finally {
-                    setIsAutoSaving(false);
-                }
-            }, delay);
+            debouncedAutoSave();
         });
 
         return () => {
             subscription.unsubscribe();
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            cancelAutoSave();
         };
-    }, [watch, getValues, handleSave, delay]);
+    }, [watch, debouncedAutoSave, cancelAutoSave, store]);
 
-    return { isAutoSaving, lastSavedTime };
-}
+    return cancelAutoSave;
+};

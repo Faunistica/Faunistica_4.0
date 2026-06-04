@@ -1,21 +1,77 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { login, logout } from '../store/reducers/userSlice';
+import type {
+    BaseQueryFn,
+    FetchArgs,
+    FetchBaseQueryError,
+    FetchBaseQueryMeta,
+    QueryReturnValue,
+} from '@reduxjs/toolkit/query';
+import type { ApiErrorBody } from '@/types/api.dto';
+import { logout } from '../store/reducers/userSlice';
 
-export const baseQuery = fetchBaseQuery({
+const baseQuery = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_URL,
     credentials: 'include',
 });
 
+export interface TypedFetchBaseQueryError extends Omit<FetchBaseQueryError, 'data'> {
+    data?: ApiErrorBody;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
+
+function normalizeErrorData(data: unknown): ApiErrorBody | undefined {
+    if (!isRecord(data)) return undefined;
+    const body = data;
+
+    let message: string | undefined;
+    const detail = body.detail;
+
+    if (typeof detail === 'string') {
+        message = detail;
+    } else if (Array.isArray(detail)) {
+        message = detail
+            .map((e: Record<string, unknown>) =>
+                typeof e.msg === 'string' ? e.msg : (JSON.stringify(e) ?? ''),
+            )
+            .join('; ');
+    } else if (typeof body.message === 'string') {
+        message = body.message;
+    }
+
+    return {
+        message,
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+        detail: detail as string | unknown[] | undefined,
+        error: typeof body.error === 'string' ? body.error : undefined,
+    };
+}
+
+function transformError(
+    result: QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>,
+): QueryReturnValue<unknown, TypedFetchBaseQueryError, FetchBaseQueryMeta> {
+    if (!result.error) {
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+        return result as QueryReturnValue<unknown, TypedFetchBaseQueryError, FetchBaseQueryMeta>;
+    }
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+    return {
+        ...result,
+        error: { ...result.error, data: normalizeErrorData(result.error.data) },
+    } as QueryReturnValue<unknown, TypedFetchBaseQueryError, FetchBaseQueryMeta>;
+}
+
 export const baseQueryWithReauth: BaseQueryFn<
     string | FetchArgs,
     unknown,
-    FetchBaseQueryError
+    TypedFetchBaseQueryError
 > = async (args, api, extraOptions) => {
     let result = await baseQuery(args, api, extraOptions);
 
     if (result.error?.status !== 401) {
-        return result;
+        return transformError(result);
     }
 
     const refreshResult = await baseQuery(
@@ -25,11 +81,10 @@ export const baseQueryWithReauth: BaseQueryFn<
     );
 
     if (refreshResult.data) {
-        api.dispatch(login());
         result = await baseQuery(args, api, extraOptions);
     } else {
         api.dispatch(logout());
     }
 
-    return result;
+    return transformError(result);
 };
