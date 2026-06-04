@@ -1,9 +1,7 @@
 from datetime import datetime as datetime_type
-from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import (
-    REAL,
     BigInteger,
     Boolean,
     Double,
@@ -18,7 +16,13 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from core.enums import RecordType, PendingStatus, PendingStatusType, UserState, UserStateType
+from core.enums import (
+    PendingStatus,
+    PendingStatusType,
+    RecordType,
+    UserState,
+    UserStateType,
+)
 
 
 class Base(DeclarativeBase):

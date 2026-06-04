@@ -84,8 +84,10 @@ class RegistrationSettings(CamelCaseSettings):
     REGISTRATION_EXPIRE_SECONDS: int = 15 * 60  # 15min
     REGISTRATION_POLL_INTERVAL_SECONDS: int = 1
     REGISTRATION_POLL_TIMEOUT_SECONDS: int = 25
-    REGISTRATION_CLEANUP_INTERVAL_SECONDS: int = 10 * 60 # 10 min
-    REGISTRATION_CONFIRMED_BACKLOG_SECONDS: int = 5 * 60 # 5 min
+    REGISTRATION_CLEANUP_INTERVAL_SECONDS: int = 10 * 60  # 10 min
+    REGISTRATION_CONFIRMED_BACKLOG_SECONDS: int = 5 * 60  # 5 min
+
+
 class Settings(
     DatabaseSettings,
     SecuritySettings,

@@ -109,6 +109,7 @@ async def _check_alembic_version() -> None:
 
     logger.info("Alembic migrations are up to date (head: %s)", head_rev)
 
+
 async def _cleanup_pending_registrations() -> None:
     while True:
         try:

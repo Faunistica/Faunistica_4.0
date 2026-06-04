@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
+from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
@@ -33,7 +34,7 @@ async def start_registration(
     request: Request,
     data: RegistrationStartRequest,
     session: DBSession,
-) -> RegistrationStartResponse:
+) -> RegistrationStartResponse | None:
     username = data.username
     password = data.password
     age = data.age
@@ -76,14 +77,14 @@ async def start_registration(
 async def registration_status(
     request: Request,
     session: DBSession,
-    code: str = Query(min_length=4, max_length=20),
-    timeout: int = Query(
-        default=settings.REGISTRATION_POLL_TIMEOUT_SECONDS, ge=5, le=60
-    ),
-) -> RegistrationStatusResponse:
-    deadline = datetime.now() + timedelta(seconds=timeout)
+    code: Annotated[str, Query(min_length=4, max_length=20)],
+    time_out: Annotated[
+        int, Query(ge=5, le=60)
+    ] = settings.REGISTRATION_POLL_TIMEOUT_SECONDS,
+) -> RegistrationStatusResponse | None:
+    deadline = datetime.now() + timedelta(seconds=time_out)
 
-    for _ in range(timeout // settings.REGISTRATION_POLL_INTERVAL_SECONDS):
+    for _ in range(time_out // settings.REGISTRATION_POLL_INTERVAL_SECONDS):
         pending = await get_pending_by_code(session, code)
         if pending is None:
             await session.rollback()
@@ -103,3 +104,4 @@ async def registration_status(
 
         await session.rollback()
         await asyncio.sleep(settings.REGISTRATION_POLL_INTERVAL_SECONDS)
+    return None
