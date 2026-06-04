@@ -1,8 +1,7 @@
 FROM ghcr.io/astral-sh/uv:python3.13-alpine AS builder
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
-RUN echo "# Faunistica Backend" > README.md && \
-    uv sync --no-dev --frozen --no-install-project --no-editable --compile-bytecode
+RUN uv sync --no-dev --frozen --no-install-project --no-editable --compile-bytecode
 COPY alembic/ alembic/
 COPY alembic.ini config.yaml ./
 COPY src/ src/
