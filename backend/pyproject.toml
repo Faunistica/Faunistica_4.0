@@ -14,13 +14,11 @@ dependencies = [
     "openpyxl>=3.1.5",
     "asyncstdlib>=3.14.0",
     "geopy>=2.4.1",
-    "pygbif>=0.6.6",
     "sqlalchemy>=2.0.48",
     "asyncpg>=0.31.0",
     "aiogram>=3.28.2",
     "cryptography>=46.0.5",
     "argon2-cffi>=25.1.0",
-    "pandas>=3.0.3",
     "aiohttp>=3.13.3",
     "fastapi[standard]>=0.136.1",
 ]
@@ -84,7 +82,6 @@ python = ".venv"
 
 [dependency-groups]
 dev = [
-    "pandas-stubs>=3.0.0.260204",
     "ruff>=0.15.7",
     "ty>=0.0.32",
     "types-openpyxl>=3.1.5.20260408",
