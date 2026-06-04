@@ -1,5 +1,7 @@
 import asyncio
+import json
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,15 +17,31 @@ from core.exceptions import (
     api_exception_handler,
     db_exception_handler,
 )
+from core.health import router as health_router
 from core.lifespan import lifespan
 from core.logging import setup_logging
 from core.rate_limiter import limiter, rate_limit_handler
 
 setup_logging()
 
-app = FastAPI(lifespan=lifespan)
-
 logger = logging.getLogger(__name__)
+
+_build_info_path = Path(__file__).resolve().parent.parent / "build_info.json"
+if _build_info_path.exists():
+    try:
+        _info = json.loads(_build_info_path.read_text())
+        logger.info(
+            "Build: commit=%s tag=%s branch=%s",
+            _info.get("commit"),
+            _info.get("tag"),
+            _info.get("branch"),
+        )
+    except (json.JSONDecodeError, OSError):
+        pass
+
+app = FastAPI(lifespan=lifespan)
+app.include_router(health_router)
+
 logger.info("Running in %s mode", "DEVELOPMENT" if settings.DEV_MODE else "PRODUCTION")
 logger.info("Allowed origins: %s", settings.ALLOWED_ORIGINS)
 

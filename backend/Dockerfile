@@ -1,14 +1,18 @@
-FROM python:3.12-slim
-
-RUN apt-get update && apt-get install -y postgresql-client
-
+FROM ghcr.io/astral-sh/uv:python3.13-alpine
 WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-RUN chmod +x init.sh wait-for-postgres.sh
-
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5001"]
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-dev --frozen
+COPY alembic/ alembic/
+COPY alembic.ini config.yaml ./
+COPY src/ src/
+COPY data/ data/
+ARG GIT_COMMIT=unknown
+ARG GIT_TAG=unknown
+ARG GIT_BRANCH=unknown
+RUN echo "{\"commit\":\"$GIT_COMMIT\",\"tag\":\"$GIT_TAG\",\"branch\":\"$GIT_BRANCH\"}" > build_info.json
+COPY scripts/entrypoint.sh scripts/healthcheck.py /scripts/
+RUN chmod +x /scripts/entrypoint.sh /scripts/healthcheck.py
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD ["/scripts/healthcheck.py"]
+ENTRYPOINT ["/scripts/entrypoint.sh"]
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "5001"]
