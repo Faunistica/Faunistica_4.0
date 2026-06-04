@@ -1,12 +1,14 @@
 FROM ghcr.io/astral-sh/uv:python3.13-alpine AS builder
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
-RUN uv sync --no-dev --frozen --no-install-project --no-editable --compile-bytecode
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-dev --frozen --no-install-project --no-editable --compile-bytecode
 COPY alembic/ alembic/
 COPY alembic.ini config.yaml ./
 COPY src/ src/
 COPY data/ data/
-RUN uv sync --no-dev --frozen --no-editable --compile-bytecode
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-dev --frozen --no-editable --compile-bytecode
 
 FROM python:3.13-alpine
 WORKDIR /app
