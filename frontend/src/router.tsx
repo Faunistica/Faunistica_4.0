@@ -96,12 +96,19 @@ export const routes: RouteObject[] = [
                                     })),
                             },
                             {
-                                path: 'recovery',
+                                path: 'onboarding',
                                 lazy: () =>
-                                    import('./pages/Auth/Recovery').then((m) => ({
+                                    import('./pages/Onboarding').then((m) => ({
                                         Component: m.default,
                                     })),
                             },
+                            // {
+                            //     path: 'recovery',
+                            //     lazy: () =>
+                            //         import('./pages/Auth/Recovery').then((m) => ({
+                            //             Component: m.default,
+                            //         })),
+                            // },
                         ],
                     },
 
@@ -115,14 +122,6 @@ export const routes: RouteObject[] = [
                                     import('./pages/Dashboard').then((m) => ({
                                         Component: m.default,
                                     })),
-                            },
-                            {
-                                path: 'onboarding',
-                                lazy: () =>
-                                    import('./pages/Onboarding').then((m) => ({
-                                        Component: m.default,
-                                    })),
-                                handle: { isNavigateEnabled: false },
                             },
                             {
                                 path: 'publication/:id/:record?',

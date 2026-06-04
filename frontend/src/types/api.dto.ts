@@ -126,3 +126,31 @@ export interface StatisticsResponse {
     most_common_genus: string | null;
     most_common_species: string | null;
 }
+
+export interface TelegramAuthInitResponse {
+    token: string;
+    code: string;
+}
+
+export interface TelegramAuthStatusResponse {
+    status: 'pending' | 'need_registration' | 'authorized';
+    code?: string;
+    user_id?: number;
+    username?: string;
+}
+
+export interface RegisterRequest {
+    token: string;
+    username: string;
+    password?: string;
+    age: number;
+    rating: boolean;
+    sex: string;
+    language: string;
+    comm?: string;
+}
+
+export interface RegisterResponse {
+    message: string;
+    user_id: number;
+}

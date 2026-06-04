@@ -74,8 +74,67 @@ export const authAPI = createApi({
                 }
             },
         }),
+        initTelegramAuth: build.mutation<Types.TelegramAuthInitResponse, void>({
+            query: () => ({
+                url: '/auth/telegram/',
+                method: 'POST',
+            }),
+        }),
+        checkTelegramAuthStatus: build.query<
+            Types.TelegramAuthStatusResponse,
+            { token: string; timeout: number }
+        >({
+            query: ({ token, timeout }) => ({
+                url: `/auth/telegram/status?token=${token}&timeout=${timeout}`,
+                method: 'GET',
+            }),
+            async onQueryStarted(_, { dispatch, queryFulfilled }) {
+                try {
+                    const { data } = await queryFulfilled;
+                    if (data.status === 'authorized' && data.user_id && data.username) {
+                        dispatch(
+                            login({
+                                name: data.username,
+                                user_id: data.user_id,
+                            })
+                        );
+                    }
+                } catch {
+                    // Ignore errors for polling
+                }
+            },
+        }),
+        register: build.mutation<Types.RegisterResponse, Types.RegisterRequest>({
+            query: (userData) => ({
+                url: '/auth/register/',
+                method: 'POST',
+                body: userData,
+            }),
+            invalidatesTags: ['auth'],
+            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+                try {
+                    const { data } = await queryFulfilled;
+                    dispatch(
+                        login({
+                            name: arg.username,
+                            user_id: data.user_id,
+                        })
+                    );
+                } catch {
+                    dispatch(logout());
+                }
+            },
+        }),
     }),
 });
 
-export const { useLoginMutation, useRefreshTokenMutation, useCheckAuthQuery, useLogoutMutation } =
-    authAPI;
+export const {
+    useLoginMutation,
+    useRefreshTokenMutation,
+    useCheckAuthQuery,
+    useLogoutMutation,
+    useInitTelegramAuthMutation,
+    useCheckTelegramAuthStatusQuery,
+    useLazyCheckTelegramAuthStatusQuery,
+    useRegisterMutation,
+} = authAPI;

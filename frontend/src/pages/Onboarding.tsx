@@ -1,4 +1,8 @@
-import { FileText, Languages, UserCheck, Settings2 } from 'lucide-react';
+import { FileText, Languages, UserCheck, Settings2, KeyRound, User, Loader2 } from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useLocation, useNavigate, Navigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,191 +18,412 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useRegisterMutation } from '@/api/authAPI';
+
+const formSchema = z
+    .object({
+        username: z.string().min(3, 'Минимум 3 символа'),
+        password: z.string().min(6, 'Минимум 6 символов'),
+        age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет'),
+        sex: z.string().min(1, 'Выберите пол'),
+        langRu: z.boolean().default(false),
+        langEn: z.boolean().default(false),
+        rating: z.enum(['yes', 'no']),
+        comm: z.string().optional(),
+        agreement: z.literal(true, {
+            errorMap: () => ({ message: 'Необходимо подтвердить согласие' }),
+        }),
+    })
+    .refine((data) => data.langRu || data.langEn, {
+        message: 'Выберите хотя бы один язык',
+        path: ['languages_error'],
+    });
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function Onboarding() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const token = location.state?.token;
+
+    const [registerMutation, { isLoading, error }] = useRegisterMutation();
+
+    const {
+        register,
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<FormValues>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            username: '',
+            password: '',
+            sex: '',
+            langRu: false,
+            langEn: false,
+            rating: 'no',
+            comm: '',
+        },
+    });
+
+    if (!token) {
+        return <Navigate to="/auth/telegram" replace />;
+    }
+
+    const onSubmit = async (data: FormValues) => {
+        const languages = [];
+        if (data.langRu) languages.push('ru');
+        if (data.langEn) languages.push('en');
+
+        try {
+            await registerMutation({
+                token,
+                username: data.username,
+                password: data.password,
+                age: data.age,
+                rating: data.rating === 'yes',
+                sex: data.sex,
+                language: languages.join(','),
+                comm: data.comm,
+            }).unwrap();
+            navigate('/dashboard', { replace: true });
+        } catch (err) {
+            console.error('Registration failed:', err);
+        }
+    };
+
     return (
         <main className="flex flex-1 flex-col items-center px-4 py-8 md:py-12">
             <div className="w-full max-w-2xl space-y-8">
-                <Card className="overflow-hidden border-slate-200 shadow-sm">
-                    <CardHeader className="space-y-4">
-                        <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
-                            Анкета участника
-                        </CardTitle>
-                        <div className="space-y-4 leading-relaxed text-slate-900">
-                            <p>
-                                Благодарим вас за регистрацию в системе. Перед началом работы нам
-                                необходимо уточнить несколько организационных вопросов для
-                                оптимизации вашего взаимодействия с проектом.
-                            </p>
-                            <div className="rounded-lg border-l-4 border-slate-400 bg-slate-100 p-4 text-sm">
-                                Напоминаем, что регистрироваться и участвовать в нашем проекте могут{' '}
-                                <strong>совершеннолетние лица</strong>. Несовершеннолетние в
-                                возрасте от 14 до 18 лет также могут принимать участие, однако
-                                регистрация должна осуществляться
-                                <strong> с согласия и в присутствии родителей</strong> или законных
-                                представителей.
-                            </div>
-                        </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-10">
-                        {/* Секция 1: Подтверждение соглашения */}
-                        <div className="space-y-4">
-                            <div className="flex items-start space-x-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-                                <Checkbox id="agreement" className="mt-1" />
-                                <div className="grid gap-1.5 leading-none">
-                                    <Label
-                                        htmlFor="agreement"
-                                        className="cursor-pointer text-sm/snug font-semibold"
-                                    >
-                                        Я подтверждаю, что соблюдаю условия пользовательского
-                                        соглашения и соответствую возрастным критериям проекта
-                                    </Label>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <Card className="overflow-hidden border-slate-200 shadow-sm">
+                        <CardHeader className="space-y-4">
+                            <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
+                                Анкета участника
+                            </CardTitle>
+                            <div className="space-y-4 leading-relaxed text-slate-900">
+                                <p>
+                                    Благодарим вас за регистрацию в системе. Перед началом работы нам
+                                    необходимо уточнить несколько организационных вопросов для
+                                    оптимизации вашего взаимодействия с проектом.
+                                </p>
+                                <div className="rounded-lg border-l-4 border-slate-400 bg-slate-100 p-4 text-sm">
+                                    Напоминаем, что регистрироваться и участвовать в нашем проекте
+                                    могут <strong>совершеннолетние лица</strong>. Несовершеннолетние
+                                    в возрасте от 14 до 18 лет также могут принимать участие, однако
+                                    регистрация должна осуществляться
+                                    <strong> с согласия и в присутствии родителей</strong> или
+                                    законных представителей.
                                 </div>
                             </div>
-                        </div>
+                        </CardHeader>
 
-                        {/* Секция 2: Демография */}
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
-                                <UserCheck className="size-5" />
-                                <h3>Личные данные</h3>
+                        <CardContent className="space-y-10">
+                            {error && (
+                                <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600 border border-red-200">
+                                    {/* @ts-ignore */}
+                                    {error.data?.message || error.data?.detail || 'Ошибка регистрации. Пожалуйста, попробуйте еще раз.'}
+                                </div>
+                            )}
+
+                            {/* Секция 1: Подтверждение соглашения */}
+                            <div className="space-y-4">
+                                <div className="flex items-start space-x-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+                                    <Controller
+                                        control={control}
+                                        name="agreement"
+                                        render={({ field }) => (
+                                            <Checkbox
+                                                id="agreement"
+                                                className="mt-1"
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <div className="grid gap-1.5 leading-none">
+                                        <Label
+                                            htmlFor="agreement"
+                                            className="cursor-pointer text-sm/snug font-semibold"
+                                        >
+                                            Я подтверждаю, что соблюдаю условия пользовательского
+                                            соглашения и соответствую возрастным критериям проекта
+                                        </Label>
+                                        {errors.agreement && (
+                                            <span className="text-xs text-red-500">
+                                                {errors.agreement.message}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="age">Ваш возраст</Label>
-                                    <Input
-                                        id="age"
-                                        type="number"
-                                        placeholder="Укажите возраст"
-                                        min="14"
+
+                            {/* Секция: Учетная запись */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                    <KeyRound className="size-5" />
+                                    <h3>Учетная запись</h3>
+                                </div>
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="username">Имя пользователя (Логин)</Label>
+                                        <div className="relative">
+                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                <User className="size-4 text-slate-400" />
+                                            </div>
+                                            <Input
+                                                id="username"
+                                                className="pl-9"
+                                                placeholder="Придумайте уникальный логин"
+                                                {...register('username')}
+                                            />
+                                        </div>
+                                        {errors.username && (
+                                            <span className="text-xs text-red-500">
+                                                {errors.username.message}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="password">Пароль</Label>
+                                        <div className="relative">
+                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                <KeyRound className="size-4 text-slate-400" />
+                                            </div>
+                                            <Input
+                                                id="password"
+                                                type="password"
+                                                className="pl-9"
+                                                placeholder="Придумайте надежный пароль"
+                                                {...register('password')}
+                                            />
+                                        </div>
+                                        {errors.password && (
+                                            <span className="text-xs text-red-500">
+                                                {errors.password.message}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Секция 2: Демография */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                    <UserCheck className="size-5" />
+                                    <h3>Личные данные</h3>
+                                </div>
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="age">Ваш возраст</Label>
+                                        <Input
+                                            id="age"
+                                            type="number"
+                                            placeholder="Укажите возраст"
+                                            min="14"
+                                            {...register('age')}
+                                        />
+                                        {errors.age && (
+                                            <span className="text-xs text-red-500">
+                                                {errors.age.message}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="gender">Пол</Label>
+                                        <Controller
+                                            control={control}
+                                            name="sex"
+                                            render={({ field }) => (
+                                                <Select
+                                                    onValueChange={field.onChange}
+                                                    value={field.value}
+                                                >
+                                                    <SelectTrigger id="gender">
+                                                        <SelectValue placeholder="Не выбрано" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="male">Мужской</SelectItem>
+                                                        <SelectItem value="female">Женский</SelectItem>
+                                                        <SelectItem value="other">Другой</SelectItem>
+                                                        <SelectItem value="prefer-not">
+                                                            Предпочитаю не указывать
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
+                                        {errors.sex && (
+                                            <span className="text-xs text-red-500">
+                                                {errors.sex.message}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Секция 3: Языки */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                    <Languages className="size-5" />
+                                    <h3>Языковые компетенции</h3>
+                                </div>
+                                <p className="text-sm text-slate-900">
+                                    На каких языках вы готовы обрабатывать научные публикации? (можно
+                                    выбрать несколько)
+                                </p>
+                                <div className="flex flex-wrap gap-6 pt-2">
+                                    <div className="flex items-center space-x-2">
+                                        <Controller
+                                            control={control}
+                                            name="langRu"
+                                            render={({ field }) => (
+                                                <Checkbox
+                                                    id="lang-ru"
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <Label
+                                            htmlFor="lang-ru"
+                                            className="cursor-pointer font-medium"
+                                        >
+                                            Русский
+                                        </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Controller
+                                            control={control}
+                                            name="langEn"
+                                            render={({ field }) => (
+                                                <Checkbox
+                                                    id="lang-en"
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <Label
+                                            htmlFor="lang-en"
+                                            className="cursor-pointer font-medium"
+                                        >
+                                            Английский
+                                        </Label>
+                                    </div>
+                                </div>
+                                {errors.languages_error && (
+                                    <span className="block text-xs text-red-500">
+                                        {errors.languages_error.message}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Секция 4: Предпочтения */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                    <Settings2 className="size-5" />
+                                    <h3>Профессиональные предпочтения</h3>
+                                </div>
+                                <div className="space-y-3 text-sm/relaxed text-slate-900">
+                                    <p>
+                                        Какие публикации вы хотели бы получать и в каком порядке?
+                                        Возможно, у вас имеются предпочтения по{' '}
+                                        <strong>
+                                            географическому региону, автору или конкретному семейству
+                                        </strong>
+                                        ?
+                                    </p>
+                                    <p>
+                                        Укажите пожелания по сложности материала, объему или наличию
+                                        описаний новых для науки видов (sp. n.). Сообщите о них, и мы
+                                        постараемся учесть это при распределении задач.
+                                    </p>
+                                </div>
+                                <div className="pt-2">
+                                    <Label
+                                        htmlFor="preferences"
+                                        className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
+                                    >
+                                        Дополнительная информация (по желанию)
+                                    </Label>
+                                    <Textarea
+                                        id="preferences"
+                                        placeholder="Например: предпочтительно семейство Lycosidae, публикации на английском языке, Южный Урал..."
+                                        className="min-h-37.5 resize-y"
+                                        {...register('comm')}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="gender">Пол</Label>
-                                    <Select>
-                                        <SelectTrigger id="gender">
-                                            <SelectValue placeholder="Не выбрано" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="male">Мужской</SelectItem>
-                                            <SelectItem value="female">Женский</SelectItem>
-                                            <SelectItem value="other">Другой</SelectItem>
-                                            <SelectItem value="prefer-not">
-                                                Предпочитаю не указывать
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                             </div>
-                        </div>
 
-                        {/* Секция 3: Языки */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
-                                <Languages className="size-5" />
-                                <h3>Языковые компетенции</h3>
-                            </div>
-                            <p className="text-sm text-slate-900">
-                                На каких языках вы готовы обрабатывать научные публикации? (можно
-                                выбрать несколько)
-                            </p>
-                            <div className="flex flex-wrap gap-6 pt-2">
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox id="lang-ru" />
-                                    <Label htmlFor="lang-ru" className="cursor-pointer font-medium">
-                                        Русский
+                            {/* Секция 5: Публичный рейтинг */}
+                            <div className="space-y-4 pt-4">
+                                <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                    <FileText className="size-5" />
+                                    <h3>Публичность данных</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    <Label className="text-base">
+                                        Согласны ли вы на отображение вашего имени в публичной таблице
+                                        рейтинга?
                                     </Label>
+                                    <Controller
+                                        control={control}
+                                        name="rating"
+                                        render={({ field }) => (
+                                            <RadioGroup
+                                                onValueChange={field.onChange}
+                                                value={field.value}
+                                                className="flex flex-col space-y-1"
+                                            >
+                                                <div className="flex items-center space-x-2">
+                                                    <RadioGroupItem value="yes" id="rating-yes" />
+                                                    <Label
+                                                        htmlFor="rating-yes"
+                                                        className="cursor-pointer font-normal"
+                                                    >
+                                                        Да, я согласен на публичное отображение
+                                                    </Label>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <RadioGroupItem value="no" id="rating-no" />
+                                                    <Label
+                                                        htmlFor="rating-no"
+                                                        className="cursor-pointer font-normal"
+                                                    >
+                                                        Нет, использовать анонимный идентификатор
+                                                    </Label>
+                                                </div>
+                                            </RadioGroup>
+                                        )}
+                                    />
+                                    {errors.rating && (
+                                        <span className="text-xs text-red-500">
+                                            {errors.rating.message}
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox id="lang-en" />
-                                    <Label htmlFor="lang-en" className="cursor-pointer font-medium">
-                                        Английский
-                                    </Label>
-                                </div>
                             </div>
-                        </div>
+                        </CardContent>
 
-                        {/* Секция 4: Предпочтения */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
-                                <Settings2 className="size-5" />
-                                <h3>Профессиональные предпочтения</h3>
-                            </div>
-                            <div className="space-y-3 text-sm/relaxed text-slate-900">
-                                <p>
-                                    Какие публикации вы хотели бы получать и в каком порядке?
-                                    Возможно, у вас имеются предпочтения по{' '}
-                                    <strong>
-                                        географическому региону, автору или конкретному семейству
-                                    </strong>
-                                    ?
-                                </p>
-                                <p>
-                                    Укажите пожелания по сложности материала, объему или наличию
-                                    описаний новых для науки видов (sp. n.). Сообщите о них, и мы
-                                    постараемся учесть это при распределении задач.
-                                </p>
-                            </div>
-                            <div className="pt-2">
-                                <Label
-                                    htmlFor="preferences"
-                                    className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
-                                >
-                                    Дополнительная информация (по желанию)
-                                </Label>
-                                <Textarea
-                                    id="preferences"
-                                    placeholder="Например: предпочтительно семейство Lycosidae, публикации на английском языке, Южный Урал..."
-                                    className="min-h-37.5 resize-y"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Секция 5: Публичный рейтинг */}
-                        <div className="space-y-4 pt-4">
-                            <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
-                                <FileText className="size-5" />
-                                <h3>Публичность данных</h3>
-                            </div>
-                            <div className="space-y-3">
-                                <Label className="text-base">
-                                    Согласны ли вы на отображение вашего имени в публичной таблице
-                                    рейтинга?
-                                </Label>
-                                <RadioGroup defaultValue="no" className="flex flex-col space-y-1">
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="yes" id="rating-yes" />
-                                        <Label
-                                            htmlFor="rating-yes"
-                                            className="cursor-pointer font-normal"
-                                        >
-                                            Да, я согласен на публичное отображение
-                                        </Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="no" id="rating-no" />
-                                        <Label
-                                            htmlFor="rating-no"
-                                            className="cursor-pointer font-normal"
-                                        >
-                                            Нет, использовать анонимный идентификатор
-                                        </Label>
-                                    </div>
-                                </RadioGroup>
-                            </div>
-                        </div>
-                    </CardContent>
-
-                    <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-white p-6 sm:flex-row">
-                        <Button className="w-full bg-slate-900 px-10 font-bold text-white shadow-md hover:bg-slate-800 sm:w-auto">
-                            Завершить регистрацию
-                        </Button>
-                        {/* <Button variant="destructive" className="w-full sm:w-auto font-bold px-10 shadow-md">
-    Отменить регистрацию
-  </Button> */}
-                    </CardFooter>
-                </Card>
+                        <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-white p-6 sm:flex-row">
+                            <Button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-slate-900 px-10 font-bold text-white shadow-md hover:bg-slate-800 sm:w-auto"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 size-4 animate-spin" />
+                                        Отправка...
+                                    </>
+                                ) : (
+                                    'Завершить регистрацию'
+                                )}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </form>
             </div>
         </main>
     );

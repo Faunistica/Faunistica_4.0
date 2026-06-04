@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import { type FC, useEffect, useState, useRef } from 'react';
 import { Send, Key, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,82 +10,220 @@ import {
     CardFooter,
 } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router';
+import { useInitTelegramAuthMutation, useLazyCheckTelegramAuthStatusQuery } from '@/api/authAPI';
+import QRCodeStyling from 'qr-code-styling';
+
+const TelegramQRCode = ({ code }: { code?: string }) => {
+    const ref = useRef<HTMLDivElement>(null);
+    const [qrCode] = useState<QRCodeStyling>(
+        () =>
+            new QRCodeStyling({
+                width: 180,
+                height: 180,
+                type: 'svg',
+                // Base64 encoded Telegram SVG icon
+                image: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzIyOUVEOSIgZD0iTTEyIDBDNS4zNzMgMCAwIDUuMzczIDAgMTJzNS4zNzMgMTIgMTIgMTIgMTItNS4zNzMgMTItMTJTMTguNjI3IDAgMTIgMHptNS44OTQgOC4yMjFsLTEuOTcgOS4yOGMtLjE0NS42NTgtLjUzNy44MTgtMS4wODQuNTA4bC0zLTIuMjEtMS40NDYgMS4zOTRjLS4xNC4xOC0uMzU3LjI5NS0uNi4yOTUtLjAwMiAwLS4wMDMgMC0uMDA1IDBsLjIxMy0zLjA1NCA1LjU2LTUuMDIyYy4yNC0uMjEzLS4wNTQtLjMzNC0uMzczLS4xMjFsLTYuODY5IDQuMzI2LTIuOTYtLjkyNGMtLjY0LS4yMDMtLjY1OC0uNjQuMTM1LS45NTRsMTEuNTY2LTQuNDU4Yy41MzgtLjE5NiAxLjAwNi4xMjguODMyLjk0eiIvPjwvc3ZnPg==',
+                dotsOptions: {
+                    color: '#1e293b', // slate-800
+                    type: 'classy-rounded', // Elegant, organic leaf-like appearance
+                },
+                cornersSquareOptions: {
+                    type: 'extra-rounded',
+                    color: '#1e293b',
+                },
+                cornersDotOptions: {
+                    type: 'dot',
+                    color: '#1e293b',
+                },
+                backgroundOptions: {
+                    color: 'transparent',
+                },
+                imageOptions: {
+                    crossOrigin: 'anonymous',
+                    margin: 4,
+                    imageSize: 0.35,
+                },
+            }),
+    );
+
+    useEffect(() => {
+        if (ref.current && ref.current.childElementCount === 0) {
+            qrCode.append(ref.current);
+        }
+    }, [qrCode]);
+
+    useEffect(() => {
+        const botUrl = import.meta.env.VITE_TELEGRAM_BOT_URL;
+        // If we have a code, append it to the deep link so scanning the QR code auto-sends the start command
+        const fullUrl = code ? `${botUrl}?start=${code}` : botUrl;
+        qrCode.update({ data: fullUrl });
+    }, [code, qrCode]);
+
+    return <div ref={ref} className="flex items-center justify-center" />;
+};
 
 const TelegramAuth: FC = () => {
     const navigate = useNavigate();
+    const [initAuth, { data: initData, isLoading: isInitLoading, error: initError }] =
+        useInitTelegramAuthMutation();
+    const [checkStatus] = useLazyCheckTelegramAuthStatusQuery();
+    const [statusMessage, setStatusMessage] = useState('Генерация кода...');
+    const [isPollingError, setIsPollingError] = useState(false);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const startPolling = async (token: string) => {
+            while (isMounted) {
+                try {
+                    const result = await checkStatus({ token, timeout: 30 }, false).unwrap();
+                    if (!isMounted) break;
+
+                    if (result.status === 'need_registration') {
+                        navigate('/auth/onboarding', { state: { token }, replace: true });
+                        break;
+                    } else if (result.status === 'authorized') {
+                        navigate('/dashboard', { replace: true });
+                        break;
+                    } else if (result.status === 'pending') {
+                        setIsPollingError(false);
+                        setStatusMessage('Ожидание ввода кода в Telegram...');
+                    }
+                } catch (e: any) {
+                    if (isMounted) {
+                        setIsPollingError(true);
+                        setStatusMessage('Проблема с подключением, пытаемся восстановить...');
+                        await new Promise((resolve) => setTimeout(resolve, 3000));
+                    }
+                }
+            }
+        };
+
+        initAuth()
+            .unwrap()
+            .then((res) => {
+                if (isMounted) {
+                    setIsPollingError(false);
+                    setStatusMessage('Ожидание ввода кода в Telegram...');
+                    startPolling(res.token);
+                }
+            })
+            .catch((err) => {
+                console.error('Failed to init auth', err);
+                if (isMounted) {
+                    setIsPollingError(true);
+                    setStatusMessage('Ошибка соединения. Пожалуйста, попробуйте еще раз.');
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [initAuth, checkStatus, navigate]);
 
     return (
-        <div className="mx-auto w-full max-w-[400px] space-y-6">
+        <div className="mx-auto w-full max-w-[700px] space-y-6">
             <Card className="relative overflow-hidden border-slate-200 shadow-sm">
                 <div className="absolute inset-y-0 left-0 w-1.5 bg-telegram"></div>
                 <CardHeader className="space-y-1 pl-6 text-center">
                     <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
-                        Telegram Secure Login
+                        Вход через Telegram
                     </CardTitle>
-                    <CardDescription className="mt-2 text-slate-500">
-                        Scan the code with your Telegram app or use the direct link below to access
-                        your profile.
+                    <CardDescription className="mx-auto mt-2 max-w-md text-slate-500">
+                        Отправьте этот код сообщением нашему Telegram боту, не закрывая данную страницу
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="my-4 flex justify-center">
-                        <div className="flex size-40 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 p-2 shadow-inner">
-                            <div className="flex size-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 text-slate-400">
-                                <Send className="size-8 opacity-50" />
-                                <span className="font-mono text-xs">QR / Widget Area</span>
+                <CardContent className="p-6 pt-2">
+                    <div className="flex flex-col items-center justify-center gap-6 md:flex-row md:items-stretch">
+                        {/* Left Column: Code Block */}
+                        <div className="flex w-full max-w-[240px] flex-col justify-center">
+                            {isInitLoading ? (
+                                <div className="flex h-[240px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
+                                    <Loader2 className="size-8 animate-spin text-telegram" />
+                                </div>
+                            ) : initError ? (
+                                <div className="flex h-[240px] flex-col items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 text-center text-red-500">
+                                    <span className="text-sm font-medium">
+                                        Не удалось сгенерировать код
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="flex h-[240px] flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-100 p-6 shadow-inner">
+                                    <span className="font-mono text-5xl font-bold tracking-[0.15em] text-slate-800">
+                                        {initData?.code || '------'}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right Column: QR and Button */}
+                        <div className="flex w-full max-w-[240px] h-[240px] flex-col justify-between">
+                            <div className="flex w-full grow items-center justify-center rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+                                <TelegramQRCode code={initData?.code} />
                             </div>
+
+                            <Button
+                                className="mt-3 w-full shrink-0 gap-2 bg-telegram font-semibold text-white shadow-md hover:bg-[#1E8CC0]"
+                                asChild
+                            >
+                                <a
+                                    href={
+                                        initData?.code
+                                            ? `${import.meta.env.VITE_TELEGRAM_BOT_URL}?start=${initData.code}`
+                                            : import.meta.env.VITE_TELEGRAM_BOT_URL
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <Send className="size-4" />
+                                    Открыть бота
+                                </a>
+                            </Button>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <Button className="w-full gap-2 bg-telegram font-semibold text-white shadow-md hover:bg-[#1E8CC0]">
-                            <Send className="size-4" />
-                            Log in via Telegram
-                        </Button>
-
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-slate-200" />
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white px-2 font-medium text-slate-500">or</span>
-                            </div>
-                        </div>
-
+                    <div className="mt-8 border-t border-slate-100 pt-6">
                         <Button
+                            asChild
                             variant="outline"
-                            className="w-full gap-2 border-slate-300 text-slate-700 hover:bg-slate-50"
-                            onClick={() => navigate('/auth/login')}
+                            className="mx-auto flex w-full max-w-[504px] gap-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
-                            <Key className="size-4 text-slate-500" />
-                            Standard Login
+                            <Link to="/auth/login">
+                                <Key className="size-4 text-slate-500" />
+                                Войти по логину
+                            </Link>
                         </Button>
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-center border-t border-slate-100 bg-slate-50 py-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Loader2 className="size-4 animate-spin text-telegram" />
-                        <span>Waiting for authentication...</span>
+                    <div
+                        className={`flex items-center gap-2 text-sm ${isPollingError ? 'font-medium text-red-500' : 'text-slate-600'
+                            }`}
+                    >
+                        {!isPollingError && (
+                            <Loader2 className="size-4 animate-spin text-telegram" />
+                        )}
+                        <span>{statusMessage}</span>
                     </div>
                 </CardFooter>
             </Card>
 
             <p className="px-4 text-center text-sm/relaxed text-slate-500">
-                By clicking continue, you agree to our{' '}
+                {'Продолжая, вы соглашаетесь с нашими '}
                 <Link
-                    to="#"
+                    to="/terms-of-service"
                     className="underline underline-offset-4 transition-colors hover:text-slate-900"
                 >
-                    Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link
-                    to="#"
-                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
-                >
-                    Privacy Policy
+                    Условиями обслуживания
                 </Link>
-                .
+                {' и '}
+                <Link
+                    to="/privacy-policy"
+                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
+                >
+                    Политикой конфиденциальности
+                </Link>
+                {'.'}
             </p>
         </div>
     );
