@@ -14,8 +14,8 @@ from sqlalchemy.sql import func
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "3f4b8a9b1d7c"
-down_revision: str | None = "97ece5251480"
+revision: str = "f3a8b9127d4c"
+down_revision: str | None = "e81c775456a5"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -28,6 +28,9 @@ def upgrade() -> None:
         sa.Column("code", sa.String(length=20), nullable=False),
         sa.Column("username", sa.String(length=255), nullable=False),
         sa.Column("password_hash", sa.String(length=255), nullable=False),
+        sa.Column("age", sa.Integer(), nullable=True),
+        sa.Column("lng", sa.String(length=10), nullable=True),
+        sa.Column("comm", sa.String(), nullable=True),
         sa.Column("status", sa.Integer(), nullable=False),
         sa.Column(
             "created_at", sa.TIMESTAMP(), server_default=func.now(), nullable=False
