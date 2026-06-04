@@ -7,8 +7,13 @@
 ## Варианты
 
 ### [all-docker](./all-docker/) — всё в Docker
-PostgreSQL, бэкенд, фронтенд и nginx — каждый в своём контейнере.
-Подходит для isolated-сервера или первого знакомства.
+PostgreSQL, бэкенд и фронтенд — каждый в своём контейнере.
+Отдельный nginx-контейнер **не нужен**: фронтенд-контейнер сам проксирует
+`/api/*` на бэкенд через смонтированный nginx-конфиг.
+
+```
+postgres → backend:5001 → frontend:80 (статический SPA + /api/ → backend)
+```
 
 ```bash
 cd examples/all-docker
@@ -35,12 +40,32 @@ docker compose up -d
 
 ## Настройка nginx
 
-В каждой директории примера лежит `nginx/faunistica.conf` — production-конфиг с:
+### all-docker: фронтенд-контейнер как reverse proxy
 
-- Проксированием `/api` на бэкенд, `/` на фронтенд
-- WebSocket-поддержкой
-- Заголовками безопасности (CSP, X-Frame-Options и др.)
-- Закомментированным блоком HTTPS
+По умолчанию образ фронтенда (`ghcr.io/faunistica/frontend`) содержит минимальный
+nginx-конфиг, который только раздаёт статику (`frontend/nginx/default.conf`).
+
+Чтобы превратить его в полноценный reverse proxy, смонтируйте production-конфиг
+поверх дефолтного:
+
+```yaml
+volumes:
+  - ./nginx/faunistica.conf:/etc/nginx/conf.d/default.conf:ro
+```
+
+Файл `nginx/faunistica.conf` в примере уже включает:
+- Раздачу статики (`/assets/` с долгим кешем, SPA-роутинг для `/`)
+- Проксирование `/api/*`, `/docs`, `/openapi.json` на бэкенд
+- Заголовки безопасности (CSP, X-Frame-Options и др.)
+- WebSocket-поддержку
+- Закомментированный блок HTTPS
+
+Если вам нужен **кастомный nginx-конфиг** — просто замените файл в `./nginx/`
+или смонтируйте свой путь. Всё остальное остаётся без изменений.
+
+### hybrid: nginx на хосте
+
+В hybrid-схеме nginx работает на хосте, конфиг лежит в `nginx/faunistica.conf`.
 
 **Для включения HTTPS:**
 ```bash
@@ -58,7 +83,6 @@ acme.sh --issue --standalone -d faunistica.ru
 | postgres  | 512 MB |
 | backend   | 1 GB   |
 | frontend  | 128 MB |
-| nginx     | 64 MB  |
 
 Изменить: `mem_limit` в `compose.yml`.
 
