@@ -170,6 +170,7 @@ class UserService:
 
     async def start_registration(self, user_id: int) -> None:
         await create_user_or_update(self.session, user_id, UserState.REG_AGREEMENT)
+        await self.session.commit()
 
     async def accept_agreement(self, user_id: int) -> None:
         await self._update(user_id, reg_stat=UserState.REG_NAME)

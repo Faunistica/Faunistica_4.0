@@ -1,0 +1,4 @@
+DevMode: false
+AllowedOrigins:
+  - "https://faunistica.ru"
+GlobalRateLimit: 100/minute

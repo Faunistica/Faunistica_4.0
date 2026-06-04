@@ -72,6 +72,13 @@ make -C frontend lint
 make -C frontend format
 ```
 
+## Docker-развёртывание
+
+Примеры production-конфигураций (all-docker и hybrid) находятся в [examples/](examples/).
+Там же — production `config.yaml` и объяснение настроек nginx, TLS, лимитов памяти и подключения к PostgreSQL.
+
+Детальное описание системы конфигурации бэкенда — в [backend/README.md](backend/README.md).
+
 ### Переменные окружения
 
 #### Обязательные

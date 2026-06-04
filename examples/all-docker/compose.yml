@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fau_db
+    env_file:
+      - ../.env.example
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+    mem_limit: 512m
+
+  backend:
+    image: ghcr.io/faunistica/backend:latest
+    container_name: fau_backend
+    env_file:
+      - ../.env.example
+    volumes:
+      - ../config.yaml:/app/config.yaml:ro
+      - backend_data:/app/data
+    ports:
+      - "127.0.0.1:5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/docs')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: always
+    mem_limit: 1g
+
+  frontend:
+    image: ghcr.io/faunistica/frontend:latest
+    container_name: fau_frontend
+    depends_on:
+      - backend
+    restart: always
+    mem_limit: 128m
+
+  nginx:
+    image: nginx:alpine
+    container_name: fau_nginx
+    volumes:
+      - ./nginx/faunistica.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+    mem_limit: 64m
+
+volumes:
+  postgres_data:
+  backend_data:
