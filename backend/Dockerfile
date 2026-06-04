@@ -1,11 +1,12 @@
 FROM ghcr.io/astral-sh/uv:python3.13-alpine
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
-RUN uv sync --no-dev --frozen
+RUN echo "# Faunistica Backend" > README.md && uv sync --no-dev --frozen --no-install-project
 COPY alembic/ alembic/
 COPY alembic.ini config.yaml ./
 COPY src/ src/
 COPY data/ data/
+RUN uv sync --no-dev --frozen
 ARG GIT_COMMIT=unknown
 ARG GIT_TAG=unknown
 ARG GIT_BRANCH=unknown
