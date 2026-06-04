@@ -9,10 +9,9 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { motion, useScroll, useMotionValueEvent } from 'motion/react';
-import { Send, Trash2, Cloud, CloudOff, Check, Loader2, X } from 'lucide-react';
+import { Send, Trash2, Cloud, CloudOff, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRecordForm } from '@/hooks/useRecordForm';
-import { cn } from '@/lib/utils';
 
 function formatTime(date: Date): string {
     return date.toLocaleTimeString('ru-RU', {
@@ -26,7 +25,7 @@ const ENABLE_MOTION_ON_DESKTOP = false;
 
 const Footer: FC = () => {
     const {
-        state: { lastSavedTime, activeRecordId, isSaving, isAutoSaving, isBusy, hasErrors },
+        state: { lastSavedTime, activeRecordId, isAutoSaving, isBusy },
         actions,
     } = useRecordForm();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -114,26 +113,7 @@ const Footer: FC = () => {
 
                 <div className="flex items-center gap-3">
                     <Button
-                        onClick={actions.save}
-                        disabled={isBusy}
-                        variant={hasErrors ? 'destructive' : 'secondary'}
-                        className={cn(
-                            'gap-2 text-xs transition-colors duration-400',
-                            hasErrors ||
-                                'bg-green-200/50 hover:bg-green-300/80 focus-visible:border-green-400/20 focus-visible:bg-green-400/40',
-                        )}
-                    >
-                        {isSaving ? (
-                            <Loader2 className="size-4 animate-spin" />
-                        ) : hasErrors ? (
-                            <X className="size-4" />
-                        ) : (
-                            <Check className="size-4" />
-                        )}
-                        Проверить
-                    </Button>
-                    <Button
-                        onClick={() => void actions.submit()}
+                        type="submit"
                         disabled={isBusy}
                         className="gap-2 bg-slate-900 text-xs font-semibold text-white hover:bg-slate-800"
                     >
