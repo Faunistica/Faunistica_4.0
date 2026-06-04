@@ -174,3 +174,46 @@ class TestComplete:
         mock_session.commit.assert_called_once()
         assert result is not None
         assert result.publ_id == 456
+
+
+# ============================================================================
+# TESTS FOR _IS_INTERACTABLE
+# ============================================================================
+
+
+class TestIsInteractable:
+    """Unit tests for PublicationService._is_interactable static method."""
+
+    @pytest.mark.parametrize(
+        "queue,publ_id,count,expected",
+        [
+            # Default count=1: only first item is interactable
+            ([1, 2, 3], 1, 1, True),
+            ([1, 2, 3], 2, 1, False),
+            ([1, 2, 3], 3, 1, False),
+            # Count=2: first two items are interactable
+            ([1, 2, 3], 1, 2, True),
+            ([1, 2, 3], 2, 2, True),
+            ([1, 2, 3], 3, 2, False),
+            # Count=0: any item in queue is interactable
+            ([1, 2, 3], 1, 0, True),
+            ([1, 2, 3], 2, 0, True),
+            ([1, 2, 3], 3, 0, True),
+            # Item not in queue
+            ([1, 2, 3], 4, 1, False),
+            ([1, 2, 3], 4, 2, False),
+            ([1, 2, 3], 4, 0, False),
+            # Empty queue
+            ([], 1, 1, False),
+            ([], 1, 0, False),
+            # Single item queue
+            ([42], 42, 1, True),
+            ([42], 42, 5, True),
+        ],
+    )
+    def test_is_interactable(self, queue: list[int], publ_id: int, count: int, expected: bool) -> None:
+        """Test _is_interactable with various queue configurations."""
+        with patch("service.publications.settings") as mock_settings:
+            mock_settings.INTERACTABLE_QUEUE_COUNT = count
+            result = PublicationService._is_interactable(publ_id, queue)
+            assert result is expected

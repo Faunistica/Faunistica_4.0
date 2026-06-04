@@ -719,3 +719,82 @@ async def test_import_limit_enforcement(authenticated_client: AsyncClient, seed_
         },
     )
     assert response.status_code == 400
+
+
+# ========== Forbidden Publication Access Tests ==========
+
+
+@pytest.mark.asyncio
+async def test_list_records_forbidden_publ(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """List records with non-interactable (second) publ_id returns 403."""
+    user_items = seed_data["users"][0].items.split("|")
+    assert len(user_items) >= 2, "Need at least 2 publications in queue"
+    second_publ_id = int(user_items[1])  # Second publication - not interactable
+
+    response = await authenticated_client.get(
+        f"/api/records?publ_id={second_publ_id}"
+    )
+    assert response.status_code == 403
+    data = response.json()
+    assert data["error"] == "PUBL_FORBIDDEN"
+
+
+@pytest.mark.asyncio
+async def test_export_records_forbidden_publ(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """Export records with non-interactable (second) publ_id returns 403."""
+    user_items = seed_data["users"][0].items.split("|")
+    assert len(user_items) >= 2, "Need at least 2 publications in queue"
+    second_publ_id = int(user_items[1])  # Second publication - not interactable
+
+    response = await authenticated_client.get(
+        f"/api/records/export?publ_id={second_publ_id}"
+    )
+    assert response.status_code == 403
+    data = response.json()
+    assert data["error"] == "PUBL_FORBIDDEN"
+
+
+@pytest.mark.asyncio
+async def test_import_records_forbidden_publ(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """Import records to non-interactable (second) publ_id returns 403."""
+    from openpyxl import Workbook
+
+    user_items = seed_data["users"][0].items.split("|")
+    assert len(user_items) >= 2, "Need at least 2 publications in queue"
+    second_publ_id = int(user_items[1])  # Second publication - not interactable
+
+    wb = Workbook()
+    ws = wb.active
+    if ws is None:
+        raise RuntimeError("Failed to create worksheet")
+
+    from service.export import COLUMN_MAPPING
+
+    ws.append(list(COLUMN_MAPPING.values()))
+    output = io.BytesIO()
+    wb.save(output)
+    excel_content = output.getvalue()
+
+    response = await authenticated_client.post(
+        "/api/records/import",
+        params={"publ_id": second_publ_id},
+        files={
+            "file": (
+                "test.xlsx",
+                excel_content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
+    )
+    assert response.status_code == 403
+    data = response.json()
+    assert data["error"] == "PUBL_FORBIDDEN"

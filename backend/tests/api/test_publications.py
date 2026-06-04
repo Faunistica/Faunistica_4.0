@@ -33,6 +33,96 @@ async def test_get_current_publication_empty_queue(
     assert len(data) == 0
 
 
+@pytest.mark.asyncio
+async def test_get_publication_by_id(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """GET /api/publications/{publ_id} returns publication when user has access."""
+    publ_id = int(seed_data["users"][0].items.split("|")[0])  # First (interactable) publication
+    response = await authenticated_client.get(f"/api/publications/{publ_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["publ_id"] == publ_id
+
+
+@pytest.mark.asyncio
+async def test_get_publication_not_found(
+    authenticated_client: AsyncClient,
+) -> None:
+    """GET /api/publications/{publ_id} returns 404 for non-existent publication."""
+    response = await authenticated_client.get("/api/publications/99999")
+    assert response.status_code == 404
+    data = response.json()
+    assert data["error"] == "PUBL_NOT_FOUND"
+
+
+@pytest.mark.asyncio
+async def test_get_publication_forbidden_not_in_queue(
+    authenticated_client_user2: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """GET /api/publications/{publ_id} returns 403 when publication not in user's queue."""
+    publ_id = seed_data["publs"][0].publ_id  # User2 has no publications
+    response = await authenticated_client_user2.get(f"/api/publications/{publ_id}")
+    assert response.status_code == 403
+    data = response.json()
+    assert data["error"] == "NO_PUBL"
+
+
+@pytest.mark.asyncio
+async def test_get_publication_forbidden_not_interactable(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """GET /api/publications/{publ_id} returns 403 for non-interactable (second in queue)."""
+    # User1 has items="publ1|publ2", with INTERACTABLE_QUEUE_COUNT=1, only publ1 is interactable
+    user_items = seed_data["users"][0].items.split("|")
+    assert len(user_items) >= 2, "Need at least 2 publications in queue"
+    second_publ_id = int(user_items[1])  # Second publication - not interactable
+    response = await authenticated_client.get(f"/api/publications/{second_publ_id}")
+    assert response.status_code == 403
+    data = response.json()
+    assert data["error"] == "PUBL_FORBIDDEN"
+
+
+# ========== Interactable Flag Tests ==========
+
+
+@pytest.mark.asyncio
+async def test_get_current_interactable_true(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """Current (first) publication has interactable: true."""
+    response = await authenticated_client.get("/api/publications/current")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["interactable"] is True
+
+
+@pytest.mark.asyncio
+async def test_get_current_queue_interactable_flags(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """With list_all=true, first item is interactable, others are not."""
+    user_items = seed_data["users"][0].items.split("|")
+    assert len(user_items) >= 2, "Need at least 2 publications in queue"
+
+    response = await authenticated_client.get("/api/publications/current?list_all=true")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert len(data) == len(user_items)
+    # First publication (index 0) should be interactable
+    assert data[0]["interactable"] is True
+    # Remaining publications should not be interactable
+    for i in range(1, len(data)):
+        assert data[i]["interactable"] is False
+
+
 # ========== Complete Tests ==========
 
 
