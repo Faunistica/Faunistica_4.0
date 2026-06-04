@@ -71,9 +71,14 @@ export default function Onboarding() {
     }
 
     const onSubmit = async (data: FormValues) => {
-        const languages = [];
-        if (data.langRu) languages.push('ru');
-        if (data.langEn) languages.push('en');
+        let language = '';
+        if (data.langRu && data.langEn) {
+            language = 'all';
+        } else if (data.langRu) {
+            language = 'rus';
+        } else if (data.langEn) {
+            language = 'eng';
+        }
 
         try {
             await registerMutation({
@@ -83,7 +88,7 @@ export default function Onboarding() {
                 age: data.age,
                 rating: data.rating === 'yes',
                 sex: data.sex,
-                language: languages.join(','),
+                language,
                 comm: data.comm,
             }).unwrap();
             navigate('/dashboard', { replace: true });
@@ -219,8 +224,7 @@ export default function Onboarding() {
                                                             <SelectContent>
                                                                 <SelectItem value="male">Мужской</SelectItem>
                                                                 <SelectItem value="female">Женский</SelectItem>
-                                                                <SelectItem value="other">Другой</SelectItem>
-                                                                <SelectItem value="prefer-not">Предпочитаю не указывать</SelectItem>
+                                                                <SelectItem value="none">Предпочитаю не указывать</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     )}
