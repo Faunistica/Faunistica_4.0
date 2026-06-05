@@ -47,7 +47,7 @@ class UserUpdateMe(BaseModel):
 
 class UserLookupResponse(BaseModel):
     user_id: int
-    name: str | None
+    username: str | None
 
 
 class UserUpdate(BaseModel):

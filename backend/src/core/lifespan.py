@@ -110,20 +110,20 @@ async def _check_alembic_version() -> None:
     logger.info("Alembic migrations are up to date (head: %s)", head_rev)
 
 
-async def _cleanup_pending_registrations() -> (
-    None
-):  # change deleted by code to deleted by token
+async def _cleanup_pending_registrations() -> None:
     while True:
         try:
             async for session in get_session():
                 now = datetime.now()
-                expired_cutoff = now - timedelta(
-                    seconds=settings.TG_CODE_EXPIRE_SECONDS
+                token_expired_cutoff = now - timedelta(
+                    seconds=settings.TG_TOKEN_EXPIRE_SECONDS
                 )
                 confirmed_cutoff = now - timedelta(
                     seconds=settings.REGISTRATION_PENDING_CONFIRMED_BACKLOG_SECONDS
                 )
-                expired_count = await delete_expired_pending(session, expired_cutoff)
+                expired_count = await delete_expired_pending(
+                    session, token_expired_cutoff
+                )
                 confirmed_count = await delete_confirmed_pending(
                     session, confirmed_cutoff
                 )

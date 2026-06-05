@@ -8,6 +8,7 @@ from core.config import settings
 from core.dependencies import DBSession
 from core.enums import PendingStatus, UserState
 from core.exceptions import (
+    MsgErr,
     RegistrationAlreadyStartedError,
     UsernameAlreadyExistsError,
 )
@@ -32,6 +33,7 @@ from schema.registration import (
     RegistrationStatusResponse,
 )
 from service.registration import is_enter_expired
+from service.user import UserService
 
 router = APIRouter()
 
@@ -74,11 +76,18 @@ async def form_filling(
     username = data.username
     name = data.name
     password = data.password
+    sex = data.sex
     age = data.age
     lng = data.lng
     comm = data.comm
-    code = data.code  # add validation fields
+    code = data.code
 
+    validate_name = await UserService.validate_name(name)
+    validate_sex = await UserService.validate_sex(sex)
+    validate_age = await UserService.validate_age_str(str(age))
+    for validate_item in [validate_name, validate_sex, validate_age]:
+        if isinstance(validate_item, MsgErr):
+            raise HTTPException(status_code=400, detail=validate_item.error)
     existing_user = await find_user_by_username(session, username)
     if existing_user is not None:
         raise UsernameAlreadyExistsError(username)
@@ -94,10 +103,12 @@ async def form_filling(
             user_id=pending.telegram_id,
             tlg_name=pending.telegram_name,
             tlg_username=pending.telegram_username,
-            name=name,  # add field username to User table
+            username=username,
+            name=name,
             age=age,
             lng=lng,
             comm=comm,
+            sex=sex,
             reg_stat=UserState.REG_COMPLETED,
             hash=password_hash,
             hash_date=datetime.now(),
@@ -150,7 +161,6 @@ async def registration_status(
             await session.commit()
             return RegistrationStartResponse(
                 code=code,
-                code_expires_in=settings.TG_CODE_EXPIRE_SECONDS,
             )
 
         if pending.status != PendingStatus.CODE_PROCESSING:  # divide + cookie

@@ -12,20 +12,12 @@ from service.registration import is_enter_expired
 async def create_pending_registration(
     session: AsyncSession,
     *,
-    username: str,
-    password_hash: str,
     code: str,
-    age: int,
-    lng: str,
-    comm: str,
+    token: str,
 ) -> PendingRegistration:
     pending = PendingRegistration(
-        username=username,
-        password_hash=password_hash,
+        token=token,
         code=code,
-        age=age,
-        lng=lng,
-        comm=comm,
     )
     session.add(pending)
     await session.flush()
@@ -71,7 +63,9 @@ async def get_pending_by_username(
     )
     result = await session.execute(stmt)
     pending = result.scalar_one_or_none()
-    if pending and is_enter_expired(pending.created_at, settings.Pe):
+    if pending and is_enter_expired(
+        pending.token_created_at, settings.TG_TOKEN_EXPIRE_SECONDS
+    ):
         return None
     return pending
 
@@ -110,7 +104,7 @@ async def delete_pending_by_code(session: AsyncSession, code: str) -> None:
 async def delete_expired_pending(session: AsyncSession, cutoff: datetime) -> int:
     stmt = delete(PendingRegistration).where(
         PendingRegistration.status == PendingStatus.CODE_PROCESSING,
-        PendingRegistration.code_created_at < cutoff,
+        PendingRegistration.token_created_at < cutoff,
     )
     result = await session.execute(stmt)
     return result.rowcount or 0

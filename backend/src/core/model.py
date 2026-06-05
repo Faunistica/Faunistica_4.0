@@ -35,6 +35,7 @@ class User(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     tlg_name: Mapped[str | None] = mapped_column(String(255))
     tlg_username: Mapped[str | None] = mapped_column(String(255))
+    username: Mapped[str | None] = mapped_column(String(255))
     name: Mapped[str | None] = mapped_column(String(255))
     reg_stat: Mapped[UserState] = mapped_column(
         UserStateType,
