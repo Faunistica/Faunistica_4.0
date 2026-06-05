@@ -34,8 +34,12 @@ class UserFull(UserMinimal):
 
 
 class UserUpdateMe(BaseModel):
+    username: str | None = None
+    password: str | None = None
+    name: str | None = None
     age: int | None = None
-    lng: UserLanguage | None
+    lng: UserLanguage | None = None
+    comm: str | None = None
     sex: str | None = None
     rating: int | None = None
     email: str | None = None
