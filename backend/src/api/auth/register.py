@@ -184,7 +184,7 @@ async def registration_status(
             )
 
         if pending.status == PendingStatus.AUTH:
-            current_user = get_user(session, pending.telegram_id)
+            current_user = await get_user(session, pending.telegram_id)
             token_payload = TokenPayload(
                 sub=str(current_user.user_id),
                 username=current_user.name,
