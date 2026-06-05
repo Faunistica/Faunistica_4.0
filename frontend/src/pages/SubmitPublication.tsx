@@ -75,7 +75,7 @@ const SubmitPublication: FC = () => {
                         <span>Публикация #{publ_id}</span>
                     </div>
                     <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">
-                        Завершение обработки
+                        Завершение работы
                     </CardTitle>
                     {pub && (
                         <p className="text-sm text-slate-600">
