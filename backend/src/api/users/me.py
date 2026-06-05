@@ -2,6 +2,7 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from requests import session
 
 from core.dependencies import TokenUser
 from core.exceptions import UserNotFoundError
@@ -42,7 +43,7 @@ async def update_current_user(
         email=data.email,
         region=data.region,
     )
-
+    await session.commit()
     if user is None:
         logger.warning("User not found during update: %d", token.user_id)
         raise UserNotFoundError(token.user_id)
