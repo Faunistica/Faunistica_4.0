@@ -107,21 +107,14 @@ class PublicationService:
         next_publ = await get_publication_expect(self.session, next_publ_id)
         return Publication.model_validate(next_publ)
 
-    async def get_draft_record_ids(
-        self, user_id: int, publ_id: int
-    ) -> list[str]:
-        stmt = (
-            select(EventRecord.id)
-            .where(
-                EventRecord.user_id == user_id,
-                EventRecord.publ_id == publ_id,
-                or_(
-                    EventRecord.type.in_(
-                        [RecordType.CHECK_OK, RecordType.CHECK_FAIL]
-                    ),
-                    EventRecord.type.is_(None),
-                ),
-            )
+    async def get_draft_record_ids(self, user_id: int, publ_id: int) -> list[str]:
+        stmt = select(EventRecord.id).where(
+            EventRecord.user_id == user_id,
+            EventRecord.publ_id == publ_id,
+            or_(
+                EventRecord.type.in_([RecordType.CHECK_OK, RecordType.CHECK_FAIL]),
+                EventRecord.type.is_(None),
+            ),
         )
         result = await self.session.execute(stmt)
         return [str(row[0]) for row in result.all()]

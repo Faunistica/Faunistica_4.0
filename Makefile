@@ -11,3 +11,9 @@ format:
 	$(MAKE) -C backend format
 	@echo "Formatting frontend..."
 	$(MAKE) -C frontend format
+
+test:
+	@echo "Running backend tests..."
+	$(MAKE) -C backend test
+	@echo "Running frontend tests..."
+	$(MAKE) -C frontend test

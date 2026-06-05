@@ -6,13 +6,7 @@ import {
     useSubmitPublicationMutation,
 } from '@/api/publAPI';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardFooter,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import {
     Select,
     SelectContent,
@@ -96,16 +90,12 @@ const SubmitPublication: FC = () => {
                         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
                             <div className="flex items-center gap-2 text-amber-800">
                                 <AlertCircle className="size-5 shrink-0" />
-                                <span className="font-semibold">
-                                    Завершение недоступно
-                                </span>
+                                <span className="font-semibold">Завершение недоступно</span>
                             </div>
                             <p className="mt-1 text-sm text-amber-700">
                                 Есть {draftIds.length}{' '}
-                                {draftIds.length === 1
-                                    ? 'черновая запись'
-                                    : 'черновых записей'}
-                                , которые нужно отправить или удалить.
+                                {draftIds.length === 1 ? 'черновая запись' : 'черновых записей'},
+                                которые нужно отправить или удалить.
                             </p>
                             <ul className="mt-3 space-y-1">
                                 {draftIds.map((recordId) => (
@@ -127,10 +117,7 @@ const SubmitPublication: FC = () => {
                             <Label htmlFor="processing-level" className="font-semibold">
                                 Уровень обработки
                             </Label>
-                            <Select
-                                value={processingLevel}
-                                onValueChange={setProcessingLevel}
-                            >
+                            <Select value={processingLevel} onValueChange={setProcessingLevel}>
                                 <SelectTrigger id="processing-level">
                                     <SelectValue placeholder="Выберите уровень" />
                                 </SelectTrigger>
@@ -154,13 +141,19 @@ const SubmitPublication: FC = () => {
                             >
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="yes" id="urals-yes" />
-                                    <Label htmlFor="urals-yes" className="cursor-pointer font-normal">
+                                    <Label
+                                        htmlFor="urals-yes"
+                                        className="cursor-pointer font-normal"
+                                    >
                                         Да
                                     </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="no" id="urals-no" />
-                                    <Label htmlFor="urals-no" className="cursor-pointer font-normal">
+                                    <Label
+                                        htmlFor="urals-no"
+                                        className="cursor-pointer font-normal"
+                                    >
                                         Нет
                                     </Label>
                                 </div>

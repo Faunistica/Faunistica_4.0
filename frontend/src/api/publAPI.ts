@@ -17,7 +17,10 @@ export const publAPI = createApi({
         getSubmitStatus: build.query<Types.SubmitStatusResponse, number>({
             query: (publ_id) => `/publications/${publ_id}/submit-status`,
         }),
-        submitPublication: build.mutation<void, { publ_id: number; data: Types.SubmitPublicationRequest }>({
+        submitPublication: build.mutation<
+            void,
+            { publ_id: number; data: Types.SubmitPublicationRequest }
+        >({
             query: ({ publ_id, data }) => ({
                 url: `/publications/${publ_id}/submit`,
                 method: 'POST',

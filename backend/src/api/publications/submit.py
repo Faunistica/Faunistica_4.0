@@ -28,10 +28,7 @@ async def _notify_admin(
     if not comment:
         return
     try:
-        text = (
-            f"📬 Комментарий к публикации #{publ_id}:\n"
-            f"{comment}"
-        )
+        text = f"📬 Комментарий к публикации #{publ_id}:\n{comment}"
         url = (
             f"https://api.telegram.org/"
             f"bot{settings.BOT_TOKEN.get_secret_value()}/sendMessage"
