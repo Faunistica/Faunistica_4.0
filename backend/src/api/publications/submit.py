@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from core.dependencies import ClientIP, HTTPClient, TokenUser
 from schema.common import ProcessingLevel
 from service.publications import PublicationService
-from service.telegram import notify_admin
+from service.telegram import notify_publication_completed
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/publications")
@@ -55,4 +55,4 @@ async def submit_publication(
         ip,
     )
 
-    bg_tasks.add_task(notify_admin, http_client, publ_id, data.comment)
+    bg_tasks.add_task(notify_publication_completed, http_client, publ_id, data.comment)

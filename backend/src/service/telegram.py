@@ -9,6 +9,18 @@ from schema.common import SupportRequest
 logger = logging.getLogger(__name__)
 
 
+async def _notify_admin(
+    client: aiohttp.ClientSession,
+    text: str,
+) -> None:
+    url = f"https://api.telegram.org/bot{settings.BOT_TOKEN.get_secret_value()}/sendMessage"
+    async with client.post(
+        url,
+        json={"chat_id": settings.ADMIN_CHAT_ID, "text": text},
+    ) as resp:
+        resp.raise_for_status()
+
+
 # NOTE: probably should cache
 async def fetch_photo(
     client: aiohttp.ClientSession,
@@ -31,7 +43,6 @@ async def fetch_photo(
     file_path = file_info["result"]["file_path"]
     file_url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
     async with client.get(file_url) as file_resp:
-        # TODO: Streaming response?
         return io.BytesIO(await file_resp.read())
 
 
@@ -40,7 +51,7 @@ async def support_message(
     data: SupportRequest,
     user_id: int | None,
 ) -> None:
-    message = (
+    text = (
         f"📢 Новое сообщение в поддержку из веб-формы 📢\n"
         f"🔗 Ссылка на Telegram: {data.link}\n"
         f"👤 Username в боте: {data.user_name if data.user_name else 'Не указан'}\n"
@@ -50,16 +61,7 @@ async def support_message(
         f"📝 Сообщение:\n"
         f"{data.text}\n"
     )
-
-    message_payload = {
-        "chat_id": settings.ADMIN_CHAT_ID,
-        "text": message,
-        "parse_mode": "HTML",
-    }
-
-    url = f"https://api.telegram.org/bot{settings.BOT_TOKEN.get_secret_value()}/sendMessage"
-    async with client.post(url, json=message_payload) as response:
-        response.raise_for_status()
+    await _notify_admin(client, text)
 
 
 def _get_issue_type(issue_type: str) -> str:
@@ -76,23 +78,15 @@ def _get_issue_type(issue_type: str) -> str:
     return issue_types.get(issue_type, issue_type)
 
 
-async def notify_admin(
+async def notify_publication_completed(
     client: aiohttp.ClientSession,
     publ_id: int,
-    comment: str | None,
+    comment: str | None = None,
 ) -> None:
-    if not comment:
-        return
     try:
-        text = f"📬 Комментарий к публикации #{publ_id}:\n{comment}"
-        url = (
-            f"https://api.telegram.org/"
-            f"bot{settings.BOT_TOKEN.get_secret_value()}/sendMessage"
-        )
-        async with client.post(
-            url,
-            json={"chat_id": settings.ADMIN_CHAT_ID, "text": text},
-        ) as resp:
-            resp.raise_for_status()
+        text = f"✅ Публикация #{publ_id} завершена"
+        if comment:
+            text += f"\n📬 Комментарий: {comment}"
+        await _notify_admin(client, text)
     except Exception:
-        logger.exception("Failed to send admin notification for publ %d", publ_id)
+        logger.exception("Failed to send completion notification for publ %d", publ_id)
