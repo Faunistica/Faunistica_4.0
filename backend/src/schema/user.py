@@ -56,7 +56,8 @@ class UserLookupResponse(BaseModel):
 class UserUpdate(BaseModel):
     tlg_name: str | None | Unset = UNSET
     tlg_username: str | None | Unset = UNSET
-    name: str | Unset = UNSET
+    username: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
     reg_stat: UserState | None | Unset = UNSET
     hash: str | None | Unset = UNSET
     hash_date: datetime | None | Unset = UNSET
