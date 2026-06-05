@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import LoadingScreen from "@/components/LoadingScreen";
 import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
 /* ─── Schema ─── */
 
@@ -118,7 +119,7 @@ const SubmitPublication: FC = () => {
       });
       if (!result.error) {
         toast.success("Публикация отмечена как обработанная");
-        navigate("/dashboard", { replace: true });
+        void navigate("/dashboard", { replace: true });
       }
     },
     [publ_id, submit, navigate],
@@ -128,9 +129,7 @@ const SubmitPublication: FC = () => {
 
   const draftIds = status?.draft_record_ids ?? [];
   const hasDrafts = draftIds.length > 0;
-  const meta = pub
-    ? [pub.author, pub.year?.toString(), pub.name].filter(Boolean).join(" — ")
-    : "";
+  const meta = pub ? [pub.author, pub.year?.toString(), pub.name].filter(Boolean).join(" — ") : "";
 
   return (
     <div className="py-6">
@@ -142,13 +141,13 @@ const SubmitPublication: FC = () => {
           transition={{ duration: 0.35 }}
         >
           {/* Breadcrumb */}
-          <Link
-            to="/dashboard"
+          <a
+            onClick={() => history.back()}
             className="mb-5 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-            На дашборд
-          </Link>
+            Назад
+          </a>
 
           {hasDrafts ? (
             <DraftsBlock publ_id={publ_id} draftIds={draftIds} />
@@ -189,177 +188,152 @@ const FormCard: FC<{
   onSubmit: (data: SubmitForm) => Promise<void>;
 }> = (p) => (
   <motion.div variants={containerAnim} initial="initial" animate="animate">
-    <div className="rounded-xl border border-border p-1">
-      <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-        <CornerOrnament position="top-left" />
-        <CornerOrnament position="top-right" />
-        <CornerOrnament position="bottom-left" />
-        <CornerOrnament position="bottom-right" />
+    <Card className="p-6 sm:p-8">
+      <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
+        <div className="mb-3 flex items-center justify-center gap-3">
+          <div className="h-px w-12 bg-border" />
+          <Flower2 className="size-4 text-emerald-600" />
+          <div className="h-px w-12 bg-border" />
+        </div>
+        <h1 className="text-2xl font-light tracking-wide sm:text-3xl">Завершение работы</h1>
+        <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
+          Публикация #{p.publ_id}
+        </p>
+        {p.meta && <p className="mt-1 text-sm text-muted-foreground italic">{p.meta}</p>}
+      </motion.div>
 
-        {/* Header */}
-        <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
-          <div className="mb-3 flex items-center justify-center gap-3">
-            <div className="h-px w-12 bg-border" />
-            <Flower2 className="size-4 text-emerald-600" />
-            <div className="h-px w-12 bg-border" />
-          </div>
-          <h1 className="text-2xl font-light tracking-wide sm:text-3xl">
-            Завершение работы
-          </h1>
-          <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
-            Публикация #{p.publ_id}
-          </p>
-          {p.meta && (
-            <p className="mt-1 text-sm italic text-muted-foreground">{p.meta}</p>
+      <div className="space-y-7">
+        {/* Processing level */}
+        <motion.div variants={itemAnim} transition={stagger(1)}>
+          <FieldLabel icon={FileText} text="Уровень обработки" />
+          <Controller
+            name="processingLevel"
+            control={p.control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger
+                  className={cn("w-full text-sm", !field.value && "text-muted-foreground")}
+                >
+                  <SelectValue placeholder="— выберите уровень —" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(LEVEL_LABELS).map(([val, label]) => (
+                    <SelectItem key={val} value={val}>
+                      <span>{label}</span>
+                      <span className="ml-2 text-xs text-muted-foreground">{LEVEL_DESC[val]}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {p.errors.processingLevel && (
+            <p className="mt-1 text-xs text-destructive">{p.errors.processingLevel.message}</p>
           )}
         </motion.div>
 
-        <div className="space-y-7">
-          {/* Processing level */}
-          <motion.div variants={itemAnim} transition={stagger(1)}>
-            <FieldLabel icon={FileText} text="Уровень обработки" />
-            <Controller
-              name="processingLevel"
-              control={p.control}
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger
-                    className={cn(
-                      "w-full text-sm",
-                      !field.value && "text-muted-foreground",
-                    )}
-                  >
-                    <SelectValue placeholder="— выберите уровень —" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(LEVEL_LABELS).map(([val, label]) => (
-                      <SelectItem key={val} value={val}>
-                        <span>{label}</span>
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          {LEVEL_DESC[val]}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {p.errors.processingLevel && (
-              <p className="mt-1 text-xs text-destructive">
-                {p.errors.processingLevel.message}
-              </p>
+        {/* Urals scope */}
+        <motion.div variants={itemAnim} transition={stagger(2)}>
+          <FieldLabel icon={MapPin} text="Находки за пределами Урала?" />
+          <Controller
+            name="uralsScope"
+            control={p.control}
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value ?? ""}
+                onValueChange={(v) => field.onChange(v || null)}
+                className="flex flex-col gap-2 sm:flex-row sm:gap-8"
+              >
+                {[
+                  { val: "yes", label: "Да" },
+                  { val: "no", label: "Нет" },
+                ].map((opt) => (
+                  <div key={opt.val} className="flex items-center gap-2">
+                    <RadioGroupItem value={opt.val} id={`urals-${opt.val}`} />
+                    <Label
+                      htmlFor={`urals-${opt.val}`}
+                      className="cursor-pointer text-sm font-normal"
+                    >
+                      {opt.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
             )}
-          </motion.div>
+          />
+        </motion.div>
 
-          {/* Urals scope */}
-          <motion.div variants={itemAnim} transition={stagger(2)}>
-            <FieldLabel icon={MapPin} text="Находки за пределами Урала?" />
-            <Controller
-              name="uralsScope"
-              control={p.control}
-              render={({ field }) => (
-                <RadioGroup
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v || null)}
-                  className="flex flex-col gap-2 sm:flex-row sm:gap-8"
-                >
-                  {[
-                    { val: "yes", label: "Да" },
-                    { val: "no", label: "Нет" },
-                  ].map((opt) => (
-                    <div key={opt.val} className="flex items-center gap-2">
-                      <RadioGroupItem
-                        value={opt.val}
-                        id={`urals-${opt.val}`}
-                      />
-                      <Label
-                        htmlFor={`urals-${opt.val}`}
-                        className="cursor-pointer text-sm font-normal"
-                      >
-                        {opt.label}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              )}
-            />
-          </motion.div>
-
-          {/* Material status */}
-          <motion.div variants={itemAnim} transition={stagger(3)}>
-            <FieldLabel icon={Hash} text="Указания видов без материала?" />
-            <Controller
-              name="materialStatus"
-              control={p.control}
-              render={({ field }) => (
-                <RadioGroup
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v || null)}
-                  className="flex flex-col gap-2 sm:flex-row sm:gap-8"
-                >
-                  {[
-                    { val: "yes", label: "Да" },
-                    { val: "no", label: "Нет" },
-                  ].map((opt) => (
-                    <div key={opt.val} className="flex items-center gap-2">
-                      <RadioGroupItem
-                        value={opt.val}
-                        id={`mat-${opt.val}`}
-                      />
-                      <Label
-                        htmlFor={`mat-${opt.val}`}
-                        className="cursor-pointer text-sm font-normal"
-                      >
-                        {opt.label}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              )}
-            />
-          </motion.div>
-
-          {/* Comment */}
-          <motion.div variants={itemAnim} transition={stagger(4)}>
-            <FieldLabel icon={MessageSquare} text="Комментарий" />
-            <Controller
-              name="comment"
-              control={p.control}
-              render={({ field }) => (
-                <Textarea
-                  {...field}
-                  placeholder="Любые замечания по публикации..."
-                  className="min-h-24 text-sm placeholder:text-sm placeholder:text-muted-foreground/40"
-                />
-              )}
-            />
-          </motion.div>
-        </div>
-
-        {/* Footer */}
-        <motion.div
-          variants={itemAnim}
-          transition={stagger(5)}
-          className="mt-8 flex items-center justify-between border-t border-border pt-6"
-        >
-          <Button variant="outline" asChild>
-            <Link to="/dashboard">Отмена</Link>
-          </Button>
-          <Button
-            onClick={p.handleSubmit(p.onSubmit)}
-            disabled={!p.isValid || p.submitting}
-            className="bg-emerald-700 text-white hover:bg-emerald-800"
-          >
-            {p.submitting ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <CheckCircle2 className="mr-2 size-4" />
+        {/* Material status */}
+        <motion.div variants={itemAnim} transition={stagger(3)}>
+          <FieldLabel icon={Hash} text="Указания видов без материала?" />
+          <Controller
+            name="materialStatus"
+            control={p.control}
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value ?? ""}
+                onValueChange={(v) => field.onChange(v || null)}
+                className="flex flex-col gap-2 sm:flex-row sm:gap-8"
+              >
+                {[
+                  { val: "yes", label: "Да" },
+                  { val: "no", label: "Нет" },
+                ].map((opt) => (
+                  <div key={opt.val} className="flex items-center gap-2">
+                    <RadioGroupItem value={opt.val} id={`mat-${opt.val}`} />
+                    <Label
+                      htmlFor={`mat-${opt.val}`}
+                      className="cursor-pointer text-sm font-normal"
+                    >
+                      {opt.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
             )}
-            {p.submitting ? "Отправка..." : "Завершить"}
-          </Button>
+          />
+        </motion.div>
+
+        {/* Comment */}
+        <motion.div variants={itemAnim} transition={stagger(4)}>
+          <FieldLabel icon={MessageSquare} text="Комментарий" />
+          <Controller
+            name="comment"
+            control={p.control}
+            render={({ field }) => (
+              <Textarea
+                {...field}
+                placeholder="Любые замечания по публикации..."
+                className="min-h-24 text-sm placeholder:text-sm placeholder:text-muted-foreground/40"
+              />
+            )}
+          />
         </motion.div>
       </div>
-    </div>
+
+      {/* Footer */}
+      <motion.div
+        variants={itemAnim}
+        transition={stagger(5)}
+        className="mt-8 flex items-center justify-between border-t border-border pt-6"
+      >
+        <Button variant="outline" asChild>
+          <Link to="/dashboard">Отмена</Link>
+        </Button>
+        <Button
+          onClick={p.handleSubmit(p.onSubmit)}
+          disabled={!p.isValid || p.submitting}
+          className="bg-emerald-700 text-white hover:bg-emerald-800"
+        >
+          {p.submitting ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <CheckCircle2 className="mr-2 size-4" />
+          )}
+          {p.submitting ? "Отправка..." : "Завершить"}
+        </Button>
+      </motion.div>
+    </Card>
   </motion.div>
 );
 
@@ -367,10 +341,7 @@ const FormCard: FC<{
    Drafts Block
    ═══════════════════════════════════════════ */
 
-const DraftsBlock: FC<{ publ_id: number; draftIds: string[] }> = ({
-  publ_id,
-  draftIds,
-}) => (
+const DraftsBlock: FC<{ publ_id: number; draftIds: string[] }> = ({ publ_id, draftIds }) => (
   <motion.div
     variants={containerAnim}
     initial="initial"
@@ -390,9 +361,8 @@ const DraftsBlock: FC<{ publ_id: number; draftIds: string[] }> = ({
           <span>Завершение недоступно</span>
         </div>
         <p className="text-sm text-muted-foreground">
-          Есть {draftIds.length}{" "}
-          {draftIds.length === 1 ? "черновая запись" : "черновых записей"}, которые нужно
-          отправить или удалить.
+          Есть {draftIds.length} {draftIds.length === 1 ? "черновая запись" : "черновых записей"},
+          которые нужно отправить или удалить.
         </p>
         <ul className="mt-4 space-y-1.5">
           {draftIds.map((recordId) => (
@@ -415,45 +385,9 @@ const DraftsBlock: FC<{ publ_id: number; draftIds: string[] }> = ({
    Sub-components
    ═══════════════════════════════════════════ */
 
-const FieldLabel: FC<{ icon: typeof FileText; text: string }> = ({
-  icon: Icon,
-  text,
-}) => (
+const FieldLabel: FC<{ icon: typeof FileText; text: string }> = ({ icon: Icon, text }) => (
   <div className="mb-2 flex items-center gap-2">
     <Icon className="size-3.5 text-emerald-600" />
     <span className="text-sm text-foreground">{text}</span>
   </div>
 );
-
-const CornerOrnament: FC<{
-  position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
-}> = ({ position }) => {
-  const posStyles: Record<string, string> = {
-    "top-left": "top-0 left-0 -translate-x-1/2 -translate-y-1/2",
-    "top-right": "top-0 right-0 translate-x-1/2 -translate-y-1/2",
-    "bottom-left": "bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
-    "bottom-right": "bottom-0 right-0 translate-x-1/2 translate-y-1/2",
-  };
-  return (
-    <div
-      className={`pointer-events-none absolute size-4 text-emerald-600/40 ${posStyles[position]}`}
-    >
-      <svg viewBox="0 0 16 16" fill="none" className="size-full">
-        <path
-          d={
-            position === "top-left"
-              ? "M16 0H0v4m12-4H4"
-            : position === "top-right"
-              ? "M0 0h16v4M4 0h8"
-            : position === "bottom-left"
-              ? "M16 16H0v-4m12 4H4"
-              : "M0 16h16v-4M4 16h8"
-          }
-          stroke="currentColor"
-          strokeWidth="1.5"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
-    </div>
-  );
-};
