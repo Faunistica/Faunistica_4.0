@@ -87,11 +87,11 @@ export default function Settings() {
 
         try {
             await updateMe({
-                username: user?.username ? undefined : (data.username || undefined),
-                password: data.password || undefined,
-                name: data.name || undefined,
-                age: data.age,
-                sex: data.sex,
+                username: user?.username ? null : (data.username || null),
+                password: data.password || null,
+                name: data.name || null,
+                age: data.age ?? null,
+                sex: data.sex || null,
                 lng: language as 'rus' | 'eng' | 'all' | null,
                 rating: data.rating === 'yes' ? 1 : 0,
                 email: data.email || null,
@@ -153,7 +153,7 @@ export default function Settings() {
                                                 <p className="text-xs text-slate-500">
                                                     {!!user?.username
                                                         ? 'Уникальный логин не может быть изменен.'
-                                                        : 'Вы можете установить логин только один раз.'}
+                                                        : 'Внимание: уникальный логин можно установить только один раз!'}
                                                 </p>
                                                 {errors.username && (
                                                     <span className="text-xs text-red-500">{errors.username.message}</span>
