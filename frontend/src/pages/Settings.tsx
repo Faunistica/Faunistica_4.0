@@ -17,7 +17,7 @@ import { useGetMeQuery, useUpdateMeMutation } from '@/api/userAPI';
 const formSchema = z.object({
     username: z.string().min(3, 'Минимум 3 символа').optional().or(z.literal('')),
     password: z.string().min(6, 'Минимум 6 символов').optional().or(z.literal('')),
-    name: z.string().min(2, 'Минимум 2 символа').optional().or(z.literal('')),
+    name: z.string().min(2, 'Минимум 2 символа'),
     age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет').nullable().optional(),
     sex: z.string().nullable().optional(),
     langRu: z.boolean().default(false),
@@ -26,6 +26,9 @@ const formSchema = z.object({
     email: z.string().email('Некорректный email').or(z.literal('')).nullable().optional(),
     region: z.string().nullable().optional(),
     comm: z.string().nullable().optional(),
+}).refine((data) => data.langRu || data.langEn, {
+    message: 'Выберите хотя бы один язык',
+    path: ['languages_error'],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -38,7 +41,7 @@ export default function Settings() {
         register,
         control,
         handleSubmit,
-        reset,
+        reset, // ← Добавьте reset
         formState: { errors },
     } = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -47,7 +50,7 @@ export default function Settings() {
             password: '',
             name: '',
             age: null,
-            sex: '',
+            sex: undefined,
             langRu: false,
             langEn: false,
             rating: 'no',
@@ -63,8 +66,8 @@ export default function Settings() {
                 username: user.username || '',
                 password: '',
                 name: user.name || '',
-                age: user.age || null,
-                sex: user.sex || '',
+                age: user.age ?? null,
+                sex: user.sex?.trim().toUpperCase() || undefined,
                 langRu: user.lng === 'rus' || user.lng === 'all',
                 langEn: user.lng === 'eng' || user.lng === 'all',
                 rating: user.rating === 1 ? 'yes' : 'no',
@@ -74,6 +77,7 @@ export default function Settings() {
             });
         }
     }, [user, reset]);
+
 
     const onSubmit = async (data: FormValues) => {
         let language = null;
@@ -89,14 +93,14 @@ export default function Settings() {
             await updateMe({
                 username: user?.username ? null : (data.username || null),
                 password: data.password || null,
-                name: data.name || null,
+                name: data.name,
                 age: data.age ?? null,
-                sex: data.sex || null,
+                sex: data.sex ? data.sex.toUpperCase() : null,
                 lng: language as 'rus' | 'eng' | 'all' | null,
                 rating: data.rating === 'yes' ? 1 : 0,
-                email: data.email || null,
-                region: data.region || null,
-                comm: data.comm || null,
+                email: data.email ?? '',
+                region: data.region ?? '',
+                comm: data.comm ?? '',
             }).unwrap();
         } catch (err) {
             console.error('Update failed:', err);
@@ -226,8 +230,9 @@ export default function Settings() {
                                                     name="sex"
                                                     render={({ field }) => (
                                                         <Select
+                                                            key={`sex-${field.value}`}
                                                             onValueChange={field.onChange}
-                                                            value={field.value || undefined}
+                                                            value={field.value}
                                                         >
                                                             <SelectTrigger id="sex">
                                                                 <SelectValue placeholder="Не выбрано" />
@@ -357,6 +362,11 @@ export default function Settings() {
                                                 </Label>
                                             </div>
                                         </div>
+                                        {errors.languages_error && (
+                                            <span className="block text-xs text-red-500 pt-1">
+                                                {errors.languages_error.message}
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Предпочтения */}

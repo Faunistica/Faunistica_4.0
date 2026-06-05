@@ -13,7 +13,7 @@ import { Link, useNavigate } from 'react-router';
 import { useInitTelegramAuthMutation, useLazyCheckTelegramAuthStatusQuery } from '@/api/authAPI';
 import QRCodeStyling from 'qr-code-styling';
 
-const TelegramQRCode = ({ code, botUrl }: { code?: string; botUrl?: string }) => {
+export const TelegramQRCode = ({ code, botUrl }: { code?: string; botUrl?: string }) => {
     const ref = useRef<HTMLDivElement>(null);
     const [qrCode] = useState<QRCodeStyling>(
         () =>

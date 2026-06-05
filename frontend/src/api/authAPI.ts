@@ -108,6 +108,12 @@ export const authAPI = createApi({
                 }
             },
         }),
+        getBotUrl: build.query<{ bot_url: string }, void>({
+            query: () => ({
+                url: '/auth/bot-url',
+                method: 'GET',
+            }),
+        }),
         register: build.mutation<Types.RegisterResponse, Types.RegisterRequest>({
             query: (userData) => ({
                 url: '/auth/form',
@@ -140,5 +146,6 @@ export const {
     useInitTelegramAuthMutation,
     useCheckTelegramAuthStatusQuery,
     useLazyCheckTelegramAuthStatusQuery,
+    useGetBotUrlQuery,
     useRegisterMutation,
 } = authAPI;
