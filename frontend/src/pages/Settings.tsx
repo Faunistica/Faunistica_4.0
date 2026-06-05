@@ -1,69 +1,383 @@
-import type { FC } from 'react';
-import { useAppSelector } from '@/store/store';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Loader2, User, UserCheck, Languages, FileText, MapPin, Mail } from 'lucide-react';
+
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useGetMeQuery, useUpdateMeMutation } from '@/api/userAPI';
 
-const Settings: FC = () => {
-    const { username, user_id } = useAppSelector((state) => state.user);
+const formSchema = z.object({
+    age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет').nullable().optional(),
+    sex: z.string().nullable().optional(),
+    langRu: z.boolean().default(false),
+    langEn: z.boolean().default(false),
+    rating: z.enum(['yes', 'no']),
+    email: z.string().email('Некорректный email').or(z.literal('')).nullable().optional(),
+    region: z.string().nullable().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function Settings() {
+    const { data: user, isLoading: isUserLoading } = useGetMeQuery();
+    const [updateMe, { isLoading: isUpdating, isSuccess }] = useUpdateMeMutation();
+
+    const {
+        register,
+        control,
+        handleSubmit,
+        reset,
+        formState: { errors },
+    } = useForm<FormValues>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            age: null,
+            sex: '',
+            langRu: false,
+            langEn: false,
+            rating: 'no',
+            email: '',
+            region: '',
+        },
+    });
+
+    useEffect(() => {
+        if (user) {
+            reset({
+                age: user.age || null,
+                sex: user.sex || '',
+                langRu: user.lng === 'rus' || user.lng === 'all',
+                langEn: user.lng === 'eng' || user.lng === 'all',
+                rating: user.rating === 1 ? 'yes' : 'no',
+                email: user.email || '',
+                region: user.region || '',
+            });
+        }
+    }, [user, reset]);
+
+    const onSubmit = async (data: FormValues) => {
+        let language = null;
+        if (data.langRu && data.langEn) {
+            language = 'all';
+        } else if (data.langRu) {
+            language = 'rus';
+        } else if (data.langEn) {
+            language = 'eng';
+        }
+
+        try {
+            await updateMe({
+                age: data.age,
+                sex: data.sex,
+                lng: language as 'rus' | 'eng' | 'all' | null,
+                rating: data.rating === 'yes' ? 1 : 0,
+                email: data.email || null,
+                region: data.region || null,
+            }).unwrap();
+        } catch (err) {
+            console.error('Update failed:', err);
+        }
+    };
+
+    if (isUserLoading) {
+        return (
+            <div className="flex h-full min-h-[50vh] items-center justify-center">
+                <Loader2 className="size-8 animate-spin text-slate-400" />
+            </div>
+        );
+    }
 
     return (
-        <div className="mx-auto w-full max-w-4xl animate-in px-4 py-8 duration-500 fade-in">
-            <h1 className="mb-8 text-3xl font-bold tracking-tight text-slate-900">
-                Настройки профиля
-            </h1>
+        <main className="flex flex-1 flex-col items-center px-4 py-8 md:py-12">
+            <div className="w-full max-w-4xl space-y-8">
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <Card className="overflow-hidden border-slate-200 shadow-sm">
+                        <CardHeader className="space-y-4">
+                            <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
+                                Настройки профиля
+                            </CardTitle>
+                            <CardDescription>
+                                Здесь вы можете изменить свои личные данные, языковые компетенции и предпочтения публичности.
+                            </CardDescription>
+                        </CardHeader>
 
-            <div className="grid gap-8">
-                <Card className="border-slate-200 shadow-sm">
-                    <CardHeader>
-                        <CardTitle>Личные данные</CardTitle>
-                        <CardDescription>Основная информация о вашем аккаунте</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="username">Имя пользователя</Label>
-                            <Input
-                                id="username"
-                                value={username || ''}
-                                disabled
-                                className="bg-slate-50 text-slate-500"
-                            />
-                            <p className="text-xs text-slate-500">
-                                Имя пользователя используется для входа в систему и не может быть
-                                изменено.
-                            </p>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="userId">ID пользователя</Label>
-                            <Input
-                                id="userId"
-                                value={user_id || ''}
-                                disabled
-                                className="max-w-[200px] bg-slate-50 text-slate-500"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
+                        <CardContent className="p-6 md:p-8">
+                            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+                                {/* Левая колонка */}
+                                <div className="space-y-8">
+                                    {/* Учетная запись (только чтение) */}
+                                    <div className="space-y-5">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                            <User className="size-5" />
+                                            <h3>Учетная запись</h3>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="username">Логин (имя пользователя)</Label>
+                                            <Input
+                                                id="username"
+                                                value={user?.username || ''}
+                                                disabled
+                                                className="bg-slate-50 text-slate-500"
+                                            />
+                                            <p className="text-xs text-slate-500">
+                                                Уникальный логин не может быть изменен.
+                                            </p>
+                                        </div>
+                                    </div>
 
-                <Card className="border-slate-200 shadow-sm">
-                    <CardHeader>
-                        <CardTitle>Предпочтения</CardTitle>
-                        <CardDescription>
-                            Настройки интерфейса и уведомлений (в разработке)
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
-                            Дополнительные настройки профиля и системы будут доступны в будущих
-                            обновлениях.
-                        </div>
-                        <Button disabled>Сохранить изменения</Button>
-                    </CardContent>
-                </Card>
+                                    {/* Личные данные */}
+                                    <div className="space-y-5">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                            <UserCheck className="size-5" />
+                                            <h3>Личные данные</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="age">Ваш возраст</Label>
+                                                <Input
+                                                    id="age"
+                                                    type="number"
+                                                    placeholder="Например, 25"
+                                                    min="14"
+                                                    {...register('age')}
+                                                />
+                                                {errors.age && (
+                                                    <span className="text-xs text-red-500">
+                                                        {errors.age.message}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="sex">Пол</Label>
+                                                <Controller
+                                                    control={control}
+                                                    name="sex"
+                                                    render={({ field }) => (
+                                                        <Select
+                                                            onValueChange={field.onChange}
+                                                            value={field.value || undefined}
+                                                        >
+                                                            <SelectTrigger id="sex">
+                                                                <SelectValue placeholder="Не выбрано" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="M">
+                                                                    Мужской
+                                                                </SelectItem>
+                                                                <SelectItem value="F">
+                                                                    Женский
+                                                                </SelectItem>
+                                                                <SelectItem value="N">
+                                                                    Предпочитаю не указывать
+                                                                </SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    )}
+                                                />
+                                                {errors.sex && (
+                                                    <span className="text-xs text-red-500">
+                                                        {errors.sex.message}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Контакты и регион */}
+                                    <div className="space-y-5">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                            <Mail className="size-5" />
+                                            <h3>Контакты и регион</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-5">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="email">Электронная почта</Label>
+                                                <div className="relative">
+                                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                        <Mail className="size-4 text-slate-400" />
+                                                    </div>
+                                                    <Input
+                                                        id="email"
+                                                        type="email"
+                                                        className="pl-9"
+                                                        placeholder="email@example.com"
+                                                        {...register('email')}
+                                                    />
+                                                </div>
+                                                {errors.email && (
+                                                    <span className="text-xs text-red-500">
+                                                        {errors.email.message}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="region">Регион проживания</Label>
+                                                <div className="relative">
+                                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                        <MapPin className="size-4 text-slate-400" />
+                                                    </div>
+                                                    <Input
+                                                        id="region"
+                                                        className="pl-9"
+                                                        placeholder="Например, Москва"
+                                                        {...register('region')}
+                                                    />
+                                                </div>
+                                                {errors.region && (
+                                                    <span className="text-xs text-red-500">
+                                                        {errors.region.message}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Правая колонка */}
+                                <div className="flex flex-col space-y-8">
+                                    {/* Языки */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                            <Languages className="size-5" />
+                                            <h3>Языковые компетенции</h3>
+                                        </div>
+                                        <p className="text-sm text-slate-600">
+                                            На каких языках вы готовы обрабатывать научные
+                                            публикации? (можно выбрать несколько)
+                                        </p>
+                                        <div className="flex flex-wrap gap-6 pt-2">
+                                            <div className="flex items-center space-x-2">
+                                                <Controller
+                                                    control={control}
+                                                    name="langRu"
+                                                    render={({ field }) => (
+                                                        <Checkbox
+                                                            id="lang-ru"
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    )}
+                                                />
+                                                <Label
+                                                    htmlFor="lang-ru"
+                                                    className="cursor-pointer font-medium"
+                                                >
+                                                    Русский
+                                                </Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <Controller
+                                                    control={control}
+                                                    name="langEn"
+                                                    render={({ field }) => (
+                                                        <Checkbox
+                                                            id="lang-en"
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    )}
+                                                />
+                                                <Label
+                                                    htmlFor="lang-en"
+                                                    className="cursor-pointer font-medium"
+                                                >
+                                                    Английский
+                                                </Label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Публичный рейтинг */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                            <FileText className="size-5" />
+                                            <h3>Публичность данных</h3>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <Label className="text-sm text-slate-600">
+                                                Согласны ли вы на отображение вашего имени в
+                                                публичной таблице рейтинга?
+                                            </Label>
+                                            <Controller
+                                                control={control}
+                                                name="rating"
+                                                render={({ field }) => (
+                                                    <RadioGroup
+                                                        onValueChange={field.onChange}
+                                                        value={field.value}
+                                                        className="flex flex-col space-y-2 pt-1"
+                                                    >
+                                                        <div className="flex items-center space-x-2">
+                                                            <RadioGroupItem
+                                                                value="yes"
+                                                                id="rating-yes"
+                                                            />
+                                                            <Label
+                                                                htmlFor="rating-yes"
+                                                                className="cursor-pointer font-normal"
+                                                            >
+                                                                Да, я согласен на публичное
+                                                                отображение
+                                                            </Label>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2">
+                                                            <RadioGroupItem
+                                                                value="no"
+                                                                id="rating-no"
+                                                            />
+                                                            <Label
+                                                                htmlFor="rating-no"
+                                                                className="cursor-pointer font-normal"
+                                                            >
+                                                                Нет, использовать анонимный
+                                                                идентификатор
+                                                            </Label>
+                                                        </div>
+                                                    </RadioGroup>
+                                                )}
+                                            />
+                                            {errors.rating && (
+                                                <span className="text-xs text-red-500">
+                                                    {errors.rating.message}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+
+                        <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50 p-6 sm:flex-row sm:justify-between sm:items-center">
+                            {isSuccess ? (
+                                <span className="text-sm text-green-600 font-medium">Настройки успешно сохранены!</span>
+                            ) : (
+                                <span />
+                            )}
+                            <Button
+                                type="submit"
+                                disabled={isUpdating}
+                                className="w-full bg-slate-900 px-10 font-bold text-white shadow-md hover:bg-slate-800 sm:w-auto"
+                            >
+                                {isUpdating ? (
+                                    <>
+                                        <Loader2 className="mr-2 size-4 animate-spin" />
+                                        Сохранение...
+                                    </>
+                                ) : (
+                                    'Сохранить изменения'
+                                )}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </form>
             </div>
-        </div>
+        </main>
     );
-};
-
-export default Settings;
+}

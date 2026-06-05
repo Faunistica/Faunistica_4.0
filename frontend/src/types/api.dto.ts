@@ -160,3 +160,31 @@ export interface RegisterResponse {
     message: string;
     user_id: number;
 }
+
+export interface UserFull {
+    user_id: number;
+    name: string;
+    tlg_name?: string | null;
+    tlg_username?: string | null;
+    reg_stat?: number | null;
+    username?: string | null;
+    items?: string;
+    age?: number | null;
+    lng?: 'eng' | 'rus' | 'all' | null;
+    comm?: string | null;
+    reg_run?: string | null;
+    reg_end?: string | null;
+    sex?: string | null;
+    rating?: number | null;
+    email?: string | null;
+    region?: string | null;
+}
+
+export interface UserUpdateMeRequest {
+    age?: number | null;
+    lng?: 'eng' | 'rus' | 'all' | null;
+    sex?: string | null;
+    rating?: number | null;
+    email?: string | null;
+    region?: string | null;
+}
