@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 async def find_user_by_username(session: AsyncSession, username: str) -> User | None:
-    stmt = select(User).where(User.name == username)
+    stmt = select(User).where(User.username == username)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -63,8 +63,8 @@ async def update_user(
     return result.scalar_one_or_none()
 
 
-async def count_users_with_name(session: AsyncSession, name: str) -> int:
-    stmt = select(func.count()).select_from(User).where(User.name == name)
+async def count_users_with_username(session: AsyncSession, username: str) -> int:
+    stmt = select(func.count()).select_from(User).where(User.username == username)
     result = await session.execute(stmt)
     return result.scalar_one()
 

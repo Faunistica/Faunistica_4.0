@@ -1,7 +1,7 @@
 import logging
 import re
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, get_args
 
 from aiogram import Bot
 from fastapi import Depends
@@ -15,7 +15,7 @@ from core.exceptions import MsgErr, Ok
 from core.model import User
 from core.security import get_password_hash
 from repository.user import (
-    count_users_with_name,
+    count_users_with_username,
     create_user_or_update,
     find_user_by_username,
     get_user,
@@ -29,6 +29,7 @@ from service.actions import ActionService
 logger = logging.getLogger(__name__)
 
 _NAME_REGEX = re.compile(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$")
+_USERNAME_REGEX = re.compile(r"^[a-zA-Z0-9_]+$")
 
 _LANG_MAP: dict[str, UserLanguage] = {"1": "all", "2": "eng", "3": "rus"}
 
@@ -106,24 +107,40 @@ class UserService:
 
     # ========== Validation ==========
 
-    async def validate_name(
-        self, name: str, *, exclude_user_id: int | None = None
+    async def validate_username(
+        self, username: str, *, exclude_user_id: int | None = None
     ) -> Ok | MsgErr:
+        if len(username) < 3:
+            return MsgErr(error=Messages.message_too_short())
+        if len(username) > 40:
+            return MsgErr(error=Messages.message_too_long())
+        if not _USERNAME_REGEX.fullmatch(username):
+            return MsgErr(error=Messages.invalid_characters())
+
+        other = await count_users_with_username(self.session, username)
+        if other > 0:
+            if exclude_user_id is not None:
+                user = await get_user(self.session, exclude_user_id)
+                if user and user.username == username:
+                    return Ok()
+            return MsgErr(error=Messages.name_already_exists())
+
+        return Ok()
+
+    @staticmethod
+    async def validate_name(name: str) -> Ok | MsgErr:
         if len(name) < 3:
             return MsgErr(error=Messages.message_too_short())
         if len(name) > 40:
             return MsgErr(error=Messages.message_too_long())
         if not _NAME_REGEX.fullmatch(name):
             return MsgErr(error=Messages.invalid_characters())
+        return Ok()
 
-        other = await count_users_with_name(self.session, name)
-        if other > 0:
-            if exclude_user_id is not None:
-                user = await get_user(self.session, exclude_user_id)
-                if user and user.name == name:
-                    return Ok()
-            return MsgErr(error=Messages.name_already_exists())
-
+    @staticmethod
+    async def validate_sex(sex: str) -> Ok | MsgErr:
+        if sex not in ["F", "M", "N"]:
+            return MsgErr(error=Messages.invalid_sex())
         return Ok()
 
     @staticmethod
@@ -145,6 +162,12 @@ class UserService:
         if len(cleaned) > 1 or cleaned not in _LANG_MAP:
             return MsgErr(error=Messages.selection_not_recognized())
         return _LANG_MAP[cleaned]
+
+    @staticmethod
+    def validate_language(lang: str) -> Ok | MsgErr:
+        if lang not in get_args(UserLanguage):
+            return MsgErr(error=Messages.invalid_lang())
+        return Ok
 
     @staticmethod
     def get_missing_survey_fields(user: User) -> list[str]:

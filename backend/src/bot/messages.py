@@ -469,6 +469,14 @@ class Messages:
         return "Ответ слишком короткий, не могу такое принять 🙁"
 
     @staticmethod
+    def invalid_sex() -> str:
+        return "Недопустимое значение пола"
+
+    @staticmethod
+    def invalid_lang() -> str:
+        return "Недопустимое значение языка"
+
+    @staticmethod
     def message_too_long() -> str:
         return "У меня плохая память, я точно не смогу запомнить такой длинный ответ 🫣"
 

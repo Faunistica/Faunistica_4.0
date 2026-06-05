@@ -35,6 +35,7 @@ class User(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     tlg_name: Mapped[str | None] = mapped_column(String(255))
     tlg_username: Mapped[str | None] = mapped_column(String(255))
+    username: Mapped[str | None] = mapped_column(String(255))
     name: Mapped[str | None] = mapped_column(String(255))
     reg_stat: Mapped[UserState] = mapped_column(
         UserStateType,
@@ -80,6 +81,9 @@ class PendingRegistration(Base):
         TIMESTAMP, server_default=func.now()
     )
     confirmed_at: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
+    telegram_id: Mapped[int | None] = mapped_column(BigInteger)
+    telegram_username: Mapped[str | None] = mapped_column(String(255))
+    telegram_name: Mapped[str | None] = mapped_column(String(255))
 
 
 class Publication(Base):

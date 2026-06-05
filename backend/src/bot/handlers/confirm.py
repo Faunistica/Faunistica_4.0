@@ -12,7 +12,7 @@ from core.dependencies import get_session
 from core.enums import PendingStatus
 from core.exceptions import HandlerError
 from repository.registration import get_pending_by_code, update_pending_by_code
-from repository.user import find_user_by_username, get_user
+from repository.user import get_user
 from service.registration import is_enter_expired
 
 router = Router()
@@ -52,17 +52,15 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
 
         existing_user = await get_user(session, message.from_user.id)
         if existing_user:
-            await update_pending_by_code(session, code, status=PendingStatus.AUTH)
+            await update_pending_by_code(
+                session,
+                code,
+                status=PendingStatus.AUTH,
+                telegram_id=message.from_user.id,
+            )
             await session.commit()
             await message.answer(Messages.already_registered(existing_user.name))
             return
-        if pending.username:
-            user_with_name = await find_user_by_username(session, pending.username)
-            if user_with_name is not None and (
-                existing_user is None or user_with_name.user_id != existing_user.user_id
-            ):
-                await message.answer(Messages.username_conflict())
-                return
 
         now = datetime.now()
         tlg_name = message.from_user.full_name

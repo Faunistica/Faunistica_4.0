@@ -8,6 +8,7 @@ class FormRequest(BaseModel):
     username: str = Field(min_length=3, max_length=40, pattern=r"^[a-zA-Z0-9_]+$")
     password: str = Field(min_length=8, max_length=128)
     name: str
+    sex: str
     age: int
     lng: UserLanguage
     comm: str
@@ -15,9 +16,10 @@ class FormRequest(BaseModel):
 
 class RegistrationStartResponse(BaseModel):
     code: str
-    code_expires_in: int
+    code_expires_in: int | None = None
     token: str | None = None
     token_expires_in: int | None = None
+    bot_url: str | None = None
 
 
 class RegistrationStatusResponse(BaseModel):

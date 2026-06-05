@@ -25,6 +25,7 @@ def upgrade() -> None:
         "users",
         sa.Column("tlg_name", sa.String(255), nullable=True),
         sa.Column("tlg_username", sa.String(255), nullable=True),
+        sa.Column("username", sa.String(255), nullable=True),
         sa.Column("name", sa.String(255), nullable=True),
         sa.Column("reg_stat", sa.Integer(), nullable=True),
         sa.Column("hash", sa.String(255), nullable=True),
