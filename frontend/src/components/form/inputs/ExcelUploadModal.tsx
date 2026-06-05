@@ -141,6 +141,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                 Работа с Excel
                             </AlertDialogTitle>
                             <Button
+                                type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={handleExport}
@@ -228,10 +229,16 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                     </div>
 
                     <AlertDialogFooter>
-                        <Button variant="outline" onClick={handleClose} disabled={isUploading}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleClose}
+                            disabled={isUploading}
+                        >
                             Отмена
                         </Button>
                         <Button
+                            type="button"
                             onClick={handleUploadClick}
                             disabled={!selectedFile || isUploading}
                             className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
@@ -265,10 +272,15 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <Button variant="outline" onClick={() => setShowConfirm(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowConfirm(false)}
+                        >
                             Отмена
                         </Button>
                         <Button
+                            type="button"
                             onClick={handleConfirmUpload}
                             className="bg-red-600 text-white hover:bg-red-700"
                         >

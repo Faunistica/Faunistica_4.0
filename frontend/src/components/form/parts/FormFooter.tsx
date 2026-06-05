@@ -82,6 +82,7 @@ const Footer: FC = () => {
             >
                 <div className="flex items-center gap-4">
                     <Button
+                        type="button"
                         onClick={() => setIsDeleteDialogOpen(true)}
                         disabled={isBusy}
                         variant="destructive"
@@ -134,6 +135,7 @@ const Footer: FC = () => {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <Button
+                            type="button"
                             variant="outline"
                             onClick={() => setIsDeleteDialogOpen(false)}
                             disabled={isBusy}
@@ -141,6 +143,7 @@ const Footer: FC = () => {
                             Отмена
                         </Button>
                         <Button
+                            type="button"
                             onClick={() => {
                                 void actions.deleteRecord(activeRecordId!);
                                 setIsDeleteDialogOpen(false);

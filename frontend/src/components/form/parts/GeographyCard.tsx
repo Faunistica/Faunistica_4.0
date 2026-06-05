@@ -162,7 +162,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     <FormAutocomplete
                         name="country"
                         label="Страна"
-                        options={COUNTRY_OPTIONS as unknown as string[]}
+                        options={[...COUNTRY_OPTIONS]}
                         placeholder="Выберите страну"
                     />
                     <FormAutocomplete
