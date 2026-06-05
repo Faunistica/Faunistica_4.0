@@ -39,6 +39,14 @@ from service.user import UserService
 router = APIRouter()
 
 
+@router.get("/bot-url")
+async def get_bot_url() -> dict:
+    """Возвращает ссылку на бота: https://t.me/{BOT_USERNAME}"""
+    if settings.BOT_USERNAME is None:
+        raise HTTPException(status_code=503, detail="Bot is not initialized yet")
+    return {"bot_url": f"https://t.me/{settings.BOT_USERNAME}"}
+
+
 @router.post("/code")
 @limiter.limit("3/minute")
 async def create_code(
