@@ -34,8 +34,13 @@ import {
   Flower2,
 } from "lucide-react";
 import LoadingScreen from "@/components/LoadingScreen";
-import { cn } from "@/lib/utils";
+import { cn, capitalizeFirstLetter } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { createSelector } from "@reduxjs/toolkit";
+import { useRecordByIdQuery } from "@/api/recordAPI";
+import { computeRecordStatus } from "@/lib/recordStatus";
+import { RecordStatusIndicator } from "@/components/form/sidebar/RecordStatusIndicator";
+import type { RecordFull } from "@/types/api.dto";
 
 /* ─── Schema ─── */
 
@@ -346,29 +351,63 @@ const FormCard: FC<{ publ_id: number; meta: string }> = ({ publ_id, meta }) => {
    Drafts Block
    ═══════════════════════════════════════════ */
 
-const DraftsBlock: FC<{ publ_id: number; draftIds: string[] }> = ({ publ_id, draftIds }) => (
-  <motion.div variants={itemAnim} transition={stagger(0)}>
-    <div className="flex flex-col items-center text-center">
-      <div className="mb-3 flex items-center gap-2 font-semibold text-amber-700">
-        <AlertCircle className="size-5 shrink-0" />
-        <span>Завершение недоступно</span>
+const selectDraftItem = createSelector(
+  [(result: { data?: RecordFull }) => result.data],
+  (record) => ({
+    status: record ? computeRecordStatus(record) : 'empty',
+    recordName: capitalizeFirstLetter(
+      record?.species || record?.genus || record?.family || 'Новая запись',
+    ),
+    recordLocation: record?.locality || record?.region || 'Нет данных о месте',
+  }),
+);
+
+const DraftRecordItem: FC<{ publ_id: number; recordId: string }> = ({ publ_id, recordId }) => {
+  const { status, recordName, recordLocation } = useRecordByIdQuery(
+    { record_id: recordId },
+    { selectFromResult: selectDraftItem },
+  );
+
+  return (
+    <Link
+      to={`/publication/${publ_id}/${recordId}`}
+      className="flex items-center justify-between rounded-md border border-border px-4 py-3 transition-colors hover:bg-slate-50"
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <RecordStatusIndicator status={status} />
+        <span className="truncate text-sm font-bold text-slate-700">{recordName}</span>
       </div>
-      <p className="text-sm text-muted-foreground">
-        Есть {draftIds.length} {draftIds.length === 1 ? "черновая запись" : "черновых записей"},
+      <div className="flex shrink-0 items-center gap-1.5 text-xs text-slate-500">
+        <MapPin className="size-3" />
+        <span className="truncate">{recordLocation}</span>
+      </div>
+    </Link>
+  );
+};
+
+const DraftsBlock: FC<{ publ_id: number; draftIds: string[] }> = ({ publ_id, draftIds }) => (
+  <>
+    <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
+      <h1 className="text-2xl font-light tracking-wide sm:text-3xl">Завершение недоступно</h1>
+      <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
+        Публикация #{publ_id}
+      </p>
+    </motion.div>
+
+    <motion.div variants={itemAnim} transition={stagger(1)}>
+      <div className="mb-3 flex items-center justify-center gap-2 font-semibold text-amber-700">
+        <AlertCircle className="size-5 shrink-0" />
+        <span>Есть {draftIds.length} {draftIds.length === 1 ? "черновая запись" : "черновых записей"}</span>
+      </div>
+      <p className="mb-4 text-center text-sm text-muted-foreground">
         которые нужно отправить или удалить.
       </p>
-      <ul className="mt-4 space-y-1.5">
+
+      <div className="space-y-2">
         {draftIds.map((recordId) => (
-          <li key={recordId}>
-            <Link
-              to={`/publication/${publ_id}/${recordId}`}
-              className="text-sm font-medium text-emerald-700 underline underline-offset-2 hover:text-emerald-800"
-            >
-              Запись {recordId.slice(0, 8)}…
-            </Link>
-          </li>
+          <DraftRecordItem key={recordId} publ_id={publ_id} recordId={recordId} />
         ))}
-      </ul>
-    </div>
-  </motion.div>
+      </div>
+    </motion.div>
+  </>
 );
