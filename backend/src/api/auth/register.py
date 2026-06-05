@@ -39,6 +39,7 @@ router = APIRouter()
 
 
 @router.post("/code")
+@limiter.limit("3/minute")
 async def create_code(
     request: Request,
     session: DBSession,
@@ -124,7 +125,7 @@ async def form_filling(
 
 
 @router.get("/code/status")
-@limiter.limit("30/minute")
+@limiter.limit("3/minute")
 async def registration_status(
     request: Request,
     session: DBSession,
