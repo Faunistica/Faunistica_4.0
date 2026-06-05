@@ -19,6 +19,7 @@ class RegistrationStartResponse(BaseModel):
     code_expires_in: int | None = None
     token: str | None = None
     token_expires_in: int | None = None
+    bot_url: str | None = None
 
 
 class RegistrationStatusResponse(BaseModel):

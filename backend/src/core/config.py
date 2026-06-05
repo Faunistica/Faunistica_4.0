@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from fastapi import requests
 from pydantic import ConfigDict, Field, SecretStr, computed_field
 from pydantic_core import Url
 from pydantic_extra_types.dsn import PostgresDsn
@@ -9,6 +10,8 @@ from pydantic_settings import (
     SettingsConfigDict,
     YamlConfigSettingsSource,
 )
+
+from core.exceptions import APIException
 
 
 def to_camel_case(string: str) -> str:
@@ -53,6 +56,23 @@ class BotSettings(CamelCaseSettings):
     BOT_TOKEN: SecretStr = Field(init=False)
     BOT_PROXY: Url | None = None
     ADMIN_CHAT_ID: int = Field(init=False)
+
+    @computed_field
+    @property
+    def BOT_URL(self) -> str:
+        """Генерирует URL бота из токена"""
+
+        return f"https://t.me/{(self._get_bot_username())}"
+
+    def _get_bot_username(self) -> str:
+        bot_token = settings.BOT_TOKEN.get_secret_value()
+        url = f"https://api.telegram.org/bot{bot_token}/getMe"
+        response = requests.get(url)
+        data = response.json()
+
+        if data["ok"]:
+            return data["result"]["username"]
+        raise APIException("TG_API_ERROR", "Can't to get bot_username")
 
 
 class LoggingSettings(CamelCaseSettings):

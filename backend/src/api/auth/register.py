@@ -67,6 +67,7 @@ async def create_code(
         code_expires_in=settings.TG_CODE_EXPIRE_SECONDS,
         token=token,
         token_expires_in=settings.TG_TOKEN_EXPIRE_SECONDS,
+        bot_url=settings.BOT_URL,
     )
 
 
