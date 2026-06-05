@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import requests
+# import requests
 from pydantic import ConfigDict, Field, SecretStr, computed_field
 from pydantic_core import Url
 from pydantic_extra_types.dsn import PostgresDsn
@@ -11,7 +11,7 @@ from pydantic_settings import (
     YamlConfigSettingsSource,
 )
 
-from core.exceptions import APIException
+# from core.exceptions import APIException
 
 
 def to_camel_case(string: str) -> str:
@@ -56,11 +56,13 @@ class BotSettings(CamelCaseSettings):
     BOT_TOKEN: SecretStr = Field(init=False)
     BOT_PROXY: Url | None = None
     ADMIN_CHAT_ID: int = Field(init=False)
+    BOT_USERNAME: str | None = None
 
-    @computed_field
+
+"""     @computed_field
     @property
     def BOT_URL(self) -> str:
-        """Генерирует URL бота из токена"""
+        '''Генерирует URL бота из токена'''
 
         return f"https://t.me/{(self._get_bot_username())}"
 
@@ -72,7 +74,7 @@ class BotSettings(CamelCaseSettings):
 
         if data["ok"]:
             return data["result"]["username"]
-        raise APIException("TG_API_ERROR", "Can't to get bot_username")
+        raise APIException("TG_API_ERROR", "Can't to get bot_username") """
 
 
 class LoggingSettings(CamelCaseSettings):

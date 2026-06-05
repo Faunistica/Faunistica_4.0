@@ -12,6 +12,8 @@ class FormRequest(BaseModel):
     age: int
     lng: UserLanguage
     comm: str
+    code: str
+    token: str
 
 
 class RegistrationStartResponse(BaseModel):

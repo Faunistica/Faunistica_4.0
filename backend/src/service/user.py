@@ -128,7 +128,7 @@ class UserService:
         return Ok()
 
     @staticmethod
-    async def validate_name(name: str) -> Ok | MsgErr:
+    def validate_name(name: str) -> Ok | MsgErr:
         if len(name) < 3:
             return MsgErr(error=Messages.message_too_short())
         if len(name) > 40:
@@ -138,7 +138,7 @@ class UserService:
         return Ok()
 
     @staticmethod
-    async def validate_sex(sex: str) -> Ok | MsgErr:
+    def validate_sex(sex: str) -> Ok | MsgErr:
         if sex not in ["F", "M", "N"]:
             return MsgErr(error=Messages.invalid_sex())
         return Ok()

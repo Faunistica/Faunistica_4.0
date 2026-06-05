@@ -9,7 +9,6 @@ from core.dependencies import ClientIP, DBSession
 from core.enums import PendingStatus, UserState
 from core.exceptions import (
     MsgErr,
-    RegistrationAlreadyStartedError,
     UsernameAlreadyExistsError,
 )
 from core.model import User
@@ -24,7 +23,6 @@ from repository.registration import (
     create_pending_registration,
     get_pending_by_code,
     get_pending_by_token,
-    get_pending_by_username,
     update_pending_by_token,
 )
 from repository.user import find_user_by_username, get_user
@@ -67,7 +65,7 @@ async def create_code(
         code_expires_in=settings.TG_CODE_EXPIRE_SECONDS,
         token=token,
         token_expires_in=settings.TG_TOKEN_EXPIRE_SECONDS,
-        bot_url=settings.BOT_URL,
+        bot_url=f"https://t.me/{settings.BOT_USERNAME}",
     )
 
 
@@ -90,18 +88,15 @@ async def form_filling(
     comm = data.comm
     code = data.code
     token = data.token
-    validate_name = await UserService.validate_name(name)
-    validate_sex = await UserService.validate_sex(sex)
-    validate_age = await UserService.validate_age_str(str(age))
+    validate_name = UserService.validate_name(name)
+    validate_sex = UserService.validate_sex(sex)
+    validate_age = UserService.validate_age_str(str(age))
     for validate_item in [validate_name, validate_sex, validate_age]:
         if isinstance(validate_item, MsgErr):
             raise HTTPException(status_code=400, detail=validate_item.error)
     existing_user = await find_user_by_username(session, username)
     if existing_user is not None:
         raise UsernameAlreadyExistsError(username)
-    pending_for_username = await get_pending_by_username(session, username)
-    if pending_for_username is not None:
-        raise RegistrationAlreadyStartedError(username)
     pending = await get_pending_by_code(session, code)
     if pending is None:
         raise HTTPException(status_code=404, detail="pending by code not found")
@@ -157,12 +152,17 @@ async def registration_status(
 
     deadline = datetime.now() + timedelta(seconds=time_out)
 
-    for _ in range(time_out // settings.TG_AUTH_POLL_INTERVAL_SECONDS):
+    for _ in range(time_out * 2 // settings.TG_AUTH_POLL_INTERVAL_SECONDS):
         pending = await get_pending_by_token(session, token)
         if pending is None:
             raise HTTPException(
                 status_code=403,
                 detail="Forbidden",
+            )
+        if pending.code != code:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid code",
             )
         if is_enter_expired(pending.code_created_at, settings.TG_CODE_EXPIRE_SECONDS):
             code = await generate_code_for_tg_enter()

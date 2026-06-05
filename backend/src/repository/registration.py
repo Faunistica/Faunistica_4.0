@@ -52,24 +52,6 @@ async def get_pending_by_token(
     return pending
 
 
-async def get_pending_by_username(
-    session: AsyncSession, username: str
-) -> PendingRegistration | None:
-    stmt = (
-        select(PendingRegistration)
-        .where(PendingRegistration.username == username)
-        .order_by(PendingRegistration.created_at.desc(), PendingRegistration.id.desc())
-        .limit(1)
-    )
-    result = await session.execute(stmt)
-    pending = result.scalar_one_or_none()
-    if pending and is_enter_expired(
-        pending.token_created_at, settings.TG_TOKEN_EXPIRE_SECONDS
-    ):
-        return None
-    return pending
-
-
 async def update_pending_by_code(
     session: AsyncSession, code: str, **values: object
 ) -> PendingRegistration | None:
