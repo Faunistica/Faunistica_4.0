@@ -36,6 +36,8 @@ async def update_current_user(
 ) -> None:
     update_data = data.model_dump(exclude_unset=True)
     update_data = {k: v for k, v in update_data.items() if v is not None}
+    if not update_data:
+        return
     if "username" in update_data:
         validate_result = await user_service.validate_username(
             update_data["username"], token.user_id
