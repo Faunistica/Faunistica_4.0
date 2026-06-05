@@ -74,3 +74,25 @@ def _get_issue_type(issue_type: str) -> str:
         "other": "Другая проблема",
     }
     return issue_types.get(issue_type, issue_type)
+
+
+async def notify_admin(
+    client: aiohttp.ClientSession,
+    publ_id: int,
+    comment: str | None,
+) -> None:
+    if not comment:
+        return
+    try:
+        text = f"📬 Комментарий к публикации #{publ_id}:\n{comment}"
+        url = (
+            f"https://api.telegram.org/"
+            f"bot{settings.BOT_TOKEN.get_secret_value()}/sendMessage"
+        )
+        async with client.post(
+            url,
+            json={"chat_id": settings.ADMIN_CHAT_ID, "text": text},
+        ) as resp:
+            resp.raise_for_status()
+    except Exception:
+        logger.exception("Failed to send admin notification for publ %d", publ_id)

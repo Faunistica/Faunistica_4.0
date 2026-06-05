@@ -4,10 +4,10 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, BackgroundTasks, Depends, status
 from pydantic import BaseModel
 
-from core.config import settings
 from core.dependencies import ClientIP, HTTPClient, TokenUser
 from schema.common import ProcessingLevel
 from service.publications import PublicationService
+from service.telegram import notify_admin
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/publications")
@@ -18,28 +18,6 @@ class PublicationSubmit(BaseModel):
     urals_scope: Literal["yes", "no"] | None = None
     material_status: Literal["yes", "no"] | None = None
     comment: str | None = None
-
-
-async def _notify_admin(
-    http_client: HTTPClient,
-    publ_id: int,
-    comment: str | None,
-) -> None:
-    if not comment:
-        return
-    try:
-        text = f"📬 Комментарий к публикации #{publ_id}:\n{comment}"
-        url = (
-            f"https://api.telegram.org/"
-            f"bot{settings.BOT_TOKEN.get_secret_value()}/sendMessage"
-        )
-        async with http_client.post(
-            url,
-            json={"chat_id": settings.ADMIN_CHAT_ID, "text": text},
-        ) as resp:
-            resp.raise_for_status()
-    except Exception:
-        logger.exception("Failed to send admin notification for publ %d", publ_id)
 
 
 class SubmitStatusResponse(BaseModel):
@@ -77,4 +55,4 @@ async def submit_publication(
         ip,
     )
 
-    bg_tasks.add_task(_notify_admin, http_client, publ_id, data.comment)
+    bg_tasks.add_task(notify_admin, http_client, publ_id, data.comment)
