@@ -18,14 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { toast } from 'sonner';
-import {
-    Loader2,
-    CheckCircle2,
-    FileText,
-    MapPin,
-    Hash,
-    MessageSquare,
-} from 'lucide-react';
+import { Loader2, CheckCircle2, FileText, MapPin, Hash, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /* ─── Schema ─── */
@@ -36,10 +29,7 @@ const submitFormSchema = z.object({
     }),
     uralsScope: z.enum(['yes', 'no']).nullable(),
     materialStatus: z.enum(['yes', 'no']).nullable(),
-    comment: z
-        .string()
-        .max(1000, 'Комментарий не длиннее 1000 символов')
-        .optional(),
+    comment: z.string().max(1000, 'Комментарий не длиннее 1000 символов').optional(),
 });
 
 type SubmitForm = z.infer<typeof submitFormSchema>;
@@ -110,22 +100,12 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <motion.div
-                variants={itemAnim}
-                transition={stagger(0)}
-                className="mb-8 text-center"
-            >
-                <h1 className="text-2xl font-light tracking-wide sm:text-3xl">
-                    Завершение работы
-                </h1>
+            <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
+                <h1 className="text-2xl font-light tracking-wide sm:text-3xl">Завершение работы</h1>
                 <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
                     Публикация #{publ_id}
                 </p>
-                {meta && (
-                    <p className="mt-1 text-sm text-muted-foreground italic">
-                        {meta}
-                    </p>
-                )}
+                {meta && <p className="mt-1 text-sm text-muted-foreground italic">{meta}</p>}
             </motion.div>
 
             <div className="space-y-7">
@@ -140,32 +120,26 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                     <FileText className="size-3.5 text-emerald-600" />
                                     Уровень обработки
                                 </FieldLabel>
-                                <Select
-                                    value={field.value}
-                                    onValueChange={field.onChange}
-                                >
+                                <Select value={field.value} onValueChange={field.onChange}>
                                     <SelectTrigger
                                         id="processingLevel"
                                         className={cn(
                                             'w-full text-sm',
-                                            !field.value &&
-                                                'text-muted-foreground',
+                                            !field.value && 'text-muted-foreground',
                                         )}
                                         aria-invalid={invalid}
                                     >
                                         <SelectValue placeholder="— выберите уровень —" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {Object.entries(LEVEL_LABELS).map(
-                                            ([val, label]) => (
-                                                <SelectItem key={val} value={val}>
-                                                    <span>{label}</span>
-                                                    <span className="ml-2 text-xs text-muted-foreground">
-                                                        {LEVEL_DESC[val]}
-                                                    </span>
-                                                </SelectItem>
-                                            ),
-                                        )}
+                                        {Object.entries(LEVEL_LABELS).map(([val, label]) => (
+                                            <SelectItem key={val} value={val}>
+                                                <span>{label}</span>
+                                                <span className="ml-2 text-xs text-muted-foreground">
+                                                    {LEVEL_DESC[val]}
+                                                </span>
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <FieldError errors={[error]} />
@@ -187,9 +161,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                 </FieldLabel>
                                 <RadioGroup
                                     value={field.value ?? ''}
-                                    onValueChange={(v) =>
-                                        field.onChange(v || null)
-                                    }
+                                    onValueChange={(v) => field.onChange(v || null)}
                                     className="flex flex-col gap-2 sm:flex-row sm:gap-8"
                                     aria-invalid={invalid}
                                 >
@@ -197,10 +169,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                         { val: 'yes', label: 'Да' },
                                         { val: 'no', label: 'Нет' },
                                     ].map((opt) => (
-                                        <div
-                                            key={opt.val}
-                                            className="flex items-center gap-2"
-                                        >
+                                        <div key={opt.val} className="flex items-center gap-2">
                                             <RadioGroupItem
                                                 value={opt.val}
                                                 id={`urals-${opt.val}`}
@@ -233,9 +202,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                 </FieldLabel>
                                 <RadioGroup
                                     value={field.value ?? ''}
-                                    onValueChange={(v) =>
-                                        field.onChange(v || null)
-                                    }
+                                    onValueChange={(v) => field.onChange(v || null)}
                                     className="flex flex-col gap-2 sm:flex-row sm:gap-8"
                                     aria-invalid={invalid}
                                 >
@@ -243,14 +210,8 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                         { val: 'yes', label: 'Да' },
                                         { val: 'no', label: 'Нет' },
                                     ].map((opt) => (
-                                        <div
-                                            key={opt.val}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <RadioGroupItem
-                                                value={opt.val}
-                                                id={`mat-${opt.val}`}
-                                            />
+                                        <div key={opt.val} className="flex items-center gap-2">
+                                            <RadioGroupItem value={opt.val} id={`mat-${opt.val}`} />
                                             <Label
                                                 htmlFor={`mat-${opt.val}`}
                                                 className="cursor-pointer text-sm font-normal"

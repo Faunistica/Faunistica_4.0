@@ -505,6 +505,3 @@ async def test_submit_status_no_access(
         f"/api/publications/{publ_id}/submit-status",
     )
     assert response.status_code == 403
-
-
-
