@@ -26,7 +26,12 @@ async def list_records(
     publ_id: Annotated[int, Query(ge=1, description="Publication ID")],
     user_id: Annotated[int | None, Query(ge=1, description="User ID")] = None,
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
-    page_size: Annotated[int, Query(ge=1, le=100, description="Page size")] = 20,
+    page_size: Annotated[
+        int,
+        Query(
+            ge=1, le=settings.MAX_USER_RECORDS_PER_PUBLICATION, description="Page size"
+        ),
+    ] = settings.MAX_USER_RECORDS_PER_PUBLICATION,
     pivot_record_id: Annotated[
         UUID4 | None, Query(description="Return the page containing this record")
     ] = None,
