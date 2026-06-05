@@ -22,6 +22,7 @@ import { useRegisterMutation } from '@/api/authAPI';
 
 const formSchema = z
     .object({
+        name: z.string().min(2, 'Минимум 2 символа'),
         username: z.string().min(3, 'Минимум 3 символа'),
         password: z.string().min(6, 'Минимум 6 символов'),
         age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет'),
@@ -57,6 +58,7 @@ export default function Onboarding() {
     } = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            name: '',
             username: '',
             password: '',
             sex: '',
@@ -84,7 +86,7 @@ export default function Onboarding() {
         try {
             await registerMutation({
                 code: code || '',
-                name: data.username,
+                name: data.name,
                 username: data.username,
                 password: data.password,
                 age: data.age,
@@ -110,8 +112,8 @@ export default function Onboarding() {
                             </CardTitle>
                             <div className="space-y-4 leading-relaxed text-slate-900">
                                 <p>
-                                    Благодарим вас за регистрацию в системе. Перед началом работы нам
-                                    необходимо уточнить несколько организационных вопросов для
+                                    Благодарим вас за регистрацию в системе. Перед началом работы
+                                    нам необходимо уточнить несколько организационных вопросов для
                                     оптимизации вашего взаимодействия с проектом.
                                 </p>
                                 <div className="rounded-lg border-l-4 border-slate-400 bg-slate-100 p-4 text-sm">
@@ -146,6 +148,25 @@ export default function Onboarding() {
                                             <h3>Учетная запись</h3>
                                         </div>
                                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="name">Имя (для отображения)</Label>
+                                                <div className="relative">
+                                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                        <User className="size-4 text-slate-400" />
+                                                    </div>
+                                                    <Input
+                                                        id="name"
+                                                        className="pl-9"
+                                                        placeholder="Ваше имя"
+                                                        {...register('name')}
+                                                    />
+                                                </div>
+                                                {errors.name && (
+                                                    <span className="text-xs text-red-500">
+                                                        {errors.name.message}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="username">Логин</Label>
                                                 <div className="relative">
@@ -224,9 +245,15 @@ export default function Onboarding() {
                                                                 <SelectValue placeholder="Не выбрано" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                <SelectItem value="male">Мужской</SelectItem>
-                                                                <SelectItem value="female">Женский</SelectItem>
-                                                                <SelectItem value="none">Предпочитаю не указывать</SelectItem>
+                                                                <SelectItem value="male">
+                                                                    Мужской
+                                                                </SelectItem>
+                                                                <SelectItem value="female">
+                                                                    Женский
+                                                                </SelectItem>
+                                                                <SelectItem value="none">
+                                                                    Предпочитаю не указывать
+                                                                </SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     )}
@@ -247,7 +274,8 @@ export default function Onboarding() {
                                             <h3>Языковые компетенции</h3>
                                         </div>
                                         <p className="text-sm text-slate-600">
-                                            На каких языках вы готовы обрабатывать научные публикации? (можно выбрать несколько)
+                                            На каких языках вы готовы обрабатывать научные
+                                            публикации? (можно выбрать несколько)
                                         </p>
                                         <div className="flex flex-wrap gap-6 pt-2">
                                             <div className="flex items-center space-x-2">
@@ -262,7 +290,10 @@ export default function Onboarding() {
                                                         />
                                                     )}
                                                 />
-                                                <Label htmlFor="lang-ru" className="cursor-pointer font-medium">
+                                                <Label
+                                                    htmlFor="lang-ru"
+                                                    className="cursor-pointer font-medium"
+                                                >
                                                     Русский
                                                 </Label>
                                             </div>
@@ -278,7 +309,10 @@ export default function Onboarding() {
                                                         />
                                                     )}
                                                 />
-                                                <Label htmlFor="lang-en" className="cursor-pointer font-medium">
+                                                <Label
+                                                    htmlFor="lang-en"
+                                                    className="cursor-pointer font-medium"
+                                                >
                                                     Английский
                                                 </Label>
                                             </div>
@@ -300,7 +334,10 @@ export default function Onboarding() {
                                             <h3>Профессиональные предпочтения</h3>
                                         </div>
                                         <p className="text-sm text-slate-600">
-                                            Укажите пожелания по сложности материала, географическому региону, автору или конкретному семейству. Мы постараемся учесть это при распределении задач.
+                                            Укажите пожелания по сложности материала,
+                                            географическому региону, автору или конкретному
+                                            семейству. Мы постараемся учесть это при распределении
+                                            задач.
                                         </p>
                                         <div className="flex grow flex-col pt-2">
                                             <Label
@@ -326,7 +363,8 @@ export default function Onboarding() {
                                         </div>
                                         <div className="space-y-3">
                                             <Label className="text-sm text-slate-600">
-                                                Согласны ли вы на отображение вашего имени в публичной таблице рейтинга?
+                                                Согласны ли вы на отображение вашего имени в
+                                                публичной таблице рейтинга?
                                             </Label>
                                             <Controller
                                                 control={control}
@@ -338,15 +376,29 @@ export default function Onboarding() {
                                                         className="flex flex-col space-y-2 pt-1"
                                                     >
                                                         <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="yes" id="rating-yes" />
-                                                            <Label htmlFor="rating-yes" className="cursor-pointer font-normal">
-                                                                Да, я согласен на публичное отображение
+                                                            <RadioGroupItem
+                                                                value="yes"
+                                                                id="rating-yes"
+                                                            />
+                                                            <Label
+                                                                htmlFor="rating-yes"
+                                                                className="cursor-pointer font-normal"
+                                                            >
+                                                                Да, я согласен на публичное
+                                                                отображение
                                                             </Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="no" id="rating-no" />
-                                                            <Label htmlFor="rating-no" className="cursor-pointer font-normal">
-                                                                Нет, использовать анонимный идентификатор
+                                                            <RadioGroupItem
+                                                                value="no"
+                                                                id="rating-no"
+                                                            />
+                                                            <Label
+                                                                htmlFor="rating-no"
+                                                                className="cursor-pointer font-normal"
+                                                            >
+                                                                Нет, использовать анонимный
+                                                                идентификатор
                                                             </Label>
                                                         </div>
                                                     </RadioGroup>

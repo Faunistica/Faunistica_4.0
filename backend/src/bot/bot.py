@@ -25,7 +25,11 @@ async def start() -> None:
     dp_instance.include_router(main_router)
 
     try:
-        await bot_instance(DeleteWebhook(drop_pending_updates=True))
+        await bot_instance.delete_webhook(drop_pending_updates=True)
+        bot_info = await bot_instance.get_me()
+        settings.BOT_USERNAME = bot_info.username
+        logger.info("Bot USERNAME: %s", bot_info.username)
+
         logger.info("Bot started polling")
         await dp_instance.start_polling(bot_instance, handle_signals=False)
     except asyncio.CancelledError:

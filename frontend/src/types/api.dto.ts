@@ -136,7 +136,7 @@ export interface TelegramAuthInitResponse {
 }
 
 export interface TelegramAuthStatusResponse {
-    status?: 'pending' | 'need_registration' | 'authorized';
+    status?: 'pending' | 'need_registration' | 'authorized' | 0 | 1 | 2 | 3;
     code?: string;
     code_expires_in?: number;
     user_id?: number;

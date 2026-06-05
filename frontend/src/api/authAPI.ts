@@ -91,12 +91,16 @@ export const authAPI = createApi({
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
-                    if (data.status === 'authorized' && data.user_id && data.username) {
+                    if (
+                        (data.status === 'authorized' || data.status === 1) &&
+                        data.user_id &&
+                        data.username
+                    ) {
                         dispatch(
                             login({
                                 name: data.username,
                                 user_id: data.user_id,
-                            })
+                            }),
                         );
                     }
                 } catch {
@@ -118,7 +122,7 @@ export const authAPI = createApi({
                         login({
                             name: arg.username,
                             user_id: data.user_id,
-                        })
+                        }),
                     );
                 } catch {
                     dispatch(logout());

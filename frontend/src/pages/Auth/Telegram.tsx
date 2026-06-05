@@ -13,7 +13,7 @@ import { Link, useNavigate } from 'react-router';
 import { useInitTelegramAuthMutation, useLazyCheckTelegramAuthStatusQuery } from '@/api/authAPI';
 import QRCodeStyling from 'qr-code-styling';
 
-const TelegramQRCode = ({ code }: { code?: string }) => {
+const TelegramQRCode = ({ code, botUrl }: { code?: string; botUrl?: string }) => {
     const ref = useRef<HTMLDivElement>(null);
     const [qrCode] = useState<QRCodeStyling>(
         () =>
@@ -53,11 +53,11 @@ const TelegramQRCode = ({ code }: { code?: string }) => {
     }, [qrCode]);
 
     useEffect(() => {
-        const botUrl = import.meta.env.VITE_TELEGRAM_BOT_URL;
+        if (!botUrl) return;
         // If we have a code, append it to the deep link so scanning the QR code auto-sends the start command
         const fullUrl = code ? `${botUrl}?start=${code}` : botUrl;
         qrCode.update({ data: fullUrl });
-    }, [code, qrCode]);
+    }, [code, qrCode, botUrl]);
 
     return <div ref={ref} className="flex items-center justify-center" />;
 };
@@ -71,6 +71,8 @@ const TelegramAuth: FC = () => {
     const [isPollingError, setIsPollingError] = useState(false);
     const [displayCode, setDisplayCode] = useState<string | undefined>(undefined);
 
+    const botUrl = initData?.bot_url;
+
     useEffect(() => {
         let isMounted = true;
 
@@ -78,22 +80,28 @@ const TelegramAuth: FC = () => {
             let currentCode = initialCode;
             while (isMounted) {
                 try {
-                    const result = await checkStatus({ code: currentCode, token, timeout: 30 }, false).unwrap();
+                    const result = await checkStatus(
+                        { code: currentCode, token, timeout: 25 },
+                        false,
+                    ).unwrap();
                     if (!isMounted) break;
 
-                    if (result.code && !result.status) {
+                    if (result.code && !result.status && result.status !== 0) {
                         currentCode = result.code;
                         setDisplayCode(currentCode);
                         continue;
                     }
 
-                    if (result.status === 'need_registration') {
-                        navigate('/auth/onboarding', { state: { token, code: currentCode }, replace: true });
+                    if (result.status === 'need_registration' || result.status === 2) {
+                        navigate('/auth/onboarding', {
+                            state: { token, code: currentCode },
+                            replace: true,
+                        });
                         break;
-                    } else if (result.status === 'authorized') {
+                    } else if (result.status === 'authorized' || result.status === 1) {
                         navigate('/dashboard', { replace: true });
                         break;
-                    } else if (result.status === 'pending') {
+                    } else if (result.status === 'pending' || result.status === 0) {
                         setIsPollingError(false);
                         setStatusMessage('Ожидание ввода кода в Telegram...');
                     }
@@ -141,12 +149,12 @@ const TelegramAuth: FC = () => {
                     <CardDescription className="mx-auto mt-2 max-w-md text-slate-500">
                         Отправьте этот код сообщением нашему Telegram боту{' '}
                         <a
-                            href={import.meta.env.VITE_TELEGRAM_BOT_URL}
+                            href={botUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="font-medium text-telegram hover:underline"
                         >
-                            @{import.meta.env.VITE_TELEGRAM_BOT_URL?.replace(/^https?:\/\/t\.me\//, '')}
+                            @{botUrl?.replace(/^https?:\/\/t\.me\//, '')}
                         </a>
                         , не закрывая данную страницу
                     </CardDescription>
@@ -175,20 +183,21 @@ const TelegramAuth: FC = () => {
                         </div>
 
                         {/* Right Column: QR and Button */}
-                        <div className="flex w-full max-w-[240px] h-[240px] flex-col justify-between">
+                        <div className="flex h-[240px] w-full max-w-[240px] flex-col justify-between">
                             <div className="flex w-full grow items-center justify-center rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-                                <TelegramQRCode code={displayCode} />
+                                <TelegramQRCode code={displayCode} botUrl={botUrl} />
                             </div>
 
                             <Button
                                 className="mt-3 w-full shrink-0 gap-2 bg-telegram font-semibold text-white shadow-md hover:bg-[#1E8CC0]"
                                 asChild
+                                disabled={!botUrl}
                             >
                                 <a
                                     href={
-                                        displayCode
-                                            ? `${import.meta.env.VITE_TELEGRAM_BOT_URL}?start=${displayCode}`
-                                            : import.meta.env.VITE_TELEGRAM_BOT_URL
+                                        displayCode && botUrl
+                                            ? `${botUrl}?start=${displayCode}`
+                                            : botUrl
                                     }
                                     target="_blank"
                                     rel="noopener noreferrer"
