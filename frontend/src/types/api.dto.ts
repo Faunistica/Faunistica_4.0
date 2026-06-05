@@ -181,8 +181,12 @@ export interface UserFull {
 }
 
 export interface UserUpdateMeRequest {
+    username?: string | null;
+    password?: string | null;
+    name?: string | null;
     age?: number | null;
     lng?: 'eng' | 'rus' | 'all' | null;
+    comm?: string | null;
     sex?: string | null;
     rating?: number | null;
     email?: string | null;

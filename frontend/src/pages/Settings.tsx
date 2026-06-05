@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, User, UserCheck, Languages, FileText, MapPin, Mail } from 'lucide-react';
+import { Loader2, User, UserCheck, Languages, FileText, MapPin, Mail, KeyRound, Settings2 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -11,9 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { useGetMeQuery, useUpdateMeMutation } from '@/api/userAPI';
 
 const formSchema = z.object({
+    username: z.string().min(3, 'Минимум 3 символа').optional().or(z.literal('')),
+    password: z.string().min(6, 'Минимум 6 символов').optional().or(z.literal('')),
+    name: z.string().min(2, 'Минимум 2 символа').optional().or(z.literal('')),
     age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет').nullable().optional(),
     sex: z.string().nullable().optional(),
     langRu: z.boolean().default(false),
@@ -21,6 +25,7 @@ const formSchema = z.object({
     rating: z.enum(['yes', 'no']),
     email: z.string().email('Некорректный email').or(z.literal('')).nullable().optional(),
     region: z.string().nullable().optional(),
+    comm: z.string().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -38,6 +43,9 @@ export default function Settings() {
     } = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            username: '',
+            password: '',
+            name: '',
             age: null,
             sex: '',
             langRu: false,
@@ -45,12 +53,16 @@ export default function Settings() {
             rating: 'no',
             email: '',
             region: '',
+            comm: '',
         },
     });
 
     useEffect(() => {
         if (user) {
             reset({
+                username: user.username || '',
+                password: '',
+                name: user.name || '',
                 age: user.age || null,
                 sex: user.sex || '',
                 langRu: user.lng === 'rus' || user.lng === 'all',
@@ -58,6 +70,7 @@ export default function Settings() {
                 rating: user.rating === 1 ? 'yes' : 'no',
                 email: user.email || '',
                 region: user.region || '',
+                comm: user.comm || '',
             });
         }
     }, [user, reset]);
@@ -74,12 +87,16 @@ export default function Settings() {
 
         try {
             await updateMe({
+                username: user?.username ? undefined : (data.username || undefined),
+                password: data.password || undefined,
+                name: data.name || undefined,
                 age: data.age,
                 sex: data.sex,
                 lng: language as 'rus' | 'eng' | 'all' | null,
                 rating: data.rating === 'yes' ? 1 : 0,
                 email: data.email || null,
                 region: data.region || null,
+                comm: data.comm || null,
             }).unwrap();
         } catch (err) {
             console.error('Update failed:', err);
@@ -112,23 +129,71 @@ export default function Settings() {
                             <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
                                 {/* Левая колонка */}
                                 <div className="space-y-8">
-                                    {/* Учетная запись (только чтение) */}
+                                    {/* Учетная запись */}
                                     <div className="space-y-5">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
-                                            <User className="size-5" />
+                                            <KeyRound className="size-5" />
                                             <h3>Учетная запись</h3>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="username">Логин (имя пользователя)</Label>
-                                            <Input
-                                                id="username"
-                                                value={user?.username || ''}
-                                                disabled
-                                                className="bg-slate-50 text-slate-500"
-                                            />
-                                            <p className="text-xs text-slate-500">
-                                                Уникальный логин не может быть изменен.
-                                            </p>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="username">Логин (имя пользователя)</Label>
+                                                <div className="relative">
+                                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                        <User className="size-4 text-slate-400" />
+                                                    </div>
+                                                    <Input
+                                                        id="username"
+                                                        disabled={!!user?.username}
+                                                        className={`pl-9 ${!!user?.username ? 'bg-slate-50 text-slate-500' : ''}`}
+                                                        placeholder="Уникальный логин"
+                                                        {...register('username')}
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-slate-500">
+                                                    {!!user?.username
+                                                        ? 'Уникальный логин не может быть изменен.'
+                                                        : 'Вы можете установить логин только один раз.'}
+                                                </p>
+                                                {errors.username && (
+                                                    <span className="text-xs text-red-500">{errors.username.message}</span>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="name">Имя (для отображения)</Label>
+                                                <div className="relative">
+                                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                        <User className="size-4 text-slate-400" />
+                                                    </div>
+                                                    <Input
+                                                        id="name"
+                                                        className="pl-9"
+                                                        placeholder="Ваше имя"
+                                                        {...register('name')}
+                                                    />
+                                                </div>
+                                                {errors.name && (
+                                                    <span className="text-xs text-red-500">{errors.name.message}</span>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="password">Пароль</Label>
+                                                <div className="relative">
+                                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                        <KeyRound className="size-4 text-slate-400" />
+                                                    </div>
+                                                    <Input
+                                                        id="password"
+                                                        type="password"
+                                                        className="pl-9"
+                                                        placeholder="Оставьте пустым, если не хотите менять"
+                                                        {...register('password')}
+                                                    />
+                                                </div>
+                                                {errors.password && (
+                                                    <span className="text-xs text-red-500">{errors.password.message}</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
@@ -291,6 +356,33 @@ export default function Settings() {
                                                     Английский
                                                 </Label>
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Предпочтения */}
+                                    <div className="flex flex-col space-y-4">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                            <Settings2 className="size-5" />
+                                            <h3>Профессиональные предпочтения</h3>
+                                        </div>
+                                        <p className="text-sm text-slate-600">
+                                            Укажите пожелания по сложности материала,
+                                            географическому региону, автору или конкретному
+                                            семейству.
+                                        </p>
+                                        <div className="flex grow flex-col pt-2">
+                                            <Label
+                                                htmlFor="preferences"
+                                                className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
+                                            >
+                                                Дополнительная информация (по желанию)
+                                            </Label>
+                                            <Textarea
+                                                id="preferences"
+                                                placeholder="Например: предпочтительно семейство Lycosidae..."
+                                                className="min-h-[160px] grow resize-y"
+                                                {...register('comm')}
+                                            />
                                         </div>
                                     </div>
 
