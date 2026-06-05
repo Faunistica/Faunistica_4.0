@@ -130,10 +130,7 @@ async def form_filling(
 
     await action_service.log_login(current_user.user_id, ip)
     await update_pending_by_token(
-        session,
-        token,
-        status=PendingStatus.CONFIRMED,
-        confirmed_at=datetime.now(),
+        session, token, status=PendingStatus.CONFIRMED, confirmed_at=datetime.now()
     )
     await session.commit()
     return RegistrationStatusResponse(
@@ -202,6 +199,8 @@ async def registration_status(
 
             return RegistrationStatusResponse(
                 status=pending.status,
+                user_id=current_user.user_id,
+                username=current_user.username,
             )
         if pending.status == PendingStatus.REGISTRATION:
             return RegistrationStatusResponse(
