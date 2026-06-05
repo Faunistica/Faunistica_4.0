@@ -145,12 +145,14 @@ export interface TelegramAuthStatusResponse {
 
 export interface RegisterRequest {
     token: string;
+    code: string;
+    name: string;
     username: string;
     password: string;
     age: number;
     rating: boolean;
-    sex: 'male' | 'female' | 'none';
-    language: 'rus' | 'eng' | 'all';
+    sex: 'M' | 'F' | 'N';
+    lng: 'rus' | 'eng' | 'all';
     comm?: string;
 }
 

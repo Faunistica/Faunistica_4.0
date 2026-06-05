@@ -85,14 +85,15 @@ export default function Onboarding() {
 
         try {
             await registerMutation({
+                token: token || '',
                 code: code || '',
                 name: data.name,
                 username: data.username,
                 password: data.password,
                 age: data.age,
                 rating: data.rating === 'yes',
-                sex: data.sex,
-                lng: language,
+                sex: data.sex as 'M' | 'F' | 'N',
+                lng: language as 'rus' | 'eng' | 'all',
                 comm: data.comm,
             }).unwrap();
             navigate('/dashboard', { replace: true });
@@ -245,13 +246,13 @@ export default function Onboarding() {
                                                                 <SelectValue placeholder="Не выбрано" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                <SelectItem value="male">
+                                                                <SelectItem value="M">
                                                                     Мужской
                                                                 </SelectItem>
-                                                                <SelectItem value="female">
+                                                                <SelectItem value="F">
                                                                     Женский
                                                                 </SelectItem>
-                                                                <SelectItem value="none">
+                                                                <SelectItem value="N">
                                                                     Предпочитаю не указывать
                                                                 </SelectItem>
                                                             </SelectContent>

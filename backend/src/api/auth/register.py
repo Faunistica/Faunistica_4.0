@@ -120,7 +120,7 @@ async def form_filling(
         )
     )
     await session.commit()
-    current_user = get_user(session, pending.telegram_id)
+    current_user = await get_user(session, pending.telegram_id)
     token_payload = TokenPayload(
         sub=str(current_user.user_id),
         username=current_user.name,
@@ -129,7 +129,7 @@ async def form_filling(
     set_response_token_cookies(response, token_payload)
 
     await action_service.log_login(current_user.user_id, ip)
-    update_pending_by_token(session, token)
+    await update_pending_by_token(session, token)
     return RegistrationStatusResponse(
         status=PendingStatus.CONFIRMED,
     )
