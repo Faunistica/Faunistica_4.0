@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { FileText, FileDown, Calendar, User, Hash, BookOpen } from 'lucide-react';
+import { FileText, FileDown, Calendar, User, Hash, BookOpen, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -101,16 +101,29 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                 </Button>
 
                 {mode === 'available' && (
-                    <Button
-                        size="sm"
-                        className="h-9 w-full justify-center gap-2 rounded-lg bg-emerald-600 text-white shadow-sm shadow-emerald-200/50 hover:bg-emerald-700 sm:w-auto"
-                        asChild
-                    >
-                        <Link to={`/publication/${pub.publ_id}`}>
-                            <BookOpen className="size-4" />
-                            <span>Продолжить</span>
-                        </Link>
-                    </Button>
+                    <>
+                        <Button
+                            size="sm"
+                            className="h-9 w-full justify-center gap-2 rounded-lg bg-emerald-600 text-white shadow-sm shadow-emerald-200/50 hover:bg-emerald-700 sm:w-auto"
+                            asChild
+                        >
+                            <Link to={`/publication/${pub.publ_id}`}>
+                                <BookOpen className="size-4" />
+                                <span>Продолжить</span>
+                            </Link>
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-9 w-full justify-center gap-2 rounded-lg border-slate-300 sm:w-auto"
+                            asChild
+                        >
+                            <Link to={`/publication/${pub.publ_id}/submit`}>
+                                <CheckCircle2 className="size-4" />
+                                <span>Завершить обработку</span>
+                            </Link>
+                        </Button>
+                    </>
                 )}
             </div>
         </Card>

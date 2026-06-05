@@ -1,6 +1,6 @@
 import { type FC, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, X, FileSpreadsheet, LogOut } from 'lucide-react';
+import { Plus, FileText, X, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
@@ -137,9 +137,9 @@ const FormSidebar: FC = () => {
                         variant="outline"
                         className="w-full justify-start gap-2 font-medium shadow-sm"
                     >
-                        <Link to="/dashboard">
-                            <LogOut className="size-4 text-slate-500" />
-                            Вернуться назад
+                        <Link to={`/publication/${publ_id}/submit`}>
+                            <CheckCircle2 className="size-4 text-emerald-600" />
+                            Завершить обработку
                         </Link>
                     </Button>
                 </SidebarFooter>

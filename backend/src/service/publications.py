@@ -2,17 +2,18 @@ import logging
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import update
+from sqlalchemy import or_, select, update
 
 from core import model
 from core.config import settings
 from core.dependencies import DBSession
+from core.enums import RecordType
 from core.exceptions import (
     NoPublicationsAssignedError,
     PublicationForbiddenError,
     PublicationNotFoundError,
 )
-from core.model import User
+from core.model import EventRecord, User
 from repository.publication import (
     get_publication,
     get_publication_expect,
@@ -109,6 +110,71 @@ class PublicationService:
         await self.session.commit()
 
         return Publication.model_validate(next_publ)
+
+    async def get_draft_record_ids(
+        self, user_id: int, publ_id: int
+    ) -> list[str]:
+        stmt = (
+            select(EventRecord.id)
+            .where(
+                EventRecord.user_id == user_id,
+                EventRecord.publ_id == publ_id,
+                or_(
+                    EventRecord.type.in_(
+                        [RecordType.CHECK_OK, RecordType.CHECK_FAIL]
+                    ),
+                    EventRecord.type.is_(None),
+                ),
+            )
+        )
+        result = await self.session.execute(stmt)
+        return [str(row[0]) for row in result.all()]
+
+    async def submit(
+        self,
+        user_id: int,
+        publ_id: int,
+        level: ProcessingLevel,
+        urals_scope: str | None,
+        material_status: str | None,
+        comment: str | None,
+        ip: str | None,
+    ) -> list[str]:
+        user = await get_user_expect(self.session, user_id)
+        await self.validate_access(publ_id, user=user)
+
+        draft_ids = await self.get_draft_record_ids(user_id, publ_id)
+        if draft_ids:
+            return draft_ids
+
+        if level in (ProcessingLevel.FULL, ProcessingLevel.URAL):
+            stmt = (
+                update(model.Publication)
+                .where(model.Publication.publ_id == publ_id)
+                .values(cover=model.Publication.cover + 1)
+            )
+            await self.session.execute(stmt)
+
+        await self.actions.log_publ_complete(user_id, level, publ_id, ip)
+
+        if urals_scope or material_status:
+            await self.actions.log_publ_metadata(
+                user_id, publ_id, urals_scope, material_status, ip
+            )
+
+        if comment:
+            await self.actions.log_publ_comment(user_id, publ_id, comment, ip)
+
+        queue = self._pipe_to_array(user.items) if user.items else []
+        if publ_id in queue:
+            queue.remove(publ_id)
+
+        new_items = self._array_to_pipe(queue)
+        stmt = update(User).where(User.user_id == user_id).values(items=new_items)
+        await self.session.execute(stmt)
+
+        await self.session.commit()
+        return []
 
     async def assign_current(self, user_id: int) -> Publication | None:
         """Return current publication from items[0], or None if queue empty."""

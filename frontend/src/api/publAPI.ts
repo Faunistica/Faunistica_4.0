@@ -14,7 +14,23 @@ export const publAPI = createApi({
             query: (id) => `/publications/${id}`,
             providesTags: (_result, _error, id) => [{ type: 'publications', id }],
         }),
+        getSubmitStatus: build.query<Types.SubmitStatusResponse, number>({
+            query: (publ_id) => `/publications/${publ_id}/submit-status`,
+        }),
+        submitPublication: build.mutation<void, { publ_id: number; data: Types.SubmitPublicationRequest }>({
+            query: ({ publ_id, data }) => ({
+                url: `/publications/${publ_id}/submit`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['publications'],
+        }),
     }),
 });
 
-export const { useGetCurrentPublicationQuery, useGetPublicationByIdQuery } = publAPI;
+export const {
+    useGetCurrentPublicationQuery,
+    useGetPublicationByIdQuery,
+    useGetSubmitStatusQuery,
+    useSubmitPublicationMutation,
+} = publAPI;

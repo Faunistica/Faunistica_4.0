@@ -110,6 +110,17 @@ export interface UploadExcelResponse {
     errors: ImportError[];
 }
 
+export interface SubmitPublicationRequest {
+    processing_level: 'full' | 'ural' | 'part' | 'skip';
+    urals_scope?: 'yes' | 'no' | null;
+    material_status?: 'yes' | 'no' | null;
+    comment?: string | null;
+}
+
+export interface SubmitStatusResponse {
+    draft_record_ids: string[];
+}
+
 export interface SupportRequest {
     link: string;
     user_name: string;

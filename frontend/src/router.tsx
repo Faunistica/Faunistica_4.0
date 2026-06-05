@@ -125,6 +125,13 @@ export const routes: RouteObject[] = [
                                 handle: { isNavigateEnabled: false },
                             },
                             {
+                                path: 'publication/:id/submit',
+                                lazy: () =>
+                                    import('./pages/SubmitPublication').then((m) => ({
+                                        Component: m.default,
+                                    })),
+                            },
+                            {
                                 path: 'publication/:id/:record?',
                                 lazy: () =>
                                     import('./pages/FormFilling').then((m) => ({
