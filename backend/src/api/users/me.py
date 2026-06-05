@@ -33,37 +33,16 @@ async def update_current_user(
     token: TokenUser,
     session: DBSession,
     user_service: Annotated[UserService, Depends()],
-) -> UserFull:
-    username = data.username
-    password = data.password
-    if username is not None:
-        validate_username = await user_service.validate_username(
-            username, token.user_id
+) -> None:
+    update_data = data.model_dump(exclude_unset=True)  # 👈 ключ!
+    if "username" in update_data:
+        validate_result = await user_service.validate_username(
+            update_data["username"], token.user_id
         )
-        if isinstance(validate_username, MsgErr):
-            raise UsernameAlreadyExistsError(validate_username.error)
-    if password is not None:
-        hash = get_password_hash(password)
-        hash_date = datetime.now()
-    else:
-        hash_date = await user_service.get(token.user_id).hash_date
-    user = await user_service.update_user_data(
-        token.user_id,
-        username=username,
-        hash=hash,
-        hash_date=hash_date,
-        name=data.name,
-        age=data.age,
-        lng=data.lng,
-        comm=data.comm,
-        sex=data.sex,
-        rating=data.rating,
-        email=data.email,
-        region=data.region,
-    )
+        if isinstance(validate_result, MsgErr):
+            raise UsernameAlreadyExistsError(validate_result.error)
+    if "password" in update_data:
+        update_data["hash"] = get_password_hash(update_data.pop("password"))
+        update_data["hash_date"] = datetime.now()
+    await user_service.update_user_data(token.user_id, **update_data)
     await session.commit()
-    if user is None:
-        logger.warning("User not found during update: %d", token.user_id)
-        raise UserNotFoundError(token.user_id)
-
-    return UserFull.model_validate(user)
