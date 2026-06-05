@@ -81,18 +81,16 @@ class PublicationService:
 
         return Publication.model_validate(publ_db)
 
-    async def complete(
+    async def _advance_queue(
         self,
         user_id: int,
         publ_id: int,
         level: ProcessingLevel,
         ip: str | None,
     ) -> Publication | None:
-        user = await get_user_expect(self.session, user_id)
-        await self.validate_access(publ_id, user=user)
-
         await self.actions.log_publ_complete(user_id, level, publ_id, ip)
 
+        user = await get_user_expect(self.session, user_id)
         queue = self._pipe_to_array(user.items) if user.items else []
         if publ_id in queue:
             queue.remove(publ_id)
@@ -104,12 +102,9 @@ class PublicationService:
         await self.session.execute(stmt)
 
         if next_publ_id is None:
-            await self.session.commit()
             return None
 
         next_publ = await get_publication_expect(self.session, next_publ_id)
-        await self.session.commit()
-
         return Publication.model_validate(next_publ)
 
     async def get_draft_record_ids(
@@ -141,8 +136,7 @@ class PublicationService:
         comment: str | None,
         ip: str | None,
     ) -> None:
-        user = await get_user_expect(self.session, user_id)
-        await self.validate_access(publ_id, user=user)
+        await self.validate_access(publ_id, user_id=user_id)
 
         draft_ids = await self.get_draft_record_ids(user_id, publ_id)
         if draft_ids:
@@ -156,8 +150,6 @@ class PublicationService:
             )
             await self.session.execute(stmt)
 
-        await self.actions.log_publ_complete(user_id, level, publ_id, ip)
-
         if urals_scope or material_status:
             await self.actions.log_publ_metadata(
                 user_id, publ_id, urals_scope, material_status, ip
@@ -166,14 +158,7 @@ class PublicationService:
         if comment:
             await self.actions.log_publ_comment(user_id, publ_id, comment, ip)
 
-        queue = self._pipe_to_array(user.items) if user.items else []
-        if publ_id in queue:
-            queue.remove(publ_id)
-
-        new_items = self._array_to_pipe(queue)
-        stmt = update(User).where(User.user_id == user_id).values(items=new_items)
-        await self.session.execute(stmt)
-
+        await self._advance_queue(user_id, publ_id, level, ip)
         await self.session.commit()
 
     async def assign_current(self, user_id: int) -> Publication | None:

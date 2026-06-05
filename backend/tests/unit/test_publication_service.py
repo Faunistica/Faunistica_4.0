@@ -4,7 +4,11 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.dependencies import TokenUser
-from core.exceptions import PublicationForbiddenError, PublicationNotFoundError
+from core.exceptions import (
+    PublicationForbiddenError,
+    PublicationNotFoundError,
+    UnsubmittedRecordsError,
+)
 from core.model import User
 from schema.common import ProcessingLevel, Publication
 from schema.user import UserMinimal
@@ -108,11 +112,11 @@ class TestValidateAccess:
 
 
 # ============================================================================
-# TESTS FOR COMPLETE
+# TESTS FOR _ADVANCE_QUEUE
 # ============================================================================
 
 
-class TestComplete:
+class TestAdvanceQueue:
     @pytest.fixture(autouse=True, scope="function")
     def setup_mocks(self, publication_service: PublicationService):
         with (
@@ -120,14 +124,8 @@ class TestComplete:
                 "service.publications.get_user_expect", new_callable=AsyncMock
             ) as self.mock_get_user,
             patch(
-                "service.publications.get_publication", new_callable=AsyncMock
-            ) as self.mock_get_pub,
-            patch(
                 "service.publications.get_publication_expect", new_callable=AsyncMock
             ) as self.mock_get_pub_expect,
-            patch.object(
-                publication_service, "validate_access", new_callable=AsyncMock
-            ) as self.mock_validate,
             patch.object(
                 publication_service.actions,
                 "log_publ_complete",
@@ -144,7 +142,7 @@ class TestComplete:
             (ProcessingLevel.SKIP, ProcessingLevel.SKIP),
         ],
     )
-    async def test_complete(
+    async def test_advance_queue(
         self,
         publication_service: PublicationService,
         mock_session: MagicMock,
@@ -152,7 +150,7 @@ class TestComplete:
         level: ProcessingLevel,
         expected_level: ProcessingLevel,
     ) -> None:
-        """Test complete with various processing levels."""
+        """_advance_queue logs action, removes from queue, returns next."""
         mock_user = User(user_id=1, items="123|456|789")
         next_publ = Publication(
             publ_id=456,
@@ -168,12 +166,122 @@ class TestComplete:
         self.mock_get_pub_expect.return_value = next_publ
 
         ip = "127.0.0.1" if level == ProcessingLevel.FULL else None
-        result = await publication_service.complete(token_user.user_id, 123, level, ip)
+        result = await publication_service._advance_queue(
+            token_user.user_id, 123, level, ip
+        )
 
         self.mock_log.assert_called_once_with(1, expected_level, 123, ip)
-        mock_session.commit.assert_called_once()
+        mock_session.commit.assert_not_called()
         assert result is not None
         assert result.publ_id == 456
+
+
+# ============================================================================
+# TESTS FOR SUBMIT
+# ============================================================================
+
+
+class TestSubmit:
+    @pytest.fixture(autouse=True, scope="function")
+    def setup_mocks(self, publication_service: PublicationService):
+        with (
+            patch.object(
+                publication_service, "validate_access", new_callable=AsyncMock
+            ) as self.mock_validate,
+            patch.object(
+                publication_service, "get_draft_record_ids", new_callable=AsyncMock
+            ) as self.mock_drafts,
+            patch.object(
+                publication_service, "_advance_queue", new_callable=AsyncMock
+            ) as self.mock_advance,
+            patch.object(
+                publication_service.actions,
+                "log_publ_metadata",
+                new_callable=AsyncMock,
+            ) as self.mock_metadata,
+            patch.object(
+                publication_service.actions,
+                "log_publ_comment",
+                new_callable=AsyncMock,
+            ) as self.mock_comment,
+        ):
+            yield
+
+    @pytest.mark.asyncio
+    async def test_submit_success(
+        self,
+        publication_service: PublicationService,
+        mock_session: MagicMock,
+        token_user: TokenUser,
+    ) -> None:
+        """submit passes draft check, advances queue."""
+        self.mock_drafts.return_value = []
+
+        await publication_service.submit(
+            token_user.user_id, 123, ProcessingLevel.FULL, None, None, None, None
+        )
+
+        self.mock_advance.assert_called_once_with(1, 123, ProcessingLevel.FULL, None)
+
+    @pytest.mark.asyncio
+    async def test_submit_raises_on_drafts(
+        self,
+        publication_service: PublicationService,
+        token_user: TokenUser,
+    ) -> None:
+        """submit raises UnsubmittedRecordsError when drafts exist."""
+        self.mock_drafts.return_value = ["draft-id-1", "draft-id-2"]
+
+        with pytest.raises(UnsubmittedRecordsError) as exc:
+            await publication_service.submit(
+                token_user.user_id, 123, ProcessingLevel.FULL, None, None, None, None
+            )
+
+        assert exc.value.draft_record_ids == ["draft-id-1", "draft-id-2"]
+
+    @pytest.mark.asyncio
+    async def test_submit_logs_metadata(
+        self,
+        publication_service: PublicationService,
+        mock_session: MagicMock,
+        token_user: TokenUser,
+    ) -> None:
+        """submit logs metadata when urals_scope or material_status provided."""
+        self.mock_drafts.return_value = []
+
+        await publication_service.submit(
+            token_user.user_id,
+            123,
+            ProcessingLevel.FULL,
+            "yes",
+            "no",
+            None,
+            "127.0.0.1",
+        )
+
+        self.mock_metadata.assert_called_once_with(1, 123, "yes", "no", "127.0.0.1")
+
+    @pytest.mark.asyncio
+    async def test_submit_logs_comment(
+        self,
+        publication_service: PublicationService,
+        mock_session: MagicMock,
+        token_user: TokenUser,
+    ) -> None:
+        """submit logs comment when comment provided."""
+        self.mock_drafts.return_value = []
+
+        await publication_service.submit(
+            token_user.user_id,
+            123,
+            ProcessingLevel.FULL,
+            None,
+            None,
+            "Looks good",
+            "127.0.0.1",
+        )
+
+        self.mock_comment.assert_called_once_with(1, 123, "Looks good", "127.0.0.1")
 
 
 # ============================================================================

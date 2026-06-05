@@ -1,11 +1,13 @@
 import random
+from uuid import uuid4
 
 import pytest
 from conftest import SeedData
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from core.model import Action, Publication, User
+from core.enums import RecordType
+from core.model import Action, EventRecord, Publication, User
 
 # ========== Current Publication Tests ==========
 
@@ -125,31 +127,37 @@ async def test_get_current_queue_interactable_flags(
         assert data[i]["interactable"] is False
 
 
-# ========== Complete Tests ==========
+# ========== Submit Tests ==========
 
 
 @pytest.mark.asyncio
-async def test_complete_full_logs_action(
+async def test_submit_success(
     authenticated_client: AsyncClient,
     session_maker,
     seed_data: SeedData,
 ) -> None:
+    """Submit with all optional fields -> 204, actions logged, queue advanced."""
     user = seed_data["users"][0]
     publ_id = seed_data["publs"][0].publ_id
 
     async with session_maker() as session:
         stmt = select(User).where(User.user_id == user.user_id)
         result = await session.execute(stmt)
-        user = result.scalar_one_or_none()
-        if user:
-            user.items = f"{publ_id}|{seed_data['publs'][1].publ_id}"
-            await session.commit()
+        user = result.scalar_one()
+        user.items = f"{publ_id}|{seed_data['publs'][1].publ_id}"
+        await session.commit()
 
     response = await authenticated_client.post(
-        f"/api/publications/{publ_id}/complete",
-        json={"processing_level": "full"},
+        f"/api/publications/{publ_id}/submit",
+        json={
+            "processing_level": "full",
+            "urals_scope": "yes",
+            "material_status": "no",
+            "comment": "All records processed",
+        },
     )
     assert response.status_code == 204
+
     async with session_maker() as session:
         stmt = select(Action).where(Action.action == "publ_end_full")
         result = await session.execute(stmt)
@@ -157,26 +165,43 @@ async def test_complete_full_logs_action(
         assert action is not None
         assert action.object == str(publ_id)
 
+        stmt = select(Action).where(Action.action == "publ_rem_json")
+        result = await session.execute(stmt)
+        assert result.scalar_one_or_none() is not None
 
-@pytest.mark.asyncio
-async def test_complete_wrong_publ_id(
-    authenticated_client: AsyncClient,
-    seed_data: dict,
-) -> None:
-    # Use publ_id that doesn't belong to user (publs[1] is not assigned to user)
-    response = await authenticated_client.post(
-        f"/api/publications/{seed_data['publs'][1].publ_id}/complete",
-        json={"processing_level": "full"},
-    )
-    assert response.status_code == 403
+        stmt = select(Action).where(Action.action == "publ_rem")
+        result = await session.execute(stmt)
+        assert result.scalar_one_or_none() is not None
 
 
 @pytest.mark.asyncio
-async def test_complete_queue_advancement(
+async def test_submit_minimal(
     authenticated_client: AsyncClient,
     session_maker,
     seed_data: SeedData,
 ) -> None:
+    """Submit with only processing_level (no optional fields) -> 204."""
+    publ_id = seed_data["publs"][0].publ_id
+
+    response = await authenticated_client.post(
+        f"/api/publications/{publ_id}/submit",
+        json={"processing_level": "full"},
+    )
+    assert response.status_code == 204
+
+    async with session_maker() as session:
+        stmt = select(Action).where(Action.action == "publ_end_full")
+        result = await session.execute(stmt)
+        assert result.scalar_one_or_none() is not None
+
+
+@pytest.mark.asyncio
+async def test_submit_advances_queue(
+    authenticated_client: AsyncClient,
+    session_maker,
+    seed_data: SeedData,
+) -> None:
+    """_advance_queue: submitting removes publ from queue, advances to next."""
     user = seed_data["users"][0]
     publ1_id = seed_data["publs"][0].publ_id
     publ2_id = seed_data["publs"][1].publ_id
@@ -195,69 +220,291 @@ async def test_complete_queue_advancement(
 
         stmt = select(User).where(User.user_id == user.user_id)
         result = await session.execute(stmt)
-        user = result.scalar_one()
-
-        user.items = f"{publ1_id}|{publ2_id}|{publ3.publ_id}"
+        user_db = result.scalar_one()
+        user_db.items = f"{publ1_id}|{publ2_id}|{publ3.publ_id}"
         await session.commit()
 
-    # Complete first publication (was items[0]), queue advances to publ2
+    # Complete first -> advances to publ2
     response = await authenticated_client.post(
-        f"/api/publications/{publ1_id}/complete",
+        f"/api/publications/{publ1_id}/submit",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
-    # Complete second publication (now items[0]), queue advances to publ3
+    # Complete second -> advances to publ3
     response = await authenticated_client.post(
-        f"/api/publications/{publ2_id}/complete",
+        f"/api/publications/{publ2_id}/submit",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
-    # Complete third publication, queue should be empty
+    # Complete third -> queue empty
     response = await authenticated_client.post(
-        f"/api/publications/{publ3.publ_id}/complete",
+        f"/api/publications/{publ3.publ_id}/submit",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
-    # Queue is empty, completing again should fail
+    # Queue empty, submitting again should fail
     response = await authenticated_client.post(
-        f"/api/publications/{publ3.publ_id}/complete",
+        f"/api/publications/{publ3.publ_id}/submit",
         json={"processing_level": "full"},
     )
     assert response.status_code == 403
 
 
 @pytest.mark.asyncio
-async def test_complete_ural_logs_publ_end_ural(
+async def test_submit_ural_logs_publ_end_ural(
     authenticated_client: AsyncClient,
     session_maker,
     seed_data: dict,
 ) -> None:
+    """_advance_queue: ural level logs publ_end_ural."""
     publ_id = seed_data["publs"][0].publ_id
     response = await authenticated_client.post(
-        f"/api/publications/{publ_id}/complete",
+        f"/api/publications/{publ_id}/submit",
         json={"processing_level": "ural"},
     )
-
     assert response.status_code == 204
+
     async with session_maker() as session:
         stmt = select(Action).where(Action.action == "publ_end_ural")
         result = await session.execute(stmt)
-        action = result.scalar_one_or_none()
-        assert action is not None
+        assert result.scalar_one_or_none() is not None
 
 
 @pytest.mark.asyncio
-async def test_complete_invalid_level(
+async def test_submit_invalid_level(
     authenticated_client: AsyncClient,
 ) -> None:
+    """Submit with invalid processing_level -> 422."""
     response = await authenticated_client.post(
-        "/api/publications/1/complete",
+        "/api/publications/1/submit",
         json={"processing_level": "invalid"},
     )
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_submit_wrong_publ_id(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """Submit with non-interactable publ_id -> 403."""
+    response = await authenticated_client.post(
+        f"/api/publications/{seed_data['publs'][1].publ_id}/submit",
+        json={"processing_level": "full"},
+    )
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_submit_empty_queue(
+    authenticated_client_user2: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """User with empty queue submitting -> 403."""
+    publ_id = seed_data["publs"][0].publ_id
+    response = await authenticated_client_user2.post(
+        f"/api/publications/{publ_id}/submit",
+        json={"processing_level": "full"},
+    )
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_submit_cover_incremented(
+    authenticated_client: AsyncClient,
+    session_maker,
+    seed_data: SeedData,
+) -> None:
+    """_advance_queue: full/ural increments publs.cover."""
+    publ_id = seed_data["publs"][0].publ_id
+
+    response = await authenticated_client.post(
+        f"/api/publications/{publ_id}/submit",
+        json={"processing_level": "full"},
+    )
+    assert response.status_code == 204
+
+    async with session_maker() as session:
+        stmt = select(Publication).where(Publication.publ_id == publ_id)
+        result = await session.execute(stmt)
+        publ = result.scalar_one()
+        assert publ.cover == 1
+
+
+@pytest.mark.asyncio
+async def test_submit_cover_not_incremented_for_skip(
+    authenticated_client: AsyncClient,
+    session_maker,
+    seed_data: SeedData,
+) -> None:
+    """_advance_queue: skip/part does NOT increment publs.cover."""
+    publ_id = seed_data["publs"][0].publ_id
+
+    response = await authenticated_client.post(
+        f"/api/publications/{publ_id}/submit",
+        json={"processing_level": "skip"},
+    )
+    assert response.status_code == 204
+
+    async with session_maker() as session:
+        stmt = select(Publication).where(Publication.publ_id == publ_id)
+        result = await session.execute(stmt)
+        publ = result.scalar_one()
+        assert publ.cover == 0
+
+
+@pytest.mark.asyncio
+async def test_submit_unsubmitted_records(
+    authenticated_client: AsyncClient,
+    session_maker,
+    seed_data: SeedData,
+) -> None:
+    """Submit with draft CHECK_OK records -> 409 + draft_record_ids."""
+    publ_id = seed_data["publs"][0].publ_id
+    user = seed_data["users"][0]
+
+    async with session_maker() as session:
+        draft = EventRecord(
+            id=uuid4(),
+            user_id=user.user_id,
+            publ_id=publ_id,
+            type=RecordType.CHECK_OK,
+        )
+        session.add(draft)
+        await session.commit()
+        draft_id = str(draft.id)
+
+    response = await authenticated_client.post(
+        f"/api/publications/{publ_id}/submit",
+        json={"processing_level": "full"},
+    )
+    assert response.status_code == 409
+    data = response.json()
+    assert data["error"] == "UNSUBMITTED_RECORDS"
+    assert draft_id in data["draft_record_ids"]
+
+
+@pytest.mark.asyncio
+async def test_submit_unsubmitted_records_null_type(
+    authenticated_client: AsyncClient,
+    session_maker,
+    seed_data: SeedData,
+) -> None:
+    """Submit with record having type=None -> 409."""
+    publ_id = seed_data["publs"][0].publ_id
+    user = seed_data["users"][0]
+
+    async with session_maker() as session:
+        draft = EventRecord(
+            id=uuid4(),
+            user_id=user.user_id,
+            publ_id=publ_id,
+            type=None,
+        )
+        session.add(draft)
+        await session.commit()
+        draft_id = str(draft.id)
+
+    response = await authenticated_client.post(
+        f"/api/publications/{publ_id}/submit",
+        json={"processing_level": "full"},
+    )
+    assert response.status_code == 409
+    data = response.json()
+    assert draft_id in data["draft_record_ids"]
+
+
+@pytest.mark.asyncio
+async def test_submit_unsubmitted_records_check_fail(
+    authenticated_client: AsyncClient,
+    session_maker,
+    seed_data: SeedData,
+) -> None:
+    """Submit with CHECK_FAIL record -> 409."""
+    publ_id = seed_data["publs"][0].publ_id
+    user = seed_data["users"][0]
+
+    async with session_maker() as session:
+        draft = EventRecord(
+            id=uuid4(),
+            user_id=user.user_id,
+            publ_id=publ_id,
+            type=RecordType.CHECK_FAIL,
+        )
+        session.add(draft)
+        await session.commit()
+        draft_id = str(draft.id)
+
+    response = await authenticated_client.post(
+        f"/api/publications/{publ_id}/submit",
+        json={"processing_level": "full"},
+    )
+    assert response.status_code == 409
+    data = response.json()
+    assert draft_id in data["draft_record_ids"]
+
+
+# ========== Submit-Status Tests ==========
+
+
+@pytest.mark.asyncio
+async def test_submit_status_ok(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """GET /submit-status returns empty list when no drafts."""
+    publ_id = seed_data["publs"][0].publ_id
+    response = await authenticated_client.get(
+        f"/api/publications/{publ_id}/submit-status",
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["draft_record_ids"] == []
+
+
+@pytest.mark.asyncio
+async def test_submit_status_drafts(
+    authenticated_client: AsyncClient,
+    session_maker,
+    seed_data: SeedData,
+) -> None:
+    """GET /submit-status returns draft IDs when drafts exist."""
+    publ_id = seed_data["publs"][0].publ_id
+    user = seed_data["users"][0]
+
+    async with session_maker() as session:
+        draft = EventRecord(
+            id=uuid4(),
+            user_id=user.user_id,
+            publ_id=publ_id,
+            type=RecordType.CHECK_OK,
+        )
+        session.add(draft)
+        await session.commit()
+        draft_id = str(draft.id)
+
+    response = await authenticated_client.get(
+        f"/api/publications/{publ_id}/submit-status",
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert draft_id in data["draft_record_ids"]
+
+
+@pytest.mark.asyncio
+async def test_submit_status_no_access(
+    authenticated_client_user2: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """GET /submit-status returns 403 for user without access."""
+    publ_id = seed_data["publs"][0].publ_id
+    response = await authenticated_client_user2.get(
+        f"/api/publications/{publ_id}/submit-status",
+    )
+    assert response.status_code == 403
 
 
 # ========== Metadata Tests ==========
