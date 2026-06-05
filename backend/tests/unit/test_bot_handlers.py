@@ -6,7 +6,7 @@ from aiogram.types import Message, User
 
 from bot.handlers.admin import logs, reply
 from bot.handlers.menu import cancel, menu
-from bot.handlers.registration import registration_start
+from bot.handlers.registration import registration_info
 from bot.handlers.start import start_command
 
 
@@ -67,7 +67,7 @@ class TestRegisterCommand:
             mock_user_service_cls.return_value = mock_user_service
             mock_user_service.get.return_value = None
 
-            await registration_start(mock_message, mock_state, mock_bot)
+            await registration_info(mock_message, mock_state, mock_bot)
             mock_user_service.start_registration.assert_called_once_with(12345)
             mock_state.set_state.assert_called_once()
 
@@ -88,7 +88,7 @@ class TestRegisterCommand:
             mock_user_service_cls.return_value = mock_user_service
             mock_user_service.get.return_value = user
 
-            await registration_start(mock_message, mock_state, mock_bot)
+            await registration_info(mock_message, mock_state, mock_bot)
             mock_message.answer.assert_called()
 
 
