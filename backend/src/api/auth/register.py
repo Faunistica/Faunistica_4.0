@@ -129,7 +129,13 @@ async def form_filling(
     set_response_token_cookies(response, token_payload)
 
     await action_service.log_login(current_user.user_id, ip)
-    await update_pending_by_token(session, token)
+    await update_pending_by_token(
+        session,
+        token,
+        status=PendingStatus.CONFIRMED,
+        confirmed_at=datetime.now(),
+    )
+    await session.commit()
     return RegistrationStatusResponse(
         status=PendingStatus.CONFIRMED,
     )
