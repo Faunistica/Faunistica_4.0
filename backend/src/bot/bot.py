@@ -5,7 +5,6 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.exceptions import TelegramAPIError, TelegramRetryAfter
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.methods import DeleteWebhook
 
 from bot.handlers import main_router
 from core.config import settings
@@ -25,7 +24,11 @@ async def start() -> None:
     dp_instance.include_router(main_router)
 
     try:
-        await bot_instance(DeleteWebhook(drop_pending_updates=True))
+        await bot_instance.delete_webhook(drop_pending_updates=True)
+        bot_info = await bot_instance.get_me()
+        settings.BOT_USERNAME = bot_info.username
+        logger.info("Bot USERNAME: %s", bot_info.username)
+
         logger.info("Bot started polling")
         await dp_instance.start_polling(bot_instance, handle_signals=False)
     except asyncio.CancelledError:
