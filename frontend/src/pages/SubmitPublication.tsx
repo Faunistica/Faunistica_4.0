@@ -189,8 +189,8 @@ const FormCard: FC<{
   onSubmit: (data: SubmitForm) => Promise<void>;
 }> = (p) => (
   <motion.div variants={containerAnim} initial="initial" animate="animate">
-    <div className="border border-emerald-200/50 p-1">
-      <div className="border border-border bg-card p-6 sm:p-8">
+    <div className="rounded-xl border border-border p-1">
+      <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
         <CornerOrnament position="top-left" />
         <CornerOrnament position="top-right" />
         <CornerOrnament position="bottom-left" />
@@ -245,21 +245,10 @@ const FormCard: FC<{
               )}
             />
             {p.errors.processingLevel && (
-              <p className="mt-1 text-xs italic text-destructive">
+              <p className="mt-1 text-xs text-destructive">
                 {p.errors.processingLevel.message}
               </p>
             )}
-          </motion.div>
-
-          {/* Divider */}
-          <motion.div
-            variants={itemAnim}
-            transition={stagger(1.5)}
-            className="flex items-center gap-3"
-          >
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs italic text-muted-foreground/60">sectio</span>
-            <div className="h-px flex-1 bg-border" />
           </motion.div>
 
           {/* Urals scope */}
@@ -285,7 +274,7 @@ const FormCard: FC<{
                       />
                       <Label
                         htmlFor={`urals-${opt.val}`}
-                        className="cursor-pointer text-sm font-normal italic"
+                        className="cursor-pointer text-sm font-normal"
                       >
                         {opt.label}
                       </Label>
@@ -319,7 +308,7 @@ const FormCard: FC<{
                       />
                       <Label
                         htmlFor={`mat-${opt.val}`}
-                        className="cursor-pointer text-sm font-normal italic"
+                        className="cursor-pointer text-sm font-normal"
                       >
                         {opt.label}
                       </Label>
@@ -340,7 +329,7 @@ const FormCard: FC<{
                 <Textarea
                   {...field}
                   placeholder="Любые замечания по публикации..."
-                  className="min-h-24 text-sm italic placeholder:text-sm placeholder:italic placeholder:text-muted-foreground/40"
+                  className="min-h-24 text-sm placeholder:text-sm placeholder:text-muted-foreground/40"
                 />
               )}
             />
@@ -386,9 +375,9 @@ const DraftsBlock: FC<{ publ_id: number; draftIds: string[] }> = ({
     variants={containerAnim}
     initial="initial"
     animate="animate"
-    className="border border-emerald-200/50 p-1"
+    className="rounded-xl border border-border p-1"
   >
-    <div className="border border-border bg-card p-6 sm:p-8">
+    <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
       <div className="mb-3 flex items-center justify-center gap-3">
         <div className="h-px w-12 bg-border" />
         <Flower2 className="size-4 text-emerald-600" />
@@ -432,7 +421,7 @@ const FieldLabel: FC<{ icon: typeof FileText; text: string }> = ({
 }) => (
   <div className="mb-2 flex items-center gap-2">
     <Icon className="size-3.5 text-emerald-600" />
-    <span className="text-sm italic text-foreground">{text}</span>
+    <span className="text-sm text-foreground">{text}</span>
   </div>
 );
 
