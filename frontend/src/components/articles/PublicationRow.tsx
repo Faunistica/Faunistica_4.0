@@ -14,7 +14,7 @@ interface PublicationRowProps {
 
 export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
     return (
-        <Card className="relative p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row">
+        <Card className="relative mb-4 p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row">
             {/* Левая цветная полоса-индикатор (опционально для разграничения режимов) */}
             <div
                 className={cn(
