@@ -66,7 +66,7 @@ def _get_issue_type(issue_type: str) -> str:
     issue_types = {
         "authorisation-website": "Проблемы с авторизацией на сайте",
         "authorisation-tg": "Проблемы с авторизацией в боте",
-        "registration": "Проблемы с регистрацией в боте",
+        "registration": "Проблемы с регистрацией на сайте",
         "get-publication": "Проблемы с получением статьи",
         "autofill": "Проблемы с автозаполнением",
         "fill-by-hand": "Проблемы с заполнением вручную",

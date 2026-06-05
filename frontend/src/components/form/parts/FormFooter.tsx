@@ -29,7 +29,6 @@ const Footer: FC = () => {
         state: { lastSavedTime, activeRecordId, isSaving, isAutoSaving, isBusy, hasErrors },
         actions,
     } = useRecordForm();
-    const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isHidden, setIsHidden] = useState(false);
 
@@ -80,7 +79,7 @@ const Footer: FC = () => {
                 animate={animateMotion && isHidden ? 'hidden' : 'visible'}
                 inert={isHidden}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="fixed inset-x-0 bottom-0 z-90 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10"
+                className="fixed inset-x-0 bottom-0 z-100 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10"
             >
                 <div className="flex items-center gap-4">
                     <Button
@@ -134,7 +133,7 @@ const Footer: FC = () => {
                         Проверить
                     </Button>
                     <Button
-                        onClick={() => setIsSubmitDialogOpen(true)}
+                        onClick={() => void actions.submit()}
                         disabled={isBusy}
                         className="gap-2 bg-slate-900 text-xs font-semibold text-white hover:bg-slate-800"
                     >
@@ -143,37 +142,6 @@ const Footer: FC = () => {
                     </Button>
                 </div>
             </motion.footer>
-
-            <AlertDialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Подтвердить отправку?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Вы уверены, что хотите отправить данные? После подтверждения эти данные
-                            уйдут в базу, и это действие нельзя будет отменить.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsSubmitDialogOpen(false)}
-                            disabled={isBusy}
-                        >
-                            Отмена
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                void actions.submit();
-                                setIsSubmitDialogOpen(false);
-                            }}
-                            disabled={isBusy}
-                            className="bg-slate-900 text-white hover:bg-slate-800"
-                        >
-                            {isBusy ? 'Отправка...' : 'Отправить'}
-                        </Button>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
 
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
@@ -197,7 +165,7 @@ const Footer: FC = () => {
                                 void actions.deleteRecord(activeRecordId!);
                                 setIsDeleteDialogOpen(false);
                             }}
-                            disabled={isBusy}
+                            disabled={isBusy || activeRecordId === null}
                             variant="destructive"
                         >
                             Удалить

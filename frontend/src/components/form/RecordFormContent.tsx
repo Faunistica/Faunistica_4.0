@@ -19,7 +19,7 @@ const RecordFormContent: FC = () => {
     }
 
     return (
-        <div className="w-full flex-1 p-4 pb-20 md:p-8 md:pb-22">
+        <div className="w-full flex-1 p-4 pb-20 md:p-8 md:pb-44">
             <div className="mx-auto max-w-6xl space-y-6">
                 <ArticleSourceCard publ_id={publ_id} />
                 <GeographyCard publ_id={publ_id} activeRecordId={activeRecordId} />

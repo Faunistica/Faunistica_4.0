@@ -4,6 +4,11 @@ on:
   pull_request:
     paths:
       - 'frontend/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,6 +22,7 @@ jobs:
   check:
     timeout-minutes: 5
     strategy:
+      fail-fast: false
       matrix:
         include:
           - task: format:check
@@ -33,6 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v6
         with:
           version: 10

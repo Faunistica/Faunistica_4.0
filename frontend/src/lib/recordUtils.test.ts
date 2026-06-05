@@ -175,18 +175,18 @@ describe('toFormPartial', () => {
         expect(result.region).toBe('Test Region');
         expect(result.latitude).toBe(55.5);
         expect(result.longitude).toBe(37.2);
-        expect(result.is_manual_location).toBeUndefined();
-        expect(result.verbatimcoordinates).toBeUndefined();
-        expect(result.coordinate_uncertainty).toBeUndefined();
-        expect(result.date_precision).toBeUndefined();
+        expect(result.is_manual_location).toBe(false);
+        expect(result.verbatimcoordinates).toBe(null);
+        expect(result.coordinate_uncertainty).toBe(0);
+        expect(result.date_precision).toBe('');
     });
 
-    it('omits null record fields (reset fills from defaultValues)', () => {
+    it('fills null fields with default values', () => {
         const record = { ...baseRecord, location_remarks: null, habitat: null };
         const result = toFormPartial(record);
 
-        expect(result.location_remarks).toBeUndefined();
-        expect(result.habitat).toBeUndefined();
+        expect(result.location_remarks).toBe('');
+        expect(result.habitat).toBe('');
     });
 
     it('maps specimens to quantity form fields', () => {
@@ -252,11 +252,11 @@ describe('toFormPartial', () => {
         expect(result.quantity_type).toBe('individuals');
     });
 
-    it('omits quantity_type when null', () => {
+    it('fills quantity_type with default when null', () => {
         const record = { ...baseRecord, quantity_type: null };
         const result = toFormPartial(record);
 
-        expect(result.quantity_type).toBeUndefined();
+        expect(result.quantity_type).toBe('');
     });
 
     it('includes required blocking fields', () => {
@@ -274,7 +274,7 @@ describe('toFormPartial', () => {
         expect(result.species).toBe('lupus');
     });
 
-    it('omits all null RecordData fields', () => {
+    it('fills all form fields with defaults when RecordData is all null', () => {
         const empty: RecordFull = {
             id: 'rec-1',
             publ_id: 1,
@@ -324,11 +324,13 @@ describe('toFormPartial', () => {
 
         const result = toFormPartial(empty);
 
-        // RecordFull fields (id, publ_id, user_id, type, created_at, updated_at) are not null
-        // RecordData fields are all null so omitted
-        expect(Object.keys(result).length).toBeGreaterThanOrEqual(5);
-        expect(result).not.toHaveProperty('country');
-        expect(result).not.toHaveProperty('locality');
-        expect(result).not.toHaveProperty('family');
+        // All RecordForm keys present with default values
+        expect(result.country).toBe('');
+        expect(result.locality).toBe('');
+        expect(result.family).toBe('');
+        expect(result.latitude).toBe(0);
+        expect(result.longitude).toBe(0);
+        expect(result.is_manual_location).toBe(false);
+        expect(result.males).toBe(0);
     });
 });

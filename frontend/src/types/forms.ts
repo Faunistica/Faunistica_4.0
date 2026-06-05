@@ -83,7 +83,7 @@ export const FORM_DEFAULT_VALUES: RecordForm = {
     locality: '',
     georef_source: undefined,
     is_manual_location: false,
-    verbatimcoordinates: '',
+    verbatimcoordinates: null,
     latitude: 0,
     longitude: 0,
     coordinate_uncertainty: 0,

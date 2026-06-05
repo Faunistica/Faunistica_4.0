@@ -1,7 +1,6 @@
 import { defineConfig } from 'oxlint';
 import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
 import reactCompiler from 'eslint-plugin-react-compiler';
-
 export default defineConfig({
     options: {
         typeAware: true,
@@ -9,7 +8,6 @@ export default defineConfig({
     },
     plugins: ['react', 'react-perf', 'import', 'typescript', 'unicorn', 'oxc', 'promise'],
     jsPlugins: [
-        'eslint-plugin-react-refresh',
         'eslint-plugin-better-tailwindcss',
         'eslint-plugin-react-compiler',
         {

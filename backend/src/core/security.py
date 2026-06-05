@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import logging
+import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
@@ -181,3 +182,13 @@ def validate_user_id_path(
     token: Annotated[UserMinimal, Depends(get_jwt_user)],
 ) -> int:
     return validate_user_id(user_id, token.user_id)
+
+
+def generate_code_for_tg_enter() -> str:
+    for _ in range(10):
+        code = "".join(str(secrets.randbelow(10)) for _ in range(6))
+    return code
+
+
+def generate_token_for_tg_enter() -> str:
+    return secrets.token_urlsafe(32)

@@ -38,7 +38,7 @@ async def test_search_doesnt_work_without_authentication(
 
     response = await async_client.get(
         "/api/geo/search",
-        params={"field": "region", "text": "Москва"},
+        params={"field": "region", "query": "Москва"},
     )
     assert response.status_code == 401
 

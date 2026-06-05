@@ -82,9 +82,11 @@ export const draftToRecordData = (draft: Partial<RecordForm>): RecordData => {
         identification_remarks: null,
     };
     for (const [key, val] of Object.entries(draft)) {
-        if (QUANTITY_FIELD_SET.has(key) || val == null) continue;
-        if (val === undefined) continue;
+        if (QUANTITY_FIELD_SET.has(key) || val === null || val === undefined || val === '') {
+            continue;
+        }
         if (NULLISH_NUMBER_FIELDS.has(key) && val === 0) continue;
+        if ((key === 'latitude' || key === 'longitude') && (val === 0 || val === '0')) continue;
         if ((key === 'latitude' || key === 'longitude') && typeof val === 'number') {
             Object.assign(data, { [key]: String(val) });
         } else {
@@ -108,7 +110,7 @@ export const draftToRecordData = (draft: Partial<RecordForm>): RecordData => {
 };
 
 export function toFormPartial(record: RecordFull): Partial<RecordForm> {
-    const result: Record<string, unknown> = {};
+    const result: Record<string, unknown> = { ...FORM_DEFAULT_VALUES };
     for (const [key, val] of Object.entries(record)) {
         if (!RECORD_FORM_KEYS.has(key)) continue;
         if (val == null) continue;

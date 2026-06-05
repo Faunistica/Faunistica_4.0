@@ -13,14 +13,48 @@ class Messages:
             "Я - телеграм-бот проекта "
             '<a href="https://vk.com/data_web">Паутина данных</a>, '
             "очень рад, что Вы им заинтересовались. "
-            "С удовольствием зарегистрирую вас как нового участника "
-            "и дам пароль для входа на "
-            '<a href="https://faunistica.ru/">наш сайт научного волонтерства</a>.\n\n'
-            "Если хотите начать регистрацию, вызовите /register.\n"
+            "Для регистрации заполните форму на "
+            '<a href="https://faunistica.ru/">нашем сайте</a> '
+            "и подтвердите код в этом боте командой /confirm.\n\n"
             "Если хотите ознакомиться со списком команд, вызовите /menu."
         )
 
     # ========== REGISTER MESSAGE ========== #
+
+    @staticmethod
+    def registration_via_site() -> str:
+        return (
+            "Регистрация теперь проходит через сайт. "
+            "Заполните форму на https://faunistica.ru/ и отправьте "
+            "код подтверждения командой /confirm"
+        )
+
+    @staticmethod
+    def request_confirmation_code() -> str:
+        return "Пожалуйста, отправьте код подтверждения"
+
+    @staticmethod
+    def confirmation_code_invalid() -> str:
+        return "Не удалось найти такой код. Проверьте его и попробуйте снова."
+
+    @staticmethod
+    def confirmation_code_expired() -> str:
+        return "Срок действия кода истек. Запросите новый код на сайте."
+
+    @staticmethod
+    def confirmation_code_used() -> str:
+        return "Этот код уже был использован."
+
+    @staticmethod
+    def registration_confirmed() -> str:
+        return "Пройдите анкету на сайте https://faunistica.ru/\n"
+
+    @staticmethod
+    def username_conflict() -> str:
+        return (
+            "Кажется, это имя уже занято. "
+            "Пожалуйста, начните регистрацию заново на сайте."
+        )
 
     @staticmethod
     def registration_start() -> str:
@@ -35,10 +69,8 @@ class Messages:
         )
 
     @staticmethod
-    def already_registered(first_name: str | None) -> str:
-        if first_name is not None:
-            return f"Вы уже зарегистрированы под именем {first_name}!"
-        return "Вы уже зарегистрированы!"
+    def already_registered() -> str:
+        return "Вход подтвержден!"
 
     @staticmethod
     def old_user(first_name: str | None) -> str:
@@ -48,6 +80,13 @@ class Messages:
             "как-будто кто-то обнулил 😅\n\n"
             "Чтобы я снова вспомнил вас, попрошу пройти регистрацию снова. "
             "Начнем прямо сейчас!"
+        )
+
+    @staticmethod
+    def started_registered() -> str:
+        return (
+            "Я так и не познакомился с вами 😭. "
+            "Вернитесь к регистрации на сайте и подтвердите код в этом боте."
         )
 
     @staticmethod
@@ -83,8 +122,8 @@ class Messages:
     def not_registered() -> str:
         return (
             "Увы, вас пока нет среди зарегистрированных пользователей.\n"
-            "Желаете зарегистрироваться?\n"
-            "/register ← Нажмите сюда"
+            "Зарегистрируйтесь на сайте https://faunistica.ru/ "
+            "и подтвердите код в этом боте командой /confirm."
         )
 
     @staticmethod
@@ -108,8 +147,7 @@ class Messages:
     @staticmethod
     def auth_success() -> str:
         return (
-            "<b>Вы успешно авторизованы!</b>\n"
-            "Уже готовлю новый пароль специально для вас! 🤭"
+            "<b>Вы успешно авторизованы!</b>\nСейчас отправлю вашу текущую публикацию."
         )
 
     @staticmethod
@@ -374,10 +412,8 @@ class Messages:
         return (
             "Вы вызвали меню 🥳\n\n"
             "<b>/start</b> — общая информация о проекте 🚀\n"
-            "<b>/register</b> — поможет зарегистрироваться, "
-            "чтобы получить доступ к нашему сервису 🕸\n"
-            "<b>/auth</b> — если вы ещё не получили пароль и статью "
-            "(или забыли), жмите, но только после регистрации 🔒\n"
+            "<b>/confirm</b> — подтвердить код регистрации с сайта 🧾\n"
+            "<b>/auth</b> — получить статью (и пароль при необходимости) 🔒\n"
             "<b>/sociology</b> — небольшой опросник, "
             "который поможет нам побольше познакомиться 🕷\n"
             "<b>/stats</b> — если хотите посмотреть статистику проекта, "
@@ -424,8 +460,8 @@ class Messages:
     @staticmethod
     def registration_not_finished() -> str:
         return (
-            "Извините, но вы не завершили начатую ранее регистрацию 👉🏻👈🏻\n"
-            "Может вернемся к этому?"
+            "Извините, но вы не завершили регистрацию на сайте 👉🏻👈🏻\n"
+            "Пожалуйста, завершите ее и подтвердите код в этом боте."
         )
 
     @staticmethod
@@ -479,7 +515,8 @@ class Messages:
     def register_for_old() -> str:
         return (
             "Здравствуйте, тут такая проблемка...\n"
-            "Я помню, что вы уже знаете меня, но попрошу выполнить команду /register"
+            "Я помню, что вы уже знаете меня, но для доступа "
+            "нужно снова зарегистрироваться на сайте и подтвердить код в этом боте."
         )
 
     @staticmethod

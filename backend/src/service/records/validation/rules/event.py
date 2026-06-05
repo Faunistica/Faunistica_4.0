@@ -1,29 +1,17 @@
 from schema.records import RecordData
 
-from ..constants import DATE_PRECISIONS
 from ..helpers import (
     contains_forbidden_chars,
     has_cyrillic_in_foreign_text,
     has_range_separator,
 )
-from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
+from ..rules.base import RuleCategory, RuleContext, required, rule
 
 rule(
     RuleCategory.EVENT,
     ["verbatim_date"],
     "required",
     required("verbatim_date", "Дата сбора не указана"),
-)
-rule(
-    RuleCategory.EVENT,
-    ["date_precision"],
-    "invalid",
-    in_set(
-        "date_precision",
-        DATE_PRECISIONS,
-        "Некорректная точность указания даты. Допустимые значения: "
-        + ", ".join(DATE_PRECISIONS),
-    ),
 )
 
 
@@ -106,12 +94,4 @@ def rule_cyrillic_event(data: RecordData, ctx: RuleContext) -> str | None:
         data.recorded_by,
     ):
         return "Кириллица в блоке Сбор материала для публикации не на русском языке"
-    return None
-
-
-@rule(RuleCategory.EVENT, ["sample_size_value"], "out_of_range")
-def rule_sample_size_positive(data: RecordData, ctx: RuleContext) -> str | None:
-    v = data.sample_size_value
-    if v is not None and v <= 0:
-        return "Объём выборки должен быть положительным числом"
     return None

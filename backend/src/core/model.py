@@ -16,7 +16,13 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from core.enums import RecordType, UserState, UserStateType
+from core.enums import (
+    PendingStatus,
+    PendingStatusType,
+    RecordType,
+    UserState,
+    UserStateType,
+)
 
 
 class Base(DeclarativeBase):
@@ -50,6 +56,30 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(Text)
     region: Mapped[str | None] = mapped_column(Text)
     token_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
+class PendingRegistration(Base):
+    __tablename__ = "pending_registrations"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        primary_key=True,
+        server_default=Identity(),
+    )
+    code: Mapped[str] = mapped_column(String(20), unique=True, index=True)
+    token: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    status: Mapped[PendingStatus] = mapped_column(
+        PendingStatusType,
+        default=PendingStatus.CODE_PROCESSING,
+        server_default="0",
+    )
+    code_created_at: Mapped[datetime_type] = mapped_column(
+        TIMESTAMP, server_default=func.now()
+    )
+    token_created_at: Mapped[datetime_type] = mapped_column(
+        TIMESTAMP, server_default=func.now()
+    )
+    confirmed_at: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
 
 
 class Publication(Base):

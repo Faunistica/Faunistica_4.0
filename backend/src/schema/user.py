@@ -35,8 +35,14 @@ class UserFull(UserMinimal):
 
 
 class UserUpdateMe(BaseModel):
-    lng: UserLanguage | None = None
+    age: int | None = None
+    lng: UserLanguage | None
+    sex: str | None = None
+    rating: int | None = None
     email: str | None = None
+    region: str | None = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class UserLookupResponse(BaseModel):

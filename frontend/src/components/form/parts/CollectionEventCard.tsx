@@ -8,6 +8,7 @@ import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarDays, Info } from 'lucide-react';
 import SavedPresetSelect from '@/components/form/inputs/SavedPresetSelect';
+import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import type { RecordForm } from '@/types/forms';
 
 interface Props {
@@ -71,22 +72,11 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         )}
                     />
 
-                    <Controller
+                    <FormAutocomplete
                         name="date_precision"
-                        control={control}
-                        render={({ field, fieldState: { error, invalid } }) => (
-                            <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="date_precision">Точность даты</FieldLabel>
-                                <Input
-                                    id="date_precision"
-                                    placeholder="день, месяц, год…"
-                                    aria-invalid={invalid}
-                                    {...field}
-                                    value={field.value?.toString()}
-                                />
-                                <FieldError errors={[error]} />
-                            </Field>
-                        )}
+                        label="Точность даты"
+                        placeholder="день, неделя, месяц, год…"
+                        options={['день', 'неделя', 'месяц', 'год']}
                     />
 
                     <Controller
@@ -161,7 +151,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Число"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -179,7 +169,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="ловушки, взмахи сачком…"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -211,7 +201,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Описание местообитания; второе местообитание"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -248,11 +238,11 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                 </FieldLabel>
                                 <Textarea
                                     id="event_remarks"
-                                    className="min-h-20 resize-none"
+                                    className="max-h-fit min-h-20"
                                     placeholder="Погодные условия, методика и т.п."
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -272,7 +262,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Полевой №"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -289,7 +279,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Каталожный №"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -306,7 +296,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     placeholder="Код коллекции"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>

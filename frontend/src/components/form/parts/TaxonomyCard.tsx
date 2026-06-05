@@ -95,7 +95,7 @@ const TaxonomyCard: FC = () => {
                     <FormAutocomplete
                         name="family"
                         label="Семейство (Familia)"
-                        searchFn={familySearchFn}
+                        options={familySearchFn}
                         placeholder="Начните вводить…"
                         onSelectSuggestion={handleTaxonSuggestionSelect}
                         onCommitTyped={handleTaxonTypedCommit}
@@ -103,7 +103,7 @@ const TaxonomyCard: FC = () => {
                     <FormAutocomplete
                         name="genus"
                         label="Род (Genus)"
-                        searchFn={genusSearchFn}
+                        options={genusSearchFn}
                         placeholder="Название рода"
                         onSelectSuggestion={handleTaxonSuggestionSelect}
                         onCommitTyped={handleTaxonTypedCommit}
@@ -111,7 +111,7 @@ const TaxonomyCard: FC = () => {
                     <FormAutocomplete
                         name="species"
                         label="Видовое название (эпитет)"
-                        searchFn={speciesSearchFn}
+                        options={speciesSearchFn}
                         placeholder="Только эпитет, без рода"
                         onSelectSuggestion={handleTaxonSuggestionSelect}
                         onCommitTyped={handleTaxonTypedCommit}
@@ -223,9 +223,10 @@ const TaxonomyCard: FC = () => {
                                 <Textarea
                                     id="taxon_remarks"
                                     placeholder="Примечания ко всему таксону…"
+                                    className="max-h-fit"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>
@@ -242,9 +243,10 @@ const TaxonomyCard: FC = () => {
                                 <Textarea
                                     id="identification_remarks"
                                     placeholder="Примечания к определению…"
+                                    className="max-h-fit"
                                     aria-invalid={invalid}
                                     {...field}
-                                    value={field.value?.toString()}
+                                    value={field.value?.toString() ?? ''}
                                 />
                                 <FieldError errors={[error]} />
                             </Field>

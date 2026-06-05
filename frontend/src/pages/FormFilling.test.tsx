@@ -162,10 +162,8 @@ function TestHarness({
                     element={
                         <FormProvider {...methods}>
                             <RecordFormProvider publ_id={1} autoSaveDelay={autoSaveDelay}>
-                                <FormProvider {...methods}>
-                                    <NavCapture />
-                                    {children}
-                                </FormProvider>
+                                <NavCapture />
+                                {children}
                             </RecordFormProvider>
                         </FormProvider>
                     }

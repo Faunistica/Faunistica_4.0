@@ -1,4 +1,4 @@
-import { type ComponentProps, type FC, useState, useRef, useEffect, useCallback } from 'react';
+import { type ComponentProps, useState, useRef, useEffect, useCallback, forwardRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -22,159 +22,174 @@ type AutocompleteProps = OverrideProps<
  * Text input with a dropdown list of suggestions.
  * Fully controlled: parent provides onChange, suggestions, and search trigger.
  */
-const Autocomplete: FC<AutocompleteProps> = ({
-    onChange,
-    onSelect,
-    onSearch,
-    suggestions,
-    isLoading = false,
-    className,
-    minChars = 2,
-    blurOnSelect = false,
-    onBlur: onBlurProp,
-    ref: refProp,
-    ...props
-}) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const [highlightIndex, setHighlightIndex] = useState(-1);
-    const wrapperRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
-
-    const open = isFocused && suggestions.length > 0;
-
-    // Clamp highlight index to always be valid for the current suggestions array
-    // This avoids needing an effect to reset it when suggestions change
-    const clampedHighlightIndex = Math.min(highlightIndex, Math.max(suggestions.length - 1, -1));
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-                setIsFocused(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
-
-    // Scroll highlighted item into view
-    useEffect(() => {
-        if (clampedHighlightIndex >= 0) {
-            itemRefs.current[clampedHighlightIndex]?.scrollIntoView({ block: 'nearest' });
-        }
-    }, [clampedHighlightIndex]);
-
-    const handleInputChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>) => {
-            if (onChange) {
-                onChange(e);
-            }
-
-            const text = e.target.value;
-            if (text.length >= minChars) {
-                onSearch(text);
-            }
+const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
+    (
+        {
+            onChange,
+            onSelect,
+            onSearch,
+            suggestions,
+            isLoading = false,
+            className,
+            minChars = 2,
+            blurOnSelect = false,
+            onBlur: onBlurProp,
+            onFocus: onFocusProp,
+            onKeyDown: onKeyDownProp,
+            ...props
         },
-        [minChars, onChange, onSearch],
-    );
+        forwardedRef,
+    ) => {
+        const [isFocused, setIsFocused] = useState(false);
+        const [highlightIndex, setHighlightIndex] = useState(-1);
+        const wrapperRef = useRef<HTMLDivElement>(null);
+        const inputRef = useRef<HTMLInputElement>(null);
+        const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
-    const handleSelect = useCallback(
-        (item: string) => {
-            onSelect?.(item);
-            if (inputRef.current) {
-                inputRef.current.value = item;
+        const open = isFocused && suggestions.length > 0;
+
+        // Clamp highlight index to always be valid for the current suggestions array
+        // This avoids needing an effect to reset it when suggestions change
+        const clampedHighlightIndex = Math.min(
+            highlightIndex,
+            Math.max(suggestions.length - 1, -1),
+        );
+
+        // Close dropdown when clicking outside
+        useEffect(() => {
+            const handleClick = (e: MouseEvent) => {
+                // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+                if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+                    setIsFocused(false);
+                }
+            };
+            document.addEventListener('mousedown', handleClick);
+            return () => document.removeEventListener('mousedown', handleClick);
+        }, []);
+
+        // Scroll highlighted item into view
+        useEffect(() => {
+            if (clampedHighlightIndex >= 0) {
+                itemRefs.current[clampedHighlightIndex]?.scrollIntoView({ block: 'nearest' });
             }
-            if (blurOnSelect) {
-                inputRef.current?.blur();
-            } else {
-                inputRef.current?.focus();
-            }
-        },
-        [onSelect, blurOnSelect],
-    );
+        }, [clampedHighlightIndex]);
 
-    const handleKeyDown = useCallback(
-        (e: React.KeyboardEvent) => {
-            if (!open || suggestions.length === 0) return;
+        const handleInputChange = useCallback(
+            (e: React.ChangeEvent<HTMLInputElement>) => {
+                if (onChange) {
+                    onChange(e);
+                }
 
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                setHighlightIndex((prev) => (prev + 1) % suggestions.length);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                setHighlightIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
-            } else if (e.key === 'Enter' && clampedHighlightIndex >= 0) {
-                e.preventDefault();
-                handleSelect(suggestions[clampedHighlightIndex]);
-            }
-        },
-        [suggestions, open, handleSelect, clampedHighlightIndex, setHighlightIndex],
-    );
+                const text = e.target.value;
+                if (text.length >= minChars) {
+                    onSearch(text);
+                }
+            },
+            [minChars, onChange, onSearch],
+        );
 
-    return (
-        <div ref={wrapperRef} className="relative">
-            <div className="relative">
-                <Input
-                    className={className}
-                    onChange={handleInputChange}
-                    onFocus={() => {
-                        setIsFocused(true);
-                    }}
-                    onBlur={(e) => {
-                        setIsFocused(false);
-                        onBlurProp?.(e);
-                    }}
-                    autoComplete="off"
-                    {...props}
-                    ref={(el) => {
-                        inputRef.current = el;
-                        if (typeof refProp === 'function') {
-                            refProp(el);
-                        }
-                    }}
-                    onKeyDown={handleKeyDown}
-                />
-                {isLoading && (
-                    <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
-                        <Spinner className="size-4" />
-                    </div>
+        const handleSelect = useCallback(
+            (item: string) => {
+                onSelect?.(item);
+                if (inputRef.current) {
+                    inputRef.current.value = item;
+                }
+                if (blurOnSelect) {
+                    inputRef.current?.blur();
+                } else {
+                    inputRef.current?.focus();
+                }
+            },
+            [onSelect, blurOnSelect],
+        );
+
+        const handleKeyDown = useCallback(
+            (e: React.KeyboardEvent) => {
+                if (!open || suggestions.length === 0) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setHighlightIndex((prev) => (prev + 1) % suggestions.length);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setHighlightIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
+                } else if (e.key === 'Enter' && clampedHighlightIndex >= 0) {
+                    e.preventDefault();
+                    handleSelect(suggestions[clampedHighlightIndex]);
+                }
+            },
+            [suggestions, open, handleSelect, clampedHighlightIndex, setHighlightIndex],
+        );
+
+        return (
+            <div ref={wrapperRef} className="relative">
+                <div className="relative">
+                    <Input
+                        className={className}
+                        {...props}
+                        onChange={handleInputChange}
+                        onFocus={(e) => {
+                            setIsFocused(true);
+                            onFocusProp?.(e);
+                        }}
+                        onBlur={(e) => {
+                            setIsFocused(false);
+                            onBlurProp?.(e);
+                        }}
+                        onKeyDown={(e) => {
+                            onKeyDownProp?.(e);
+                            handleKeyDown(e);
+                        }}
+                        autoComplete="off"
+                        ref={(el) => {
+                            inputRef.current = el;
+                            if (typeof forwardedRef === 'function') {
+                                forwardedRef(el);
+                            } else if (forwardedRef) {
+                                forwardedRef.current = el;
+                            }
+                        }}
+                    />
+                    {isLoading && (
+                        <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
+                            <Spinner className="size-4" />
+                        </div>
+                    )}
+                </div>
+
+                {open && suggestions.length > 0 && (
+                    <ul
+                        className="absolute z-150 mt-2 max-h-60 w-full animate-in overflow-x-hidden overflow-y-auto rounded-xl border border-slate-200 bg-white/95 py-1.5 shadow-xl backdrop-blur-md duration-200 zoom-in-95 fade-in"
+                        role="listbox"
+                    >
+                        {suggestions.map((item, i) => (
+                            <li
+                                key={item}
+                                ref={(el) => {
+                                    itemRefs.current[i] = el;
+                                }}
+                                role="option"
+                                aria-selected={i === clampedHighlightIndex}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleSelect(item);
+                                }}
+                                onMouseEnter={() => setHighlightIndex(i)}
+                                className={cn(
+                                    'cursor-pointer px-4 py-2 text-sm transition-all duration-150',
+                                    i === clampedHighlightIndex
+                                        ? 'bg-slate-100 pl-5 font-medium text-slate-900'
+                                        : 'text-slate-700 hover:bg-slate-50',
+                                )}
+                            >
+                                {item}
+                            </li>
+                        ))}
+                    </ul>
                 )}
             </div>
-
-            {open && suggestions.length > 0 && (
-                <ul
-                    className="absolute z-150 mt-2 max-h-60 w-full animate-in overflow-x-hidden overflow-y-auto rounded-xl border border-slate-200 bg-white/95 py-1.5 shadow-xl backdrop-blur-md duration-200 zoom-in-95 fade-in"
-                    role="listbox"
-                >
-                    {suggestions.map((item, i) => (
-                        <li
-                            key={item}
-                            ref={(el) => {
-                                itemRefs.current[i] = el;
-                            }}
-                            role="option"
-                            aria-selected={i === clampedHighlightIndex}
-                            onMouseDown={(e) => {
-                                e.preventDefault();
-                                handleSelect(item);
-                            }}
-                            onMouseEnter={() => setHighlightIndex(i)}
-                            className={cn(
-                                'cursor-pointer px-4 py-2 text-sm transition-all duration-150',
-                                i === clampedHighlightIndex
-                                    ? 'bg-slate-100 pl-5 font-medium text-slate-900'
-                                    : 'text-slate-700 hover:bg-slate-50',
-                            )}
-                        >
-                            {item}
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    );
-};
+        );
+    },
+);
 
 export default Autocomplete;

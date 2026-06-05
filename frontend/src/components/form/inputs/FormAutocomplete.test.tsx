@@ -42,7 +42,7 @@ describe('FormAutocomplete', () => {
             <FormAutocomplete
                 name="family"
                 label="Семейство"
-                searchFn={vi.fn().mockResolvedValue([])}
+                options={vi.fn().mockResolvedValue([])}
                 placeholder="Начните вводить…"
             />,
         );
@@ -57,7 +57,7 @@ describe('FormAutocomplete', () => {
             <FormAutocomplete
                 name="family"
                 label="Family"
-                searchFn={vi.fn().mockResolvedValue([])}
+                options={vi.fn().mockResolvedValue([])}
                 placeholder="Type here…"
             />,
         );
@@ -72,7 +72,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                 />,
             );
@@ -106,7 +106,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onCommitTyped={onCommitTyped}
                 />,
@@ -139,7 +139,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onCommitTyped={onCommitTyped}
                 />,
@@ -161,6 +161,53 @@ describe('FormAutocomplete', () => {
         });
     });
 
+    it('null default: blurring without changes does not call onCommitTyped', async () => {
+        const searchFn = createMockSearch();
+        const onCommitTyped = vi.fn();
+        renderWithForm(
+            <FormAutocomplete
+                name="location_remarks"
+                label="Заметки"
+                options={searchFn}
+                placeholder="Начните вводить…"
+                onCommitTyped={onCommitTyped}
+            />,
+            { location_remarks: null },
+        );
+
+        const input = screen.getByPlaceholderText('Начните вводить…') as HTMLInputElement;
+        await act(async () => {
+            fireEvent.blur(input);
+        });
+
+        expect(onCommitTyped).not.toHaveBeenCalled();
+    });
+
+    it('null set externally on empty value then blur does not call onCommitTyped', async () => {
+        const searchFn = createMockSearch();
+        const onCommitTyped = vi.fn();
+        const { getFormMethods } = renderWithForm(
+            <FormAutocomplete
+                name="location_remarks"
+                label="Заметки"
+                options={searchFn}
+                placeholder="Начните вводить…"
+                onCommitTyped={onCommitTyped}
+            />,
+            { location_remarks: '' },
+        );
+
+        const input = screen.getByPlaceholderText('Начните вводить…') as HTMLInputElement;
+        await act(async () => {
+            getFormMethods().setValue('location_remarks', null);
+        });
+        await act(async () => {
+            fireEvent.blur(input);
+        });
+
+        expect(onCommitTyped).not.toHaveBeenCalled();
+    });
+
     describe('suggestion selection', () => {
         it('selecting a suggestion immediately commits the value and calls onSelectSuggestion', async () => {
             const searchFn = createMockSearch(['Canidae', 'Canis']);
@@ -169,7 +216,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onSelectSuggestion={onSelectSuggestion}
                     debounceMs={0}
@@ -207,7 +254,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     debounceMs={0}
                 />,
@@ -242,7 +289,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                 />,
             );
@@ -272,7 +319,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                 />,
                 { family: 'Initial' },
@@ -301,7 +348,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onCommitTyped={onCommitTyped}
                 />,
@@ -338,7 +385,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     debounceMs={300}
                 />,
@@ -382,7 +429,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     debounceMs={100}
                 />,
@@ -415,7 +462,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onCommitTyped={onCommitTyped}
                 />,
@@ -455,7 +502,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     onSelectSuggestion={onSelectSuggestion}
                     onCommitTyped={onCommitTyped}
@@ -495,7 +542,7 @@ describe('FormAutocomplete', () => {
                 <FormAutocomplete
                     name="family"
                     label="Семейство"
-                    searchFn={searchFn}
+                    options={searchFn}
                     placeholder="Начните вводить…"
                     debounceMs={100}
                 />,
