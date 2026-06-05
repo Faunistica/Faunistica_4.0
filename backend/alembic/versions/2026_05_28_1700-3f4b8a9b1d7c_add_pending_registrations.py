@@ -38,6 +38,9 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("confirmed_at", sa.TIMESTAMP(), nullable=True),
+        sa.Column("telegram_id", sa.BigInteger(), nullable=True),
+        sa.Column("telegram_username", sa.String(length=255), nullable=True),
+        sa.Column("telegram_name", sa.String(length=255), nullable=True),
     )
     op.create_index(
         op.f("ix_pending_registrations_code"),

@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from core.config import settings
-from core.dependencies import DBSession
+from core.dependencies import ClientIP, DBSession
 from core.enums import PendingStatus, UserState
 from core.exceptions import (
     MsgErr,
@@ -18,6 +18,7 @@ from core.security import (
     generate_code_for_tg_enter,
     generate_token_for_tg_enter,
     get_password_hash,
+    set_response_token_cookies,
 )
 from repository.registration import (
     create_pending_registration,
@@ -26,12 +27,14 @@ from repository.registration import (
     get_pending_by_username,
     update_pending_by_token,
 )
-from repository.user import find_user_by_username
+from repository.user import find_user_by_username, get_user
+from schema.jwt import TokenPayload
 from schema.registration import (
     FormRequest,
     RegistrationStartResponse,
     RegistrationStatusResponse,
 )
+from service.actions import ActionService
 from service.registration import is_enter_expired
 from service.user import UserService
 
@@ -72,7 +75,10 @@ async def create_code(
 async def form_filling(
     request: Request,
     data: FormRequest,
+    response: Response,
     session: DBSession,
+    ip: ClientIP,
+    action_service: Annotated[ActionService, Depends()],
 ) -> RegistrationStatusResponse | None:
     username = data.username
     name = data.name
@@ -82,7 +88,7 @@ async def form_filling(
     lng = data.lng
     comm = data.comm
     code = data.code
-
+    token = data.token
     validate_name = await UserService.validate_name(name)
     validate_sex = await UserService.validate_sex(sex)
     validate_age = await UserService.validate_age_str(str(age))
@@ -118,7 +124,16 @@ async def form_filling(
         )
     )
     await session.commit()
+    current_user = get_user(session, pending.telegram_id)
+    token_payload = TokenPayload(
+        sub=str(current_user.user_id),
+        username=current_user.name,
+        version=current_user.token_version,
+    )
+    set_response_token_cookies(response, token_payload)
 
+    await action_service.log_login(current_user.user_id, ip)
+    update_pending_by_token(session, token)
     return RegistrationStatusResponse(
         status=PendingStatus.CONFIRMED,
     )
@@ -129,8 +144,11 @@ async def form_filling(
 async def registration_status(
     request: Request,
     session: DBSession,
+    response: Response,
     code: Annotated[str, Query(min_length=4, max_length=20)],
     token: Annotated[str, Query(min_length=20, max_length=50)],
+    ip: ClientIP,
+    action_service: Annotated[ActionService, Depends()],
     time_out: Annotated[
         int, Query(ge=5, le=60)
     ] = settings.TG_AUTH_POLL_TIMEOUT_SECONDS,
@@ -164,11 +182,24 @@ async def registration_status(
                 code=code,
             )
 
-        if pending.status != PendingStatus.CODE_PROCESSING:  # divide + cookie
+        if pending.status == PendingStatus.AUTH:
+            current_user = get_user(session, pending.telegram_id)
+            token_payload = TokenPayload(
+                sub=str(current_user.user_id),
+                username=current_user.name,
+                version=current_user.token_version,
+            )
+            set_response_token_cookies(response, token_payload)
+
+            await action_service.log_login(current_user.user_id, ip)
+
             return RegistrationStatusResponse(
                 status=pending.status,
             )
-
+        if pending.status == PendingStatus.REGISTRATION:
+            return RegistrationStatusResponse(
+                status=pending.status,
+            )
         if datetime.now() >= deadline:
             await session.rollback()
             return RegistrationStatusResponse(status=PendingStatus.CODE_PROCESSING)

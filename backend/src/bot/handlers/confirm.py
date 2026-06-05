@@ -52,7 +52,12 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
 
         existing_user = await get_user(session, message.from_user.id)
         if existing_user:
-            await update_pending_by_code(session, code, status=PendingStatus.AUTH)
+            await update_pending_by_code(
+                session,
+                code,
+                status=PendingStatus.AUTH,
+                telegram_id=message.from_user.id,
+            )
             await session.commit()
             await message.answer(Messages.already_registered(existing_user.name))
             return
