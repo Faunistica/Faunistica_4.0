@@ -26,3 +26,5 @@ class RegistrationStartResponse(BaseModel):
 
 class RegistrationStatusResponse(BaseModel):
     status: PendingStatus
+    user_id: int | None = None
+    username: str | None = None

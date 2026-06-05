@@ -199,6 +199,8 @@ async def registration_status(
 
             return RegistrationStatusResponse(
                 status=pending.status,
+                user_id=current_user.user_id,
+                username=current_user.username,
             )
         if pending.status == PendingStatus.REGISTRATION:
             return RegistrationStatusResponse(
