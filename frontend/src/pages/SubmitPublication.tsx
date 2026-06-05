@@ -20,6 +20,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -81,49 +82,10 @@ const itemAnim = {
 
 const SubmitPublication: FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const publ_id = Number(id);
 
   const { data: pub, isLoading: pubLoading } = useGetPublicationByIdQuery(publ_id);
   const { data: status, isLoading: statusLoading } = useGetSubmitStatusQuery(publ_id);
-  const [submit, { isLoading: submitting }] = useSubmitPublicationMutation();
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isValid },
-    watch,
-  } = useForm<SubmitForm>({
-    resolver: zodResolver(submitFormSchema),
-    defaultValues: {
-      processingLevel: undefined,
-      uralsScope: null,
-      materialStatus: null,
-      comment: "",
-    },
-    mode: "onChange",
-  });
-
-  const processingLevel = watch("processingLevel");
-
-  const onSubmit = useCallback(
-    async (data: SubmitForm) => {
-      const result = await submit({
-        publ_id,
-        data: {
-          processing_level: data.processingLevel,
-          urals_scope: data.uralsScope || null,
-          material_status: data.materialStatus || null,
-          comment: data.comment || null,
-        },
-      });
-      if (!result.error) {
-        toast.success("Публикация отмечена как обработанная");
-        void navigate("/dashboard", { replace: true });
-      }
-    },
-    [publ_id, submit, navigate],
-  );
 
   if (pubLoading || statusLoading) return <LoadingScreen />;
 
@@ -160,17 +122,7 @@ const SubmitPublication: FC = () => {
               {hasDrafts ? (
                 <DraftsBlock publ_id={publ_id} draftIds={draftIds} />
               ) : (
-                <FormCard
-                  publ_id={publ_id}
-                  meta={meta}
-                  control={control}
-                  errors={errors}
-                  isValid={isValid}
-                  submitting={submitting}
-                  processingLevel={processingLevel}
-                  handleSubmit={handleSubmit}
-                  onSubmit={onSubmit}
-                />
+                <FormCard publ_id={publ_id} meta={meta} />
               )}
             </Card>
           </motion.div>
@@ -186,163 +138,216 @@ export default SubmitPublication;
    Form Card
    ═══════════════════════════════════════════ */
 
-const FormCard: FC<{
-  publ_id: number;
-  meta: string;
-  control: ReturnType<typeof useForm<SubmitForm>>["control"];
-  errors: ReturnType<typeof useForm<SubmitForm>>["formState"]["errors"];
-  isValid: boolean;
-  submitting: boolean;
-  processingLevel: string | undefined;
-  handleSubmit: ReturnType<typeof useForm<SubmitForm>>["handleSubmit"];
-  onSubmit: (data: SubmitForm) => Promise<void>;
-}> = (p) => (
-  <>
-    <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
-      <h1 className="text-2xl font-light tracking-wide sm:text-3xl">Завершение работы</h1>
-      <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
-        Публикация #{p.publ_id}
-      </p>
-      {p.meta && <p className="mt-1 text-sm text-muted-foreground italic">{p.meta}</p>}
-    </motion.div>
+const FormCard: FC<{ publ_id: number; meta: string }> = ({ publ_id, meta }) => {
+  const navigate = useNavigate();
+  const [submit, { isLoading: submitting }] = useSubmitPublicationMutation();
 
-    <div className="space-y-7">
-      {/* Processing level */}
-      <motion.div variants={itemAnim} transition={stagger(1)}>
-        <FieldLabel icon={FileText} text="Уровень обработки" />
-        <Controller
-          name="processingLevel"
-          control={p.control}
-          render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger
-                className={cn("w-full text-sm", !field.value && "text-muted-foreground")}
-              >
-                <SelectValue placeholder="— выберите уровень —" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(LEVEL_LABELS).map(([val, label]) => (
-                  <SelectItem key={val} value={val}>
-                    <span>{label}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">{LEVEL_DESC[val]}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {p.errors.processingLevel && (
-          <p className="mt-1 text-xs text-destructive">{p.errors.processingLevel.message}</p>
-        )}
+  const {
+    control,
+    handleSubmit,
+    formState: { isValid },
+  } = useForm<SubmitForm>({
+    resolver: zodResolver(submitFormSchema),
+    defaultValues: {
+      processingLevel: undefined,
+      uralsScope: null,
+      materialStatus: null,
+      comment: "",
+    },
+    mode: "onChange",
+  });
+
+  const onSubmit = useCallback(
+    async (data: SubmitForm) => {
+      const result = await submit({
+        publ_id,
+        data: {
+          processing_level: data.processingLevel,
+          urals_scope: data.uralsScope || null,
+          material_status: data.materialStatus || null,
+          comment: data.comment || null,
+        },
+      });
+      if (!result.error) {
+        toast.success("Публикация отмечена как обработанная");
+        void navigate("/dashboard", { replace: true });
+      }
+    },
+    [publ_id, submit, navigate],
+  );
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
+        <h1 className="text-2xl font-light tracking-wide sm:text-3xl">Завершение работы</h1>
+        <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
+          Публикация #{publ_id}
+        </p>
+        {meta && <p className="mt-1 text-sm text-muted-foreground italic">{meta}</p>}
       </motion.div>
 
-      {/* Urals scope */}
-      <motion.div variants={itemAnim} transition={stagger(2)}>
-        <FieldLabel icon={MapPin} text="Находки за пределами Урала?" />
-        <Controller
-          name="uralsScope"
-          control={p.control}
-          render={({ field }) => (
-            <RadioGroup
-              value={field.value ?? ""}
-              onValueChange={(v) => field.onChange(v || null)}
-              className="flex flex-col gap-2 sm:flex-row sm:gap-8"
-            >
-              {[
-                { val: "yes", label: "Да" },
-                { val: "no", label: "Нет" },
-              ].map((opt) => (
-                <div key={opt.val} className="flex items-center gap-2">
-                  <RadioGroupItem value={opt.val} id={`urals-${opt.val}`} />
-                  <Label
-                    htmlFor={`urals-${opt.val}`}
-                    className="cursor-pointer text-sm font-normal"
+      <div className="space-y-7">
+        {/* Processing level */}
+        <motion.div variants={itemAnim} transition={stagger(1)}>
+          <Controller
+            name="processingLevel"
+            control={control}
+            render={({ field, fieldState: { invalid, error } }) => (
+              <Field data-invalid={invalid}>
+                <FieldLabel>
+                  <FileText className="size-3.5 text-emerald-600" />
+                  Уровень обработки
+                </FieldLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger
+                    id="processingLevel"
+                    className={cn("w-full text-sm", !field.value && "text-muted-foreground")}
+                    aria-invalid={invalid}
                   >
-                    {opt.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          )}
-        />
-      </motion.div>
+                    <SelectValue placeholder="— выберите уровень —" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(LEVEL_LABELS).map(([val, label]) => (
+                      <SelectItem key={val} value={val}>
+                        <span>{label}</span>
+                        <span className="ml-2 text-xs text-muted-foreground">{LEVEL_DESC[val]}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError errors={[error]} />
+              </Field>
+            )}
+          />
+        </motion.div>
 
-      {/* Material status */}
-      <motion.div variants={itemAnim} transition={stagger(3)}>
-        <FieldLabel icon={Hash} text="Указания видов без материала?" />
-        <Controller
-          name="materialStatus"
-          control={p.control}
-          render={({ field }) => (
-            <RadioGroup
-              value={field.value ?? ""}
-              onValueChange={(v) => field.onChange(v || null)}
-              className="flex flex-col gap-2 sm:flex-row sm:gap-8"
-            >
-              {[
-                { val: "yes", label: "Да" },
-                { val: "no", label: "Нет" },
-              ].map((opt) => (
-                <div key={opt.val} className="flex items-center gap-2">
-                  <RadioGroupItem value={opt.val} id={`mat-${opt.val}`} />
-                  <Label htmlFor={`mat-${opt.val}`} className="cursor-pointer text-sm font-normal">
-                    {opt.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          )}
-        />
-      </motion.div>
+        {/* Urals scope */}
+        <motion.div variants={itemAnim} transition={stagger(2)}>
+          <Controller
+            name="uralsScope"
+            control={control}
+            render={({ field, fieldState: { invalid, error } }) => (
+              <Field data-invalid={invalid}>
+                <FieldLabel>
+                  <MapPin className="size-3.5 text-emerald-600" />
+                  Находки за пределами Урала?
+                </FieldLabel>
+                <RadioGroup
+                  value={field.value ?? ""}
+                  onValueChange={(v) => field.onChange(v || null)}
+                  className="flex flex-col gap-2 sm:flex-row sm:gap-8"
+                  aria-invalid={invalid}
+                >
+                  {[
+                    { val: "yes", label: "Да" },
+                    { val: "no", label: "Нет" },
+                  ].map((opt) => (
+                    <div key={opt.val} className="flex items-center gap-2">
+                      <RadioGroupItem value={opt.val} id={`urals-${opt.val}`} />
+                      <Label htmlFor={`urals-${opt.val}`} className="cursor-pointer text-sm font-normal">
+                        {opt.label}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+                <FieldError errors={[error]} />
+              </Field>
+            )}
+          />
+        </motion.div>
 
-      {/* Comment */}
-      <motion.div variants={itemAnim} transition={stagger(4)}>
-        <FieldLabel icon={MessageSquare} text="Комментарий" />
-        <Controller
-          name="comment"
-          control={p.control}
-          render={({ field }) => (
-            <Textarea
-              {...field}
-              placeholder="Любые замечания по публикации..."
-              className="min-h-24 text-sm placeholder:text-sm placeholder:text-muted-foreground/40"
-            />
-          )}
-        />
-      </motion.div>
-    </div>
+        {/* Material status */}
+        <motion.div variants={itemAnim} transition={stagger(3)}>
+          <Controller
+            name="materialStatus"
+            control={control}
+            render={({ field, fieldState: { invalid, error } }) => (
+              <Field data-invalid={invalid}>
+                <FieldLabel>
+                  <Hash className="size-3.5 text-emerald-600" />
+                  Указания видов без материала?
+                </FieldLabel>
+                <RadioGroup
+                  value={field.value ?? ""}
+                  onValueChange={(v) => field.onChange(v || null)}
+                  className="flex flex-col gap-2 sm:flex-row sm:gap-8"
+                  aria-invalid={invalid}
+                >
+                  {[
+                    { val: "yes", label: "Да" },
+                    { val: "no", label: "Нет" },
+                  ].map((opt) => (
+                    <div key={opt.val} className="flex items-center gap-2">
+                      <RadioGroupItem value={opt.val} id={`mat-${opt.val}`} />
+                      <Label htmlFor={`mat-${opt.val}`} className="cursor-pointer text-sm font-normal">
+                        {opt.label}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+                <FieldError errors={[error]} />
+              </Field>
+            )}
+          />
+        </motion.div>
 
-    {/* Footer */}
-    <motion.div
-      variants={itemAnim}
-      transition={stagger(5)}
-      className="mt-8 flex items-center justify-between border-t border-border pt-6"
-    >
-      <Button variant="outline" asChild>
-        <Link to="/dashboard">Отмена</Link>
-      </Button>
-      <Button
-        onClick={p.handleSubmit(p.onSubmit)}
-        disabled={!p.isValid || p.submitting}
-        className="bg-emerald-700 text-white hover:bg-emerald-800"
+        {/* Comment */}
+        <motion.div variants={itemAnim} transition={stagger(4)}>
+          <Controller
+            name="comment"
+            control={control}
+            render={({ field, fieldState: { invalid, error } }) => (
+              <Field data-invalid={invalid}>
+                <FieldLabel>
+                  <MessageSquare className="size-3.5 text-emerald-600" />
+                  Комментарий
+                </FieldLabel>
+                <Textarea
+                  id="comment"
+                  {...field}
+                  placeholder="Любые замечания по публикации..."
+                  className="min-h-24 text-sm placeholder:text-sm placeholder:text-muted-foreground/40"
+                  aria-invalid={invalid}
+                />
+                <FieldError errors={[error]} />
+              </Field>
+            )}
+          />
+        </motion.div>
+      </div>
+
+      {/* Footer */}
+      <motion.div
+        variants={itemAnim}
+        transition={stagger(5)}
+        className="mt-8 flex items-center justify-between border-t border-border pt-6"
       >
-        {p.submitting ? (
-          <Loader2 className="mr-2 size-4 animate-spin" />
-        ) : (
-          <CheckCircle2 className="mr-2 size-4" />
-        )}
-        {p.submitting ? "Отправка..." : "Завершить"}
-      </Button>
-    </motion.div>
-  </>
-);
+        <Button variant="outline" asChild>
+          <Link to="/dashboard">Отмена</Link>
+        </Button>
+        <Button
+          type="submit"
+          disabled={!isValid || submitting}
+          className="bg-emerald-700 text-white hover:bg-emerald-800"
+        >
+          {submitting ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <CheckCircle2 className="mr-2 size-4" />
+          )}
+          {submitting ? "Отправка..." : "Завершить"}
+        </Button>
+      </motion.div>
+    </form>
+  );
+};
 
 /* ═══════════════════════════════════════════
    Drafts Block
    ═══════════════════════════════════════════ */
 
 const DraftsBlock: FC<{ publ_id: number; draftIds: string[] }> = ({ publ_id, draftIds }) => (
-  <>
+  <motion.div variants={itemAnim} transition={stagger(0)}>
     <div className="flex flex-col items-center text-center">
       <div className="mb-3 flex items-center gap-2 font-semibold text-amber-700">
         <AlertCircle className="size-5 shrink-0" />
@@ -365,16 +370,5 @@ const DraftsBlock: FC<{ publ_id: number; draftIds: string[] }> = ({ publ_id, dra
         ))}
       </ul>
     </div>
-  </>
-);
-
-/* ═══════════════════════════════════════════
-   Sub-components
-   ═══════════════════════════════════════════ */
-
-const FieldLabel: FC<{ icon: typeof FileText; text: string }> = ({ icon: Icon, text }) => (
-  <div className="mb-2 flex items-center gap-2">
-    <Icon className="size-3.5 text-emerald-600" />
-    <span className="text-sm text-foreground">{text}</span>
-  </div>
+  </motion.div>
 );
