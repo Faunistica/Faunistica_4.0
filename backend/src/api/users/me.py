@@ -40,7 +40,7 @@ async def update_current_user(
         return
     if "username" in update_data:
         validate_result = await user_service.validate_username(
-            update_data["username"], token.user_id
+            username=update_data["username"], exclude_user_id=token.user_id
         )
         if isinstance(validate_result, MsgErr):
             raise UsernameAlreadyExistsError(validate_result.error)
