@@ -128,13 +128,17 @@ export interface StatisticsResponse {
 }
 
 export interface TelegramAuthInitResponse {
-    token: string;
     code: string;
+    code_expires_in: number;
+    token: string;
+    token_expires_in: number;
+    bot_url: string;
 }
 
 export interface TelegramAuthStatusResponse {
-    status: 'pending' | 'need_registration' | 'authorized';
+    status?: 'pending' | 'need_registration' | 'authorized';
     code?: string;
+    code_expires_in?: number;
     user_id?: number;
     username?: string;
 }
@@ -142,11 +146,11 @@ export interface TelegramAuthStatusResponse {
 export interface RegisterRequest {
     token: string;
     username: string;
-    password?: string;
+    password: string;
     age: number;
     rating: boolean;
-    sex: string;
-    language: string;
+    sex: 'male' | 'female' | 'none';
+    language: 'rus' | 'eng' | 'all';
     comm?: string;
 }
 

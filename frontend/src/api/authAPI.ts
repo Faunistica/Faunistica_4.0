@@ -76,16 +76,16 @@ export const authAPI = createApi({
         }),
         initTelegramAuth: build.mutation<Types.TelegramAuthInitResponse, void>({
             query: () => ({
-                url: '/auth/telegram/',
+                url: '/auth/code',
                 method: 'POST',
             }),
         }),
         checkTelegramAuthStatus: build.query<
             Types.TelegramAuthStatusResponse,
-            { token: string; timeout: number }
+            { code: string; token: string; timeout: number }
         >({
-            query: ({ token, timeout }) => ({
-                url: `/auth/telegram/status?token=${token}&timeout=${timeout}`,
+            query: ({ code, token, timeout }) => ({
+                url: `/auth/code/status?code=${code}&token=${token}&time_out=${timeout}`,
                 method: 'GET',
             }),
             async onQueryStarted(_, { dispatch, queryFulfilled }) {
@@ -106,7 +106,7 @@ export const authAPI = createApi({
         }),
         register: build.mutation<Types.RegisterResponse, Types.RegisterRequest>({
             query: (userData) => ({
-                url: '/auth/register/',
+                url: '/auth/form',
                 method: 'POST',
                 body: userData,
             }),

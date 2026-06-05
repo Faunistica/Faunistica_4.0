@@ -69,18 +69,26 @@ const TelegramAuth: FC = () => {
     const [checkStatus] = useLazyCheckTelegramAuthStatusQuery();
     const [statusMessage, setStatusMessage] = useState('Генерация кода...');
     const [isPollingError, setIsPollingError] = useState(false);
+    const [displayCode, setDisplayCode] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         let isMounted = true;
 
-        const startPolling = async (token: string) => {
+        const startPolling = async (initialCode: string, token: string) => {
+            let currentCode = initialCode;
             while (isMounted) {
                 try {
-                    const result = await checkStatus({ token, timeout: 30 }, false).unwrap();
+                    const result = await checkStatus({ code: currentCode, token, timeout: 30 }, false).unwrap();
                     if (!isMounted) break;
 
+                    if (result.code && !result.status) {
+                        currentCode = result.code;
+                        setDisplayCode(currentCode);
+                        continue;
+                    }
+
                     if (result.status === 'need_registration') {
-                        navigate('/auth/onboarding', { state: { token }, replace: true });
+                        navigate('/auth/onboarding', { state: { token, code: currentCode }, replace: true });
                         break;
                     } else if (result.status === 'authorized') {
                         navigate('/dashboard', { replace: true });
@@ -105,7 +113,8 @@ const TelegramAuth: FC = () => {
                 if (isMounted) {
                     setIsPollingError(false);
                     setStatusMessage('Ожидание ввода кода в Telegram...');
-                    startPolling(res.token);
+                    setDisplayCode(res.code);
+                    startPolling(res.code, res.token);
                 }
             })
             .catch((err) => {
@@ -130,7 +139,16 @@ const TelegramAuth: FC = () => {
                         Вход через Telegram
                     </CardTitle>
                     <CardDescription className="mx-auto mt-2 max-w-md text-slate-500">
-                        Отправьте этот код сообщением нашему Telegram боту, не закрывая данную страницу
+                        Отправьте этот код сообщением нашему Telegram боту{' '}
+                        <a
+                            href={import.meta.env.VITE_TELEGRAM_BOT_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-telegram hover:underline"
+                        >
+                            @{import.meta.env.VITE_TELEGRAM_BOT_URL?.replace(/^https?:\/\/t\.me\//, '')}
+                        </a>
+                        , не закрывая данную страницу
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 pt-2">
@@ -150,7 +168,7 @@ const TelegramAuth: FC = () => {
                             ) : (
                                 <div className="flex h-[240px] flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-100 p-6 shadow-inner">
                                     <span className="font-mono text-5xl font-bold tracking-[0.15em] text-slate-800">
-                                        {initData?.code || '------'}
+                                        {displayCode || '------'}
                                     </span>
                                 </div>
                             )}
@@ -159,7 +177,7 @@ const TelegramAuth: FC = () => {
                         {/* Right Column: QR and Button */}
                         <div className="flex w-full max-w-[240px] h-[240px] flex-col justify-between">
                             <div className="flex w-full grow items-center justify-center rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-                                <TelegramQRCode code={initData?.code} />
+                                <TelegramQRCode code={displayCode} />
                             </div>
 
                             <Button
@@ -168,8 +186,8 @@ const TelegramAuth: FC = () => {
                             >
                                 <a
                                     href={
-                                        initData?.code
-                                            ? `${import.meta.env.VITE_TELEGRAM_BOT_URL}?start=${initData.code}`
+                                        displayCode
+                                            ? `${import.meta.env.VITE_TELEGRAM_BOT_URL}?start=${displayCode}`
                                             : import.meta.env.VITE_TELEGRAM_BOT_URL
                                     }
                                     target="_blank"

@@ -45,6 +45,7 @@ export default function Onboarding() {
     const location = useLocation();
     const navigate = useNavigate();
     const token = location.state?.token;
+    const code = location.state?.code;
 
     const [registerMutation, { isLoading, error }] = useRegisterMutation();
 
@@ -82,13 +83,14 @@ export default function Onboarding() {
 
         try {
             await registerMutation({
-                token,
+                code: code || '',
+                name: data.username,
                 username: data.username,
                 password: data.password,
                 age: data.age,
                 rating: data.rating === 'yes',
                 sex: data.sex,
-                language,
+                lng: language,
                 comm: data.comm,
             }).unwrap();
             navigate('/dashboard', { replace: true });
