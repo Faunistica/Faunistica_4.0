@@ -33,6 +33,7 @@ async def update_current_user(
 ) -> UserFull:
     user = await user_service.update_user_data(
         token.user_id,
+        name=data.name,
         age=data.age,
         lng=data.lng,
         comm=data.comm,

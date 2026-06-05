@@ -18,8 +18,7 @@ class UserFull(UserMinimal):
     tlg_name: str | None = None
     tlg_username: str | None = None
     reg_stat: UserState | None = None
-    hash: str | None = None
-    hash_date: datetime | None = None
+    username: str | None = None
     items: str
     age: int | None = None
     lng: UserLanguage | None = None
