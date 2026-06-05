@@ -2,7 +2,6 @@ import logging
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, status
-from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 
 from core.config import settings
@@ -61,7 +60,7 @@ async def submit_status(
     return SubmitStatusResponse(draft_record_ids=draft_ids)
 
 
-@router.post("/{publ_id}/submit")
+@router.post("/{publ_id}/submit", status_code=status.HTTP_204_NO_CONTENT)
 async def submit_publication(
     publ_id: int,
     data: PublicationSubmit,
@@ -70,8 +69,8 @@ async def submit_publication(
     bg_tasks: BackgroundTasks,
     http_client: HTTPClient,
     pub_service: Annotated[PublicationService, Depends()],
-) -> Response:
-    draft_ids = await pub_service.submit(
+) -> None:
+    await pub_service.submit(
         token.user_id,
         publ_id,
         data.processing_level,
@@ -81,11 +80,4 @@ async def submit_publication(
         ip,
     )
 
-    if draft_ids:
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT,
-            content={"draft_record_ids": draft_ids},
-        )
-
     bg_tasks.add_task(_notify_admin, http_client, publ_id, data.comment)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)

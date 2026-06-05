@@ -12,6 +12,7 @@ from core.exceptions import (
     NoPublicationsAssignedError,
     PublicationForbiddenError,
     PublicationNotFoundError,
+    UnsubmittedRecordsError,
 )
 from core.model import EventRecord, User
 from repository.publication import (
@@ -139,13 +140,13 @@ class PublicationService:
         material_status: str | None,
         comment: str | None,
         ip: str | None,
-    ) -> list[str]:
+    ) -> None:
         user = await get_user_expect(self.session, user_id)
         await self.validate_access(publ_id, user=user)
 
         draft_ids = await self.get_draft_record_ids(user_id, publ_id)
         if draft_ids:
-            return draft_ids
+            raise UnsubmittedRecordsError(draft_ids)
 
         if level in (ProcessingLevel.FULL, ProcessingLevel.URAL):
             stmt = (
@@ -174,7 +175,6 @@ class PublicationService:
         await self.session.execute(stmt)
 
         await self.session.commit()
-        return []
 
     async def assign_current(self, user_id: int) -> Publication | None:
         """Return current publication from items[0], or None if queue empty."""
