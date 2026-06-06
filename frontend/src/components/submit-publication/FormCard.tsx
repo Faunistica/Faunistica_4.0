@@ -91,7 +91,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                 },
             });
             if (!result.error) {
-                toast.success('Публикация отмечена как обработанная');
+                toast.success('Публикация обработана');
                 void navigate('/dashboard', { replace: true });
             }
         },
@@ -101,7 +101,9 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
-                <h1 className="text-2xl font-light tracking-wide sm:text-3xl">Завершение работы</h1>
+                <h1 className="text-2xl font-light tracking-wide sm:text-3xl">
+                    Завершение обработки
+                </h1>
                 <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
                     Публикация #{publ_id}
                 </p>
