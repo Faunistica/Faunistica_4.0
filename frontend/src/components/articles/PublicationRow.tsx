@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router';
 import * as Types from '@/types/api.dto';
-import { Card } from '../ui/card';
+import { Card, CardHeader, CardTitle } from '../ui/card';
 
 interface PublicationRowProps {
-    pub: Types.Publication;
+    publication: Types.Publication;
     mode: 'progress' | 'available';
 }
 
-export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
+export const PublicationRow: FC<PublicationRowProps> = ({ publication, mode }) => {
     return (
         <Card className="relative mb-4 p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row">
             {/* Левая цветная полоса-индикатор (опционально для разграничения режимов) */}
@@ -25,54 +25,45 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
             />
 
             {/* Блок с метаданными */}
-            <div className="w-full min-w-0 flex-1 space-y-2 pl-1">
+            <CardHeader className="w-full min-w-0 flex-1 pl-1">
                 {/* Строка с ID и бейджами */}
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="flex h-5 items-center gap-1 rounded-full bg-slate-100 px-2.5 font-mono text-xs font-semibold text-slate-500">
-                        <Hash className="mb-px size-3" />
-                        <span className="mt-px leading-3">{pub.publ_id}</span>
-                    </span>
-
-                    {pub.type && (
-                        <Badge
-                            variant="outline"
-                            className="h-5 rounded-full border-slate-300 bg-white px-2.5 text-[10px] font-medium text-slate-700"
-                        >
-                            {pub.type}
-                        </Badge>
-                    )}
-                    {pub.language && (
-                        <Badge className="h-5 rounded-full bg-slate-100 px-2.5 text-[10px] font-medium text-slate-700">
-                            {pub.language}
-                        </Badge>
-                    )}
-                    {pub.ural && (
+                    {publication.ural && (
                         <Badge className="h-5 rounded-full border border-blue-200 bg-blue-50 px-2.5 text-[10px] font-medium text-blue-700">
                             Урал
                         </Badge>
                     )}
+                    {publication.language && (
+                        <Badge className="h-5 rounded-full bg-slate-100 px-2.5 text-[10px] font-medium text-slate-700">
+                            {publication.language}
+                        </Badge>
+                    )}
                 </div>
 
-                <h4
+                <CardTitle
                     className="line-clamp-2 text-sm/snug font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
-                    title={pub.name || 'Без названия'}
+                    title={publication.name || 'Без названия'}
                 >
-                    {pub.name || 'Название публикации отсутствует'}
-                </h4>
+                    {publication.name || 'Название публикации отсутствует'}
+                </CardTitle>
 
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     <span className="inline-flex items-center gap-1">
-                        <User className="size-3.5 text-slate-400" />
-                        {pub.author || 'Автор неизвестен'}
+                        <Hash className="size-3.5 text-slate-400" />
+                        {publication.publ_id}
                     </span>
-                    {pub.year && (
+                    <span className="inline-flex items-center gap-1">
+                        <User className="size-3.5 text-slate-400" />
+                        {publication.author || 'Автор неизвестен'}
+                    </span>
+                    {publication.year && (
                         <span className="inline-flex items-center gap-1">
                             <Calendar className="size-3.5 text-slate-400" />
-                            {pub.year}
+                            {publication.year}
                         </span>
                     )}
                 </div>
-            </div>
+            </CardHeader>
 
             <div className="mt-1 flex w-full shrink-0 flex-col items-stretch gap-2.5 sm:flex-row sm:items-center lg:mt-0 lg:w-auto">
                 <Button
@@ -80,15 +71,15 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                     size="sm"
                     className={cn(
                         'h-9 w-full justify-center gap-2 rounded-lg border transition-all sm:w-auto',
-                        pub.pdf_file
+                        publication.pdf_file
                             ? 'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-100'
                             : 'cursor-not-allowed border-slate-200 bg-slate-50/50 text-slate-400',
                     )}
-                    disabled={!pub.pdf_file}
-                    asChild={!!pub.pdf_file}
+                    disabled={!publication.pdf_file}
+                    asChild={!!publication.pdf_file}
                 >
-                    {pub.pdf_file ? (
-                        <a href={pub.pdf_file} target="_blank" rel="noopener noreferrer">
+                    {publication.pdf_file ? (
+                        <a href={publication.pdf_file} target="_blank" rel="noopener noreferrer">
                             <FileDown className="size-4" />
                             <span>PDF</span>
                         </a>
@@ -107,7 +98,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                             className="h-9 w-full justify-center gap-2 rounded-lg bg-emerald-600 text-white shadow-sm shadow-emerald-200/50 hover:bg-emerald-700 sm:w-auto"
                             asChild
                         >
-                            <Link to={`/publication/${pub.publ_id}`}>
+                            <Link to={`/publication/${publication.publ_id}`}>
                                 <BookOpen className="size-4" />
                                 <span>Продолжить</span>
                             </Link>
@@ -118,7 +109,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ pub, mode }) => {
                             className="h-9 w-full justify-center gap-2 rounded-lg border-slate-300 sm:w-auto"
                             asChild
                         >
-                            <Link to={`/publication/${pub.publ_id}/submit`}>
+                            <Link to={`/publication/${publication.publ_id}/submit`}>
                                 <CheckCircle2 className="size-4" />
                                 <span>Завершить обработку</span>
                             </Link>

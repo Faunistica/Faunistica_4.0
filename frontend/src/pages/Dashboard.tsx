@@ -38,7 +38,7 @@ const Dashboard: FC = () => {
                             </div>
                         </div>
                         {availible.map((pub) => (
-                            <PublicationRow key={pub.publ_id} pub={pub} mode="available" />
+                            <PublicationRow key={pub.publ_id} publication={pub} mode="available" />
                         ))}
                     </section>
                 )}
@@ -55,7 +55,7 @@ const Dashboard: FC = () => {
                             </div>
                         </div>
                         {queue.map((pub) => (
-                            <PublicationRow key={pub.publ_id} pub={pub} mode="progress" />
+                            <PublicationRow key={pub.publ_id} publication={pub} mode="progress" />
                         ))}
                     </section>
                 )}
