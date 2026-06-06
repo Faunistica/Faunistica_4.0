@@ -57,16 +57,18 @@ const DraftsBlock: FC<Props> = ({ publ_id, draftIds }) => (
         </motion.div>
 
         <motion.div variants={itemAnim} transition={stagger(1)}>
-            <div className="mb-3 flex items-center justify-center gap-2 font-semibold text-amber-700">
-                <AlertCircle className="size-5 shrink-0" />
-                <span>
-                    Есть {draftIds.length}{' '}
-                    {draftIds.length === 1 ? 'черновая запись' : 'черновых записей'}
-                </span>
+            <div className="mb-3 flex items-start gap-2 text-slate-600">
+                <AlertCircle className="size-5 shrink-0 pb-0.75 text-red-500" />
+                <div className="flex flex-col">
+                    <span className="font-semibold">
+                        Есть {draftIds.length}{' '}
+                        {draftIds.length === 1 ? 'черновая запись' : 'черновых записей'}
+                    </span>
+                    <span className="mb-4 text-sm text-muted-foreground">
+                        которые нужно отправить или удалить.
+                    </span>
+                </div>
             </div>
-            <p className="mb-4 text-center text-sm text-muted-foreground">
-                которые нужно отправить или удалить.
-            </p>
 
             <div className="space-y-2">
                 {draftIds.map((recordId) => (
