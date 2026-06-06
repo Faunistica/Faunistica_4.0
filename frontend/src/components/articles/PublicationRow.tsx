@@ -41,7 +41,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ publication, mode }) =
                 </div>
 
                 <CardTitle
-                    className="line-clamp-2 text-sm/snug font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
+                    className="line-clamp-2 text-lg font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
                     title={publication.name || 'Без названия'}
                 >
                     {publication.name || 'Название публикации отсутствует'}

@@ -51,7 +51,7 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
                 </div>
 
                 <CardTitle
-                    className="line-clamp-2 text-sm/snug font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
+                    className="line-clamp-2 text-lg font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
                     title={publication.name || 'Без названия'}
                 >
                     {publication.name || 'Название публикации отсутствует'}
