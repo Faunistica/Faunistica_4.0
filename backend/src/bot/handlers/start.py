@@ -1,5 +1,6 @@
 from aiogram import Router
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from bot import keyboards
@@ -13,7 +14,7 @@ router = Router()
 
 
 @router.message(Command("start"))
-async def start_command(message: Message) -> None:
+async def start_command(message: Message, state: FSMContext) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
@@ -23,7 +24,7 @@ async def start_command(message: Message) -> None:
     args = message.text.split()
     if len(args) > 1:
         if args[1] == "support":
-            await support_command(message)
+            await support_command(message, state, message.bot)
         else:
             await handle_code_input(message, args[1])
         return
