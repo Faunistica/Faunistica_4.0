@@ -21,9 +21,7 @@ async def registration_info(message: Message) -> None:
 
     args = message.text.split()
     if len(args) > 1:
-        if args[1] == "support":
-            await support_command(message)
-        await handle_code_input(message)
+        await handle_code_input(message, args[1])
         return
 
     await message.answer(

@@ -2,6 +2,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
+from bot.handlers.support import support_command
 from bot import keyboards
 from bot.handlers.confirm import handle_code_input
 from bot.messages import Messages
@@ -21,7 +22,10 @@ async def start_command(message: Message) -> None:
 
     args = message.text.split()
     if len(args) > 1:
-        await handle_code_input(message)
+        if args[1] == "support":
+            await support_command(message)
+        else:
+            await handle_code_input(message, args[1])
         return
 
     await message.answer(
