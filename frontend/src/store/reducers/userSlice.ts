@@ -1,5 +1,6 @@
 import type { UserInfo } from '@/types/api.dto';
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { clearUserPhotoCache } from '@/hooks/useUserPhoto';
 
 interface UserState {
     auth: boolean | null;
@@ -42,6 +43,7 @@ export const userSlice = createSlice({
             localStorage.removeItem('auth');
             localStorage.removeItem('username');
             localStorage.removeItem('user_id');
+            clearUserPhotoCache();
         },
     },
 });
