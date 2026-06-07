@@ -1,6 +1,6 @@
 import { type FC, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, PanelLeft, Globe, LogOut, Settings as SettingsIcon, Check } from 'lucide-react';
+import { Menu, X, PanelLeft, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useRouteHandle } from '@/hooks/useRouteMeta';
 import { useAppSelector } from '@/store/store';
@@ -29,13 +29,6 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
     const photoUrl = useUserPhoto(auth ? user_id : null);
     const [logout] = useLogoutMutation();
     const navigate = useNavigate();
-
-    const [language, setLanguage] = useState(localStorage.getItem('language') || 'ru');
-
-    const handleLanguageChange = (lang: string) => {
-        setLanguage(lang);
-        localStorage.setItem('language', lang);
-    };
 
     const handleLogout = async () => {
         try {
@@ -158,35 +151,6 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             )}
                         </nav>
                         <div className="flex items-center gap-3">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="size-9 rounded-full"
-                                    >
-                                        <Globe className="size-5 text-slate-600" />
-                                        <span className="sr-only">Сменить язык</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="z-150">
-                                    <DropdownMenuItem
-                                        onClick={() => handleLanguageChange('ru')}
-                                        className="cursor-pointer justify-between"
-                                    >
-                                        Русский
-                                        {language === 'ru' && <Check className="ml-4 size-4" />}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => handleLanguageChange('en')}
-                                        className="cursor-pointer justify-between"
-                                    >
-                                        English
-                                        {language === 'en' && <Check className="ml-4 size-4" />}
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
                             {!auth ? (
                                 <Button
                                     asChild
