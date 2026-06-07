@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { useGetPublicationByIdQuery } from '@/api/publAPI';
 import { type FC } from 'react';
 import { PublicationPreview } from '@/components/shared/PublicationPreview';
+import PublicationSourceFiles from '@/components/shared/PublicationSourceFiles';
 
 interface Props {
     publ_id: number;
@@ -30,6 +31,9 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
     return (
         <Card className="relative mb-4 p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row">
             <PublicationPreview publication={publication} border="border-slate-800" />
+            <div className="mt-3 flex shrink-0 items-center justify-end lg:mt-0 lg:ml-auto lg:self-center">
+                <PublicationSourceFiles publication={publication} />
+            </div>
         </Card>
     );
 };

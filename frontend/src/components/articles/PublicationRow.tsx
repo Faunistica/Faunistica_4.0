@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router';
 import { Card } from '@/components/ui/card';
 import { PublicationPreview } from '@/components/shared/PublicationPreview';
+import PublicationSourceFiles from '@/components/shared/PublicationSourceFiles';
 import type { Publication } from '@/types/domain';
 
 interface PublicationRowProps {
@@ -15,7 +16,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ publication, mode }) =
     const border = mode === 'progress' ? 'border-blue-400' : 'border-emerald-400';
 
     return (
-        <Card className="relative mb-4 p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row">
+        <Card className="relative mb-4 gap-2.5 p-4 shadow-sm transition-all duration-200 hover:border-slate-300/80 hover:shadow-md sm:p-5 lg:flex-row">
             <PublicationPreview publication={publication} border={border} />
 
             {mode === 'available' && (
@@ -43,6 +44,10 @@ export const PublicationRow: FC<PublicationRowProps> = ({ publication, mode }) =
                     </Button>
                 </div>
             )}
+
+            <div className="mt-3 flex shrink-0 items-center justify-end lg:mt-0 lg:ml-auto lg:self-center">
+                <PublicationSourceFiles publication={publication} />
+            </div>
         </Card>
     );
 };

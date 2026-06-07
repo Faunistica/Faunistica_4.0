@@ -203,6 +203,7 @@ class PublicationService:
             pub = Publication.model_validate(p)
             pub.interactable = self._is_interactable(pub.publ_id, publ_ids)
             results.append(pub)
+        print([p.publ_id for p in results])
         return results
 
     def _pipe_to_array(self, pipe_str: str) -> list[int]:

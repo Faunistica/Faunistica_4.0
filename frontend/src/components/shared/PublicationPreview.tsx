@@ -1,8 +1,9 @@
 import { type FC } from 'react';
-import { FileDown, FileText, FileArchive, Calendar, User, Hash } from 'lucide-react';
+import { Calendar, User, Hash } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { CardHeader, CardTitle } from '@/components/ui/card';
 import type { Publication } from '@/types/domain';
+import { cn } from '@/lib/utils';
 
 interface PublicationPreviewProps {
     publication: Publication;
@@ -10,11 +11,11 @@ interface PublicationPreviewProps {
 }
 
 export const PublicationPreview: FC<PublicationPreviewProps> = ({ publication, border }) => {
-    const hasFiles = publication.pdf_file || publication.bib_file || publication.arj_file;
-
     return (
         <>
-            <div className={`pointer-events-none absolute inset-0 rounded-xl border-l-3 ${border}`} />
+            <div
+                className={cn('pointer-events-none absolute inset-0 rounded-xl border-l-3', border)}
+            />
             <CardHeader className="w-full min-w-0 flex-1 pl-1">
                 <div className="flex flex-wrap items-center gap-2">
                     {publication.ural && (
@@ -53,44 +54,6 @@ export const PublicationPreview: FC<PublicationPreviewProps> = ({ publication, b
                             </span>
                         )}
                     </div>
-
-                    {hasFiles && (
-                        <div className="flex items-center gap-2">
-                            {publication.pdf_file && (
-                                <a
-                                    href={publication.pdf_file}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-0.5 text-slate-400 transition-colors hover:text-slate-700"
-                                >
-                                    <FileDown className="size-3.5" />
-                                    <span>PDF</span>
-                                </a>
-                            )}
-                            {publication.bib_file && (
-                                <a
-                                    href={publication.bib_file}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-0.5 text-slate-400 transition-colors hover:text-slate-700"
-                                >
-                                    <FileText className="size-3.5" />
-                                    <span>BIB</span>
-                                </a>
-                            )}
-                            {publication.arj_file && (
-                                <a
-                                    href={publication.arj_file}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-0.5 text-slate-400 transition-colors hover:text-slate-700"
-                                >
-                                    <FileArchive className="size-3.5" />
-                                    <span>ARJ</span>
-                                </a>
-                            )}
-                        </div>
-                    )}
                 </div>
             </CardHeader>
         </>
