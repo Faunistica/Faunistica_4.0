@@ -2,7 +2,7 @@ import { FileText, Languages, UserCheck, Settings2, KeyRound, User, Loader2 } fr
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useLocation, useNavigate, Navigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,8 +31,8 @@ const formSchema = z
         langEn: z.boolean().default(false),
         rating: z.enum(['yes', 'no']),
         comm: z.string().optional(),
-        agreement: z.literal(true, {
-            errorMap: () => ({ message: 'Необходимо подтвердить согласие' }),
+        agreement: z.boolean().refine((val) => val === true, {
+            message: 'Необходимо подтвердить согласие',
         }),
     })
     .refine((data) => data.langRu || data.langEn, {
@@ -56,16 +56,18 @@ export default function Onboarding() {
         handleSubmit,
         formState: { errors },
     } = useForm<FormValues>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(formSchema) as any,
         defaultValues: {
             name: '',
             username: '',
             password: '',
+            age: '' as unknown as number,
             sex: '',
             langRu: false,
             langEn: false,
             rating: 'no',
             comm: '',
+            agreement: false,
         },
     });
 
@@ -318,9 +320,9 @@ export default function Onboarding() {
                                                 </Label>
                                             </div>
                                         </div>
-                                        {errors.languages_error && (
+                                        {(errors as any).languages_error && (
                                             <span className="block text-xs text-red-500">
-                                                {errors.languages_error.message}
+                                                {(errors as any).languages_error.message}
                                             </span>
                                         )}
                                     </div>

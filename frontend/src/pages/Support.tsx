@@ -1,4 +1,4 @@
-import { Loader2, MessageCircle, Send, HelpCircle, ExternalLink } from 'lucide-react';
+import { Loader2, MessageCircle, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useGetBotUrlQuery } from '@/api/authAPI';

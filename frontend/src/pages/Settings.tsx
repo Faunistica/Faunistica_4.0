@@ -44,7 +44,7 @@ export default function Settings() {
         reset, // ← Добавьте reset
         formState: { errors },
     } = useForm<FormValues>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(formSchema) as any,
         defaultValues: {
             username: '',
             password: '',
@@ -232,7 +232,7 @@ export default function Settings() {
                                                         <Select
                                                             key={`sex-${field.value}`}
                                                             onValueChange={field.onChange}
-                                                            value={field.value}
+                                                            value={field.value || undefined}
                                                         >
                                                             <SelectTrigger id="sex">
                                                                 <SelectValue placeholder="Не выбрано" />
@@ -362,9 +362,9 @@ export default function Settings() {
                                                 </Label>
                                             </div>
                                         </div>
-                                        {errors.languages_error && (
+                                        {(errors as any).languages_error && (
                                             <span className="block text-xs text-red-500 pt-1">
-                                                {errors.languages_error.message}
+                                                {(errors as any).languages_error.message}
                                             </span>
                                         )}
                                     </div>
