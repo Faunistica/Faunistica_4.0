@@ -28,7 +28,7 @@ const TelegramAuth: FC = () => {
                     <CardDescription className="mx-auto mt-2 max-w-md text-slate-500">
                         {'Отправьте этот код сообщением нашему Telegram боту '}
                         <a
-                            href={botUrl}
+                            href={botUrl ? `${botUrl}?start=${displayCode}` : ''}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="font-medium text-telegram hover:underline"
