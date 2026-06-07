@@ -2,6 +2,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
+from bot.handlers.confirm import handle_code_input
 from bot.messages import Messages
 from core.config import settings
 from core.exceptions import HandlerError
@@ -16,6 +17,12 @@ async def registration_info(message: Message) -> None:
 
     if message.chat.id == settings.ADMIN_CHAT_ID:
         return
+
+    if message.text:
+        args = message.text.split()
+        if len(args) > 1:
+            await handle_code_input(message, args[1])
+            return
 
     await message.answer(
         Messages.registration_via_site(),

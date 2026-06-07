@@ -6,14 +6,12 @@ from typing import Annotated, Any, get_args
 from aiogram import Bot
 from fastapi import Depends
 
-from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
 from core.config import settings
 from core.dependencies import DBSession
 from core.enums import UserState
 from core.exceptions import MsgErr, Ok
 from core.model import User
-from core.security import get_password_hash
 from repository.user import (
     count_users_with_username,
     create_user_or_update,
@@ -123,7 +121,7 @@ class UserService:
                 user = await get_user(self.session, exclude_user_id)
                 if user and user.username == username:
                     return Ok()
-            return MsgErr(error=Messages.name_already_exists())
+            return MsgErr(error=Messages.username_already_exists())
 
         return Ok()
 
@@ -167,7 +165,7 @@ class UserService:
     def validate_language(lang: str) -> Ok | MsgErr:
         if lang not in get_args(UserLanguage):
             return MsgErr(error=Messages.invalid_lang())
-        return Ok
+        return Ok()
 
     @staticmethod
     def get_missing_survey_fields(user: User) -> list[str]:
@@ -198,7 +196,7 @@ class UserService:
         await self._update(user_id, reg_stat=UserState.REG_NAME)
 
     async def set_name(self, user_id: int, name: str) -> Ok | MsgErr:
-        result = await self.validate_name(name)
+        result = self.validate_name(name)
         if isinstance(result, MsgErr):
             return result
         await self._update(user_id, name=name, reg_stat=UserState.REG_AGE)
@@ -227,28 +225,6 @@ class UserService:
             reg_end=datetime.now(),
         )
         return Ok()
-
-    async def rename_user(self, user_id: int, new_name: str) -> Ok | MsgErr:
-        user = await self.get_expect(user_id)
-        if new_name == user.name:
-            return MsgErr(error=Messages.same_name(new_name))
-
-        result = await self.validate_name(new_name, exclude_user_id=user_id)
-        if isinstance(result, MsgErr):
-            return result
-
-        if self.actions:
-            await self.actions.log_bot_rename(
-                user_id=user_id, old=user.name, new=new_name
-            )
-        await self._update(user_id, name=new_name, reg_stat=UserState.REG_COMPLETED)
-        return Ok()
-
-    async def generate_password(self, user_id: int) -> str:
-        password = generate_secure_password()
-        hashed = get_password_hash(password)
-        await self._update(user_id, hash=hashed, hash_date=datetime.now())
-        return password
 
     async def cancel_action(self, user: User) -> Ok | MsgErr:
         if user.reg_stat == UserState.DATA_CLEARED:
