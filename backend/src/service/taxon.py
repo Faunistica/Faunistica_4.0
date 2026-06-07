@@ -36,12 +36,14 @@ def _filter_rows(
     result = rows
     if filters.family is not None:
         result = [
-            r for r in result
+            r
+            for r in result
             if r.get("family") and filters.family.lower() in r["family"].lower()
         ]
     if filters.genus is not None:
         result = [
-            r for r in result
+            r
+            for r in result
             if r.get("genus") and filters.genus.lower() in r["genus"].lower()
         ]
     return result
@@ -52,9 +54,7 @@ def suggest(
 ) -> list[str]:
     rows = _filter_rows(_all_rows, filters)
     values = {
-        r[field]
-        for r in rows
-        if r.get(field) and text.lower() in r[field].lower()
+        r[field] for r in rows if r.get(field) and text.lower() in r[field].lower()
     }
     return sorted(values)
 
