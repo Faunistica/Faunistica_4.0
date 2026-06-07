@@ -1,5 +1,6 @@
 import { Navigate, redirect, type LoaderFunctionArgs, type RouteObject } from 'react-router';
 import { store } from './store/store';
+import { publAPI } from './api/publAPI';
 import LoadingScreen from './components/LoadingScreen';
 import Layout from './components/layout/Layout';
 import { NavigationWrapper } from './components/NavigationWrapper';
@@ -22,6 +23,26 @@ const requireGuest = ({ request }: LoaderFunctionArgs) => {
         return redirect(redirectTo || '/dashboard');
     }
     return null;
+};
+
+const requireInteractablePublication = async ({ params }: LoaderFunctionArgs) => {
+    const { id } = params;
+    if (!id) return redirect('/dashboard');
+
+    const publ_id = Number(id);
+    if (Number.isNaN(publ_id)) return redirect('/dashboard');
+
+    const promise = store.dispatch(publAPI.endpoints.getPublicationById.initiate(publ_id));
+
+    try {
+        const result = await promise.unwrap();
+        if (!result.interactable) return redirect('/dashboard');
+        return null;
+    } catch {
+        return redirect('/dashboard');
+    } finally {
+        promise.unsubscribe();
+    }
 };
 
 export const routes: RouteObject[] = [
@@ -133,6 +154,7 @@ export const routes: RouteObject[] = [
                             },
                             {
                                 path: 'publication/:id/:record?',
+                                loader: requireInteractablePublication,
                                 lazy: () =>
                                     import('./pages/FormFilling').then((m) => ({
                                         Component: m.default,
