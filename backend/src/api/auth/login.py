@@ -61,5 +61,6 @@ async def login(
 
     return UserLoginResponse(
         user_id=user.user_id,
+        name=user.name,
         username=data.username,
     )

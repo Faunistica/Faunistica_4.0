@@ -21,6 +21,7 @@ export const authAPI = createApi({
                     dispatch(
                         login({
                             name: data.name,
+                            username: data.username,
                             user_id: data.user_id,
                         }),
                     );
@@ -52,6 +53,7 @@ export const authAPI = createApi({
                     dispatch(
                         login({
                             name: data.name,
+                            username: data.username,
                             user_id: data.user_id,
                         }),
                     );
@@ -93,11 +95,12 @@ export const authAPI = createApi({
                     const { data } = await queryFulfilled;
                     if (
                         (data.status === 'authorized' || data.status === 1) &&
-                        data.user_id && data.name
+                        data.user_id && data.name && data.username
                     ) {
                         dispatch(
                             login({
                                 name: data.name,
+                                username: data.username,
                                 user_id: data.user_id,
                             }),
                         );
@@ -126,6 +129,7 @@ export const authAPI = createApi({
                     dispatch(
                         login({
                             name: arg.name,
+                            username: arg.username,
                             user_id: data.user_id,
                         }),
                     );

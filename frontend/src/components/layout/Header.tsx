@@ -25,7 +25,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isLanding, isNavigateEnabled = true } = useRouteHandle();
 
-    const { username, auth, user_id } = useAppSelector((state) => state.user);
+    const { name, auth, user_id } = useAppSelector((state) => state.user);
     const photoUrl = useUserPhoto(auth ? user_id : null);
     const [logout] = useLogoutMutation();
     const navigate = useNavigate();
@@ -206,12 +206,12 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                                 {photoUrl && (
                                                     <AvatarImage
                                                         src={photoUrl}
-                                                        alt={username || 'Фото профиля'}
+                                                        alt={name || 'Фото профиля'}
                                                     />
                                                 )}
                                                 <AvatarFallback className="bg-slate-900 text-xs font-bold text-white">
-                                                    {username
-                                                        ? username.substring(0, 2).toUpperCase()
+                                                    {name
+                                                        ? name.substring(0, 2).toUpperCase()
                                                         : 'US'}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -221,7 +221,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                         <DropdownMenuLabel className="font-normal">
                                             <div className="flex flex-col space-y-1">
                                                 <p className="text-sm leading-none font-medium text-slate-900">
-                                                    {username || 'Пользователь'}
+                                                    {name || 'Пользователь'}
                                                 </p>
                                                 <p className="text-xs leading-none text-slate-500">
                                                     Волонтёр

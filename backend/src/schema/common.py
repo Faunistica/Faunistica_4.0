@@ -38,6 +38,7 @@ class UserInfo(BaseModel):
 
 class UserLoginResponse(BaseModel):
     user_id: int
+    name: str
     username: str
 
 
