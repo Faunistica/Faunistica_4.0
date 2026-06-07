@@ -154,10 +154,9 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             {!auth ? (
                                 <Button
                                     asChild
-                                    variant="default"
-                                    className="bg-[#229ED9] text-white shadow-sm hover:bg-[#1E8CC0]"
+                                    className="bg-slate-900 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                                 >
-                                    <Link to="/auth/login">Личный кабинет</Link>
+                                    <Link to="/auth/login">Войти</Link>
                                 </Button>
                             ) : (
                                 <DropdownMenu>

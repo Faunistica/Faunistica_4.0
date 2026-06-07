@@ -31,13 +31,8 @@ export default function Footer() {
                             </a>
                         </li>
                         <li>
-                            <a href="#" className="transition-colors hover:text-white">
-                                Команда
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" className="transition-colors hover:text-white">
-                                Контакты
+                            <a href="#science" className="transition-colors hover:text-white">
+                                Научная база
                             </a>
                         </li>
                     </ul>
@@ -47,14 +42,17 @@ export default function Footer() {
                     <ul className="space-y-2 text-sm">
                         <li>
                             <a
-                                href="#"
+                                href="https://vk.ru/data_web"
                                 className="flex items-center gap-2 transition-colors hover:text-[#229ED9]"
                             >
                                 ВКонтакте
                             </a>
                         </li>
                         <li>
-                            <a href="#" className="transition-colors hover:text-white">
+                            <a
+                                href="https://faunistics.international/arachnolibrary/"
+                                className="transition-colors hover:text-white"
+                            >
                                 Arachnolibrary
                             </a>
                         </li>
@@ -62,7 +60,7 @@ export default function Footer() {
                 </div>
             </div>
             <div className="mx-auto mt-10 flex w-full max-w-7xl flex-col items-center justify-between gap-4 border-t border-slate-800 px-4 pt-6 text-center text-sm md:flex-row md:px-6 md:text-left">
-                <p>© 2026 Проект «Паутина данных». Все права защищены.</p>
+                <p>© {new Date().getFullYear()} Проект «Паутина данных». Все права защищены.</p>
                 <div className="flex gap-4">
                     <Link to="/privacy-policy" className="hover:text-white">
                         Политика конфиденциальности
