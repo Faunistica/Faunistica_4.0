@@ -89,7 +89,7 @@ async def delete_expired_pending(session: AsyncSession, cutoff: datetime) -> int
         PendingRegistration.token_created_at < cutoff,
     )
     result = await session.execute(stmt)
-    return result.rowcount or 0
+    return getattr(result, "rowcount", 0) or 0
 
 
 async def delete_confirmed_pending(session: AsyncSession, cutoff: datetime) -> int:
@@ -99,4 +99,4 @@ async def delete_confirmed_pending(session: AsyncSession, cutoff: datetime) -> i
         PendingRegistration.confirmed_at < cutoff,
     )
     result = await session.execute(stmt)
-    return result.rowcount or 0
+    return getattr(result, "rowcount", 0) or 0

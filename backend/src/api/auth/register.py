@@ -10,6 +10,7 @@ from core.enums import PendingStatus, UserState
 from core.exceptions import (
     MsgErr,
     UsernameAlreadyExistsError,
+    UserNotFoundError,
 )
 from core.model import User
 from core.rate_limiter import limiter
@@ -128,7 +129,13 @@ async def form_filling(
         )
     )
     await session.commit()
+    if pending.telegram_id is None:
+        raise HTTPException(status_code=403, detail="Telegram id not found")
     current_user = await get_user(session, pending.telegram_id)
+    if current_user is None:
+        raise UserNotFoundError(pending.telegram_id)
+    if current_user.name is None:
+        raise HTTPException(status_code=403, detail="Name is null")
     token_payload = TokenPayload(
         sub=str(current_user.user_id),
         username=current_user.name,
@@ -136,7 +143,7 @@ async def form_filling(
     )
     set_response_token_cookies(response, token_payload)
 
-    await action_service.log_login(current_user.user_id, ip)
+    await action_service.log_login(pending.telegram_id, ip)
     await update_pending_by_token(
         session, token, status=PendingStatus.CONFIRMED, confirmed_at=datetime.now()
     )
@@ -194,8 +201,12 @@ async def registration_status(
                 code=code,
             )
 
-        if pending.status == PendingStatus.AUTH:
+        if pending.status == PendingStatus.AUTH and pending.telegram_id is not None:
             current_user = await get_user(session, pending.telegram_id)
+            if current_user is None:
+                raise UserNotFoundError(pending.telegram_id)
+            if current_user.name is None:
+                raise HTTPException(status_code=403, detail="Name is null")
             token_payload = TokenPayload(
                 sub=str(current_user.user_id),
                 username=current_user.name,

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from aiogram import Router
-from aiogram.filters import Command
+from aiogram.filters import Command, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
@@ -25,11 +25,25 @@ async def confirm_registration(message: Message, state: FSMContext) -> None:
 
     if message.chat.id == settings.ADMIN_CHAT_ID:
         return
+
+    if message.text:
+        args = message.text.split()
+        if len(args) > 1:
+            await handle_code_input(message, args[1])
+            return
+
     await message.answer(Messages.request_confirmation_code())
     await state.set_state(ConfirmStates.waiting_for_code)
 
 
-@router.message(ConfirmStates.waiting_for_code)
+@router.message(
+    or_f(
+        ConfirmStates.waiting_for_code,
+        lambda msg: (
+            msg.text and len(msg.text.strip()) == 6 and msg.text.strip().isdigit()
+        ),
+    )
+)
 async def handle_code_input(message: Message, state: FSMContext) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
@@ -59,7 +73,7 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
                 telegram_id=message.from_user.id,
             )
             await session.commit()
-            await message.answer(Messages.already_registered(existing_user.name))
+            await message.answer(Messages.auth_confirmed())
             return
 
         now = datetime.now()
