@@ -154,9 +154,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger.info("Database connection verified")
 
     if settings.BOT_PROXY is not None:
-        app.state.http_session = aiohttp.ClientSession(
-            proxy=settings.BOT_PROXY.unicode_string()
-        )
+        proxy_url = settings.BOT_PROXY.unicode_string()
+        if proxy_url.startswith(("socks5://", "socks4://")):
+            from aiohttp_socks import ProxyConnector
+            connector = ProxyConnector.from_url(proxy_url)
+            app.state.http_session = aiohttp.ClientSession(connector=connector)
+        else:
+            app.state.http_session = aiohttp.ClientSession(proxy=proxy_url)
         logger.info("HTTP session configured with proxy: %s", settings.BOT_PROXY)
     else:
         app.state.http_session = aiohttp.ClientSession()
