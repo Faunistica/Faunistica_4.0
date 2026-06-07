@@ -36,6 +36,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { useGetMeQuery, useUpdateMeMutation } from '@/api/userAPI';
+import { toast } from 'sonner';
 
 const formSchema = z
     .object({
@@ -129,6 +130,7 @@ export default function Settings() {
                 comm: data.comm ?? '',
             }).unwrap();
         } catch (err) {
+            toast.error('Сбой обновления');
             console.error('Update failed:', err);
         }
     };
@@ -399,13 +401,13 @@ export default function Settings() {
                                         </div>
                                         {(errors as Record<string, { message?: string }>)
                                             .languages_error && (
-                                            <span className="block pt-1 text-xs text-red-500">
-                                                {
-                                                    (errors as Record<string, { message?: string }>)
-                                                        .languages_error?.message
-                                                }
-                                            </span>
-                                        )}
+                                                <span className="block pt-1 text-xs text-red-500">
+                                                    {
+                                                        (errors as Record<string, { message?: string }>)
+                                                            .languages_error?.message
+                                                    }
+                                                </span>
+                                            )}
                                     </div>
 
                                     {/* Предпочтения */}

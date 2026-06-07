@@ -22,7 +22,15 @@ export const userAPI = createApi({
             }),
             invalidatesTags: ['User'],
         }),
+        getPhoto: build.query<Blob, void>({
+            query: () => ({
+                url: '/users/photo',
+                method: 'GET',
+                responseHandler: (response: Response) => response.blob(),
+            }),
+            providesTags: ['User'],
+        }),
     }),
 });
 
-export const { useGetMeQuery, useUpdateMeMutation } = userAPI;
+export const { useGetMeQuery, useUpdateMeMutation, useGetPhotoQuery } = userAPI;

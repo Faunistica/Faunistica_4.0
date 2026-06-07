@@ -140,6 +140,7 @@ export interface TelegramAuthStatusResponse {
     code?: string;
     code_expires_in?: number;
     user_id?: number;
+    name?: string;
     username?: string;
 }
 

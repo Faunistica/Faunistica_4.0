@@ -13,7 +13,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUserPhoto } from '@/hooks/useUserPhoto';
 
 interface HeaderProps {
     isSidebarEnabled?: boolean;
@@ -24,7 +25,8 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isLanding, isNavigateEnabled = true } = useRouteHandle();
 
-    const { username, auth } = useAppSelector((state) => state.user);
+    const { username, auth, user_id } = useAppSelector((state) => state.user);
+    const photoUrl = useUserPhoto(auth ? user_id : null);
     const [logout] = useLogoutMutation();
     const navigate = useNavigate();
 
@@ -201,6 +203,12 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                             className="relative size-9 overflow-hidden rounded-full p-0 transition-transform hover:scale-105"
                                         >
                                             <Avatar className="size-9">
+                                                {photoUrl && (
+                                                    <AvatarImage
+                                                        src={photoUrl}
+                                                        alt={username || 'Фото профиля'}
+                                                    />
+                                                )}
                                                 <AvatarFallback className="bg-slate-900 text-xs font-bold text-white">
                                                     {username
                                                         ? username.substring(0, 2).toUpperCase()
