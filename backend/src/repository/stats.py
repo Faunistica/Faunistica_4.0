@@ -270,10 +270,10 @@ async def get_cumulative_volunteers(session: AsyncSession) -> list[Row]:
 
 async def get_cumulative_records(session: AsyncSession) -> list[Row]:
     stmt = text("""
-        SELECT DATE(created_at) as date, COUNT(*) as cnt
+        SELECT DATE(datetime) as date, COUNT(*) as cnt
         FROM event_records
         WHERE type = 'rec_ok'
-        GROUP BY DATE(created_at)
+        GROUP BY DATE(datetime)
         ORDER BY date
     """)
     result = await session.execute(stmt)
@@ -293,15 +293,20 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
     )
     total = await session.scalar(total_stmt) or 0
 
-    distinct_stmt = text("""
-        SELECT COUNT(DISTINCT (r.publ_id, r.user_id))
-        FROM event_records r
-        INNER JOIN publs p ON r.publ_id = p.publ_id
-        WHERE r.type = 'rec_ok'
-          AND p.ural = 1 AND p.spec = 1 AND p.occs = 1
-          AND r.user_id NOT IN :admin_ids
-    """)
-    result = await session.execute(distinct_stmt, {"admin_ids": tuple(admin_ids)})
-    distinct_pairs = result.scalar_one() or 0
+    subq = (
+        select(EventRecord.publ_id, EventRecord.user_id)
+        .join(Publication, EventRecord.publ_id == Publication.publ_id)
+        .where(
+            EventRecord.type == RecordType.REC_OK,
+            Publication.ural == 1,
+            Publication.spec == 1,
+            Publication.occs == 1,
+            EventRecord.user_id.notin_(admin_ids),
+        )
+        .distinct()
+        .subquery()
+    )
+    count_stmt = select(func.count()).select_from(subq)
+    distinct_pairs = await session.scalar(count_stmt) or 0
 
     return total, distinct_pairs

@@ -5,6 +5,17 @@ from pydantic import BaseModel, ConfigDict
 from schema.common import TopSpeciesItem
 
 
+class CumulativePoint(BaseModel):
+    date: date
+    count: int
+
+
+class ProgressInfo(BaseModel):
+    coverage: float
+    total_publications: int
+    processed_publications: int
+
+
 class ProjectStatisticsResponse(BaseModel):
     total_volunteers: int
     total_records: int
@@ -18,6 +29,9 @@ class ProjectStatisticsResponse(BaseModel):
     families_count: int = 0
     checks_count: int = 0
     failed_records: int = 0
+    cumulative_volunteers: list[CumulativePoint] = []
+    cumulative_records: list[CumulativePoint] = []
+    progress: ProgressInfo | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -40,16 +54,4 @@ class UserStatisticsResponse(BaseModel):
     most_common_year: int | None = None
 
 
-class CumulativePoint(BaseModel):
-    date: date
-    count: int
 
-
-class CumulativeResponse(BaseModel):
-    data: list[CumulativePoint]
-
-
-class ProgressResponse(BaseModel):
-    coverage: float
-    total_publications: int
-    processed_publications: int
