@@ -6,11 +6,26 @@ import type { UserStatisticsResponse } from '@/types/api.dto';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Users, Database, Bug, BookOpen, FileEdit, Layers } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Users, Database, Bug, BookOpen, LayoutGrid, AlignJustify, Palette } from 'lucide-react';
 
-type Tab = 'project' | 'personal';
+type Design = 'classic' | 'compact' | 'vibrant';
 
 const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
+
+const GRADIENTS = [
+    'from-blue-400 to-cyan-400',
+    'from-emerald-400 to-teal-400',
+    'from-amber-400 to-orange-400',
+    'from-violet-400 to-purple-400',
+];
+
+const ICON_BG = [
+    'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400',
+    'bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
+    'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
+    'bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400',
+];
 
 const projectStatCards = [
     { key: 'volunteers', icon: Users, label: 'Волонтёров', field: 'total_volunteers' as const },
@@ -34,33 +49,35 @@ function formatNumber(n: number): string {
     return n.toLocaleString('ru-RU');
 }
 
-function TabSwitch({ active, onChange }: { active: Tab; onChange: (t: Tab) => void }) {
-    const tabs: { key: Tab; label: string; icon: typeof Users }[] = [
-        { key: 'project', label: 'Проект', icon: Layers },
-        { key: 'personal', label: 'Личная', icon: FileEdit },
+function DesignSwitch({ active, onChange }: { active: Design; onChange: (d: Design) => void }) {
+    const designs: { key: Design; icon: typeof LayoutGrid; label: string }[] = [
+        { key: 'classic', icon: LayoutGrid, label: 'Классический' },
+        { key: 'compact', icon: AlignJustify, label: 'Компактный' },
+        { key: 'vibrant', icon: Palette, label: 'Яркий' },
     ];
     return (
         <div className="flex rounded-lg bg-muted p-0.5">
-            {tabs.map(({ key, label, icon: Icon }) => (
+            {designs.map(({ key, icon: Icon, label }) => (
                 <button
                     key={key}
                     type="button"
                     onClick={() => onChange(key)}
-                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${
+                    className={cn(
+                        'flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all',
                         active === key
                             ? 'bg-background text-foreground shadow-xs'
-                            : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                            : 'text-muted-foreground hover:text-foreground',
+                    )}
                 >
                     <Icon className="size-4" />
-                    {label}
+                    <span className="hidden sm:inline">{label}</span>
                 </button>
             ))}
         </div>
     );
 }
 
-function PieChartCard({ data, error }: { data: UserStatisticsResponse | undefined; error: boolean }) {
+function PieChartCard({ data, error, compact }: { data: UserStatisticsResponse | undefined; error: boolean; compact?: boolean }) {
     if (error) {
         return (
             <Card>
@@ -80,7 +97,7 @@ function PieChartCard({ data, error }: { data: UserStatisticsResponse | undefine
         );
     }
     return (
-        <Card>
+        <Card className={cn(compact && 'gap-3 py-3')}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                     <Bug className="size-4" />
@@ -88,8 +105,15 @@ function PieChartCard({ data, error }: { data: UserStatisticsResponse | undefine
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-                    <ResponsiveContainer width="100%" height={240} className="max-w-xs shrink-0">
+                <div className={cn(
+                    'flex flex-col items-center gap-6',
+                    compact ? 'sm:flex-row sm:items-center sm:gap-4' : 'sm:flex-row sm:items-start',
+                )}>
+                    <ResponsiveContainer
+                        width="100%"
+                        height={compact ? 160 : 240}
+                        className={cn('max-w-xs shrink-0', compact && 'max-w-36')}
+                    >
                         <PieChart>
                             <Pie
                                 data={data.top_species}
@@ -97,8 +121,8 @@ function PieChartCard({ data, error }: { data: UserStatisticsResponse | undefine
                                 nameKey="species"
                                 cx="50%"
                                 cy="50%"
-                                outerRadius={100}
-                                innerRadius={50}
+                                outerRadius={compact ? 60 : 100}
+                                innerRadius={compact ? 30 : 50}
                             >
                                 {data.top_species.map((_, i) => (
                                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -116,7 +140,7 @@ function PieChartCard({ data, error }: { data: UserStatisticsResponse | undefine
                         {data.top_species.map((item, i) => (
                             <div
                                 key={item.species}
-                                className="flex items-center gap-3 text-sm"
+                                className={cn('flex items-center gap-3', compact && 'text-xs')}
                             >
                                 <span
                                     className="inline-block size-3 shrink-0 rounded-full"
@@ -138,8 +162,16 @@ function PieChartCard({ data, error }: { data: UserStatisticsResponse | undefine
     );
 }
 
+function SectionHeading({ children }: { children: string }) {
+    return (
+        <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
+            {children}
+        </h2>
+    );
+}
+
 const Statistics: FC = () => {
-    const [tab, setTab] = useState<Tab>('project');
+    const [design, setDesign] = useState<Design>('classic');
     const userId = useAppSelector((state) => state.user.user_id);
 
     const {
@@ -159,7 +191,10 @@ const Statistics: FC = () => {
     if (isLoading) {
         return (
             <div className="space-y-6">
-                <TabSwitch active={tab} onChange={setTab} />
+                <div className="flex items-center justify-between">
+                    <Skeleton className="h-7 w-32" />
+                    <Skeleton className="h-9 w-64" />
+                </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <Card key={i}>
@@ -196,7 +231,7 @@ const Statistics: FC = () => {
 
     if (projectError) {
         return (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
                 Не удалось загрузить статистику проекта
             </div>
         );
@@ -205,14 +240,14 @@ const Statistics: FC = () => {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-lg font-bold tracking-wide text-slate-900 uppercase">
+                <h1 className="text-lg font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
                     Статистика
                 </h1>
-                <TabSwitch active={tab} onChange={setTab} />
+                <DesignSwitch active={design} onChange={setDesign} />
             </div>
 
-            {tab === 'project' && (
-                <>
+            {design === 'classic' && (
+                <div key="classic" className="space-y-6">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {projectStatCards.map(({ key, icon: Icon, label, field }) => (
                             <Card key={key}>
@@ -231,10 +266,8 @@ const Statistics: FC = () => {
                         ))}
                     </div>
 
-                    <div>
-                        <h2 className="mb-3 text-sm font-bold tracking-wide text-slate-900 uppercase">
-                            Наиболее распространённые
-                        </h2>
+                    <div className="space-y-3">
+                        <SectionHeading>Наиболее распространённые</SectionHeading>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             {commonLabels.map(({ key, label, field }) => {
                                 const value = projectStats?.[field];
@@ -244,7 +277,7 @@ const Statistics: FC = () => {
                                             <p className="mb-1 text-xs text-muted-foreground">{label}</p>
                                             <p className="text-sm font-medium">
                                                 {value ?? (
-                                                    <span className="italic text-muted-foreground">—</span>
+                                                    <span className="text-muted-foreground italic">—</span>
                                                 )}
                                             </p>
                                         </CardContent>
@@ -254,34 +287,29 @@ const Statistics: FC = () => {
                         </div>
                     </div>
 
-                    <PieChartCard data={userStats} error={userError} />
-                </>
-            )}
-
-            {tab === 'personal' && (
-                <>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {personalStatCards.map(({ key, icon: Icon, label, field }) => (
-                            <Card key={key}>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                        <Icon className="size-4" />
-                                        {label}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <span className="text-3xl font-bold tracking-tight">
-                                        {formatNumber(userStats?.[field] ?? 0)}
-                                    </span>
-                                </CardContent>
-                            </Card>
-                        ))}
+                    <div className="space-y-3">
+                        <SectionHeading>Личная статистика</SectionHeading>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {personalStatCards.map(({ key, icon: Icon, label, field }) => (
+                                <Card key={key}>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                            <Icon className="size-4" />
+                                            {label}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <span className="text-3xl font-bold tracking-tight">
+                                            {formatNumber(userStats?.[field] ?? 0)}
+                                        </span>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
                     </div>
 
-                    <div>
-                        <h2 className="mb-3 text-sm font-bold tracking-wide text-slate-900 uppercase">
-                            Личное: наиболее распространённые
-                        </h2>
+                    <div className="space-y-3">
+                        <SectionHeading>Личное: наиболее распространённые</SectionHeading>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             {commonLabels.map(({ key, label, field }) => {
                                 const value = userStats?.[field];
@@ -291,7 +319,7 @@ const Statistics: FC = () => {
                                             <p className="mb-1 text-xs text-muted-foreground">{label}</p>
                                             <p className="text-sm font-medium">
                                                 {value ?? (
-                                                    <span className="italic text-muted-foreground">—</span>
+                                                    <span className="text-muted-foreground italic">—</span>
                                                 )}
                                             </p>
                                         </CardContent>
@@ -302,7 +330,218 @@ const Statistics: FC = () => {
                     </div>
 
                     <PieChartCard data={userStats} error={userError} />
-                </>
+                </div>
+            )}
+
+            {design === 'compact' && (
+                <div key="compact" className="space-y-5">
+                    <div className="space-y-2">
+                        <SectionHeading>Проект</SectionHeading>
+                        <div className="flex flex-wrap gap-2">
+                            {projectStatCards.map(({ key, icon: Icon, label, field }) => (
+                                <div
+                                    key={key}
+                                    className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm shadow-xs"
+                                >
+                                    <Icon className="size-4 text-muted-foreground" />
+                                    <span className="text-muted-foreground">{label}</span>
+                                    <span className="font-semibold tracking-tight">
+                                        {formatNumber(projectStats?.[field] ?? 0)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <SectionHeading>Наиболее распространённые</SectionHeading>
+                        <div className="flex flex-wrap gap-2">
+                            {commonLabels.map(({ key, label, field }) => {
+                                const value = projectStats?.[field];
+                                return (
+                                    <div
+                                        key={key}
+                                        className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 text-sm shadow-xs"
+                                    >
+                                        <span className="text-xs text-muted-foreground">{label}:</span>
+                                        <span className="font-medium">
+                                            {value ?? (
+                                                <span className="text-muted-foreground italic">—</span>
+                                            )}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <SectionHeading>Личная статистика</SectionHeading>
+                        <div className="flex flex-wrap gap-2">
+                            {personalStatCards.map(({ key, icon: Icon, label, field }) => (
+                                <div
+                                    key={key}
+                                    className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm shadow-xs"
+                                >
+                                    <Icon className="size-4 text-muted-foreground" />
+                                    <span className="text-muted-foreground">{label}</span>
+                                    <span className="font-semibold tracking-tight">
+                                        {formatNumber(userStats?.[field] ?? 0)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <SectionHeading>Личное: наиболее распространённые</SectionHeading>
+                        <div className="flex flex-wrap gap-2">
+                            {commonLabels.map(({ key, label, field }) => {
+                                const value = userStats?.[field];
+                                return (
+                                    <div
+                                        key={key}
+                                        className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 text-sm shadow-xs"
+                                    >
+                                        <span className="text-xs text-muted-foreground">{label}:</span>
+                                        <span className="font-medium">
+                                            {value ?? (
+                                                <span className="text-muted-foreground italic">—</span>
+                                            )}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <PieChartCard data={userStats} error={userError} compact />
+                </div>
+            )}
+
+            {design === 'vibrant' && (
+                <div key="vibrant" className="space-y-6">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {projectStatCards.map(({ key, icon: Icon, label, field }, idx) => (
+                            <Card key={key} className="relative overflow-hidden">
+                                <div
+                                    className={cn(
+                                        'absolute top-0 left-0 h-full w-1 bg-linear-to-b',
+                                        GRADIENTS[idx % GRADIENTS.length],
+                                    )}
+                                />
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                        <div
+                                            className={cn(
+                                                'flex size-7 items-center justify-center rounded-md',
+                                                ICON_BG[idx % ICON_BG.length],
+                                            )}
+                                        >
+                                            <Icon className="size-4" />
+                                        </div>
+                                        {label}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <span className="text-3xl font-bold tracking-tight">
+                                        {formatNumber(projectStats?.[field] ?? 0)}
+                                    </span>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+
+                    <div className="space-y-3">
+                        <SectionHeading>Наиболее распространённые</SectionHeading>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {commonLabels.map(({ key, label, field }, idx) => {
+                                const value = projectStats?.[field];
+                                return (
+                                    <Card key={key} size="sm" className="relative overflow-hidden">
+                                        <div
+                                            className={cn(
+                                                'absolute top-0 left-0 h-full w-0.5 bg-linear-to-b',
+                                                GRADIENTS[idx % GRADIENTS.length],
+                                            )}
+                                        />
+                                        <CardContent className="pt-3">
+                                            <p className="mb-1 text-xs text-muted-foreground">{label}</p>
+                                            <p className="text-sm font-medium">
+                                                {value ?? (
+                                                    <span className="text-muted-foreground italic">—</span>
+                                                )}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <SectionHeading>Личная статистика</SectionHeading>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {personalStatCards.map(({ key, icon: Icon, label, field }, idx) => (
+                                <Card key={key} className="relative overflow-hidden">
+                                    <div
+                                        className={cn(
+                                            'absolute top-0 left-0 h-full w-1 bg-linear-to-b',
+                                            GRADIENTS[(idx + 2) % GRADIENTS.length],
+                                        )}
+                                    />
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                            <div
+                                                className={cn(
+                                                    'flex size-7 items-center justify-center rounded-md',
+                                                    ICON_BG[(idx + 2) % ICON_BG.length],
+                                                )}
+                                            >
+                                                <Icon className="size-4" />
+                                            </div>
+                                            {label}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <span className="text-3xl font-bold tracking-tight">
+                                            {formatNumber(userStats?.[field] ?? 0)}
+                                        </span>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <SectionHeading>Личное: наиболее распространённые</SectionHeading>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {commonLabels.map(({ key, label, field }, idx) => {
+                                const value = userStats?.[field];
+                                return (
+                                    <Card key={key} size="sm" className="relative overflow-hidden">
+                                        <div
+                                            className={cn(
+                                                'absolute top-0 left-0 h-full w-0.5 bg-linear-to-b',
+                                                GRADIENTS[(idx + 2) % GRADIENTS.length],
+                                            )}
+                                        />
+                                        <CardContent className="pt-3">
+                                            <p className="mb-1 text-xs text-muted-foreground">{label}</p>
+                                            <p className="text-sm font-medium">
+                                                {value ?? (
+                                                    <span className="text-muted-foreground italic">—</span>
+                                                )}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <PieChartCard data={userStats} error={userError} />
+                </div>
             )}
         </div>
     );
