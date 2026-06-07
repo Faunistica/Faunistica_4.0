@@ -22,9 +22,6 @@ from testcontainers.postgres import PostgresContainer
 
 from app import app
 from core.config import settings
-
-# Tests expect only the first publication in queue to be interactable
-settings.INTERACTABLE_QUEUE_COUNT = 1
 from core.database import get_session
 from core.dependencies import get_http_session
 from core.enums import RecordType, UserState
@@ -32,6 +29,9 @@ from core.model import Base, EventRecord, Publication, User
 from core.rate_limiter import limiter
 from core.security import create_access_token, create_refresh_token
 from schema.jwt import TokenPayload
+
+# Tests expect only the first publication in queue to be interactable
+settings.INTERACTABLE_QUEUE_COUNT = 1
 
 
 def md5_hash(password: str) -> str:
