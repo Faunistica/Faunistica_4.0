@@ -3,7 +3,7 @@ from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.enums import RecordType, UserState
-from core.model import Action, EventRecord, User
+from core.model import Action, EventRecord, Publication, User
 from schema.common import ProjectStats, TopSpeciesItem, UserStats
 
 
@@ -61,6 +61,36 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         .limit(1)
     )
 
+    total_users = await session.scalar(
+        select(func.count())
+        .select_from(User)
+        .where(
+            (User.reg_stat == UserState.REG_COMPLETED)
+            | (User.reg_stat >= UserState.SUPPORT)
+        )
+    )
+
+    avg_age_value = await session.scalar(select(func.avg(User.age)))
+    avg_age = round(avg_age_value, 1) if avg_age_value is not None else None
+
+    families_count = await session.scalar(
+        select(func.count(func.distinct(EventRecord.family)))
+        .select_from(EventRecord)
+        .where(EventRecord.type == RecordType.REC_OK)
+    )
+
+    checks_count = await session.scalar(
+        select(func.count())
+        .select_from(EventRecord)
+        .where(EventRecord.type.in_([RecordType.CHECK_OK, RecordType.CHECK_FAIL]))
+    )
+
+    failed_records = await session.scalar(
+        select(func.count())
+        .select_from(EventRecord)
+        .where(EventRecord.type == RecordType.REC_FAIL)
+    )
+
     return {
         "total_volunteers": total_volunteers or 0,
         "total_records": total_records or 0,
@@ -69,6 +99,11 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         "most_common_family": most_common_family,
         "most_common_genus": most_common_genus,
         "most_common_species": most_common_species,
+        "total_users": total_users or 0,
+        "avg_age": avg_age,
+        "families_count": families_count or 0,
+        "checks_count": checks_count or 0,
+        "failed_records": failed_records or 0,
     }
 
 
@@ -134,6 +169,63 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         for r in rows
     ]
 
+    checks_count = await session.scalar(
+        select(func.count())
+        .select_from(EventRecord)
+        .where(
+            EventRecord.user_id == user_id,
+            EventRecord.type.in_([RecordType.CHECK_OK, RecordType.CHECK_FAIL]),
+        )
+    )
+
+    failed_records = await session.scalar(
+        select(func.count())
+        .select_from(EventRecord)
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_FAIL)
+    )
+
+    total_individuals = await session.scalar(
+        select(func.sum(func.ceil(EventRecord.quantity)))
+        .select_from(EventRecord)
+        .where(
+            EventRecord.user_id == user_id,
+            EventRecord.type == RecordType.REC_OK,
+            EventRecord.quantity.isnot(None),
+        )
+    )
+
+    distinct_families = await session.scalar(
+        select(func.count(func.distinct(EventRecord.family)))
+        .select_from(EventRecord)
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
+    )
+
+    distinct_genera = await session.scalar(
+        select(func.count(func.distinct(EventRecord.genus)))
+        .select_from(EventRecord)
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
+    )
+
+    distinct_species = await session.scalar(
+        select(func.count(func.distinct(EventRecord.species)))
+        .select_from(EventRecord)
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
+    )
+
+    most_common_year = await session.scalar(
+        select(Publication.year)
+        .select_from(EventRecord)
+        .join(Publication, EventRecord.publ_id == Publication.publ_id)
+        .where(
+            EventRecord.user_id == user_id,
+            EventRecord.type == RecordType.REC_OK,
+            Publication.year.isnot(None),
+        )
+        .group_by(Publication.year)
+        .order_by(func.count().desc())
+        .limit(1)
+    )
+
     return {
         "records_entered": records_entered or 0,
         "publications_processed": publications_processed or 0,
@@ -141,19 +233,75 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         "most_common_genus": most_common_genus,
         "most_common_species": most_common_species,
         "top_species": top_species,
+        "checks_count": checks_count or 0,
+        "failed_records": failed_records or 0,
+        "total_individuals": total_individuals or 0,
+        "distinct_families": distinct_families or 0,
+        "distinct_genera": distinct_genera or 0,
+        "distinct_species": distinct_species or 0,
+        "most_common_year": most_common_year,
     }
 
 
-async def get_volunteers_achievements(
-    session: AsyncSession,
-) -> list[Row]:
+async def get_volunteers_achievements(session: AsyncSession) -> list[Row]:
     stmt = text("""
         SELECT a.user_id, a.object, a.datetime,
                u.name, u.tlg_name, u.tlg_username
         FROM actions a
         INNER JOIN users u ON a.user_id = u.user_id
-        WHERE a.action = 'fau_50'
+        WHERE a.action IN ('fau_50', 'fau_100')
         ORDER BY a.datetime DESC
     """)
     result = await session.execute(stmt)
     return list(result.fetchall())
+
+
+async def get_cumulative_volunteers(session: AsyncSession) -> list[Row]:
+    stmt = text("""
+        SELECT DATE(reg_run) as date, COUNT(*) as cnt
+        FROM users
+        WHERE reg_run IS NOT NULL
+        GROUP BY DATE(reg_run)
+        ORDER BY date
+    """)
+    result = await session.execute(stmt)
+    return list(result.fetchall())
+
+
+async def get_cumulative_records(session: AsyncSession) -> list[Row]:
+    stmt = text("""
+        SELECT DATE(created_at) as date, COUNT(*) as cnt
+        FROM event_records
+        WHERE type = 'rec_ok'
+        GROUP BY DATE(created_at)
+        ORDER BY date
+    """)
+    result = await session.execute(stmt)
+    return list(result.fetchall())
+
+
+async def get_progress(session: AsyncSession) -> tuple[int, int]:
+    admin_ids = [911269241, 412819044, 950994899]
+    total_stmt = (
+        select(func.count())
+        .select_from(Publication)
+        .where(
+            Publication.ural == 1,
+            Publication.spec == 1,
+            Publication.occs == 1,
+        )
+    )
+    total = await session.scalar(total_stmt) or 0
+
+    distinct_stmt = text("""
+        SELECT COUNT(DISTINCT (r.publ_id, r.user_id))
+        FROM event_records r
+        INNER JOIN publs p ON r.publ_id = p.publ_id
+        WHERE r.type = 'rec_ok'
+          AND p.ural = 1 AND p.spec = 1 AND p.occs = 1
+          AND r.user_id NOT IN :admin_ids
+    """)
+    result = await session.execute(distinct_stmt, {"admin_ids": tuple(admin_ids)})
+    distinct_pairs = result.scalar_one() or 0
+
+    return total, distinct_pairs

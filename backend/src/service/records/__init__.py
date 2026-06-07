@@ -28,7 +28,6 @@ from schema.common import PaginatedResponse
 from schema.records import RecordData, RecordFull, RecordValidationError
 from service.actions import ActionService
 from service.export import ParseResult, is_row_empty
-from service.milestone import check_and_log_milestone
 from service.publications import PublicationService
 from service.records.validation import validate_record
 from service.records.validation.errors import ErrorCollection
@@ -133,10 +132,6 @@ class RecordService:
         if updated is None:
             raise RecordStaleError(record_id)
 
-        if updated.type == RecordType.REC_OK:
-            await check_and_log_milestone(
-                self.session, user_id, updated, self.action_service
-            )
         await self.session.commit()
 
         full = _enrich_record(updated)
@@ -282,7 +277,6 @@ class RecordService:
 
         event_records: list[EventRecord] = []
         all_errors: list[ImportError] = []
-        last_ok = None
 
         async for i, (record_data, error) in a.enumerate(records, 1):
             if error:
@@ -315,23 +309,10 @@ class RecordService:
 
             event_records.append(record)
 
-            if metadata.type == RecordType.REC_OK:
-                last_ok = record
-
         # Delete old records, then insert — all in one transaction
         await repo.delete_records_by_user_and_publ(self.session, user_id, publ.publ_id)
 
         self.session.add_all(event_records)
-
-        if last_ok is not None:
-            await check_and_log_milestone(
-                self.session,
-                user_id,
-                # FIXME: This should be the exact record, that broke the record,
-                # but here we use the last one, which might not be expected
-                last_ok,
-                self.action_service,
-            )
 
         await self.session.commit()
 

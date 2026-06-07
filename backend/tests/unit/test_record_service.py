@@ -72,7 +72,6 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
                 RecordData(
@@ -120,7 +119,6 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             # Create a mock ValidationError
             mock_error = MagicMock(spec=ValidationError)
@@ -258,7 +256,6 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
                 RecordData(
@@ -322,7 +319,6 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records, total = await read_excel(excel_content)
             result = await record_service.import_records(
@@ -353,7 +349,6 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
                 RecordData(

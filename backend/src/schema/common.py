@@ -90,12 +90,6 @@ class WinnerInfo(BaseModel):
     datetime: datetime
 
 
-class MilestoneInfo(BaseModel):
-    milestone: int
-    user_id: int
-    datetime: datetime
-
-
 class ProjectStats(TypedDict):
     total_volunteers: int
     total_records: int
@@ -104,6 +98,14 @@ class ProjectStats(TypedDict):
     most_common_family: str | None
     most_common_genus: str | None
     most_common_species: str | None
+    total_users: int
+    avg_age: float | None
+    families_count: int
+    checks_count: int
+    failed_records: int
+    total_publs: int
+    rus_publs: int
+    eng_publs: int
 
 
 class TopSpeciesItem(TypedDict):
@@ -118,6 +120,13 @@ class UserStats(TypedDict):
     most_common_genus: str | None
     most_common_species: str | None
     top_species: list[TopSpeciesItem]
+    checks_count: int
+    failed_records: int
+    total_individuals: float
+    distinct_families: int
+    distinct_genera: int
+    distinct_species: int
+    most_common_year: int | None
 
 
 class ProcessingLevel(StrEnum):

@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel
 
 from schema.common import TopSpeciesItem
@@ -11,6 +13,11 @@ class ProjectStatisticsResponse(BaseModel):
     most_common_family: str | None
     most_common_genus: str | None
     most_common_species: str | None
+    total_users: int = 0
+    avg_age: float | None = None
+    families_count: int = 0
+    checks_count: int = 0
+    failed_records: int = 0
 
 
 class UserStatisticsResponse(BaseModel):
@@ -22,3 +29,25 @@ class UserStatisticsResponse(BaseModel):
     most_common_genus: str | None
     most_common_species: str | None
     top_species: list[TopSpeciesItem]
+    checks_count: int = 0
+    failed_records: int = 0
+    total_individuals: float = 0
+    distinct_families: int = 0
+    distinct_genera: int = 0
+    distinct_species: int = 0
+    most_common_year: int | None = None
+
+
+class CumulativePoint(BaseModel):
+    date: date
+    count: int
+
+
+class CumulativeResponse(BaseModel):
+    data: list[CumulativePoint]
+
+
+class ProgressResponse(BaseModel):
+    coverage: float
+    total_publications: int
+    processed_publications: int
