@@ -2,7 +2,7 @@ import { Loader2, MessageCircle, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useGetBotUrlQuery } from '@/api/authAPI';
-import { TelegramQRCode } from '@/pages/Auth/Telegram';
+import TelegramQRCode from '@/components/qr/TelegramQRCode';
 
 export default function Support() {
     const { data: botData, isLoading } = useGetBotUrlQuery();
@@ -22,9 +22,6 @@ export default function Support() {
             <div className="w-full max-w-3xl space-y-8">
                 <Card className="overflow-hidden border-slate-200 shadow-sm">
                     <CardHeader className="space-y-4 pb-8 text-center">
-                        {/* <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-blue-50">
-                            <HelpCircle className="size-8 text-telegram" />
-                        </div> */}
                         <div className="space-y-2">
                             <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
                                 Служба поддержки

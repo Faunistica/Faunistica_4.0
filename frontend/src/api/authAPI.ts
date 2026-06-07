@@ -36,32 +36,6 @@ export const authAPI = createApi({
                 method: 'POST',
             }),
         }),
-        /**
-         * Used on app startup to verify whether the user has a valid session
-         * (access-token cookie). If the server returns 200, the user is logged in.
-         * The baseQueryWithReauth wrapper will automatically attempt a token
-         * refresh if the access token is expired but the refresh token is still valid.
-         */
-        checkAuth: build.query<Types.UserInfo, void>({
-            query: () => ({
-                url: '/auth/check',
-                method: 'POST',
-            }),
-            async onQueryStarted(_, { dispatch, queryFulfilled }) {
-                try {
-                    const { data } = await queryFulfilled;
-                    dispatch(
-                        login({
-                            name: data.name,
-                            username: data.username,
-                            user_id: data.user_id,
-                        }),
-                    );
-                } catch {
-                    dispatch(logout());
-                }
-            },
-        }),
         logout: build.mutation<void, void>({
             query: () => ({
                 url: '/auth/logout',
@@ -144,7 +118,6 @@ export const authAPI = createApi({
 export const {
     useLoginMutation,
     useRefreshTokenMutation,
-    useCheckAuthQuery,
     useLogoutMutation,
     useInitTelegramAuthMutation,
     useCheckTelegramAuthStatusQuery,

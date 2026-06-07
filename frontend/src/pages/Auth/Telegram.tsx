@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState, useRef } from 'react';
+import { type FC } from 'react';
 import { Send, Key, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,136 +9,13 @@ import {
     CardDescription,
     CardFooter,
 } from '@/components/ui/card';
-import { Link, useNavigate } from 'react-router';
-import { useInitTelegramAuthMutation, useLazyCheckTelegramAuthStatusQuery } from '@/api/authAPI';
-import QRCodeStyling from 'qr-code-styling';
-
-export const TelegramQRCode = ({ code, botUrl }: { code?: string; botUrl?: string }) => {
-    const ref = useRef<HTMLDivElement>(null);
-    const [qrCode] = useState<QRCodeStyling>(
-        () =>
-            new QRCodeStyling({
-                width: 180,
-                height: 180,
-                type: 'svg',
-                // Base64 encoded Telegram SVG icon
-                image: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzIyOUVEOSIgZD0iTTEyIDBDNS4zNzMgMCAwIDUuMzczIDAgMTJzNS4zNzMgMTIgMTIgMTIgMTItNS4zNzMgMTItMTJTMTguNjI3IDAgMTIgMHptNS44OTQgOC4yMjFsLTEuOTcgOS4yOGMtLjE0NS42NTgtLjUzNy44MTgtMS4wODQuNTA4bC0zLTIuMjEtMS40NDYgMS4zOTRjLS4xNC4xOC0uMzU3LjI5NS0uNi4yOTUtLjAwMiAwLS4wMDMgMC0uMDA1IDBsLjIxMy0zLjA1NCA1LjU2LTUuMDIyYy4yNC0uMjEzLS4wNTQtLjMzNC0uMzczLS4xMjFsLTYuODY5IDQuMzI2LTIuOTYtLjkyNGMtLjY0LS4yMDMtLjY1OC0uNjQuMTM1LS45NTRsMTEuNTY2LTQuNDU4Yy41MzgtLjE5NiAxLjAwNi4xMjguODMyLjk0eiIvPjwvc3ZnPg==',
-                dotsOptions: {
-                    color: '#1e293b', // slate-800
-                    type: 'classy-rounded', // Elegant, organic leaf-like appearance
-                },
-                cornersSquareOptions: {
-                    type: 'extra-rounded',
-                    color: '#1e293b',
-                },
-                cornersDotOptions: {
-                    type: 'dot',
-                    color: '#1e293b',
-                },
-                backgroundOptions: {
-                    color: 'transparent',
-                },
-                imageOptions: {
-                    crossOrigin: 'anonymous',
-                    margin: 4,
-                    imageSize: 0.35,
-                },
-            }),
-    );
-
-    useEffect(() => {
-        if (ref.current && ref.current.childElementCount === 0) {
-            qrCode.append(ref.current);
-        }
-    }, [qrCode]);
-
-    useEffect(() => {
-        if (!botUrl) return;
-        // If we have a code, append it to the deep link so scanning the QR code auto-sends the start command
-        const fullUrl = code ? `${botUrl}?start=${code}` : botUrl;
-        qrCode.update({ data: fullUrl });
-    }, [code, qrCode, botUrl]);
-
-    return <div ref={ref} className="flex items-center justify-center" />;
-};
+import { Link } from 'react-router';
+import { useTelegramAuth } from '@/hooks/useTelegramAuth';
+import TelegramQRCode from '@/components/qr/TelegramQRCode';
 
 const TelegramAuth: FC = () => {
-    const navigate = useNavigate();
-    const [initAuth, { data: initData, isLoading: isInitLoading, error: initError }] =
-        useInitTelegramAuthMutation();
-    const [checkStatus] = useLazyCheckTelegramAuthStatusQuery();
-    const [statusMessage, setStatusMessage] = useState('Генерация кода...');
-    const [isPollingError, setIsPollingError] = useState(false);
-    const [displayCode, setDisplayCode] = useState<string | undefined>(undefined);
-
-    const botUrl = initData?.bot_url;
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const startPolling = async (initialCode: string, token: string) => {
-            let currentCode = initialCode;
-            while (true) {
-                try {
-                    const result = await checkStatus(
-                        { code: currentCode, token, timeout: 25 },
-                        false,
-                    ).unwrap();
-                    if (!isMounted) break;
-
-                    if (result.code && !result.status && result.status !== 0) {
-                        currentCode = result.code;
-                        setDisplayCode(currentCode);
-                        continue;
-                    }
-
-                    if (result.status === 'need_registration' || result.status === 2) {
-                        void navigate('/auth/onboarding', {
-                            state: { token, code: currentCode },
-                            replace: true,
-                        });
-                        break;
-                    } else if (result.status === 'authorized' || result.status === 1) {
-                        void navigate('/dashboard', { replace: true });
-                        break;
-                    } else if (result.status === 'pending' || result.status === 0) {
-                        setIsPollingError(false);
-                        setStatusMessage('Ожидание ввода кода в Telegram...');
-                    }
-                } catch {
-                    if (isMounted) {
-                        setIsPollingError(true);
-                        setStatusMessage('Проблема с подключением, пытаемся восстановить...');
-                        await new Promise((resolve) => setTimeout(resolve, 3000));
-                    }
-                }
-            }
-        };
-
-        const init = async () => {
-            try {
-                const res = await initAuth().unwrap();
-                if (isMounted) {
-                    setIsPollingError(false);
-                    setStatusMessage('Ожидание ввода кода в Telegram...');
-                    setDisplayCode(res.code);
-                    void startPolling(res.code, res.token);
-                }
-            } catch (err) {
-                console.error('Failed to init auth', err);
-                if (isMounted) {
-                    setIsPollingError(true);
-                    setStatusMessage('Ошибка соединения. Пожалуйста, попробуйте еще раз.');
-                }
-            }
-        };
-
-        void init();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [initAuth, checkStatus, navigate]);
+    const { displayCode, botUrl, statusMessage, isPollingError, isInitLoading, initError } =
+        useTelegramAuth();
 
     return (
         <div className="mx-auto w-full max-w-[700px] space-y-6">
@@ -149,7 +26,7 @@ const TelegramAuth: FC = () => {
                         Вход через Telegram
                     </CardTitle>
                     <CardDescription className="mx-auto mt-2 max-w-md text-slate-500">
-                        Отправьте этот код сообщением нашему Telegram боту{' '}
+                        {'Отправьте этот код сообщением нашему Telegram боту '}
                         <a
                             href={botUrl}
                             target="_blank"
@@ -158,7 +35,7 @@ const TelegramAuth: FC = () => {
                         >
                             @{botUrl?.replace(/^https?:\/\/t\.me\//, '')}
                         </a>
-                        , не закрывая данную страницу
+                        {', не закрывая данную страницу'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 pt-2">
@@ -226,9 +103,8 @@ const TelegramAuth: FC = () => {
                 </CardContent>
                 <CardFooter className="flex justify-center border-t border-slate-100 bg-slate-50 py-4">
                     <div
-                        className={`flex items-center gap-2 text-sm ${
-                            isPollingError ? 'font-medium text-red-500' : 'text-slate-600'
-                        }`}
+                        className={`flex items-center gap-2 text-sm ${isPollingError ? 'font-medium text-red-500' : 'text-slate-600'
+                            }`}
                     >
                         {!isPollingError && (
                             <Loader2 className="size-4 animate-spin text-telegram" />
