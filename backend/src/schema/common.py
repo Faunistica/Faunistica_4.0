@@ -106,12 +106,18 @@ class ProjectStats(TypedDict):
     most_common_species: str | None
 
 
+class TopSpeciesItem(TypedDict):
+    species: str
+    count: int
+
+
 class UserStats(TypedDict):
     records_entered: int
     publications_processed: int
     most_common_family: str | None
     most_common_genus: str | None
     most_common_species: str | None
+    top_species: list[TopSpeciesItem]
 
 
 class ProcessingLevel(StrEnum):

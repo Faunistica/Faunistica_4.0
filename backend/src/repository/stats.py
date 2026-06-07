@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.enums import RecordType, UserState
 from core.model import Action, EventRecord, User
-from schema.common import ProjectStats, UserStats
+from schema.common import ProjectStats, TopSpeciesItem, UserStats
 
 
 async def get_project_statistics(session: AsyncSession) -> ProjectStats:
@@ -117,12 +117,30 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         .limit(1)
     )
 
+    top_species_stmt = (
+        select(
+            EventRecord.genus,
+            EventRecord.species,
+            func.count().label("cnt"),
+        )
+        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
+        .group_by(EventRecord.genus, EventRecord.species)
+        .order_by(func.count().desc())
+        .limit(4)
+    )
+    rows = (await session.execute(top_species_stmt)).all()
+    top_species = [
+        TopSpeciesItem(species=f"{r.genus} {r.species}".strip(), count=r.cnt)
+        for r in rows
+    ]
+
     return {
         "records_entered": records_entered or 0,
         "publications_processed": publications_processed or 0,
         "most_common_family": most_common_family,
         "most_common_genus": most_common_genus,
         "most_common_species": most_common_species,
+        "top_species": top_species,
     }
 
 

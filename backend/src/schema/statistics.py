@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from schema.common import TopSpeciesItem
+
 
 class ProjectStatisticsResponse(BaseModel):
     total_volunteers: int
@@ -19,3 +21,4 @@ class UserStatisticsResponse(BaseModel):
     most_common_family: str | None
     most_common_genus: str | None
     most_common_species: str | None
+    top_species: list[TopSpeciesItem]
