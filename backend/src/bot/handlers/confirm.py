@@ -28,7 +28,7 @@ async def confirm_registration(message: Message, state: FSMContext) -> None:
 
     args = message.text.split()
     if len(args) > 1:
-        await handle_code_input(message, args[1])
+        await handle_code_input(message)
         return
 
     await message.answer(Messages.request_confirmation_code())

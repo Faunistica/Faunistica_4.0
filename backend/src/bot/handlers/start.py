@@ -21,7 +21,7 @@ async def start_command(message: Message) -> None:
 
     args = message.text.split()
     if len(args) > 1:
-        await handle_code_input(message, args[1])
+        await handle_code_input(message)
         return
 
     await message.answer(
