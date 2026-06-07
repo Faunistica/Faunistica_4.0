@@ -20,17 +20,16 @@ router = Router()
 
 @router.message(Command("confirm"))
 async def confirm_registration(message: Message, state: FSMContext) -> None:
-    if message.from_user is None:
+    if message.from_user is None or message.text is None:
         raise HandlerError
 
     if message.chat.id == settings.ADMIN_CHAT_ID:
         return
 
-    if message.text:
-        args = message.text.split()
-        if len(args) > 1:
-            await handle_code_input(message, args[1])
-            return
+    args = message.text.split()
+    if len(args) > 1:
+        await handle_code_input(message, args[1])
+        return
 
     await message.answer(Messages.request_confirmation_code())
     await state.set_state(ConfirmStates.waiting_for_code)
@@ -47,7 +46,11 @@ async def confirm_registration(message: Message, state: FSMContext) -> None:
 async def handle_code_input(message: Message, state: FSMContext) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
+    args = message.text.split()
     code = message.text.strip()
+    if len(args) > 1:
+        code = args[1].strip()
+
     async for session in get_session():
         pending = await get_pending_by_code(session, code)
         if pending is None:

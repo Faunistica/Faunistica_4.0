@@ -13,17 +13,16 @@ router = Router()
 
 @router.message(Command("start"))
 async def start_command(message: Message) -> None:
-    if message.from_user is None:
+    if message.from_user is None or message.text is None:
         raise HandlerError
 
     if message.chat.id == settings.ADMIN_CHAT_ID:
         return
 
-    if message.text:
-        args = message.text.split()
-        if len(args) > 1:
-            await handle_code_input(message, args[1])
-            return
+    args = message.text.split()
+    if len(args) > 1:
+        await handle_code_input(message, args[1])
+        return
 
     await message.answer(
         Messages.start(message.from_user.first_name),
