@@ -224,8 +224,9 @@ const TelegramAuth: FC = () => {
                 </CardContent>
                 <CardFooter className="flex justify-center border-t border-slate-100 bg-slate-50 py-4">
                     <div
-                        className={`flex items-center gap-2 text-sm ${isPollingError ? 'font-medium text-red-500' : 'text-slate-600'
-                            }`}
+                        className={`flex items-center gap-2 text-sm ${
+                            isPollingError ? 'font-medium text-red-500' : 'text-slate-600'
+                        }`}
                     >
                         {!isPollingError && (
                             <Loader2 className="size-4 animate-spin text-telegram" />

@@ -30,8 +30,8 @@ export default function Support() {
                                 Служба поддержки
                             </CardTitle>
                             <CardDescription className="mx-auto max-w-lg text-base">
-                                Возникли вопросы, нужна помощь или вы нашли ошибку?
-                                Напишите нашему Telegram-боту, и мы оперативно вам поможем!
+                                Возникли вопросы, нужна помощь или вы нашли ошибку? Напишите нашему
+                                Telegram-боту, и мы оперативно вам поможем!
                             </CardDescription>
                         </div>
                     </CardHeader>
@@ -50,7 +50,8 @@ export default function Support() {
                                                 1
                                             </div>
                                             <span>
-                                                Перейдите в наш Telegram-бот по кнопке ниже, отсканируйте QR-код или перейдите по прямой ссылке:{' '}
+                                                Перейдите в наш Telegram-бот по кнопке ниже,
+                                                отсканируйте QR-код или перейдите по прямой ссылке:{' '}
                                                 {botUrl ? (
                                                     <a
                                                         href={supportUrl}
@@ -61,7 +62,9 @@ export default function Support() {
                                                         @{botUrl.replace(/^https?:\/\/t\.me\//, '')}
                                                     </a>
                                                 ) : (
-                                                    <span className="text-slate-400">загрузка...</span>
+                                                    <span className="text-slate-400">
+                                                        загрузка...
+                                                    </span>
                                                 )}
                                                 .
                                             </span>
@@ -71,7 +74,8 @@ export default function Support() {
                                                 2
                                             </div>
                                             <span>
-                                                Нажмите кнопку <strong>«Запустить»</strong> (Start), если вы впервые открываете бота.
+                                                Нажмите кнопку <strong>«Запустить»</strong> (Start),
+                                                если вы впервые открываете бота.
                                             </span>
                                         </li>
                                         <li className="flex items-start gap-3">
@@ -79,7 +83,8 @@ export default function Support() {
                                                 3
                                             </div>
                                             <span>
-                                                Если бот не перешел в режим поддержки автоматически, отправьте команду <strong>/support</strong>.
+                                                Если бот не перешел в режим поддержки автоматически,
+                                                отправьте команду <strong>/support</strong>.
                                             </span>
                                         </li>
                                         <li className="flex items-start gap-3">
@@ -87,7 +92,8 @@ export default function Support() {
                                                 4
                                             </div>
                                             <span>
-                                                Опишите вашу проблему, и наша команда поддержки ответит вам в кратчайшие сроки.
+                                                Опишите вашу проблему, и наша команда поддержки
+                                                ответит вам в кратчайшие сроки.
                                             </span>
                                         </li>
                                     </ul>
@@ -133,7 +139,8 @@ export default function Support() {
                 <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 text-center text-sm text-blue-800">
                     <MessageCircle className="mx-auto mb-2 size-6 text-blue-500" />
                     <p>
-                        Мы стараемся отвечать на все запросы в течение 24 часов.<br />
+                        Мы стараемся отвечать на все запросы в течение 24 часов.
+                        <br />
                         Спасибо, что помогаете делать проект лучше!
                     </p>
                 </div>

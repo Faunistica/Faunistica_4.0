@@ -2,34 +2,59 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, User, UserCheck, Languages, FileText, MapPin, Mail, KeyRound, Settings2 } from 'lucide-react';
+import {
+    Loader2,
+    User,
+    UserCheck,
+    Languages,
+    FileText,
+    MapPin,
+    Mail,
+    KeyRound,
+    Settings2,
+} from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    CardFooter,
+    CardDescription,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { useGetMeQuery, useUpdateMeMutation } from '@/api/userAPI';
 
-const formSchema = z.object({
-    username: z.string().min(3, 'Минимум 3 символа').optional().or(z.literal('')),
-    password: z.string().min(6, 'Минимум 6 символов').optional().or(z.literal('')),
-    name: z.string().min(2, 'Минимум 2 символа'),
-    age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет').nullable().optional(),
-    sex: z.string().nullable().optional(),
-    langRu: z.boolean().default(false),
-    langEn: z.boolean().default(false),
-    rating: z.enum(['yes', 'no']),
-    email: z.string().email('Некорректный email').or(z.literal('')).nullable().optional(),
-    region: z.string().nullable().optional(),
-    comm: z.string().nullable().optional(),
-}).refine((data) => data.langRu || data.langEn, {
-    message: 'Выберите хотя бы один язык',
-    path: ['languages_error'],
-});
+const formSchema = z
+    .object({
+        username: z.string().min(3, 'Минимум 3 символа').optional().or(z.literal('')),
+        password: z.string().min(6, 'Минимум 6 символов').optional().or(z.literal('')),
+        name: z.string().min(2, 'Минимум 2 символа'),
+        age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет').nullable().optional(),
+        sex: z.string().nullable().optional(),
+        langRu: z.boolean().default(false),
+        langEn: z.boolean().default(false),
+        rating: z.enum(['yes', 'no']),
+        email: z.string().email('Некорректный email').or(z.literal('')).nullable().optional(),
+        region: z.string().nullable().optional(),
+        comm: z.string().nullable().optional(),
+    })
+    .refine((data) => data.langRu || data.langEn, {
+        message: 'Выберите хотя бы один язык',
+        path: ['languages_error'],
+    });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -78,7 +103,6 @@ export default function Settings() {
         }
     }, [user, reset]);
 
-
     const onSubmit = async (data: FormValues) => {
         let language = null;
         if (data.langRu && data.langEn) {
@@ -91,7 +115,7 @@ export default function Settings() {
 
         try {
             await updateMe({
-                username: user?.username ? null : (data.username || null),
+                username: user?.username ? null : data.username || null,
                 password: data.password || null,
                 name: data.name,
                 age: data.age ?? null,
@@ -125,7 +149,8 @@ export default function Settings() {
                                 Настройки профиля
                             </CardTitle>
                             <CardDescription>
-                                Здесь вы можете изменить свои личные данные, языковые компетенции и предпочтения публичности.
+                                Здесь вы можете изменить свои личные данные, языковые компетенции и
+                                предпочтения публичности.
                             </CardDescription>
                         </CardHeader>
 
@@ -141,7 +166,9 @@ export default function Settings() {
                                         </div>
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="username">Логин (имя пользователя)</Label>
+                                                <Label htmlFor="username">
+                                                    Логин (имя пользователя)
+                                                </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -160,7 +187,9 @@ export default function Settings() {
                                                         : 'Внимание: уникальный логин можно установить только один раз!'}
                                                 </p>
                                                 {errors.username && (
-                                                    <span className="text-xs text-red-500">{errors.username.message}</span>
+                                                    <span className="text-xs text-red-500">
+                                                        {errors.username.message}
+                                                    </span>
                                                 )}
                                             </div>
                                             <div className="space-y-2">
@@ -177,7 +206,9 @@ export default function Settings() {
                                                     />
                                                 </div>
                                                 {errors.name && (
-                                                    <span className="text-xs text-red-500">{errors.name.message}</span>
+                                                    <span className="text-xs text-red-500">
+                                                        {errors.name.message}
+                                                    </span>
                                                 )}
                                             </div>
                                             <div className="space-y-2">
@@ -195,7 +226,9 @@ export default function Settings() {
                                                     />
                                                 </div>
                                                 {errors.password && (
-                                                    <span className="text-xs text-red-500">{errors.password.message}</span>
+                                                    <span className="text-xs text-red-500">
+                                                        {errors.password.message}
+                                                    </span>
                                                 )}
                                             </div>
                                         </div>
@@ -363,7 +396,7 @@ export default function Settings() {
                                             </div>
                                         </div>
                                         {(errors as any).languages_error && (
-                                            <span className="block text-xs text-red-500 pt-1">
+                                            <span className="block pt-1 text-xs text-red-500">
                                                 {(errors as any).languages_error.message}
                                             </span>
                                         )}
@@ -456,9 +489,11 @@ export default function Settings() {
                             </div>
                         </CardContent>
 
-                        <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50 p-6 sm:flex-row sm:justify-between sm:items-center">
+                        <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50 p-6 sm:flex-row sm:items-center sm:justify-between">
                             {isSuccess ? (
-                                <span className="text-sm text-green-600 font-medium">Настройки успешно сохранены!</span>
+                                <span className="text-sm font-medium text-green-600">
+                                    Настройки успешно сохранены!
+                                </span>
                             ) : (
                                 <span />
                             )}
