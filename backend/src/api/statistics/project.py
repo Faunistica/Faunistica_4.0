@@ -12,4 +12,4 @@ async def read_project_statistics(
     session: DBSession,
 ) -> ProjectStatisticsResponse:
     stats = await get_project_statistics(session)
-    return ProjectStatisticsResponse(**stats)
+    return ProjectStatisticsResponse.model_validate(stats)

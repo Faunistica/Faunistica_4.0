@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from schema.common import TopSpeciesItem
 
@@ -18,6 +18,8 @@ class ProjectStatisticsResponse(BaseModel):
     families_count: int = 0
     checks_count: int = 0
     failed_records: int = 0
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserStatisticsResponse(BaseModel):

@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 from openpyxl import Workbook
 
 from core.dependencies import DBSession
+from core.exceptions import InternalError
 from repository.stats import get_project_statistics
 
 router = APIRouter()
@@ -17,6 +18,9 @@ async def download_report(session: DBSession) -> StreamingResponse:
 
     wb = Workbook()
     ws = wb.active
+    if ws is None:
+        raise InternalError("couldn't create xlxs response")
+
     ws.title = "Report"
 
     today = date.today().isoformat()
