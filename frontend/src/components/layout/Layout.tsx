@@ -10,13 +10,13 @@ const Layout: FC = () => {
     const { isLanding, isSidebarEnabled, isFullWidth } = useRouteHandle();
 
     return (
-        <div className="flex min-h-screen flex-col overflow-x-clip bg-slate-50 font-sans text-slate-900">
+        <div className="flex min-h-screen flex-col overflow-x-clip bg-background font-sans text-foreground">
             <Header isSidebarEnabled={isSidebarEnabled} setSidebarOpen={setIsSidebarOpen} />
 
             <div
                 className={cn(
                     'relative flex w-full flex-1 overflow-x-clip',
-                    isLanding && 'bg-white',
+                    isLanding && 'bg-background',
                 )}
             >
                 {isSidebarEnabled ? (

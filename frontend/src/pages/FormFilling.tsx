@@ -37,7 +37,7 @@ const FormFillingInner: FC<OutletContextType> = ({ isSidebarOpen, setIsSidebarOp
                     <RecordFormContent />
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-6 py-24">
-                        <p className="text-lg text-slate-500">Нет записей</p>
+                        <p className="text-lg text-muted-foreground">Нет записей</p>
                         <Button onClick={create} className="gap-2">
                             <Plus className="size-4" />
                             Создать запись

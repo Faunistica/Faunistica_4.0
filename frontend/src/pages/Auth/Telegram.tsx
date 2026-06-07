@@ -140,13 +140,13 @@ const TelegramAuth: FC = () => {
 
     return (
         <div className="mx-auto w-full max-w-[700px] space-y-6">
-            <Card className="relative overflow-hidden border-slate-200 shadow-sm">
+            <Card className="relative overflow-hidden border-border shadow-sm">
                 <div className="absolute inset-y-0 left-0 w-1.5 bg-telegram"></div>
                 <CardHeader className="space-y-1 pl-6 text-center">
-                    <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
+                    <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
                         Вход через Telegram
                     </CardTitle>
-                    <CardDescription className="mx-auto mt-2 max-w-md text-slate-500">
+                    <CardDescription className="mx-auto mt-2 max-w-md text-muted-foreground">
                         Отправьте этот код сообщением нашему Telegram боту{' '}
                         <a
                             href={botUrl}
@@ -164,18 +164,18 @@ const TelegramAuth: FC = () => {
                         {/* Left Column: Code Block */}
                         <div className="flex w-full max-w-[240px] flex-col justify-center">
                             {isInitLoading ? (
-                                <div className="flex h-[240px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
+                                <div className="flex h-[240px] items-center justify-center rounded-xl border border-border bg-muted">
                                     <Loader2 className="size-8 animate-spin text-telegram" />
                                 </div>
                             ) : initError ? (
-                                <div className="flex h-[240px] flex-col items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 text-center text-red-500">
+                                <div className="flex h-[240px] flex-col items-center justify-center rounded-xl border border-destructive/30 bg-destructive/10 px-4 text-center text-red-500">
                                     <span className="text-sm font-medium">
                                         Не удалось сгенерировать код
                                     </span>
                                 </div>
                             ) : (
-                                <div className="flex h-[240px] flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-100 p-6 shadow-inner">
-                                    <span className="font-mono text-5xl font-bold tracking-[0.15em] text-slate-800">
+                                <div className="flex h-[240px] flex-col items-center justify-center rounded-xl border border-border bg-muted/50 p-6 shadow-inner">
+                                    <span className="font-mono text-5xl font-bold tracking-[0.15em] text-foreground">
                                         {displayCode || '------'}
                                     </span>
                                 </div>
@@ -184,7 +184,7 @@ const TelegramAuth: FC = () => {
 
                         {/* Right Column: QR and Button */}
                         <div className="flex h-[240px] w-full max-w-[240px] flex-col justify-between">
-                            <div className="flex w-full grow items-center justify-center rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+                            <div className="flex w-full grow items-center justify-center rounded-xl border border-border bg-card p-2 shadow-sm">
                                 <TelegramQRCode code={displayCode} botUrl={botUrl} />
                             </div>
 
@@ -209,22 +209,22 @@ const TelegramAuth: FC = () => {
                         </div>
                     </div>
 
-                    <div className="mt-8 border-t border-slate-100 pt-6">
+                    <div className="mt-8 border-t border-border pt-6">
                         <Button
                             asChild
                             variant="outline"
-                            className="mx-auto flex w-full max-w-[504px] gap-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                            className="mx-auto flex w-full max-w-[504px] gap-2 border-border bg-background text-foreground hover:bg-accent"
                         >
                             <Link to="/auth/login">
-                                <Key className="size-4 text-slate-500" />
+                                <Key className="size-4 text-muted-foreground" />
                                 Войти по логину
                             </Link>
                         </Button>
                     </div>
                 </CardContent>
-                <CardFooter className="flex justify-center border-t border-slate-100 bg-slate-50 py-4">
+                <CardFooter className="flex justify-center border-t border-border bg-muted py-4">
                     <div
-                        className={`flex items-center gap-2 text-sm ${isPollingError ? 'font-medium text-red-500' : 'text-slate-600'
+                        className={`flex items-center gap-2 text-sm ${isPollingError ? 'font-medium text-red-500' : 'text-muted-foreground'
                             }`}
                     >
                         {!isPollingError && (
@@ -235,18 +235,18 @@ const TelegramAuth: FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm/relaxed text-slate-500">
+            <p className="px-4 text-center text-sm/relaxed text-muted-foreground">
                 {'Продолжая, вы соглашаетесь с нашими '}
                 <Link
                     to="/terms-of-service"
-                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
+                    className="underline underline-offset-4 transition-colors hover:text-foreground"
                 >
                     Условиями обслуживания
                 </Link>
                 {' и '}
                 <Link
                     to="/privacy-policy"
-                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
+                    className="underline underline-offset-4 transition-colors hover:text-foreground"
                 >
                     Политикой конфиденциальности
                 </Link>

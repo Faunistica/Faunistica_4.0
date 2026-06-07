@@ -159,7 +159,7 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className
                         <span className="w-6 text-xs font-semibold text-blue-600">
                             #{presets.length - presets.indexOf(p)}
                         </span>
-                        <span className="text-slate-700">{p.label}</span>
+                        <span className="text-foreground">{p.label}</span>
                     </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>

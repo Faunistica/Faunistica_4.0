@@ -16,12 +16,12 @@ import { Link } from 'react-router';
 const Register: FC = () => {
     return (
         <div className="mx-auto w-full max-w-[400px] space-y-6">
-            <Card className="border-slate-200 shadow-sm">
+            <Card className="border-border shadow-sm">
                 <CardHeader className="space-y-1 text-center">
-                    <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
+                    <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
                         Регистрация
                     </CardTitle>
-                    <CardDescription className="text-slate-500">
+                    <CardDescription className="text-muted-foreground">
                         Создание аккаунта доступно только через Telegram
                     </CardDescription>
                 </CardHeader>
@@ -55,7 +55,7 @@ const Register: FC = () => {
                     </div>
                     */}
 
-                    <div className="px-4 py-2 text-center text-sm text-slate-600">
+                    <div className="px-4 py-2 text-center text-sm text-muted-foreground">
                         В данный момент регистрация новых пользователей возможна только после
                         авторизации через нашего Telegram-бота.
                     </div>
@@ -64,7 +64,7 @@ const Register: FC = () => {
                         <Button
                             asChild
                             variant="outline"
-                            className="w-full gap-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                            className="w-full gap-2 border-border bg-background text-foreground hover:bg-accent"
                         >
                             <Link to="/auth/telegram">
                                 <Send className="size-4 text-[#229ED9]" />
@@ -85,12 +85,12 @@ const Register: FC = () => {
                     </div>
                 </CardContent>
 
-                <CardFooter className="flex flex-col justify-center border-t border-slate-100 bg-white p-4">
-                    <div className="text-sm text-slate-600">
+                <CardFooter className="flex flex-col justify-center border-t border-border bg-card p-4">
+                    <div className="text-sm text-muted-foreground">
                         Уже есть аккаунт?{' '}
                         <Link
                             to="/auth/login"
-                            className="font-semibold text-slate-900 hover:underline"
+                            className="font-semibold text-foreground hover:underline"
                         >
                             Войти
                         </Link>
@@ -98,18 +98,18 @@ const Register: FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm/relaxed text-slate-500">
+            <p className="px-4 text-center text-sm/relaxed text-muted-foreground">
                 {'Продолжая, вы соглашаетесь с нашими '}
                 <Link
                     to="/terms-of-service"
-                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
+                    className="underline underline-offset-4 transition-colors hover:text-foreground"
                 >
                     Условиями обслуживания
                 </Link>
                 {' и '}
                 <Link
                     to="/privacy-policy"
-                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
+                    className="underline underline-offset-4 transition-colors hover:text-foreground"
                 >
                     Политикой конфиденциальности
                 </Link>

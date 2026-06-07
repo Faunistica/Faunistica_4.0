@@ -35,7 +35,7 @@ const Dashboard: FC = () => {
     ];
     */
 
-    if (isLoading) return <div className="p-4 text-slate-500">Загрузка публикаций...</div>;
+    if (isLoading) return <div className="p-4 text-muted-foreground">Загрузка публикаций...</div>;
     if (isError) return <div className="p-4 text-red-500">Ошибка при загрузке публикаций.</div>;
 
     return (
@@ -46,7 +46,7 @@ const Dashboard: FC = () => {
                     <section>
                         <div className="mb-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase md:text-base">
+                                <h2 className="text-sm font-bold tracking-wide text-foreground uppercase md:text-base">
                                     Назначено модератором
                                 </h2>
                                 <Badge className="rounded-md border-none bg-amber-100 px-2 font-bold text-amber-800 hover:bg-amber-100">

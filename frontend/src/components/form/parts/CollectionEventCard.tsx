@@ -20,7 +20,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
     const { control } = useFormContext<RecordForm>();
 
     return (
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-border shadow-sm">
             <CardHeader className="pb-2">
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center gap-2">
@@ -52,7 +52,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     </FieldLabel>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Info className="size-3.5 cursor-help text-slate-400" />
+                                            <Info className="size-3.5 cursor-help text-muted-foreground" />
                                         </TooltipTrigger>
                                         <TooltipContent side="top" className="max-w-xs text-xs">
                                             Укажите дату точно так, как она приведена в статье.
@@ -120,7 +120,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 border-t border-border pt-5 lg:grid-cols-3">
                     <Controller
                         name="sampling_protocol"
                         control={control}
@@ -187,7 +187,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     <FieldLabel htmlFor="habitat">Биотоп</FieldLabel>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Info className="size-3.5 cursor-help text-slate-400" />
+                                            <Info className="size-3.5 cursor-help text-muted-foreground" />
                                         </TooltipTrigger>
                                         <TooltipContent side="top" className="max-w-xs text-xs">
                                             Если биотопов несколько, разделяйте их точкой с запятой
@@ -227,7 +227,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     />
                 </div>
 
-                <div className="border-t border-slate-100 pt-5">
+                <div className="border-t border-border pt-5">
                     <Controller
                         name="event_remarks"
                         control={control}
@@ -250,7 +250,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 border-t border-border pt-5 md:grid-cols-3">
                     <Controller
                         name="field_number"
                         control={control}

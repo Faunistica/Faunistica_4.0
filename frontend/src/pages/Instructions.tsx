@@ -116,11 +116,10 @@ const Instructions: FC = () => {
                             <button
                                 key={section.id}
                                 onClick={() => scrollToSection(section.id)}
-                                className={`rounded-md px-3 py-2 text-left text-sm transition-colors ${
-                                    activeSection === section.id
-                                        ? 'bg-primary font-medium text-primary-foreground'
-                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                }`}
+                                className={`rounded-md px-3 py-2 text-left text-sm transition-colors ${activeSection === section.id
+                                    ? 'bg-primary font-medium text-primary-foreground'
+                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                    }`}
                             >
                                 {section.title}
                             </button>
@@ -154,6 +153,20 @@ const Instructions: FC = () => {
                                     пауков Урала.
                                 </strong>
                             </p>
+                            <div className="rounded-lg border border-muted-foreground/20 bg-muted p-4">
+                                <p className="mb-0 text-sm">
+                                    Старая версия инструкции доступна в Notion{' '}
+                                    <a
+                                        href="https://puzzling-ironclad-999.notion.site/7ce0e0d610dd4313b15389c07a7d78f5"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-primary hover:underline"
+                                    >
+                                        по ссылке
+                                    </a>
+                                    .
+                                </p>
+                            </div>
                             <p>
                                 Приветствуем вас на проекте &quot;Паутина данных&quot;, друзья! Вам
                                 предстоит перенести данные из разнообразных арахнологических
@@ -175,13 +188,13 @@ const Instructions: FC = () => {
                         <CardContent className="prose prose-sm max-w-none space-y-4 md:prose-base dark:prose-invert">
                             <p>
                                 Ваша текущая публикация - научная работа, из которой мы будем
-                                извлекать данные. По клику на названии мы можем получить полный
+                                извлекать данные. По клику на название мы можем получить полный
                                 текст и ознакомиться с ним перед внесением данных.
                             </p>
                             <p>
                                 Прочитать подробности про структуру научных публикаций вы можете{' '}
                                 <a
-                                    href="https://pulpy-rondel-999.notion.site/b1156ce089d44f99a8465ba2b5815469"
+                                    href="https://puzzling-ironclad-999.notion.site/bf56cef08da44bd9a8465fbd2b58f5df"
                                     target="_blank"
                                     rel="noreferrer"
                                     className="text-primary hover:underline"

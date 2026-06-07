@@ -159,7 +159,7 @@ const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
 
                 {open && suggestions.length > 0 && (
                     <ul
-                        className="absolute z-150 mt-2 max-h-60 w-full animate-in overflow-x-hidden overflow-y-auto rounded-xl border border-slate-200 bg-white/95 py-1.5 shadow-xl backdrop-blur-md duration-200 zoom-in-95 fade-in"
+                        className="absolute z-150 mt-2 max-h-60 w-full animate-in overflow-x-hidden overflow-y-auto rounded-xl border border-border bg-popover py-1.5 shadow-xl backdrop-blur-md duration-200 zoom-in-95 fade-in"
                         role="listbox"
                     >
                         {suggestions.map((item, i) => (
@@ -178,8 +178,8 @@ const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
                                 className={cn(
                                     'cursor-pointer px-4 py-2 text-sm transition-all duration-150',
                                     i === clampedHighlightIndex
-                                        ? 'bg-slate-100 pl-5 font-medium text-slate-900'
-                                        : 'text-slate-700 hover:bg-slate-50',
+                                        ? 'bg-accent pl-5 font-medium text-foreground'
+                                        : 'text-foreground hover:bg-accent',
                                 )}
                             >
                                 {item}

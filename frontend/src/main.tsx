@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')!).render(
         <Provider store={store}>
             <ThemeProvider
                 attribute="class"
-                defaultTheme="light"
+                defaultTheme="dark"
                 enableSystem={false}
                 disableTransitionOnChange
             >

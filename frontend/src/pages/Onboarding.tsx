@@ -106,18 +106,18 @@ export default function Onboarding() {
         <main className="flex flex-1 flex-col items-center px-4 py-8 md:py-12">
             <div className="w-full max-w-4xl space-y-8">
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <Card className="overflow-hidden border-slate-200 shadow-sm">
+                    <Card className="overflow-hidden border-border shadow-sm">
                         <CardHeader className="space-y-4">
-                            <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
+                            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
                                 Анкета участника
                             </CardTitle>
-                            <div className="space-y-4 leading-relaxed text-slate-900">
+                            <div className="space-y-4 leading-relaxed text-foreground">
                                 <p>
                                     Благодарим вас за регистрацию в системе. Перед началом работы
                                     нам необходимо уточнить несколько организационных вопросов для
                                     оптимизации вашего взаимодействия с проектом.
                                 </p>
-                                <div className="rounded-lg border-l-4 border-slate-400 bg-slate-100 p-4 text-sm">
+                                <div className="rounded-lg border-l-4 border-muted-foreground bg-muted p-4 text-sm">
                                     Напоминаем, что регистрироваться и участвовать в нашем проекте
                                     могут <strong>совершеннолетние лица</strong>. Несовершеннолетние
                                     в возрасте от 14 до 18 лет также могут принимать участие, однако
@@ -144,7 +144,7 @@ export default function Onboarding() {
                                 <div className="space-y-8">
                                     {/* Учетная запись */}
                                     <div className="space-y-5">
-                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
                                             <KeyRound className="size-5" />
                                             <h3>Учетная запись</h3>
                                         </div>
@@ -153,7 +153,7 @@ export default function Onboarding() {
                                                 <Label htmlFor="name">Имя (для отображения)</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                        <User className="size-4 text-slate-400" />
+                                                        <User className="size-4 text-muted-foreground" />
                                                     </div>
                                                     <Input
                                                         id="name"
@@ -172,7 +172,7 @@ export default function Onboarding() {
                                                 <Label htmlFor="username">Логин</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                        <User className="size-4 text-slate-400" />
+                                                        <User className="size-4 text-muted-foreground" />
                                                     </div>
                                                     <Input
                                                         id="username"
@@ -191,7 +191,7 @@ export default function Onboarding() {
                                                 <Label htmlFor="password">Пароль</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                        <KeyRound className="size-4 text-slate-400" />
+                                                        <KeyRound className="size-4 text-muted-foreground" />
                                                     </div>
                                                     <Input
                                                         id="password"
@@ -212,7 +212,7 @@ export default function Onboarding() {
 
                                     {/* Личные данные */}
                                     <div className="space-y-5">
-                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
                                             <UserCheck className="size-5" />
                                             <h3>Личные данные</h3>
                                         </div>
@@ -270,11 +270,11 @@ export default function Onboarding() {
 
                                     {/* Языки */}
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
                                             <Languages className="size-5" />
                                             <h3>Языковые компетенции</h3>
                                         </div>
-                                        <p className="text-sm text-slate-600">
+                                        <p className="text-sm text-muted-foreground">
                                             На каких языках вы готовы обрабатывать научные
                                             публикации? (можно выбрать несколько)
                                         </p>
@@ -330,11 +330,11 @@ export default function Onboarding() {
                                 <div className="flex flex-col space-y-8">
                                     {/* Предпочтения */}
                                     <div className="flex flex-col space-y-4">
-                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
                                             <Settings2 className="size-5" />
                                             <h3>Профессиональные предпочтения</h3>
                                         </div>
-                                        <p className="text-sm text-slate-600">
+                                        <p className="text-sm text-muted-foreground">
                                             Укажите пожелания по сложности материала,
                                             географическому региону, автору или конкретному
                                             семейству. Мы постараемся учесть это при распределении
@@ -343,7 +343,7 @@ export default function Onboarding() {
                                         <div className="flex grow flex-col pt-2">
                                             <Label
                                                 htmlFor="preferences"
-                                                className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
+                                                className="mb-2 block text-xs font-bold tracking-wider text-muted-foreground uppercase"
                                             >
                                                 Дополнительная информация (по желанию)
                                             </Label>
@@ -358,12 +358,12 @@ export default function Onboarding() {
 
                                     {/* Публичный рейтинг */}
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
+                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
                                             <FileText className="size-5" />
                                             <h3>Публичность данных</h3>
                                         </div>
                                         <div className="space-y-3">
-                                            <Label className="text-sm text-slate-600">
+                                                <Label className="text-sm text-muted-foreground">
                                                 Согласны ли вы на отображение вашего имени в
                                                 публичной таблице рейтинга?
                                             </Label>
@@ -416,8 +416,8 @@ export default function Onboarding() {
                             </div>
 
                             {/* Соглашение */}
-                            <div className="mt-10 border-t border-slate-100 pt-8">
-                                <div className="flex items-start space-x-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+                            <div className="mt-10 border-t border-border pt-8">
+                                <div className="flex items-start space-x-3 rounded-lg border border-border bg-muted/50 p-4">
                                     <Controller
                                         control={control}
                                         name="agreement"
@@ -448,11 +448,11 @@ export default function Onboarding() {
                             </div>
                         </CardContent>
 
-                        <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50 p-6 sm:flex-row sm:justify-end">
+                        <CardFooter className="flex flex-col gap-4 border-t border-border bg-muted p-6 sm:flex-row sm:justify-end">
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full bg-slate-900 px-10 font-bold text-white shadow-md hover:bg-slate-800 sm:w-auto"
+                                className="w-full bg-primary px-10 font-bold text-primary-foreground shadow-md hover:bg-primary/90 sm:w-auto"
                             >
                                 {isLoading ? (
                                     <>

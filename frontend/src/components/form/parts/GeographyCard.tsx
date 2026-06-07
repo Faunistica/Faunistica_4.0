@@ -80,7 +80,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
             .then((r) => r.suggestions ?? []);
 
     return (
-        <Card className="border-slate-200 shadow-sm">
+        <Card className="border-border shadow-sm">
             <CardHeader className="pb-2">
                 <div className="flex flex-col items-center gap-2 md:flex-row md:justify-between">
                     <div className="flex gap-2 md:items-center">
@@ -101,7 +101,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
             </CardHeader>
 
             <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 border-b border-slate-100 pb-6 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 border-b border-border pb-6 lg:grid-cols-2">
                     <Controller
                         name="georef_source"
                         defaultValue={'none'}
@@ -126,7 +126,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                             />
                                             <FieldLabel
                                                 htmlFor={`geo_${opt.value}`}
-                                                className="cursor-pointer font-normal text-slate-700"
+                                                className="cursor-pointer font-normal text-foreground"
                                             >
                                                 {opt.label}
                                             </FieldLabel>
@@ -223,7 +223,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                 </div>
 
                 {georefSource !== 'none' && (
-                    <div className="space-y-6 border-t border-slate-100 pt-5">
+                    <div className="space-y-6 border-t border-border pt-5">
                         {georefSource === 'lit' && (
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
