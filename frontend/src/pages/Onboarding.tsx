@@ -26,12 +26,12 @@ const formSchema = z
         username: z.string().min(3, 'Минимум 3 символа'),
         password: z.string().min(6, 'Минимум 6 символов'),
         age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет'),
-        sex: z.string().min(1, 'Выберите пол'),
+        sex: z.enum(['M', 'F', 'N'], { message: 'Выберите пол' }),
         langRu: z.boolean().default(false),
         langEn: z.boolean().default(false),
         rating: z.enum(['yes', 'no']),
         comm: z.string().optional(),
-        agreement: z.boolean().refine((val) =>  val, {
+        agreement: z.boolean().refine((val) => val, {
             message: 'Необходимо подтвердить согласие',
         }),
     })
@@ -45,8 +45,9 @@ type FormValues = z.infer<typeof formSchema>;
 export default function Onboarding() {
     const location = useLocation();
     const navigate = useNavigate();
-    const token = location.state?.token;
-    const code = location.state?.code;
+    const state = location.state as { token?: string; code?: string } | null;
+    const token = state?.token;
+    const code = state?.code;
 
     const [registerMutation, { isLoading, error }] = useRegisterMutation();
 
@@ -56,13 +57,15 @@ export default function Onboarding() {
         handleSubmit,
         formState: { errors },
     } = useForm<FormValues>({
-        resolver: zodResolver(formSchema) as any,
+        resolver: zodResolver(
+            formSchema,
+        ) as unknown as import('react-hook-form').Resolver<FormValues>,
         defaultValues: {
             name: '',
             username: '',
             password: '',
-            age: '' as unknown as number,
-            sex: '',
+            age: '' as never,
+            sex: undefined as never,
             langRu: false,
             langEn: false,
             rating: 'no',
@@ -76,7 +79,7 @@ export default function Onboarding() {
     }
 
     const onSubmit = async (data: FormValues) => {
-        let language = '';
+        let language: 'rus' | 'eng' | 'all' = 'rus';
         if (data.langRu && data.langEn) {
             language = 'all';
         } else if (data.langRu) {
@@ -87,18 +90,18 @@ export default function Onboarding() {
 
         try {
             await registerMutation({
-                token: token || '',
-                code: code || '',
+                token: token ?? '',
+                code: code ?? '',
                 name: data.name,
                 username: data.username,
                 password: data.password,
                 age: data.age,
                 rating: data.rating === 'yes',
-                sex: data.sex as 'M' | 'F' | 'N',
-                lng: language as 'rus' | 'eng' | 'all',
+                sex: data.sex,
+                lng: language,
                 comm: data.comm,
             }).unwrap();
-            navigate('/dashboard', { replace: true });
+            void navigate('/dashboard', { replace: true });
         } catch (err) {
             console.error('Registration failed:', err);
         }
@@ -320,9 +323,13 @@ export default function Onboarding() {
                                                 </Label>
                                             </div>
                                         </div>
-                                        {(errors as any).languages_error && (
+                                        {(errors as Record<string, { message?: string }>)
+                                            .languages_error && (
                                             <span className="block text-xs text-red-500">
-                                                {(errors as any).languages_error.message}
+                                                {
+                                                    (errors as Record<string, { message?: string }>)
+                                                        .languages_error?.message
+                                                }
                                             </span>
                                         )}
                                     </div>

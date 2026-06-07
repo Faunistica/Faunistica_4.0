@@ -69,7 +69,9 @@ export default function Settings() {
         reset, // ← Добавьте reset
         formState: { errors },
     } = useForm<FormValues>({
-        resolver: zodResolver(formSchema) as any,
+        resolver: zodResolver(
+            formSchema,
+        ) as unknown as import('react-hook-form').Resolver<FormValues>,
         defaultValues: {
             username: '',
             password: '',
@@ -104,7 +106,7 @@ export default function Settings() {
     }, [user, reset]);
 
     const onSubmit = async (data: FormValues) => {
-        let language = null;
+        let language: 'rus' | 'eng' | 'all' | null = null;
         if (data.langRu && data.langEn) {
             language = 'all';
         } else if (data.langRu) {
@@ -120,7 +122,7 @@ export default function Settings() {
                 name: data.name,
                 age: data.age ?? null,
                 sex: data.sex ? data.sex.toUpperCase() : null,
-                lng: language as 'rus' | 'eng' | 'all' | null,
+                lng: language,
                 rating: data.rating === 'yes' ? 1 : 0,
                 email: data.email ?? '',
                 region: data.region ?? '',
@@ -176,13 +178,13 @@ export default function Settings() {
                                                     <Input
                                                         id="username"
                                                         disabled={!!user?.username}
-                                                        className={`pl-9 ${!!user?.username ? 'bg-slate-50 text-slate-500' : ''}`}
+                                                        className={`pl-9 ${user?.username ? 'bg-slate-50 text-slate-500' : ''}`}
                                                         placeholder="Уникальный логин"
                                                         {...register('username')}
                                                     />
                                                 </div>
                                                 <p className="text-xs text-slate-500">
-                                                    {!!user?.username
+                                                    {user?.username
                                                         ? 'Уникальный логин не может быть изменен.'
                                                         : 'Внимание: уникальный логин можно установить только один раз!'}
                                                 </p>
@@ -395,9 +397,13 @@ export default function Settings() {
                                                 </Label>
                                             </div>
                                         </div>
-                                        {(errors as any).languages_error && (
+                                        {(errors as Record<string, { message?: string }>)
+                                            .languages_error && (
                                             <span className="block pt-1 text-xs text-red-500">
-                                                {(errors as any).languages_error.message}
+                                                {
+                                                    (errors as Record<string, { message?: string }>)
+                                                        .languages_error?.message
+                                                }
                                             </span>
                                         )}
                                     </div>

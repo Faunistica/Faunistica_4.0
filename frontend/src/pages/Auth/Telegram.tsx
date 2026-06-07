@@ -78,7 +78,7 @@ const TelegramAuth: FC = () => {
 
         const startPolling = async (initialCode: string, token: string) => {
             let currentCode = initialCode;
-            while (isMounted) {
+            while (true) {
                 try {
                     const result = await checkStatus(
                         { code: currentCode, token, timeout: 25 },
@@ -93,19 +93,19 @@ const TelegramAuth: FC = () => {
                     }
 
                     if (result.status === 'need_registration' || result.status === 2) {
-                        navigate('/auth/onboarding', {
+                        void navigate('/auth/onboarding', {
                             state: { token, code: currentCode },
                             replace: true,
                         });
                         break;
                     } else if (result.status === 'authorized' || result.status === 1) {
-                        navigate('/dashboard', { replace: true });
+                        void navigate('/dashboard', { replace: true });
                         break;
                     } else if (result.status === 'pending' || result.status === 0) {
                         setIsPollingError(false);
                         setStatusMessage('Ожидание ввода кода в Telegram...');
                     }
-                } catch (e: any) {
+                } catch {
                     if (isMounted) {
                         setIsPollingError(true);
                         setStatusMessage('Проблема с подключением, пытаемся восстановить...');
@@ -115,23 +115,25 @@ const TelegramAuth: FC = () => {
             }
         };
 
-        initAuth()
-            .unwrap()
-            .then((res) => {
+        const init = async () => {
+            try {
+                const res = await initAuth().unwrap();
                 if (isMounted) {
                     setIsPollingError(false);
                     setStatusMessage('Ожидание ввода кода в Telegram...');
                     setDisplayCode(res.code);
-                    startPolling(res.code, res.token);
+                    void startPolling(res.code, res.token);
                 }
-            })
-            .catch((err) => {
+            } catch (err) {
                 console.error('Failed to init auth', err);
                 if (isMounted) {
                     setIsPollingError(true);
                     setStatusMessage('Ошибка соединения. Пожалуйста, попробуйте еще раз.');
                 }
-            });
+            }
+        };
+
+        void init();
 
         return () => {
             isMounted = false;
