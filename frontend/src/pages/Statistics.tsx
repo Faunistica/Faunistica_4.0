@@ -7,9 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Users, Database, Bug, BookOpen, LayoutGrid, AlignJustify, Palette } from 'lucide-react';
+import {
+    Users, Database, Bug, BookOpen,
+    LayoutGrid, AlignJustify, Palette,
+    Gauge, Minus,
+} from 'lucide-react';
 
-type Design = 'classic' | 'compact' | 'vibrant';
+type Design = 'classic' | 'compact' | 'vibrant' | 'dashboard' | 'minimal';
 
 const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
 
@@ -50,14 +54,16 @@ function formatNumber(n: number): string {
 }
 
 function DesignSwitch({ active, onChange }: { active: Design; onChange: (d: Design) => void }) {
-    const designs: { key: Design; icon: typeof LayoutGrid; label: string }[] = [
+    const items: { key: Design; icon: typeof LayoutGrid; label: string }[] = [
         { key: 'classic', icon: LayoutGrid, label: 'Классический' },
         { key: 'compact', icon: AlignJustify, label: 'Компактный' },
-        { key: 'vibrant', icon: Palette, label: 'Яркий' },
+        { key: 'vibrant', icon: Palette, label: 'Цветной' },
+        { key: 'dashboard', icon: Gauge, label: 'Дашборд' },
+        { key: 'minimal', icon: Minus, label: 'Минимал' },
     ];
     return (
         <div className="flex rounded-lg bg-muted p-0.5">
-            {designs.map(({ key, icon: Icon, label }) => (
+            {items.map(({ key, icon: Icon, label }) => (
                 <button
                     key={key}
                     type="button"
@@ -77,92 +83,113 @@ function DesignSwitch({ active, onChange }: { active: Design; onChange: (d: Desi
     );
 }
 
-function PieChartCard({ data, error, compact }: { data: UserStatisticsResponse | undefined; error: boolean; compact?: boolean }) {
+function PieChartCard({
+    data,
+    error,
+    variant = 'default',
+}: {
+    data: UserStatisticsResponse | undefined;
+    error: boolean;
+    variant?: 'default' | 'compact' | 'minimal';
+}) {
+    const isCompact = variant === 'compact';
+    const isMinimal = variant === 'minimal';
+
     if (error) {
-        return (
-            <Card>
-                <CardContent className="py-6 text-center text-sm text-red-500">
-                    Не удалось загрузить статистику
-                </CardContent>
-            </Card>
+        const content = (
+            <div className="py-6 text-center text-sm text-red-500">
+                Не удалось загрузить статистику
+            </div>
         );
+        if (isMinimal) return <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">{content}</div>;
+        return <Card><CardContent>{content}</CardContent></Card>;
     }
     if (!data || data.top_species.length === 0) {
-        return (
-            <Card>
-                <CardContent className="py-12 text-center text-sm text-muted-foreground">
-                    У вас пока нет записей
-                </CardContent>
-            </Card>
+        const content = (
+            <div className="py-12 text-center text-sm text-muted-foreground">
+                У вас пока нет записей
+            </div>
         );
+        if (isMinimal) return <div className="border-t pt-6">{content}</div>;
+        return <Card><CardContent>{content}</CardContent></Card>;
     }
-    return (
-        <Card className={cn(compact && 'gap-3 py-3')}>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <Bug className="size-4" />
-                    Ваши топ-виды
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className={cn(
-                    'flex flex-col items-center gap-6',
-                    compact ? 'sm:flex-row sm:items-center sm:gap-4' : 'sm:flex-row sm:items-start',
+
+    const chart = (
+        <>
+            <div className={cn('flex items-center gap-2', isMinimal && 'mb-2')}>
+                {!isMinimal && <Bug className="size-4" />}
+                <h3 className={cn(
+                    'font-medium text-muted-foreground',
+                    isMinimal ? 'text-xs tracking-widest uppercase' : 'text-sm',
                 )}>
-                    <ResponsiveContainer
-                        width="100%"
-                        height={compact ? 160 : 240}
-                        className={cn('max-w-xs shrink-0', compact && 'max-w-36')}
-                    >
-                        <PieChart>
-                            <Pie
-                                data={data.top_species}
-                                dataKey="count"
-                                nameKey="species"
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={compact ? 60 : 100}
-                                innerRadius={compact ? 30 : 50}
-                            >
-                                {data.top_species.map((_, i) => (
-                                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip
-                                formatter={(value, name) => [
-                                    formatNumber(Number(value)),
-                                    String(name),
-                                ]}
+                    Ваши топ-виды
+                </h3>
+            </div>
+            <div className={cn(
+                'flex flex-col items-center gap-6',
+                isCompact ? 'sm:flex-row sm:items-center sm:gap-4' : 'sm:flex-row sm:items-start',
+            )}>
+                <ResponsiveContainer
+                    width="100%"
+                    height={isCompact ? 160 : isMinimal ? 200 : 240}
+                    className={cn('max-w-xs shrink-0', (isCompact || isMinimal) && 'max-w-44')}
+                >
+                    <PieChart>
+                        <Pie
+                            data={data.top_species}
+                            dataKey="count"
+                            nameKey="species"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={isCompact ? 60 : isMinimal ? 75 : 100}
+                            innerRadius={isCompact ? 30 : isMinimal ? 38 : 50}
+                        >
+                            {data.top_species.map((_, i) => (
+                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip
+                            formatter={(value, name) => [
+                                formatNumber(Number(value)),
+                                String(name),
+                            ]}
+                        />
+                    </PieChart>
+                </ResponsiveContainer>
+                <div className={cn('w-full space-y-2 sm:w-auto', isMinimal && 'space-y-1.5')}>
+                    {data.top_species.map((item, i) => (
+                        <div key={item.species} className={cn('flex items-center gap-3', isCompact && 'text-xs', isMinimal && 'text-sm')}>
+                            <span
+                                className={cn('inline-block shrink-0 rounded-full', isMinimal ? 'size-2' : 'size-3')}
+                                style={{ backgroundColor: COLORS[i % COLORS.length] }}
                             />
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className="w-full space-y-2 sm:w-auto">
-                        {data.top_species.map((item, i) => (
-                            <div
-                                key={item.species}
-                                className={cn('flex items-center gap-3', compact && 'text-xs')}
+                            <span className="truncate">{item.species}</span>
+                            <Badge
+                                variant="secondary"
+                                className={cn('ml-auto shrink-0 font-mono', isMinimal ? 'px-1.5 py-0 text-[10px]' : 'text-xs')}
                             >
-                                <span
-                                    className="inline-block size-3 shrink-0 rounded-full"
-                                    style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                                />
-                                <span className="truncate">{item.species}</span>
-                                <Badge
-                                    variant="secondary"
-                                    className="ml-auto shrink-0 font-mono text-xs"
-                                >
-                                    {formatNumber(item.count)}
-                                </Badge>
-                            </div>
-                        ))}
-                    </div>
+                                {formatNumber(item.count)}
+                            </Badge>
+                        </div>
+                    ))}
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </>
     );
+
+    if (isMinimal) return <div className="space-y-4">{chart}</div>;
+    if (isCompact) return <Card className="gap-3 py-3"><CardHeader><CardTitle>{chart}</CardTitle></CardHeader></Card>;
+    return <Card><CardHeader><CardTitle>{chart}</CardTitle></CardHeader></Card>;
 }
 
-function SectionHeading({ children }: { children: string }) {
+function SectionHeading({ children, minimal }: { children: string; minimal?: boolean }) {
+    if (minimal) {
+        return (
+            <h2 className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+                {children}
+            </h2>
+        );
+    }
     return (
         <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
             {children}
@@ -193,17 +220,13 @@ const Statistics: FC = () => {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <Skeleton className="h-7 w-32" />
-                    <Skeleton className="h-9 w-64" />
+                    <Skeleton className="h-9 w-80" />
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <Card key={i}>
-                            <CardHeader>
-                                <Skeleton className="h-4 w-24" />
-                            </CardHeader>
-                            <CardContent>
-                                <Skeleton className="h-8 w-16" />
-                            </CardContent>
+                            <CardHeader><Skeleton className="h-4 w-24" /></CardHeader>
+                            <CardContent><Skeleton className="h-8 w-16" /></CardContent>
                         </Card>
                     ))}
                 </div>
@@ -218,9 +241,7 @@ const Statistics: FC = () => {
                     ))}
                 </div>
                 <Card>
-                    <CardHeader>
-                        <Skeleton className="h-5 w-32" />
-                    </CardHeader>
+                    <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
                     <CardContent className="flex justify-center">
                         <Skeleton className="size-48 rounded-full" />
                     </CardContent>
@@ -276,9 +297,7 @@ const Statistics: FC = () => {
                                         <CardContent className="pt-3">
                                             <p className="mb-1 text-xs text-muted-foreground">{label}</p>
                                             <p className="text-sm font-medium">
-                                                {value ?? (
-                                                    <span className="text-muted-foreground italic">—</span>
-                                                )}
+                                                {value ?? <span className="text-muted-foreground italic">—</span>}
                                             </p>
                                         </CardContent>
                                     </Card>
@@ -318,9 +337,7 @@ const Statistics: FC = () => {
                                         <CardContent className="pt-3">
                                             <p className="mb-1 text-xs text-muted-foreground">{label}</p>
                                             <p className="text-sm font-medium">
-                                                {value ?? (
-                                                    <span className="text-muted-foreground italic">—</span>
-                                                )}
+                                                {value ?? <span className="text-muted-foreground italic">—</span>}
                                             </p>
                                         </CardContent>
                                     </Card>
@@ -334,42 +351,40 @@ const Statistics: FC = () => {
             )}
 
             {design === 'compact' && (
-                <div key="compact" className="space-y-5">
+                <div key="compact" className="space-y-4">
                     <div className="space-y-2">
                         <SectionHeading>Проект</SectionHeading>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                             {projectStatCards.map(({ key, icon: Icon, label, field }) => (
-                                <div
+                                <span
                                     key={key}
-                                    className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm shadow-xs"
+                                    className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 text-xs font-medium"
                                 >
-                                    <Icon className="size-4 text-muted-foreground" />
+                                    <Icon className="size-3 text-muted-foreground" />
                                     <span className="text-muted-foreground">{label}</span>
                                     <span className="font-semibold tracking-tight">
                                         {formatNumber(projectStats?.[field] ?? 0)}
                                     </span>
-                                </div>
+                                </span>
                             ))}
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <SectionHeading>Наиболее распространённые</SectionHeading>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                             {commonLabels.map(({ key, label, field }) => {
                                 const value = projectStats?.[field];
                                 return (
-                                    <div
+                                    <span
                                         key={key}
-                                        className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 text-sm shadow-xs"
+                                        className="inline-flex items-center gap-1 rounded-md bg-muted px-2.5 py-1.5 text-xs"
                                     >
-                                        <span className="text-xs text-muted-foreground">{label}:</span>
+                                        <span className="text-muted-foreground">{label}:</span>
                                         <span className="font-medium">
-                                            {value ?? (
-                                                <span className="text-muted-foreground italic">—</span>
-                                            )}
+                                            {value ?? <span className="text-muted-foreground italic">—</span>}
                                         </span>
-                                    </div>
+                                    </span>
                                 );
                             })}
                         </div>
@@ -377,45 +392,43 @@ const Statistics: FC = () => {
 
                     <div className="space-y-2">
                         <SectionHeading>Личная статистика</SectionHeading>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                             {personalStatCards.map(({ key, icon: Icon, label, field }) => (
-                                <div
+                                <span
                                     key={key}
-                                    className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm shadow-xs"
+                                    className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 text-xs font-medium"
                                 >
-                                    <Icon className="size-4 text-muted-foreground" />
+                                    <Icon className="size-3 text-muted-foreground" />
                                     <span className="text-muted-foreground">{label}</span>
                                     <span className="font-semibold tracking-tight">
                                         {formatNumber(userStats?.[field] ?? 0)}
                                     </span>
-                                </div>
+                                </span>
                             ))}
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <SectionHeading>Личное: наиболее распространённые</SectionHeading>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                             {commonLabels.map(({ key, label, field }) => {
                                 const value = userStats?.[field];
                                 return (
-                                    <div
+                                    <span
                                         key={key}
-                                        className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-2 text-sm shadow-xs"
+                                        className="inline-flex items-center gap-1 rounded-md bg-muted px-2.5 py-1.5 text-xs"
                                     >
-                                        <span className="text-xs text-muted-foreground">{label}:</span>
+                                        <span className="text-muted-foreground">{label}:</span>
                                         <span className="font-medium">
-                                            {value ?? (
-                                                <span className="text-muted-foreground italic">—</span>
-                                            )}
+                                            {value ?? <span className="text-muted-foreground italic">—</span>}
                                         </span>
-                                    </div>
+                                    </span>
                                 );
                             })}
                         </div>
                     </div>
 
-                    <PieChartCard data={userStats} error={userError} compact />
+                    <PieChartCard data={userStats} error={userError} variant="compact" />
                 </div>
             )}
 
@@ -423,21 +436,13 @@ const Statistics: FC = () => {
                 <div key="vibrant" className="space-y-6">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {projectStatCards.map(({ key, icon: Icon, label, field }, idx) => (
-                            <Card key={key} className="relative overflow-hidden">
-                                <div
-                                    className={cn(
-                                        'absolute top-0 left-0 h-full w-1 bg-linear-to-b',
-                                        GRADIENTS[idx % GRADIENTS.length],
-                                    )}
-                                />
+                            <Card key={key} className="relative overflow-hidden border-0 bg-linear-to-br shadow-md" style={{
+                                backgroundImage: `linear-gradient(to bottom right, ${['#eff6ff', '#ecfdf5', '#fffbeb', '#f5f3ff'][idx]}, white)`,
+                            }}>
+                                <div className={cn('absolute top-0 left-0 h-full w-1 bg-linear-to-b', GRADIENTS[idx % GRADIENTS.length])} />
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                        <div
-                                            className={cn(
-                                                'flex size-7 items-center justify-center rounded-md',
-                                                ICON_BG[idx % ICON_BG.length],
-                                            )}
-                                        >
+                                        <div className={cn('flex size-8 items-center justify-center rounded-lg', ICON_BG[idx % ICON_BG.length])}>
                                             <Icon className="size-4" />
                                         </div>
                                         {label}
@@ -458,19 +463,14 @@ const Statistics: FC = () => {
                             {commonLabels.map(({ key, label, field }, idx) => {
                                 const value = projectStats?.[field];
                                 return (
-                                    <Card key={key} size="sm" className="relative overflow-hidden">
-                                        <div
-                                            className={cn(
-                                                'absolute top-0 left-0 h-full w-0.5 bg-linear-to-b',
-                                                GRADIENTS[idx % GRADIENTS.length],
-                                            )}
-                                        />
+                                    <Card key={key} size="sm" className="relative overflow-hidden border-0 bg-linear-to-br shadow-sm" style={{
+                                        backgroundImage: `linear-gradient(to bottom right, ${['#f0f9ff', '#f0fdf4', '#fefce8'][idx]}, white)`,
+                                    }}>
+                                        <div className={cn('absolute top-0 left-0 h-full w-0.5 bg-linear-to-b', GRADIENTS[idx % GRADIENTS.length])} />
                                         <CardContent className="pt-3">
                                             <p className="mb-1 text-xs text-muted-foreground">{label}</p>
                                             <p className="text-sm font-medium">
-                                                {value ?? (
-                                                    <span className="text-muted-foreground italic">—</span>
-                                                )}
+                                                {value ?? <span className="text-muted-foreground italic">—</span>}
                                             </p>
                                         </CardContent>
                                     </Card>
@@ -483,21 +483,13 @@ const Statistics: FC = () => {
                         <SectionHeading>Личная статистика</SectionHeading>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {personalStatCards.map(({ key, icon: Icon, label, field }, idx) => (
-                                <Card key={key} className="relative overflow-hidden">
-                                    <div
-                                        className={cn(
-                                            'absolute top-0 left-0 h-full w-1 bg-linear-to-b',
-                                            GRADIENTS[(idx + 2) % GRADIENTS.length],
-                                        )}
-                                    />
+                                <Card key={key} className="relative overflow-hidden border-0 bg-linear-to-br shadow-md" style={{
+                                    backgroundImage: `linear-gradient(to bottom right, ${['#fffbeb', '#f5f3ff'][idx]}, white)`,
+                                }}>
+                                    <div className={cn('absolute top-0 left-0 h-full w-1 bg-linear-to-b', GRADIENTS[(idx + 2) % GRADIENTS.length])} />
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                            <div
-                                                className={cn(
-                                                    'flex size-7 items-center justify-center rounded-md',
-                                                    ICON_BG[(idx + 2) % ICON_BG.length],
-                                                )}
-                                            >
+                                            <div className={cn('flex size-8 items-center justify-center rounded-lg', ICON_BG[(idx + 2) % ICON_BG.length])}>
                                                 <Icon className="size-4" />
                                             </div>
                                             {label}
@@ -519,19 +511,14 @@ const Statistics: FC = () => {
                             {commonLabels.map(({ key, label, field }, idx) => {
                                 const value = userStats?.[field];
                                 return (
-                                    <Card key={key} size="sm" className="relative overflow-hidden">
-                                        <div
-                                            className={cn(
-                                                'absolute top-0 left-0 h-full w-0.5 bg-linear-to-b',
-                                                GRADIENTS[(idx + 2) % GRADIENTS.length],
-                                            )}
-                                        />
+                                    <Card key={key} size="sm" className="relative overflow-hidden border-0 bg-linear-to-br shadow-sm" style={{
+                                        backgroundImage: `linear-gradient(to bottom right, ${['#fefce8', '#f5f3ff', '#f0fdf4'][idx]}, white)`,
+                                    }}>
+                                        <div className={cn('absolute top-0 left-0 h-full w-0.5 bg-linear-to-b', GRADIENTS[(idx + 2) % GRADIENTS.length])} />
                                         <CardContent className="pt-3">
                                             <p className="mb-1 text-xs text-muted-foreground">{label}</p>
                                             <p className="text-sm font-medium">
-                                                {value ?? (
-                                                    <span className="text-muted-foreground italic">—</span>
-                                                )}
+                                                {value ?? <span className="text-muted-foreground italic">—</span>}
                                             </p>
                                         </CardContent>
                                     </Card>
@@ -541,6 +528,166 @@ const Statistics: FC = () => {
                     </div>
 
                     <PieChartCard data={userStats} error={userError} />
+                </div>
+            )}
+
+            {design === 'dashboard' && (
+                <div key="dashboard" className="space-y-8">
+                    <div className="rounded-xl border bg-card">
+                        <div className="grid grid-cols-2 divide-x divide-border sm:grid-cols-4">
+                            {projectStatCards.map(({ key, icon: Icon, label, field }) => {
+                                const value = projectStats?.[field] ?? 0;
+                                return (
+                                    <div key={key} className="flex flex-col items-center gap-1 px-4 py-6 text-center">
+                                        <Icon className="size-4 text-muted-foreground/60" />
+                                        <span className="text-3xl font-bold tracking-tight tabular-nums sm:text-4xl">
+                                            {formatNumber(value)}
+                                        </span>
+                                        <span className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                            {label}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <SectionHeading>Наиболее распространённые</SectionHeading>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {commonLabels.map(({ key, label, field }) => {
+                                const value = projectStats?.[field];
+                                return (
+                                    <div key={key} className="rounded-lg border bg-card px-4 py-3">
+                                        <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                            {label}
+                                        </p>
+                                        <p className="mt-1 text-lg font-semibold tracking-tight">
+                                            {value ?? <span className="text-muted-foreground italic">—</span>}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <SectionHeading>Личная статистика</SectionHeading>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {personalStatCards.map(({ key, icon: Icon, label, field }) => {
+                                const value = userStats?.[field] ?? 0;
+                                return (
+                                    <div key={key} className="rounded-lg border bg-card px-5 py-4">
+                                        <div className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                            <Icon className="size-3.5" />
+                                            {label}
+                                        </div>
+                                        <span className="mt-1 block text-2xl font-bold tracking-tight">
+                                            {formatNumber(value)}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <SectionHeading>Личное: наиболее распространённые</SectionHeading>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {commonLabels.map(({ key, label, field }) => {
+                                const value = userStats?.[field];
+                                return (
+                                    <div key={key} className="rounded-lg border bg-card px-4 py-3">
+                                        <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                            {label}
+                                        </p>
+                                        <p className="mt-1 text-lg font-semibold tracking-tight">
+                                            {value ?? <span className="text-muted-foreground italic">—</span>}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <PieChartCard data={userStats} error={userError} />
+                </div>
+            )}
+
+            {design === 'minimal' && (
+                <div key="minimal" className="divide-y divide-border">
+                    <div className="pb-8">
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
+                            {projectStatCards.map(({ key, label, field }) => (
+                                <div key={key}>
+                                    <div className="text-4xl font-light tracking-tight tabular-nums sm:text-5xl">
+                                        {formatNumber(projectStats?.[field] ?? 0)}
+                                    </div>
+                                    <p className="mt-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+                                        {label}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="py-8">
+                        <SectionHeading minimal>Наиболее распространённые</SectionHeading>
+                        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {commonLabels.map(({ key, label, field }) => {
+                                const value = projectStats?.[field];
+                                return (
+                                    <div key={key}>
+                                        <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+                                            {label}
+                                        </p>
+                                        <p className="mt-1 text-base font-medium">
+                                            {value ?? <span className="text-muted-foreground italic">—</span>}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="py-8">
+                        <SectionHeading minimal>Личная статистика</SectionHeading>
+                        <div className="mt-3 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            {personalStatCards.map(({ key, label, field }) => (
+                                <div key={key}>
+                                    <div className="text-3xl font-light tracking-tight tabular-nums">
+                                        {formatNumber(userStats?.[field] ?? 0)}
+                                    </div>
+                                    <p className="mt-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+                                        {label}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="py-8">
+                        <SectionHeading minimal>Личное: наиболее распространённые</SectionHeading>
+                        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {commonLabels.map(({ key, label, field }) => {
+                                const value = userStats?.[field];
+                                return (
+                                    <div key={key}>
+                                        <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+                                            {label}
+                                        </p>
+                                        <p className="mt-1 text-base font-medium">
+                                            {value ?? <span className="text-muted-foreground italic">—</span>}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="pt-8">
+                        <PieChartCard data={userStats} error={userError} variant="minimal" />
+                    </div>
                 </div>
             )}
         </div>
