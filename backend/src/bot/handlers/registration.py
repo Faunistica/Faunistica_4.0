@@ -3,7 +3,6 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from bot.handlers.confirm import handle_code_input
-from bot.handlers.support import support_command
 from bot.messages import Messages
 from core.config import settings
 from core.exceptions import HandlerError
