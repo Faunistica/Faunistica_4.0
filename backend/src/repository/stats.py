@@ -91,20 +91,20 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         .where(EventRecord.type == RecordType.REC_FAIL)
     )
 
-    return {
-        "total_volunteers": total_volunteers or 0,
-        "total_records": total_records or 0,
-        "species_count": species_count or 0,
-        "processed_publications_count": processed_publications or 0,
-        "most_common_family": most_common_family,
-        "most_common_genus": most_common_genus,
-        "most_common_species": most_common_species,
-        "total_users": total_users or 0,
-        "avg_age": avg_age,
-        "families_count": families_count or 0,
-        "checks_count": checks_count or 0,
-        "failed_records": failed_records or 0,
-    }
+    return ProjectStats(
+        total_volunteers=total_volunteers or 0,
+        total_records=total_records or 0,
+        species_count=species_count or 0,
+        processed_publications_count=processed_publications or 0,
+        most_common_family=most_common_family,
+        most_common_genus=most_common_genus,
+        most_common_species=most_common_species,
+        total_users=total_users or 0,
+        avg_age=avg_age,
+        families_count=families_count or 0,
+        checks_count=checks_count or 0,
+        failed_records=failed_records or 0,
+    )
 
 
 async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:

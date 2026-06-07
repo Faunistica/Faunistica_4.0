@@ -4,10 +4,10 @@ from core.dependencies import DBSession
 from repository.stats import (
     get_cumulative_records,
     get_cumulative_volunteers,
-    get_project_statistics,
     get_progress,
+    get_project_statistics,
 )
-from schema.statistics import CumulativePoint, ProjectStatisticsResponse, ProgressInfo
+from schema.statistics import CumulativePoint, ProgressInfo, ProjectStatisticsResponse
 
 router = APIRouter()
 
@@ -34,7 +34,9 @@ async def read_project_statistics(
 
     total, distinct_pairs = await get_progress(session)
     if total == 0:
-        progress = ProgressInfo(coverage=0.0, total_publications=0, processed_publications=0)
+        progress = ProgressInfo(
+            coverage=0.0, total_publications=0, processed_publications=0
+        )
     else:
         coverage = min(distinct_pairs / (total * 3), 1.0)
         progress = ProgressInfo(

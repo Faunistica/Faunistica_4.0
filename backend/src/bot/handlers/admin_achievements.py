@@ -26,6 +26,9 @@ async def achievements_command(message: Message) -> None:
 
     wb = Workbook()
     ws = wb.active
+    if ws is None:
+        msg = "No active worksheet in workbook"
+        raise RuntimeError(msg)
     ws.title = "Achievements"
     ws.append(["user_id", "milestone", "datetime", "name", "tlg_name", "tlg_username"])
 

@@ -103,9 +103,6 @@ class ProjectStats(TypedDict):
     families_count: int
     checks_count: int
     failed_records: int
-    total_publs: int
-    rus_publs: int
-    eng_publs: int
 
 
 class TopSpeciesItem(TypedDict):
