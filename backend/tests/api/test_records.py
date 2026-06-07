@@ -175,7 +175,7 @@ async def test_list_records_page_size_exceeds_max(
 ):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&page_size=200"
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&page_size=1001"
     )
     assert response.status_code == 422
 
