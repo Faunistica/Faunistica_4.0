@@ -117,6 +117,17 @@ export interface SupportRequest {
     issue_type: string;
 }
 
+export interface CumulativePoint {
+    date: string;
+    count: number;
+}
+
+export interface ProgressInfo {
+    coverage: number;
+    total_publications: number;
+    processed_publications: number;
+}
+
 export interface StatisticsResponse {
     total_volunteers: number;
     total_records: number;
@@ -125,6 +136,14 @@ export interface StatisticsResponse {
     most_common_family: string | null;
     most_common_genus: string | null;
     most_common_species: string | null;
+    total_users: number;
+    avg_age: number | null;
+    families_count: number;
+    checks_count: number;
+    failed_records: number;
+    cumulative_volunteers: CumulativePoint[];
+    cumulative_records: CumulativePoint[];
+    progress: ProgressInfo | null;
 }
 
 export interface TopSpeciesItem {
@@ -141,4 +160,11 @@ export interface UserStatisticsResponse {
     most_common_genus: string | null;
     most_common_species: string | null;
     top_species: TopSpeciesItem[];
+    checks_count: number;
+    failed_records: number;
+    total_individuals: number;
+    distinct_families: number;
+    distinct_genera: number;
+    distinct_species: number;
+    most_common_year: number | null;
 }
