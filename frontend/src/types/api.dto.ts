@@ -126,3 +126,19 @@ export interface StatisticsResponse {
     most_common_genus: string | null;
     most_common_species: string | null;
 }
+
+export interface TopSpeciesItem {
+    species: string;
+    count: number;
+}
+
+export interface UserStatisticsResponse {
+    user_id: number;
+    name: string | null;
+    records_entered: number;
+    publications_processed: number;
+    most_common_family: string | null;
+    most_common_genus: string | null;
+    most_common_species: string | null;
+    top_species: TopSpeciesItem[];
+}
