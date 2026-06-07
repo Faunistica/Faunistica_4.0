@@ -45,12 +45,12 @@ const Login: FC = () => {
 
     return (
         <div className="mx-auto w-full max-w-100 space-y-6">
-            <Card className="border-border shadow-sm">
+            <Card className="border-slate-200 shadow-sm">
                 <CardHeader className="space-y-1 text-center">
-                    <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
+                    <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
                         Добро пожаловать
                     </CardTitle>
-                    <CardDescription className="text-muted-foreground">
+                    <CardDescription className="text-slate-500">
                         Войдите с помощью вашей учётной записи
                     </CardDescription>
                 </CardHeader>
@@ -59,7 +59,7 @@ const Login: FC = () => {
                         <Button
                             asChild
                             variant="outline"
-                            className="w-full border-border bg-background text-foreground hover:bg-accent"
+                            className="w-full border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                         >
                             <Link to="/auth/telegram">
                                 <Send className="mr-2 size-4 text-[#229ED9]" />
@@ -70,10 +70,10 @@ const Login: FC = () => {
 
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-border" />
+                            <span className="w-full border-t border-slate-200" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 font-medium text-muted-foreground">
+                            <span className="bg-white px-2 font-medium text-slate-500">
                                 Или войдите с помощью
                             </span>
                         </div>
@@ -123,18 +123,18 @@ const Login: FC = () => {
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                            className="w-full bg-slate-900 font-semibold text-white shadow-sm hover:bg-slate-800"
                         >
                             {isLoading ? 'Вход...' : 'Войти'}
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex flex-col justify-center border-t border-border bg-card p-4">
-                    <div className="text-sm text-muted-foreground">
+                <CardFooter className="flex flex-col justify-center border-t border-slate-100 bg-white p-4">
+                    <div className="text-sm text-slate-600">
                         Нет аккаунта?{' '}
                         <Link
                             to="/auth/register"
-                            className="font-semibold text-foreground hover:underline"
+                            className="font-semibold text-slate-900 hover:underline"
                         >
                             Зарегистрироваться
                         </Link>
@@ -142,18 +142,18 @@ const Login: FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm/relaxed text-muted-foreground">
+            <p className="px-4 text-center text-sm/relaxed text-slate-500">
                 {'Продолжая, вы соглашаетесь с нашими '}
                 <Link
                     to="/terms-of-service"
-                    className="underline underline-offset-4 transition-colors hover:text-foreground"
+                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
                 >
                     Условиями обслуживания
                 </Link>
                 {' и '}
                 <Link
                     to="/privacy-policy"
-                    className="underline underline-offset-4 transition-colors hover:text-foreground"
+                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
                 >
                     Политикой конфиденциальности
                 </Link>

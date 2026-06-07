@@ -36,18 +36,18 @@ const FormSidebar: FC = () => {
 
     return (
         <>
-            <Sidebar variant="sidebar" className="border-r border-border">
-                <SidebarHeader className="border-b border-border p-4">
+            <Sidebar variant="sidebar" className="border-r border-slate-200">
+                <SidebarHeader className="border-b border-slate-100 p-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                            <div className="flex size-8 items-center justify-center rounded-md bg-slate-900 text-white">
                                 <FileText className="size-4" />
                             </div>
                             <div>
-                                <div className="text-sm/tight font-bold text-foreground">
+                                <div className="text-sm/tight font-bold text-slate-900">
                                     Менеджер
                                 </div>
-                                <div className="text-[10px] leading-tight font-medium text-muted-foreground">
+                                <div className="text-[10px] leading-tight font-medium text-slate-500">
                                     Записи данных
                                 </div>
                             </div>
@@ -56,7 +56,7 @@ const FormSidebar: FC = () => {
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="size-8 text-muted-foreground hover:text-foreground md:hidden"
+                            className="size-8 text-slate-400 hover:text-slate-600 md:hidden"
                             onClick={() => setOpenMobile(false)}
                             aria-label="Закрыть панель"
                         >
@@ -70,7 +70,7 @@ const FormSidebar: FC = () => {
                         <Button
                             type="button"
                             onClick={create}
-                            className="flex h-fit w-full items-center gap-2 bg-primary py-2 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                            className="flex h-fit w-full items-center gap-2 bg-slate-900 py-2 font-semibold text-white shadow-sm hover:bg-slate-800"
                             size="sm"
                         >
                             <Plus className="size-4" />
@@ -89,7 +89,7 @@ const FormSidebar: FC = () => {
                     </div>
 
                     <SidebarGroup className="mt-2">
-                        <SidebarGroupLabel className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                        <SidebarGroupLabel className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                             Список записей
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
@@ -109,14 +109,14 @@ const FormSidebar: FC = () => {
                     </SidebarGroup>
                 </SidebarContent>
 
-                <SidebarFooter className="border-t border-border p-4">
+                <SidebarFooter className="border-t border-slate-100 p-4">
                     <Button
                         asChild
                         variant="outline"
                         className="w-full justify-start gap-2 font-medium shadow-sm"
                     >
                         <Link to="/dashboard">
-                            <LogOut className="size-4 text-muted-foreground" />
+                            <LogOut className="size-4 text-slate-500" />
                             Вернуться назад
                         </Link>
                     </Button>

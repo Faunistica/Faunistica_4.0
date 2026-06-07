@@ -6,7 +6,7 @@ import Footer from './components/Footer';
 
 export default function Landing() {
     return (
-        <div className="flex w-full flex-col bg-background selection:bg-blue-100 selection:text-blue-900 dark:selection:bg-blue-900 dark:selection:text-blue-100">
+        <div className="flex w-full flex-col bg-white selection:bg-blue-100 selection:text-blue-900">
             <Hero />
             <About />
             <Volunteers />

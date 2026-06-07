@@ -79,7 +79,7 @@ const TaxonomyCard: FC = () => {
     };
 
     return (
-        <Card className="border-border shadow-sm">
+        <Card className="border-slate-200 shadow-sm">
             <CardHeader className="md:pb-4">
                 <div className="flex gap-2 md:items-center">
                     <span className="size-8 rounded-lg bg-violet-50 p-2 text-violet-600">
@@ -118,7 +118,7 @@ const TaxonomyCard: FC = () => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 border-t border-border pt-5 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-3">
                     <Controller
                         name="taxon_rank"
                         control={control}
@@ -211,7 +211,7 @@ const TaxonomyCard: FC = () => {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 border-t border-border pt-4 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 lg:grid-cols-2">
                     <Controller
                         name="taxon_remarks"
                         control={control}

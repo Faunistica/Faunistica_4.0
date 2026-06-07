@@ -79,7 +79,7 @@ const Footer: FC = () => {
                 animate={animateMotion && isHidden ? 'hidden' : 'visible'}
                 inert={isHidden}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="fixed inset-x-0 bottom-0 z-100 flex flex-row items-center justify-between gap-3 border-t border-border bg-background/95 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10"
+                className="fixed inset-x-0 bottom-0 z-100 flex flex-row items-center justify-between gap-3 border-t border-slate-200 bg-white/95 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] backdrop-blur-md md:left-64 md:px-10"
             >
                 <div className="flex items-center gap-4">
                     <Button
@@ -92,7 +92,7 @@ const Footer: FC = () => {
                         Удалить
                     </Button>
 
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
                         {isAutoSaving ? (
                             <>
                                 <Cloud className="size-4 animate-pulse text-blue-500" />
@@ -105,7 +105,7 @@ const Footer: FC = () => {
                             </>
                         ) : (
                             <>
-                                <CloudOff className="size-4 text-muted-foreground" />
+                                <CloudOff className="size-4 text-slate-400" />
                                 <span>Не сохранено</span>
                             </>
                         )}
@@ -135,7 +135,7 @@ const Footer: FC = () => {
                     <Button
                         onClick={() => void actions.submit()}
                         disabled={isBusy}
-                        className="gap-2 bg-primary text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                        className="gap-2 bg-slate-900 text-xs font-semibold text-white hover:bg-slate-800"
                     >
                         <Send className="size-4" />
                         Отправить

@@ -42,7 +42,7 @@ const QuantitiesCard: FC = () => {
             label: QUANTITY_FIELD_LABELS.subadultFemales,
             color: 'text-pink-400',
         },
-        { key: 'adults' as const, label: QUANTITY_FIELD_LABELS.adults, color: 'text-muted-foreground' },
+        { key: 'adults' as const, label: QUANTITY_FIELD_LABELS.adults, color: 'text-slate-600' },
         {
             key: 'juveniles' as const,
             label: QUANTITY_FIELD_LABELS.juveniles,
@@ -51,7 +51,7 @@ const QuantitiesCard: FC = () => {
     ];
 
     return (
-        <Card className="border-border shadow-sm">
+        <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-4">
                 <div className="flex gap-2 md:items-center">
                     <div className="flex size-8 rounded-lg bg-rose-50 p-2 text-rose-600">
@@ -105,7 +105,7 @@ const QuantitiesCard: FC = () => {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 border-t border-border pt-5 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-2">
                     <FormAutocomplete
                         name="quantity_type"
                         label="Единицы измерения"
@@ -114,7 +114,7 @@ const QuantitiesCard: FC = () => {
                     />
                     <Field>
                         <FieldLabel>Общее количество (вычислено)</FieldLabel>
-                        <div className="flex h-9 items-center rounded-md border border-border bg-muted px-3 text-sm font-semibold text-foreground">
+                        <div className="flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700">
                             {total > 0 ? total : '—'}
                         </div>
                     </Field>

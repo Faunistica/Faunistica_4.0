@@ -93,7 +93,7 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
                 />
             </div>
 
-            <div className="z-0 h-90 w-full overflow-hidden rounded-md border border-border">
+            <div className="z-0 h-90 w-full overflow-hidden rounded-md border border-slate-200">
                 <MapContainer
                     center={center}
                     zoom={10}

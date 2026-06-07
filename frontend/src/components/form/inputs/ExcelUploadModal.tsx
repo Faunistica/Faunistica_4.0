@@ -172,7 +172,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                 ? 'scale-[1.02] border-emerald-400 bg-emerald-50'
                                 : selectedFile
                                   ? 'border-emerald-300 bg-emerald-50/50'
-                                  : 'border-border bg-muted hover:border-border hover:bg-accent',
+                                  : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100',
                         )}
                     >
                         <input
@@ -189,10 +189,10 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                     <FileSpreadsheet className="size-6 text-emerald-600" />
                                 </div>
                                 <div className="text-center">
-                                    <p className="font-medium text-foreground">
+                                    <p className="font-medium text-slate-900">
                                         {selectedFile.name}
                                     </p>
-                                    <p className="mt-1 text-xs text-muted-foreground">
+                                    <p className="mt-1 text-xs text-slate-500">
                                         {(selectedFile.size / 1024).toFixed(1)} КБ
                                     </p>
                                 </div>
@@ -212,14 +212,14 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                             </>
                         ) : (
                             <>
-                                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                                    <Upload className="size-6 text-muted-foreground" />
+                                <div className="flex size-12 items-center justify-center rounded-full bg-slate-200">
+                                    <Upload className="size-6 text-slate-500" />
                                 </div>
                                 <div className="text-center">
-                                    <p className="font-medium text-foreground">
+                                    <p className="font-medium text-slate-700">
                                         Перетащите файл сюда
                                     </p>
-                                    <p className="mt-1 text-xs text-muted-foreground">
+                                    <p className="mt-1 text-xs text-slate-500">
                                         или нажмите для выбора • .xlsx, .csv
                                     </p>
                                 </div>

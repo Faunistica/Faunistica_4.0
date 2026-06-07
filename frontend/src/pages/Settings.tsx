@@ -110,7 +110,7 @@ export default function Settings() {
     if (isUserLoading) {
         return (
             <div className="flex h-full min-h-[50vh] items-center justify-center">
-                <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                <Loader2 className="size-8 animate-spin text-slate-400" />
             </div>
         );
     }
@@ -119,9 +119,9 @@ export default function Settings() {
         <main className="flex flex-1 flex-col items-center px-4 py-8 md:py-12">
             <div className="w-full max-w-4xl space-y-8">
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <Card className="overflow-hidden border-border shadow-sm">
+                    <Card className="overflow-hidden border-slate-200 shadow-sm">
                         <CardHeader className="space-y-4">
-                            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+                            <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
                                 Настройки профиля
                             </CardTitle>
                             <CardDescription>
@@ -135,7 +135,7 @@ export default function Settings() {
                                 <div className="space-y-8">
                                     {/* Учетная запись */}
                                     <div className="space-y-5">
-                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <KeyRound className="size-5" />
                                             <h3>Учетная запись</h3>
                                         </div>
@@ -144,17 +144,17 @@ export default function Settings() {
                                                 <Label htmlFor="username">Логин (имя пользователя)</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                        <User className="size-4 text-muted-foreground" />
+                                                        <User className="size-4 text-slate-400" />
                                                     </div>
                                                     <Input
                                                         id="username"
                                                         disabled={!!user?.username}
-                                                        className={`pl-9 ${!!user?.username ? 'bg-muted text-muted-foreground' : ''}`}
+                                                        className={`pl-9 ${!!user?.username ? 'bg-slate-50 text-slate-500' : ''}`}
                                                         placeholder="Уникальный логин"
                                                         {...register('username')}
                                                     />
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">
+                                                <p className="text-xs text-slate-500">
                                                     {!!user?.username
                                                         ? 'Уникальный логин не может быть изменен.'
                                                         : 'Внимание: уникальный логин можно установить только один раз!'}
@@ -167,7 +167,7 @@ export default function Settings() {
                                                 <Label htmlFor="name">Имя (для отображения)</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                        <User className="size-4 text-muted-foreground" />
+                                                        <User className="size-4 text-slate-400" />
                                                     </div>
                                                     <Input
                                                         id="name"
@@ -184,7 +184,7 @@ export default function Settings() {
                                                 <Label htmlFor="password">Пароль</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                        <KeyRound className="size-4 text-muted-foreground" />
+                                                        <KeyRound className="size-4 text-slate-400" />
                                                     </div>
                                                     <Input
                                                         id="password"
@@ -203,7 +203,7 @@ export default function Settings() {
 
                                     {/* Личные данные */}
                                     <div className="space-y-5">
-                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <UserCheck className="size-5" />
                                             <h3>Личные данные</h3>
                                         </div>
@@ -262,7 +262,7 @@ export default function Settings() {
 
                                     {/* Контакты и регион */}
                                     <div className="space-y-5">
-                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <Mail className="size-5" />
                                             <h3>Контакты и регион</h3>
                                         </div>
@@ -271,7 +271,7 @@ export default function Settings() {
                                                 <Label htmlFor="email">Электронная почта</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                        <Mail className="size-4 text-muted-foreground" />
+                                                        <Mail className="size-4 text-slate-400" />
                                                     </div>
                                                     <Input
                                                         id="email"
@@ -291,7 +291,7 @@ export default function Settings() {
                                                 <Label htmlFor="region">Регион проживания</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                        <MapPin className="size-4 text-muted-foreground" />
+                                                        <MapPin className="size-4 text-slate-400" />
                                                     </div>
                                                     <Input
                                                         id="region"
@@ -314,11 +314,11 @@ export default function Settings() {
                                 <div className="flex flex-col space-y-8">
                                     {/* Языки */}
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <Languages className="size-5" />
                                             <h3>Языковые компетенции</h3>
                                         </div>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-slate-600">
                                             На каких языках вы готовы обрабатывать научные
                                             публикации? (можно выбрать несколько)
                                         </p>
@@ -371,11 +371,11 @@ export default function Settings() {
 
                                     {/* Предпочтения */}
                                     <div className="flex flex-col space-y-4">
-                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <Settings2 className="size-5" />
                                             <h3>Профессиональные предпочтения</h3>
                                         </div>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-slate-600">
                                             Укажите пожелания по сложности материала,
                                             географическому региону, автору или конкретному
                                             семейству.
@@ -383,7 +383,7 @@ export default function Settings() {
                                         <div className="flex grow flex-col pt-2">
                                             <Label
                                                 htmlFor="preferences"
-                                                className="mb-2 block text-xs font-bold tracking-wider text-muted-foreground uppercase"
+                                                className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
                                             >
                                                 Дополнительная информация (по желанию)
                                             </Label>
@@ -398,12 +398,12 @@ export default function Settings() {
 
                                     {/* Публичный рейтинг */}
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 border-b border-border pb-2 font-bold text-foreground">
+                                        <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <FileText className="size-5" />
                                             <h3>Публичность данных</h3>
                                         </div>
                                         <div className="space-y-3">
-                                            <Label className="text-sm text-muted-foreground">
+                                            <Label className="text-sm text-slate-600">
                                                 Согласны ли вы на отображение вашего имени в
                                                 публичной таблице рейтинга?
                                             </Label>
@@ -456,7 +456,7 @@ export default function Settings() {
                             </div>
                         </CardContent>
 
-                        <CardFooter className="flex flex-col gap-4 border-t border-border bg-muted p-6 sm:flex-row sm:justify-between sm:items-center">
+                        <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50 p-6 sm:flex-row sm:justify-between sm:items-center">
                             {isSuccess ? (
                                 <span className="text-sm text-green-600 font-medium">Настройки успешно сохранены!</span>
                             ) : (
@@ -465,7 +465,7 @@ export default function Settings() {
                             <Button
                                 type="submit"
                                 disabled={isUpdating}
-                                className="w-full bg-primary px-10 font-bold text-primary-foreground shadow-md hover:bg-primary/90 sm:w-auto"
+                                className="w-full bg-slate-900 px-10 font-bold text-white shadow-md hover:bg-slate-800 sm:w-auto"
                             >
                                 {isUpdating ? (
                                     <>
