@@ -31,7 +31,7 @@ const formSchema = z
         langEn: z.boolean().default(false),
         rating: z.enum(['yes', 'no']),
         comm: z.string().optional(),
-        agreement: z.boolean().refine((val) => val === true, {
+        agreement: z.boolean().refine((val) =>  val, {
             message: 'Необходимо подтвердить согласие',
         }),
     })

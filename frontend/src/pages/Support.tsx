@@ -122,7 +122,7 @@ export default function Support() {
                                     {supportUrl ? (
                                         <TelegramQRCode botUrl={supportUrl} />
                                     ) : (
-                                        <div className="flex h-[180px] w-[180px] items-center justify-center bg-slate-50">
+                                        <div className="flex size-[180px]  items-center justify-center bg-slate-50">
                                             <Loader2 className="size-6 animate-spin text-slate-300" />
                                         </div>
                                     )}
