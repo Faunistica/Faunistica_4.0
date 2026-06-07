@@ -198,12 +198,15 @@ class PublicationService:
             return []
 
         publications = await get_publications_by_ids(self.session, publ_ids)
+        publ_map = {p.publ_id: p for p in publications}
         results: list[Publication] = []
-        for p in publications:
+        for pid in publ_ids:
+            p = publ_map.get(pid)
+            if p is None:
+                continue
             pub = Publication.model_validate(p)
             pub.interactable = self._is_interactable(pub.publ_id, publ_ids)
             results.append(pub)
-        print([p.publ_id for p in results])
         return results
 
     def _pipe_to_array(self, pipe_str: str) -> list[int]:
