@@ -27,39 +27,10 @@ const Register: FC = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                    {/*
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="username">Username</Label>
-                            <Input id="username" type="text" placeholder="johndoe" />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="name@example.com" />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="confirm-password">Confirm password</Label>
-                            <Input id="confirm-password" type="password" />
-                        </div>
-
-                        <Button className="mt-2 w-full bg-slate-900 font-semibold text-white shadow-sm hover:bg-slate-800">
-                            Create Account
-                        </Button>
-                    </div>
-                    */}
-
                     <div className="px-4 py-2 text-center text-sm text-slate-600">
                         В данный момент регистрация новых пользователей возможна только после
                         авторизации через нашего Telegram-бота.
                     </div>
-
                     <div className="space-y-3 pt-2">
                         <Button
                             asChild
@@ -71,17 +42,6 @@ const Register: FC = () => {
                                 Регистрация через Telegram
                             </Link>
                         </Button>
-
-                        {/* <Button
-                            asChild
-                            variant="outline"
-                            className="w-full gap-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                        >
-                            <Link to="/auth/login">
-                                <Key className="size-4 text-slate-500" />
-                                Войти по логину
-                            </Link>
-                        </Button> */}
                     </div>
                 </CardContent>
 
