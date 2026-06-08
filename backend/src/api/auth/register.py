@@ -139,12 +139,12 @@ async def registration_status(
     deadline = datetime.now(UTC) + timedelta(seconds=time_out)
 
     for _ in range(time_out * 2 // settings.TG_AUTH_POLL_INTERVAL_SECONDS):
-        pending, user_id = await get_validated_pending_by_token(session, token, code)
+        pending = await get_validated_pending_by_token(session, token, code)
         if is_enter_expired(pending.code_created_at, settings.TG_CODE_EXPIRE_SECONDS):
             return await refresh_code(session, token)
 
-        if pending.status == PendingStatus.AUTH:
-            current_user = await get_validated_user(session, user_id)
+        if pending.status == PendingStatus.AUTH and pending.telegram_id is not None:
+            current_user = await get_validated_user(session, pending.telegram_id)
             await create_auth_response(response, ip, current_user, action_service)
             await update_pending_by_token(
                 session,
