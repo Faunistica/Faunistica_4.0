@@ -549,7 +549,7 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
     for publ_id, value in counts.items():
         counts[publ_id] = min(value, 3)
 
-    processed = sum(counts.values())
+    processed = sum(counts.values()) // 3
 
     result = (total, processed)
     _project_stats_cache["progress"] = result

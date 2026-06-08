@@ -7,7 +7,7 @@ from openpyxl import Workbook
 
 from core.dependencies import DBSession
 from core.exceptions import InternalError
-from repository.stats import get_project_statistics
+from repository.stats import get_project_statistics, get_progress
 
 router = APIRouter()
 
@@ -15,6 +15,7 @@ router = APIRouter()
 @router.get("/report")
 async def download_report(session: DBSession) -> StreamingResponse:
     stats = await get_project_statistics(session)
+    total, processed = await get_progress(session)
 
     wb = Workbook()
     ws = wb.active
@@ -28,8 +29,8 @@ async def download_report(session: DBSession) -> StreamingResponse:
     ws.append([])
     ws.append(["Metric", "Value"])
     ws.append(["Total users", stats.get("total_users", 0)])
-    ws.append(["Total publications in DB", stats.get("total_publications", 0)])
-    ws.append(["Publications processed", stats.get("processed_publications_count", 0)])
+    ws.append(["Total publications in DB", total])
+    ws.append(["Publications processed", processed])
     ws.append(["Checks done", stats.get("checks_count", 0)])
     ws.append(["Failed records", stats.get("failed_records", 0)])
     ws.append(["Total records entered", stats.get("total_records", 0)])
