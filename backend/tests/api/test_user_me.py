@@ -28,6 +28,7 @@ async def test_put_me_update_language(
     authenticated_client: AsyncClient,
     seed_data: SeedData,
 ) -> None:
+    print(authenticated_client)
     response = await authenticated_client.put(
         "/api/users/me",
         json={"lng": "eng"},

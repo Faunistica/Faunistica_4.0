@@ -55,7 +55,7 @@ async def get_validated_pending_by_token(
     session: DBSession,
     token: str,
     code: str,
-) -> tuple[PendingRegistration, int]:
+) -> PendingRegistration:
 
     pending = await get_pending_by_token(session, token)
     if pending is None:
@@ -65,10 +65,7 @@ async def get_validated_pending_by_token(
             status_code=400,
             detail="Invalid code",
         )
-    if pending.telegram_id is None:
-        raise HTTPException(status_code=403, detail="Telegram id not found")
-
-    return pending, pending.telegram_id
+    return pending
 
 
 async def create_user_from_survey(
