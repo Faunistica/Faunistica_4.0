@@ -89,7 +89,7 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
             session,
             code,
             status=PendingStatus.REGISTRATION,
-            #reg_run=datetime.now(UTC),
+            reg_run=datetime.now(UTC),
             telegram_id=message.from_user.id,
             telegram_username=tlg_username,
             telegram_name=tlg_name,

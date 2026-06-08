@@ -40,7 +40,7 @@ def upgrade() -> None:
         sa.Column(
             "reg_run",
             sa.TIMESTAMP(),
-            nullable=True,
+            nullable=False,
         ),
         sa.Column("confirmed_at", sa.TIMESTAMP(), nullable=True),
         sa.Column("telegram_id", sa.BigInteger(), nullable=True),
