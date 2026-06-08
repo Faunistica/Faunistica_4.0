@@ -13,17 +13,26 @@ from ..constants import (
     REGION_LON_MIN,
 )
 from ..helpers import decimal_places, should_skip_geo
-from ..rules.base import RuleCategory, RuleContext, in_range, in_set, required, rule
+from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
 
-rule(
-    RuleCategory.GEO, ["latitude"], "required", required("latitude", "Широта не задана")
-)
-rule(
-    RuleCategory.GEO,
-    ["longitude"],
-    "required",
-    required("longitude", "Долгота не задана"),
-)
+@rule(RuleCategory.GEO, ["latitude"], "required")
+def rule_latitude_required(data: RecordData, ctx: RuleContext) -> str | None:
+    if should_skip_geo(data):
+        return None
+    v = data.latitude
+    if v is None or (isinstance(v, str) and not v.strip()):
+        return "Широта не задана"
+    return None
+
+
+@rule(RuleCategory.GEO, ["longitude"], "required")
+def rule_longitude_required(data: RecordData, ctx: RuleContext) -> str | None:
+    if should_skip_geo(data):
+        return None
+    v = data.longitude
+    if v is None or (isinstance(v, str) and not v.strip()):
+        return "Долгота не задана"
+    return None
 rule(
     RuleCategory.GEO,
     ["georef_source"],
@@ -32,7 +41,6 @@ rule(
 )
 
 
-# TODO: decide whether should_skip_geo should apply consistently to all geo rules
 @rule(RuleCategory.GEO, ["latitude"], "precision")
 def rule_latitude_precision(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
@@ -73,28 +81,24 @@ def rule_longitude_excess_precision(data: RecordData, ctx: RuleContext) -> str |
     return None
 
 
-rule(
-    RuleCategory.GEO,
-    ["coordinate_uncertainty"],
-    "out_of_range",
-    in_range(
-        "coordinate_uncertainty",
-        COORD_UNCERTAINTY_MIN,
-        None,
-        "Радиус неточности координат недопустимо мал (менее 30 м)",
-    ),
-)
-rule(
-    RuleCategory.GEO,
-    ["coordinate_uncertainty"],
-    "out_of_range",
-    in_range(
-        "coordinate_uncertainty",
-        None,
-        COORD_UNCERTAINTY_MAX,
-        "Радиус неточности координат недопустимо большой (более 15 км)",
-    ),
-)
+@rule(RuleCategory.GEO, ["coordinate_uncertainty"], "out_of_range")
+def rule_coord_uncertainty_min(data: RecordData, ctx: RuleContext) -> str | None:
+    if should_skip_geo(data):
+        return None
+    v = data.coordinate_uncertainty
+    if v is not None and v < COORD_UNCERTAINTY_MIN:
+        return "Радиус неточности координат недопустимо мал (менее 30 м)"
+    return None
+
+
+@rule(RuleCategory.GEO, ["coordinate_uncertainty"], "out_of_range")
+def rule_coord_uncertainty_max(data: RecordData, ctx: RuleContext) -> str | None:
+    if should_skip_geo(data):
+        return None
+    v = data.coordinate_uncertainty
+    if v is not None and v > COORD_UNCERTAINTY_MAX:
+        return "Радиус неточности координат недопустимо большой (более 15 км)"
+    return None
 
 rule(
     RuleCategory.GEO,
@@ -108,30 +112,36 @@ rule(
     ),
 )
 
-rule(
-    RuleCategory.GEO,
-    ["latitude"],
-    "out_of_range",
-    in_range(
-        "latitude",
-        REGION_LAT_MIN,
-        REGION_LAT_MAX,
-        "Точка выходит за границы исследуемого региона по широте",
-        convert_to_float=True,
-    ),
-)
-rule(
-    RuleCategory.GEO,
-    ["longitude"],
-    "out_of_range",
-    in_range(
-        "longitude",
-        REGION_LON_MIN,
-        REGION_LON_MAX,
-        "Точка выходит за границы исследуемого региона по долготе",
-        convert_to_float=True,
-    ),
-)
+@rule(RuleCategory.GEO, ["latitude"], "out_of_range")
+def rule_latitude_region(data: RecordData, ctx: RuleContext) -> str | None:
+    if should_skip_geo(data):
+        return None
+    v = data.latitude
+    if v is None:
+        return None
+    try:
+        lat = float(v)
+    except ValueError:
+        return "Точка выходит за границы исследуемого региона по широте"
+    if lat < REGION_LAT_MIN or lat > REGION_LAT_MAX:
+        return "Точка выходит за границы исследуемого региона по широте"
+    return None
+
+
+@rule(RuleCategory.GEO, ["longitude"], "out_of_range")
+def rule_longitude_region(data: RecordData, ctx: RuleContext) -> str | None:
+    if should_skip_geo(data):
+        return None
+    v = data.longitude
+    if v is None:
+        return None
+    try:
+        lon = float(v)
+    except ValueError:
+        return "Точка выходит за границы исследуемого региона по долготе"
+    if lon < REGION_LON_MIN or lon > REGION_LON_MAX:
+        return "Точка выходит за границы исследуемого региона по долготе"
+    return None
 
 
 @rule(RuleCategory.GEO, ["latitude", "longitude"], "out_of_region")

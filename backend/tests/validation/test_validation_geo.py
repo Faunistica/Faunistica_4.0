@@ -237,6 +237,80 @@ class TestGeoValidation:
         errors = validate_record(data, language="rus")
         assert not any(e.code == "out_of_region" for e in errors.errors)
 
+    # ── Should skip geo for all coord rules ─────────────────────────────
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_geo_skip_latitude_required(self, _m) -> None:
+        """When georef_source is 'none', latitude required is skipped."""
+        data = _valid_data(georef_source="none", latitude=None)
+        errors = validate_record(data, language="rus")
+        assert not any(
+            e.code == "required" and "latitude" in (e.fields or [])
+            for e in errors.errors
+        )
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_geo_skip_longitude_required(self, _m) -> None:
+        """When georef_source is 'none', longitude required is skipped."""
+        data = _valid_data(georef_source="none", longitude=None)
+        errors = validate_record(data, language="rus")
+        assert not any(
+            e.code == "required" and "longitude" in (e.fields or [])
+            for e in errors.errors
+        )
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_geo_skip_coord_uncertainty_min(self, _m) -> None:
+        """When georef_source is 'none', uncertainty min check skipped."""
+        data = _valid_data(
+            georef_source="none",
+            coordinate_uncertainty=COORD_UNCERTAINTY_MIN - 1,
+        )
+        errors = validate_record(data, language="rus")
+        assert not any(
+            e.code == "out_of_range" and "coordinate_uncertainty" in (e.fields or [])
+            for e in errors.errors
+        )
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_geo_skip_coord_uncertainty_max(self, _m) -> None:
+        """When georef_source is 'none', uncertainty max check skipped."""
+        data = _valid_data(
+            georef_source="none",
+            coordinate_uncertainty=COORD_UNCERTAINTY_MAX + 1,
+        )
+        errors = validate_record(data, language="rus")
+        assert not any(
+            e.code == "out_of_range" and "coordinate_uncertainty" in (e.fields or [])
+            for e in errors.errors
+        )
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_geo_skip_latitude_region(self, _m) -> None:
+        """When georef_source is 'none', lat region bound check skipped."""
+        data = _valid_data(
+            georef_source="none",
+            latitude=str(REGION_LAT_MAX + 1),
+        )
+        errors = validate_record(data, language="rus")
+        assert not any(
+            e.code == "out_of_range" and "latitude" in (e.fields or [])
+            for e in errors.errors
+        )
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_geo_skip_longitude_region(self, _m) -> None:
+        """When georef_source is 'none', lon region bound check skipped."""
+        data = _valid_data(
+            georef_source="none",
+            longitude=str(REGION_LON_MAX + 1),
+        )
+        errors = validate_record(data, language="rus")
+        assert not any(
+            e.code == "out_of_range" and "longitude" in (e.fields or [])
+            for e in errors.errors
+        )
+
     # ── Geo coords conflict ────────────────────────────────────────────
 
     def test_geo_coords_conflict(self) -> None:
