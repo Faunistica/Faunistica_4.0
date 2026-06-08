@@ -134,6 +134,7 @@ async def _cleanup_pending_registrations() -> None:
                 confirmed_count = await delete_confirmed_pending(
                     session, confirmed_cutoff
                 )
+                registration_count = None
                 registration_count = await delete_registration_pending(
                     session, survey_cutoff
                 )
