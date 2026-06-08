@@ -1,46 +1,41 @@
-import { useState, type FC } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { type FC } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useAppSelector } from '@/store/store';
 import { statsAPI } from '@/api/statsAPI';
 import type { UserStatisticsResponse } from '@/types/api.dto';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import {
-    Users, Database, Bug, BookOpen,
-    LayoutGrid, AlignJustify, Palette,
-    Gauge, Minus,
-} from 'lucide-react';
+import { Users, Database, Bug, BookOpen, ShieldCheck, XCircle, Calendar, TrendingUp, Layers } from 'lucide-react';
 
-type Design = 'classic' | 'compact' | 'vibrant' | 'dashboard' | 'minimal';
+const PIE_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
 
-const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
-
-const GRADIENTS = [
-    'from-blue-400 to-cyan-400',
-    'from-emerald-400 to-teal-400',
-    'from-amber-400 to-orange-400',
-    'from-violet-400 to-purple-400',
-];
-
-const ICON_BG = [
-    'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400',
-    'bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
-    'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
-    'bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400',
-];
-
-const projectStatCards = [
+const projectMainCards = [
     { key: 'volunteers', icon: Users, label: 'Волонтёров', field: 'total_volunteers' as const },
     { key: 'records', icon: Database, label: 'Всего записей', field: 'total_records' as const },
     { key: 'species', icon: Bug, label: 'Видов', field: 'species_count' as const },
     { key: 'publications', icon: BookOpen, label: 'Обработано публикаций', field: 'processed_publications_count' as const },
 ] as const;
 
-const personalStatCards = [
+const projectSecondaryCards = [
+    { key: 'total_users', icon: Users, label: 'Пользователей', field: 'total_users' as const },
+    { key: 'families', icon: Layers, label: 'Семейств', field: 'families_count' as const },
+    { key: 'checks', icon: ShieldCheck, label: 'Проверок', field: 'checks_count' as const },
+    { key: 'failed', icon: XCircle, label: 'Ошибочных записей', field: 'failed_records' as const },
+] as const;
+
+const personalMainCards = [
     { key: 'records', icon: Database, label: 'Записей внесено', field: 'records_entered' as const },
     { key: 'publications', icon: BookOpen, label: 'Публикаций обработано', field: 'publications_processed' as const },
+] as const;
+
+const personalDetailedCards = [
+    { key: 'individuals', icon: Users, label: 'Всего экземпляров', field: 'total_individuals' as const },
+    { key: 'species', icon: Bug, label: 'Видов определено', field: 'distinct_species' as const },
+    { key: 'families', icon: Layers, label: 'Семейств', field: 'distinct_families' as const },
+    { key: 'genera', icon: Layers, label: 'Родов', field: 'distinct_genera' as const },
+    { key: 'checks', icon: ShieldCheck, label: 'Проверок', field: 'checks_count' as const },
+    { key: 'failed', icon: XCircle, label: 'Ошибочных записей', field: 'failed_records' as const },
 ] as const;
 
 const commonLabels = [
@@ -53,143 +48,79 @@ function formatNumber(n: number): string {
     return n.toLocaleString('ru-RU');
 }
 
-function DesignSwitch({ active, onChange }: { active: Design; onChange: (d: Design) => void }) {
-    const items: { key: Design; icon: typeof LayoutGrid; label: string }[] = [
-        { key: 'classic', icon: LayoutGrid, label: 'Классический' },
-        { key: 'compact', icon: AlignJustify, label: 'Компактный' },
-        { key: 'vibrant', icon: Palette, label: 'Цветной' },
-        { key: 'dashboard', icon: Gauge, label: 'Дашборд' },
-        { key: 'minimal', icon: Minus, label: 'Минимал' },
-    ];
-    return (
-        <div className="flex rounded-lg bg-muted p-0.5">
-            {items.map(({ key, icon: Icon, label }) => (
-                <button
-                    key={key}
-                    type="button"
-                    onClick={() => onChange(key)}
-                    className={cn(
-                        'flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all',
-                        active === key
-                            ? 'bg-background text-foreground shadow-xs'
-                            : 'text-muted-foreground hover:text-foreground',
-                    )}
-                >
-                    <Icon className="size-4" />
-                    <span className="hidden sm:inline">{label}</span>
-                </button>
-            ))}
-        </div>
-    );
-}
-
-function PieChartCard({
-    data,
-    error,
-    variant = 'default',
-}: {
-    data: UserStatisticsResponse | undefined;
-    error: boolean;
-    variant?: 'default' | 'compact' | 'minimal';
-}) {
-    const isCompact = variant === 'compact';
-    const isMinimal = variant === 'minimal';
-
+function PieChartCard({ data, error }: { data: UserStatisticsResponse | undefined; error: boolean }) {
     if (error) {
-        const content = (
-            <div className="py-6 text-center text-sm text-red-500">
-                Не удалось загрузить статистику
-            </div>
+        return (
+            <Card>
+                <CardContent className="py-6 text-center text-sm text-red-500">
+                    Не удалось загрузить статистику
+                </CardContent>
+            </Card>
         );
-        if (isMinimal) return <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">{content}</div>;
-        return <Card><CardContent>{content}</CardContent></Card>;
     }
     if (!data || data.top_species.length === 0) {
-        const content = (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-                У вас пока нет записей
-            </div>
+        return (
+            <Card>
+                <CardContent className="py-12 text-center text-sm text-muted-foreground">
+                    У вас пока нет записей
+                </CardContent>
+            </Card>
         );
-        if (isMinimal) return <div className="border-t pt-6">{content}</div>;
-        return <Card><CardContent>{content}</CardContent></Card>;
     }
-
-    const chart = (
-        <>
-            <div className={cn('flex items-center gap-2', isMinimal && 'mb-2')}>
-                {!isMinimal && <Bug className="size-4" />}
-                <h3 className={cn(
-                    'font-medium text-muted-foreground',
-                    isMinimal ? 'text-xs tracking-widest uppercase' : 'text-sm',
-                )}>
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Bug className="size-4" />
                     Ваши топ-виды
-                </h3>
-            </div>
-            <div className={cn(
-                'flex flex-col items-center gap-6',
-                isCompact ? 'sm:flex-row sm:items-center sm:gap-4' : 'sm:flex-row sm:items-start',
-            )}>
-                <ResponsiveContainer
-                    width="100%"
-                    height={isCompact ? 160 : isMinimal ? 200 : 240}
-                    className={cn('max-w-xs shrink-0', (isCompact || isMinimal) && 'max-w-44')}
-                >
-                    <PieChart>
-                        <Pie
-                            data={data.top_species}
-                            dataKey="count"
-                            nameKey="species"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={isCompact ? 60 : isMinimal ? 75 : 100}
-                            innerRadius={isCompact ? 30 : isMinimal ? 38 : 50}
-                        >
-                            {data.top_species.map((_, i) => (
-                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                            ))}
-                        </Pie>
-                        <Tooltip
-                            formatter={(value, name) => [
-                                formatNumber(Number(value)),
-                                String(name),
-                            ]}
-                        />
-                    </PieChart>
-                </ResponsiveContainer>
-                <div className={cn('w-full space-y-2 sm:w-auto', isMinimal && 'space-y-1.5')}>
-                    {data.top_species.map((item, i) => (
-                        <div key={item.species} className={cn('flex items-center gap-3', isCompact && 'text-xs', isMinimal && 'text-sm')}>
-                            <span
-                                className={cn('inline-block shrink-0 rounded-full', isMinimal ? 'size-2' : 'size-3')}
-                                style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                            />
-                            <span className="truncate">{item.species}</span>
-                            <Badge
-                                variant="secondary"
-                                className={cn('ml-auto shrink-0 font-mono', isMinimal ? 'px-1.5 py-0 text-[10px]' : 'text-xs')}
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+                    <ResponsiveContainer width="100%" height={240} className="max-w-xs shrink-0">
+                        <PieChart>
+                            <Pie
+                                data={data.top_species}
+                                dataKey="count"
+                                nameKey="species"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={100}
+                                innerRadius={50}
                             >
-                                {formatNumber(item.count)}
-                            </Badge>
-                        </div>
-                    ))}
+                                {data.top_species.map((_, i) => (
+                                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip
+                                formatter={(value, name) => [
+                                    formatNumber(Number(value)),
+                                    String(name),
+                                ]}
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    <div className="w-full space-y-2 sm:w-auto">
+                        {data.top_species.map((item, i) => (
+                            <div key={item.species} className="flex items-center gap-3 text-sm">
+                                <span
+                                    className="inline-block size-3 shrink-0 rounded-full"
+                                    style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
+                                />
+                                <span className="truncate">{item.species}</span>
+                                <Badge variant="secondary" className="ml-auto shrink-0 font-mono text-xs">
+                                    {formatNumber(item.count)}
+                                </Badge>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
-        </>
+            </CardContent>
+        </Card>
     );
-
-    if (isMinimal) return <div className="space-y-4">{chart}</div>;
-    if (isCompact) return <Card className="gap-3 py-3"><CardHeader><CardTitle>{chart}</CardTitle></CardHeader></Card>;
-    return <Card><CardHeader><CardTitle>{chart}</CardTitle></CardHeader></Card>;
 }
 
-function SectionHeading({ children, minimal }: { children: string; minimal?: boolean }) {
-    if (minimal) {
-        return (
-            <h2 className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-                {children}
-            </h2>
-        );
-    }
+function SectionHeading({ children }: { children: string }) {
     return (
         <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
             {children}
@@ -197,8 +128,48 @@ function SectionHeading({ children, minimal }: { children: string; minimal?: boo
     );
 }
 
+function Value({ value }: { value: number | string | null | undefined }) {
+    if (value == null) return <span className="text-muted-foreground italic">—</span>;
+    return <>{typeof value === 'number' ? formatNumber(value) : value}</>;
+}
+
+function StatCard({ icon: Icon, label, value, children }: {
+    icon?: typeof Users;
+    label: string;
+    value?: number | string | null;
+    children?: React.ReactNode;
+}) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    {Icon && <Icon className="size-4" />}
+                    {label}
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {children ?? (
+                    <span className="text-3xl font-bold tracking-tight">
+                        <Value value={value} />
+                    </span>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+function LabelCard({ label, value }: { label: string; value: string | null | undefined }) {
+    return (
+        <Card size="sm">
+            <CardContent className="pt-3">
+                <p className="mb-1 text-xs text-muted-foreground">{label}</p>
+                <p className="text-sm font-medium"><Value value={value} /></p>
+            </CardContent>
+        </Card>
+    );
+}
+
 const Statistics: FC = () => {
-    const [design, setDesign] = useState<Design>('classic');
     const userId = useAppSelector((state) => state.user.user_id);
 
     const {
@@ -218,11 +189,8 @@ const Statistics: FC = () => {
     if (isLoading) {
         return (
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <Skeleton className="h-7 w-32" />
-                    <Skeleton className="h-9 w-80" />
-                </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Skeleton className="h-7 w-32" />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <Card key={i}>
                             <CardHeader><Skeleton className="h-4 w-24" /></CardHeader>
@@ -230,6 +198,7 @@ const Statistics: FC = () => {
                         </Card>
                     ))}
                 </div>
+                <Skeleton className="h-32 w-full rounded-xl" />
                 <div className="flex gap-4">
                     {Array.from({ length: 3 }).map((_, i) => (
                         <Card key={i} className="flex-1">
@@ -260,436 +229,174 @@ const Statistics: FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-lg font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
-                    Статистика
-                </h1>
-                <DesignSwitch active={design} onChange={setDesign} />
+            <h1 className="text-lg font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
+                Статистика
+            </h1>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {projectMainCards.map(({ key, icon, label, field }) => (
+                    <StatCard key={key} icon={icon} label={label} value={projectStats?.[field]} />
+                ))}
             </div>
 
-            {design === 'classic' && (
-                <div key="classic" className="space-y-6">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {projectStatCards.map(({ key, icon: Icon, label, field }) => (
-                            <Card key={key}>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                        <Icon className="size-4" />
-                                        {label}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <span className="text-3xl font-bold tracking-tight">
-                                        {formatNumber(projectStats?.[field] ?? 0)}
-                                    </span>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {projectSecondaryCards.map(({ key, icon, label, field }) => (
+                    <StatCard key={key} icon={icon} label={label} value={projectStats?.[field]} />
+                ))}
+                {projectStats?.avg_age != null && (
+                    <StatCard icon={Calendar} label="Средний возраст" value={projectStats.avg_age.toFixed(1)} />
+                )}
+            </div>
 
-                    <div className="space-y-3">
-                        <SectionHeading>Наиболее распространённые</SectionHeading>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {commonLabels.map(({ key, label, field }) => {
-                                const value = projectStats?.[field];
-                                return (
-                                    <Card key={key} size="sm">
-                                        <CardContent className="pt-3">
-                                            <p className="mb-1 text-xs text-muted-foreground">{label}</p>
-                                            <p className="text-sm font-medium">
-                                                {value ?? <span className="text-muted-foreground italic">—</span>}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
+            {projectStats?.progress && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                            <BookOpen className="size-4" />
+                            Прогресс оцифровки
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Охват</span>
+                            <span className="font-semibold">
+                                {(projectStats.progress.coverage * 100).toFixed(1)}%
+                            </span>
                         </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <SectionHeading>Личная статистика</SectionHeading>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {personalStatCards.map(({ key, icon: Icon, label, field }) => (
-                                <Card key={key}>
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                            <Icon className="size-4" />
-                                            {label}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <span className="text-3xl font-bold tracking-tight">
-                                            {formatNumber(userStats?.[field] ?? 0)}
-                                        </span>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                                className="h-full rounded-full bg-primary transition-all"
+                                style={{ width: `${projectStats.progress.coverage * 100}%` }}
+                            />
                         </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <SectionHeading>Личное: наиболее распространённые</SectionHeading>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {commonLabels.map(({ key, label, field }) => {
-                                const value = userStats?.[field];
-                                return (
-                                    <Card key={key} size="sm">
-                                        <CardContent className="pt-3">
-                                            <p className="mb-1 text-xs text-muted-foreground">{label}</p>
-                                            <p className="text-sm font-medium">
-                                                {value ?? <span className="text-muted-foreground italic">—</span>}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Обработано: {formatNumber(projectStats.progress.processed_publications)}</span>
+                            <span>Всего: {formatNumber(projectStats.progress.total_publications)}</span>
                         </div>
-                    </div>
-
-                    <PieChartCard data={userStats} error={userError} />
-                </div>
+                    </CardContent>
+                </Card>
             )}
 
-            {design === 'compact' && (
-                <div key="compact" className="space-y-4">
-                    <div className="space-y-2">
-                        <SectionHeading>Проект</SectionHeading>
-                        <div className="flex flex-wrap gap-1.5">
-                            {projectStatCards.map(({ key, icon: Icon, label, field }) => (
-                                <span
-                                    key={key}
-                                    className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 text-xs font-medium"
-                                >
-                                    <Icon className="size-3 text-muted-foreground" />
-                                    <span className="text-muted-foreground">{label}</span>
-                                    <span className="font-semibold tracking-tight">
-                                        {formatNumber(projectStats?.[field] ?? 0)}
-                                    </span>
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <SectionHeading>Наиболее распространённые</SectionHeading>
-                        <div className="flex flex-wrap gap-1.5">
-                            {commonLabels.map(({ key, label, field }) => {
-                                const value = projectStats?.[field];
-                                return (
-                                    <span
-                                        key={key}
-                                        className="inline-flex items-center gap-1 rounded-md bg-muted px-2.5 py-1.5 text-xs"
-                                    >
-                                        <span className="text-muted-foreground">{label}:</span>
-                                        <span className="font-medium">
-                                            {value ?? <span className="text-muted-foreground italic">—</span>}
-                                        </span>
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <SectionHeading>Личная статистика</SectionHeading>
-                        <div className="flex flex-wrap gap-1.5">
-                            {personalStatCards.map(({ key, icon: Icon, label, field }) => (
-                                <span
-                                    key={key}
-                                    className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1.5 text-xs font-medium"
-                                >
-                                    <Icon className="size-3 text-muted-foreground" />
-                                    <span className="text-muted-foreground">{label}</span>
-                                    <span className="font-semibold tracking-tight">
-                                        {formatNumber(userStats?.[field] ?? 0)}
-                                    </span>
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <SectionHeading>Личное: наиболее распространённые</SectionHeading>
-                        <div className="flex flex-wrap gap-1.5">
-                            {commonLabels.map(({ key, label, field }) => {
-                                const value = userStats?.[field];
-                                return (
-                                    <span
-                                        key={key}
-                                        className="inline-flex items-center gap-1 rounded-md bg-muted px-2.5 py-1.5 text-xs"
-                                    >
-                                        <span className="text-muted-foreground">{label}:</span>
-                                        <span className="font-medium">
-                                            {value ?? <span className="text-muted-foreground italic">—</span>}
-                                        </span>
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <PieChartCard data={userStats} error={userError} variant="compact" />
-                </div>
-            )}
-
-            {design === 'vibrant' && (
-                <div key="vibrant" className="space-y-6">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {projectStatCards.map(({ key, icon: Icon, label, field }, idx) => (
-                            <Card key={key} className="relative overflow-hidden border-0 bg-linear-to-br shadow-md" style={{
-                                backgroundImage: `linear-gradient(to bottom right, ${['#eff6ff', '#ecfdf5', '#fffbeb', '#f5f3ff'][idx]}, white)`,
-                            }}>
-                                <div className={cn('absolute top-0 left-0 h-full w-1 bg-linear-to-b', GRADIENTS[idx % GRADIENTS.length])} />
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                        <div className={cn('flex size-8 items-center justify-center rounded-lg', ICON_BG[idx % ICON_BG.length])}>
-                                            <Icon className="size-4" />
-                                        </div>
-                                        {label}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <span className="text-3xl font-bold tracking-tight">
-                                        {formatNumber(projectStats?.[field] ?? 0)}
-                                    </span>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-
-                    <div className="space-y-3">
-                        <SectionHeading>Наиболее распространённые</SectionHeading>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {commonLabels.map(({ key, label, field }, idx) => {
-                                const value = projectStats?.[field];
-                                return (
-                                    <Card key={key} size="sm" className="relative overflow-hidden border-0 bg-linear-to-br shadow-sm" style={{
-                                        backgroundImage: `linear-gradient(to bottom right, ${['#f0f9ff', '#f0fdf4', '#fefce8'][idx]}, white)`,
-                                    }}>
-                                        <div className={cn('absolute top-0 left-0 h-full w-0.5 bg-linear-to-b', GRADIENTS[idx % GRADIENTS.length])} />
-                                        <CardContent className="pt-3">
-                                            <p className="mb-1 text-xs text-muted-foreground">{label}</p>
-                                            <p className="text-sm font-medium">
-                                                {value ?? <span className="text-muted-foreground italic">—</span>}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <SectionHeading>Личная статистика</SectionHeading>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {personalStatCards.map(({ key, icon: Icon, label, field }, idx) => (
-                                <Card key={key} className="relative overflow-hidden border-0 bg-linear-to-br shadow-md" style={{
-                                    backgroundImage: `linear-gradient(to bottom right, ${['#fffbeb', '#f5f3ff'][idx]}, white)`,
-                                }}>
-                                    <div className={cn('absolute top-0 left-0 h-full w-1 bg-linear-to-b', GRADIENTS[(idx + 2) % GRADIENTS.length])} />
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                            <div className={cn('flex size-8 items-center justify-center rounded-lg', ICON_BG[(idx + 2) % ICON_BG.length])}>
-                                                <Icon className="size-4" />
-                                            </div>
-                                            {label}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <span className="text-3xl font-bold tracking-tight">
-                                            {formatNumber(userStats?.[field] ?? 0)}
-                                        </span>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <SectionHeading>Личное: наиболее распространённые</SectionHeading>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {commonLabels.map(({ key, label, field }, idx) => {
-                                const value = userStats?.[field];
-                                return (
-                                    <Card key={key} size="sm" className="relative overflow-hidden border-0 bg-linear-to-br shadow-sm" style={{
-                                        backgroundImage: `linear-gradient(to bottom right, ${['#fefce8', '#f5f3ff', '#f0fdf4'][idx]}, white)`,
-                                    }}>
-                                        <div className={cn('absolute top-0 left-0 h-full w-0.5 bg-linear-to-b', GRADIENTS[(idx + 2) % GRADIENTS.length])} />
-                                        <CardContent className="pt-3">
-                                            <p className="mb-1 text-xs text-muted-foreground">{label}</p>
-                                            <p className="text-sm font-medium">
-                                                {value ?? <span className="text-muted-foreground italic">—</span>}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <PieChartCard data={userStats} error={userError} />
-                </div>
-            )}
-
-            {design === 'dashboard' && (
-                <div key="dashboard" className="space-y-8">
-                    <div className="rounded-xl border bg-card">
-                        <div className="grid grid-cols-2 divide-x divide-border sm:grid-cols-4">
-                            {projectStatCards.map(({ key, icon: Icon, label, field }) => {
-                                const value = projectStats?.[field] ?? 0;
-                                return (
-                                    <div key={key} className="flex flex-col items-center gap-1 px-4 py-6 text-center">
-                                        <Icon className="size-4 text-muted-foreground/60" />
-                                        <span className="text-3xl font-bold tracking-tight tabular-nums sm:text-4xl">
-                                            {formatNumber(value)}
-                                        </span>
-                                        <span className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                            {label}
-                                        </span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <SectionHeading>Наиболее распространённые</SectionHeading>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {commonLabels.map(({ key, label, field }) => {
-                                const value = projectStats?.[field];
-                                return (
-                                    <div key={key} className="rounded-lg border bg-card px-4 py-3">
-                                        <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                            {label}
-                                        </p>
-                                        <p className="mt-1 text-lg font-semibold tracking-tight">
-                                            {value ?? <span className="text-muted-foreground italic">—</span>}
-                                        </p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <SectionHeading>Личная статистика</SectionHeading>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {personalStatCards.map(({ key, icon: Icon, label, field }) => {
-                                const value = userStats?.[field] ?? 0;
-                                return (
-                                    <div key={key} className="rounded-lg border bg-card px-5 py-4">
-                                        <div className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                            <Icon className="size-3.5" />
-                                            {label}
-                                        </div>
-                                        <span className="mt-1 block text-2xl font-bold tracking-tight">
-                                            {formatNumber(value)}
-                                        </span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <SectionHeading>Личное: наиболее распространённые</SectionHeading>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {commonLabels.map(({ key, label, field }) => {
-                                const value = userStats?.[field];
-                                return (
-                                    <div key={key} className="rounded-lg border bg-card px-4 py-3">
-                                        <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                            {label}
-                                        </p>
-                                        <p className="mt-1 text-lg font-semibold tracking-tight">
-                                            {value ?? <span className="text-muted-foreground italic">—</span>}
-                                        </p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <PieChartCard data={userStats} error={userError} />
-                </div>
-            )}
-
-            {design === 'minimal' && (
-                <div key="minimal" className="divide-y divide-border">
-                    <div className="pb-8">
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
-                            {projectStatCards.map(({ key, label, field }) => (
-                                <div key={key}>
-                                    <div className="text-4xl font-light tracking-tight tabular-nums sm:text-5xl">
-                                        {formatNumber(projectStats?.[field] ?? 0)}
-                                    </div>
-                                    <p className="mt-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-                                        {label}
+            {projectStats && (projectStats.cumulative_records.length > 0 || projectStats.cumulative_volunteers.length > 0) && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                            <TrendingUp className="size-4" />
+                            Динамика проекта
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            {projectStats.cumulative_records.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Накоплено записей
                                     </p>
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <LineChart data={projectStats.cumulative_records}>
+                                            <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                                            <XAxis
+                                                dataKey="date"
+                                                tick={{ fontSize: 10 }}
+                                                tickFormatter={(v) => {
+                                                    const d = new Date(v);
+                                                    return `${d.getMonth() + 1}.${d.getFullYear().toString().slice(2)}`;
+                                                }}
+                                                className="text-muted-foreground"
+                                            />
+                                            <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                                            <Tooltip
+                                                formatter={(value) => [formatNumber(Number(value)), 'Записей']}
+                                                labelFormatter={(v) => new Date(v).toLocaleDateString('ru-RU')}
+                                            />
+                                            <Line
+                                                type="monotone"
+                                                dataKey="count"
+                                                stroke="#3b82f6"
+                                                strokeWidth={2}
+                                                dot={false}
+                                                activeDot={{ r: 4 }}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="py-8">
-                        <SectionHeading minimal>Наиболее распространённые</SectionHeading>
-                        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {commonLabels.map(({ key, label, field }) => {
-                                const value = projectStats?.[field];
-                                return (
-                                    <div key={key}>
-                                        <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-                                            {label}
-                                        </p>
-                                        <p className="mt-1 text-base font-medium">
-                                            {value ?? <span className="text-muted-foreground italic">—</span>}
-                                        </p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="py-8">
-                        <SectionHeading minimal>Личная статистика</SectionHeading>
-                        <div className="mt-3 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            {personalStatCards.map(({ key, label, field }) => (
-                                <div key={key}>
-                                    <div className="text-3xl font-light tracking-tight tabular-nums">
-                                        {formatNumber(userStats?.[field] ?? 0)}
-                                    </div>
-                                    <p className="mt-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-                                        {label}
+                            )}
+                            {projectStats.cumulative_volunteers.length > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                        Накоплено волонтёров
                                     </p>
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <LineChart data={projectStats.cumulative_volunteers}>
+                                            <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                                            <XAxis
+                                                dataKey="date"
+                                                tick={{ fontSize: 10 }}
+                                                tickFormatter={(v) => {
+                                                    const d = new Date(v);
+                                                    return `${d.getMonth() + 1}.${d.getFullYear().toString().slice(2)}`;
+                                                }}
+                                                className="text-muted-foreground"
+                                            />
+                                            <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                                            <Tooltip
+                                                formatter={(value) => [formatNumber(Number(value)), 'Волонтёров']}
+                                                labelFormatter={(v) => new Date(v).toLocaleDateString('ru-RU')}
+                                            />
+                                            <Line
+                                                type="monotone"
+                                                dataKey="count"
+                                                stroke="#22c55e"
+                                                strokeWidth={2}
+                                                dot={false}
+                                                activeDot={{ r: 4 }}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
                                 </div>
-                            ))}
+                            )}
                         </div>
-                    </div>
-
-                    <div className="py-8">
-                        <SectionHeading minimal>Личное: наиболее распространённые</SectionHeading>
-                        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {commonLabels.map(({ key, label, field }) => {
-                                const value = userStats?.[field];
-                                return (
-                                    <div key={key}>
-                                        <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-                                            {label}
-                                        </p>
-                                        <p className="mt-1 text-base font-medium">
-                                            {value ?? <span className="text-muted-foreground italic">—</span>}
-                                        </p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="pt-8">
-                        <PieChartCard data={userStats} error={userError} variant="minimal" />
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             )}
+
+            <div className="space-y-3">
+                <SectionHeading>Наиболее распространённые</SectionHeading>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    {commonLabels.map(({ key, label, field }) => (
+                        <LabelCard key={key} label={label} value={projectStats?.[field]} />
+                    ))}
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <SectionHeading>Личная статистика</SectionHeading>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {personalMainCards.map(({ key, icon, label, field }) => (
+                        <StatCard key={key} icon={icon} label={label} value={userStats?.[field]} />
+                    ))}
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {personalDetailedCards.map(({ key, icon, label, field }) => (
+                    <StatCard key={key} icon={icon} label={label} value={userStats?.[field]} />
+                ))}
+                {userStats?.most_common_year != null && (
+                    <StatCard icon={Calendar} label="Чаще всего год" value={userStats.most_common_year} />
+                )}
+            </div>
+
+            <div className="space-y-3">
+                <SectionHeading>Личное: наиболее распространённые</SectionHeading>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    {commonLabels.map(({ key, label, field }) => (
+                        <LabelCard key={key} label={label} value={userStats?.[field]} />
+                    ))}
+                </div>
+            </div>
+
+            <PieChartCard data={userStats} error={userError} />
         </div>
     );
 };
