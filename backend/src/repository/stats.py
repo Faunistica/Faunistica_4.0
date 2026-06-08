@@ -535,24 +535,21 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
         async with session.begin_nested():
             rows = await session.execute(
                 text("""
-                    SELECT r.publ_id
-                    FROM records r
-                    JOIN publications p ON r.publ_id = p.publ_id
-                    WHERE r.type = 'rec_ok'
-                      AND p.ural = 1
-                      AND p.spec = 1
-                      AND p.occs = 1
-                      AND r.user_id NOT IN (911269241, 412819044, 950994899)
-                    GROUP BY r.publ_id
+                    SELECT publ_id, COUNT(DISTINCT user_id)
+                    FROM records
+                    WHERE type = 'rec_ok'
+                    GROUP BY publ_id
                 """)
             )
-            for publ_id, in rows:
-                if publ_id not in counts:
-                    counts[publ_id] = 1
+            for publ_id, cnt in rows:
+                counts[publ_id] = counts.get(publ_id, 0) + cnt
     except Exception:
         logger.warning("Could not query legacy records for progress")
 
-    processed = len(counts)
+    for publ_id, value in counts.items():
+        counts[publ_id] = min(value, 3)
+
+    processed = sum(counts.values())
 
     result = (total, processed)
     _project_stats_cache["progress"] = result

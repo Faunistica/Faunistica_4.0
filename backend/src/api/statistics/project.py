@@ -38,7 +38,7 @@ async def read_project_statistics(
             coverage=0.0, total_publications=0, processed_publications=0
         )
     else:
-        coverage = min(processed / total, 1.0)
+        coverage = min(processed / (total * 3), 1.0)
         progress = ProgressInfo(
             coverage=round(coverage, 4),
             total_publications=total,
