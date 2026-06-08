@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy import func, select, text
 from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -5,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.enums import RecordType, UserState
 from core.model import Action, EventRecord, Publication, User
 from schema.common import ProjectStats, TopSpeciesItem, UserStats
+
+logger = logging.getLogger(__name__)
 
 
 async def get_project_statistics(session: AsyncSession) -> ProjectStats:
@@ -24,12 +28,28 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         .select_from(EventRecord)
         .where(EventRecord.type == RecordType.REC_OK)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(*) FROM records WHERE type = 'rec_ok'")
+            )
+        total_records = (total_records or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records table for total_records")
 
     species_count = await session.scalar(
         select(func.count(func.distinct(EventRecord.genus + " " + EventRecord.species)))
         .select_from(EventRecord)
         .where(EventRecord.type == RecordType.REC_OK)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(DISTINCT tax_gen || ' ' || tax_sp) FROM records WHERE type = 'rec_ok'")
+            )
+        species_count = (species_count or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for species_count")
 
     processed_publications = await session.scalar(
         select(func.count(func.distinct(Action.object)))
@@ -44,6 +64,24 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         .order_by(func.count().desc())
         .limit(1)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("""
+                    SELECT family FROM (
+                        SELECT family FROM event_records WHERE type = 'rec_ok'
+                        UNION ALL
+                        SELECT tax_fam FROM records WHERE type = 'rec_ok'
+                    ) combined
+                    WHERE family IS NOT NULL AND family != ''
+                    GROUP BY family
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 1
+                """)
+            )
+        most_common_family = result.scalar()
+    except Exception:
+        logger.warning("Could not query legacy records for most_common_family")
 
     most_common_genus = await session.scalar(
         select(EventRecord.genus)
@@ -52,6 +90,24 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         .order_by(func.count().desc())
         .limit(1)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("""
+                    SELECT genus FROM (
+                        SELECT genus FROM event_records WHERE type = 'rec_ok'
+                        UNION ALL
+                        SELECT tax_gen FROM records WHERE type = 'rec_ok'
+                    ) combined
+                    WHERE genus IS NOT NULL AND genus != ''
+                    GROUP BY genus
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 1
+                """)
+            )
+        most_common_genus = result.scalar()
+    except Exception:
+        logger.warning("Could not query legacy records for most_common_genus")
 
     most_common_species = await session.scalar(
         select(EventRecord.genus + " " + EventRecord.species)
@@ -60,6 +116,26 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         .order_by(func.count().desc())
         .limit(1)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("""
+                    SELECT species FROM (
+                        SELECT genus || ' ' || specificepithet AS species
+                        FROM event_records WHERE type = 'rec_ok'
+                        UNION ALL
+                        SELECT tax_gen || ' ' || tax_sp AS species
+                        FROM records WHERE type = 'rec_ok'
+                    ) combined
+                    WHERE species IS NOT NULL AND species != ' '
+                    GROUP BY species
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 1
+                """)
+            )
+        most_common_species = result.scalar()
+    except Exception:
+        logger.warning("Could not query legacy records for most_common_species")
 
     total_users = await session.scalar(
         select(func.count())
@@ -78,18 +154,42 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         .select_from(EventRecord)
         .where(EventRecord.type == RecordType.REC_OK)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(DISTINCT tax_fam) FROM records WHERE type = 'rec_ok'")
+            )
+        families_count = (families_count or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for families_count")
 
     checks_count = await session.scalar(
         select(func.count())
         .select_from(EventRecord)
         .where(EventRecord.type.in_([RecordType.CHECK_OK, RecordType.CHECK_FAIL]))
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(*) FROM records WHERE type IN ('check_ok', 'check_fail')")
+            )
+        checks_count = (checks_count or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for checks_count")
 
     failed_records = await session.scalar(
         select(func.count())
         .select_from(EventRecord)
         .where(EventRecord.type == RecordType.REC_FAIL)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(*) FROM records WHERE type = 'rec_fail'")
+            )
+        failed_records = (failed_records or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for failed_records")
 
     return ProjectStats(
         total_volunteers=total_volunteers or 0,
@@ -121,12 +221,30 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         .select_from(EventRecord)
         .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(*) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                {"uid": user_id},
+            )
+        records_entered = (records_entered or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for user records_entered")
 
     publications_processed = await session.scalar(
         select(func.count(func.distinct(EventRecord.publ_id)))
         .select_from(EventRecord)
         .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(DISTINCT publ_id) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                {"uid": user_id},
+            )
+        publications_processed = (publications_processed or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for user publications_processed")
 
     most_common_family = await session.scalar(
         select(EventRecord.family)
@@ -135,6 +253,25 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         .order_by(func.count().desc())
         .limit(1)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("""
+                    SELECT family FROM (
+                        SELECT family FROM event_records WHERE user_id = :uid AND type = 'rec_ok'
+                        UNION ALL
+                        SELECT tax_fam FROM records WHERE user_id = :uid AND type = 'rec_ok'
+                    ) combined
+                    WHERE family IS NOT NULL AND family != ''
+                    GROUP BY family
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 1
+                """),
+                {"uid": user_id},
+            )
+        most_common_family = result.scalar()
+    except Exception:
+        logger.warning("Could not query legacy records for user most_common_family")
 
     most_common_genus = await session.scalar(
         select(EventRecord.genus)
@@ -143,6 +280,25 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         .order_by(func.count().desc())
         .limit(1)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("""
+                    SELECT genus FROM (
+                        SELECT genus FROM event_records WHERE user_id = :uid AND type = 'rec_ok'
+                        UNION ALL
+                        SELECT tax_gen FROM records WHERE user_id = :uid AND type = 'rec_ok'
+                    ) combined
+                    WHERE genus IS NOT NULL AND genus != ''
+                    GROUP BY genus
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 1
+                """),
+                {"uid": user_id},
+            )
+        most_common_genus = result.scalar()
+    except Exception:
+        logger.warning("Could not query legacy records for user most_common_genus")
 
     most_common_species = await session.scalar(
         select(EventRecord.genus + " " + EventRecord.species)
@@ -151,6 +307,27 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         .order_by(func.count().desc())
         .limit(1)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("""
+                    SELECT species FROM (
+                        SELECT genus || ' ' || specificepithet AS species
+                        FROM event_records WHERE user_id = :uid AND type = 'rec_ok'
+                        UNION ALL
+                        SELECT tax_gen || ' ' || tax_sp AS species
+                        FROM records WHERE user_id = :uid AND type = 'rec_ok'
+                    ) combined
+                    WHERE species IS NOT NULL AND species != ' '
+                    GROUP BY species
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 1
+                """),
+                {"uid": user_id},
+            )
+        most_common_species = result.scalar()
+    except Exception:
+        logger.warning("Could not query legacy records for user most_common_species")
 
     top_species_stmt = (
         select(
@@ -164,10 +341,36 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         .limit(4)
     )
     rows = (await session.execute(top_species_stmt)).all()
-    top_species = [
-        TopSpeciesItem(species=f"{r.genus} {r.species}".strip(), count=r.cnt)
-        for r in rows
-    ]
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("""
+                    SELECT tax_gen, tax_sp, COUNT(*) as cnt
+                    FROM records
+                    WHERE user_id = :uid AND type = 'rec_ok'
+                    GROUP BY tax_gen, tax_sp
+                    ORDER BY cnt DESC
+                    LIMIT 4
+                """),
+                {"uid": user_id},
+            )
+        legacy_top = {(r.tax_gen, r.tax_sp): r.cnt for r in result.fetchall()}
+        species_counts: dict[tuple[str | None, str | None], int] = {}
+        for r in rows:
+            key = (r.genus, r.species)
+            species_counts[key] = species_counts.get(key, 0) + r.cnt
+        for (g, s), c in legacy_top.items():
+            species_counts[(g, s)] = species_counts.get((g, s), 0) + c
+        top_sorted = sorted(species_counts.items(), key=lambda x: -x[1])[:4]
+        top_species = [
+            TopSpeciesItem(species=f"{g} {s}".strip(), count=c)
+            for (g, s), c in top_sorted
+        ]
+    except Exception:
+        top_species = [
+            TopSpeciesItem(species=f"{r.genus} {r.species}".strip(), count=r.cnt)
+            for r in rows
+        ]
 
     checks_count = await session.scalar(
         select(func.count())
@@ -177,12 +380,30 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
             EventRecord.type.in_([RecordType.CHECK_OK, RecordType.CHECK_FAIL]),
         )
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(*) FROM records WHERE user_id = :uid AND type IN ('check_ok', 'check_fail')"),
+                {"uid": user_id},
+            )
+        checks_count = (checks_count or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for user checks_count")
 
     failed_records = await session.scalar(
         select(func.count())
         .select_from(EventRecord)
         .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_FAIL)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(*) FROM records WHERE user_id = :uid AND type = 'rec_fail'"),
+                {"uid": user_id},
+            )
+        failed_records = (failed_records or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for user failed_records")
 
     total_individuals = await session.scalar(
         select(func.sum(func.ceil(EventRecord.quantity)))
@@ -193,24 +414,60 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
             EventRecord.quantity.isnot(None),
         )
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT SUM(abu) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                {"uid": user_id},
+            )
+        total_individuals = (total_individuals or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for user total_individuals")
 
     distinct_families = await session.scalar(
         select(func.count(func.distinct(EventRecord.family)))
         .select_from(EventRecord)
         .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(DISTINCT tax_fam) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                {"uid": user_id},
+            )
+        distinct_families = (distinct_families or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for user distinct_families")
 
     distinct_genera = await session.scalar(
         select(func.count(func.distinct(EventRecord.genus)))
         .select_from(EventRecord)
         .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(DISTINCT tax_gen) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                {"uid": user_id},
+            )
+        distinct_genera = (distinct_genera or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for user distinct_genera")
 
     distinct_species = await session.scalar(
         select(func.count(func.distinct(EventRecord.species)))
         .select_from(EventRecord)
         .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("SELECT COUNT(DISTINCT tax_gen || ' ' || tax_sp) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                {"uid": user_id},
+            )
+        distinct_species = (distinct_species or 0) + (result.scalar() or 0)
+    except Exception:
+        logger.warning("Could not query legacy records for user distinct_species")
 
     most_common_year = await session.scalar(
         select(Publication.year)
@@ -225,6 +482,29 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         .order_by(func.count().desc())
         .limit(1)
     )
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("""
+                    SELECT year FROM (
+                        SELECT p.year
+                        FROM event_records er
+                        JOIN publications p ON er.publ_id = p.publ_id
+                        WHERE er.user_id = :uid AND er.type = 'rec_ok' AND p.year IS NOT NULL
+                        UNION ALL
+                        SELECT eve_yy FROM records
+                        WHERE user_id = :uid AND type = 'rec_ok' AND eve_yy IS NOT NULL
+                    ) combined
+                    WHERE year IS NOT NULL
+                    GROUP BY year
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 1
+                """),
+                {"uid": user_id},
+            )
+        most_common_year = result.scalar()
+    except Exception:
+        logger.warning("Could not query legacy records for user most_common_year")
 
     return {
         "records_entered": records_entered or 0,
@@ -274,6 +554,11 @@ async def get_cumulative_records(session: AsyncSession) -> list[Row]:
         FROM event_records
         WHERE type = 'rec_ok'
         GROUP BY DATE(datetime)
+        UNION ALL
+        SELECT DATE(datetime) as date, COUNT(*) as cnt
+        FROM records
+        WHERE type = 'rec_ok'
+        GROUP BY DATE(datetime)
         ORDER BY date
     """)
     result = await session.execute(stmt)
@@ -308,5 +593,18 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
     )
     count_stmt = select(func.count()).select_from(subq)
     distinct_pairs = await session.scalar(count_stmt) or 0
+
+    try:
+        async with session.begin_nested():
+            result = await session.execute(
+                text("""
+                    SELECT COUNT(DISTINCT (publ_id, user_id))
+                    FROM records
+                    WHERE type = 'rec_ok'
+                """)
+            )
+        distinct_pairs += result.scalar() or 0
+    except Exception:
+        logger.warning("Could not query legacy records for progress")
 
     return total, distinct_pairs
