@@ -1,10 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from core.enums import PendingStatus
-from schema.user import UserLanguage
+from core.enums import PendingStatus, UserLanguage
+from core.exceptions import MsgErr
+from service.user import UserService
 
 
-class FormRequest(BaseModel):
+class SurveyRequest(BaseModel):
     username: str = Field(min_length=3, max_length=40, pattern=r"^[a-zA-Z0-9_]+$")
     password: str = Field(min_length=8, max_length=128)
     name: str
@@ -14,6 +15,38 @@ class FormRequest(BaseModel):
     comm: str
     code: str
     token: str
+
+    @field_validator("name")
+    @classmethod
+    def validate_name_field(cls, name: str) -> str:
+        result = UserService.validate_name(name)
+        if isinstance(result, MsgErr):
+            raise ValueError(result.error)
+        return name
+
+    @field_validator("sex")
+    @classmethod
+    def validate_sex_field(cls, sex: str) -> str:
+        result = UserService.validate_sex(sex)
+        if isinstance(result, MsgErr):
+            raise ValueError(result.error)
+        return sex
+
+    @field_validator("age")
+    @classmethod
+    def validate_age_field(cls, age: int) -> int:
+        result = UserService.validate_age_str(str(age))
+        if isinstance(result, MsgErr):
+            raise ValueError(result.error)
+        return age
+
+    @field_validator("lng")
+    @classmethod
+    def validate_lng_field(cls, lng: UserLanguage) -> UserLanguage:
+        result = UserService.validate_language(lng)
+        if isinstance(result, MsgErr):
+            raise ValueError(result.error)
+        return lng
 
 
 class RegistrationStartResponse(BaseModel):

@@ -3,10 +3,8 @@ from datetime import datetime
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config import settings
 from core.enums import PendingStatus
 from core.model import PendingRegistration
-from service.registration import is_enter_expired
 
 
 async def create_pending_registration(
@@ -29,13 +27,7 @@ async def get_pending_by_code(
 ) -> PendingRegistration | None:
     stmt = select(PendingRegistration).where(PendingRegistration.code == code)
     result = await session.execute(stmt)
-    pending = result.scalar_one_or_none()
-
-    if pending and is_enter_expired(
-        pending.code_created_at, settings.TG_CODE_EXPIRE_SECONDS
-    ):
-        return None
-    return pending
+    return result.scalar_one_or_none()
 
 
 async def get_pending_by_token(
@@ -43,13 +35,7 @@ async def get_pending_by_token(
 ) -> PendingRegistration | None:
     stmt = select(PendingRegistration).where(PendingRegistration.token == token)
     result = await session.execute(stmt)
-    pending = result.scalar_one_or_none()
-
-    if pending and is_enter_expired(
-        pending.token_created_at, settings.TG_TOKEN_EXPIRE_SECONDS
-    ):
-        return None
-    return pending
+    return result.scalar_one_or_none()
 
 
 async def update_pending_by_code(
@@ -87,6 +73,15 @@ async def delete_expired_pending(session: AsyncSession, cutoff: datetime) -> int
     stmt = delete(PendingRegistration).where(
         PendingRegistration.status == PendingStatus.CODE_PROCESSING,
         PendingRegistration.token_created_at < cutoff,
+    )
+    result = await session.execute(stmt)
+    return getattr(result, "rowcount", 0) or 0
+
+
+async def delete_registration_pending(session: AsyncSession, cutoff: datetime) -> int:
+    stmt = delete(PendingRegistration).where(
+        PendingRegistration.status == PendingStatus.REGISTRATION,
+        PendingRegistration.reg_run < cutoff,
     )
     result = await session.execute(stmt)
     return getattr(result, "rowcount", 0) or 0

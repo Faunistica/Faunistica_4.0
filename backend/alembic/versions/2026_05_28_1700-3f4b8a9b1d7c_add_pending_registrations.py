@@ -37,6 +37,11 @@ def upgrade() -> None:
             server_default=func.now(),
             nullable=False,
         ),
+        sa.Column(
+            "reg_run",
+            sa.TIMESTAMP(),
+            nullable=True,
+        ),
         sa.Column("confirmed_at", sa.TIMESTAMP(), nullable=True),
         sa.Column("telegram_id", sa.BigInteger(), nullable=True),
         sa.Column("telegram_username", sa.String(length=255), nullable=True),

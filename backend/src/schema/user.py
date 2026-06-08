@@ -1,12 +1,11 @@
 from datetime import datetime
-from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from core.enums import UserState
+from core.enums import UserLanguage, UserState
+from core.exceptions import MsgErr
 from schema.common import UNSET, Unset
-
-type UserLanguage = Literal["eng", "rus", "all"]
+from service.user_validation import UserValidators
 
 
 class UserMinimal(BaseModel):
@@ -34,8 +33,10 @@ class UserFull(UserMinimal):
 
 
 class UserUpdateMe(BaseModel):
-    username: str | None = None
-    password: str | None = None
+    username: str | None = Field(
+        None, min_length=3, max_length=40, pattern=r"^[a-zA-Z0-9_]+$"
+    )
+    password: str | None = Field(None, min_length=8, max_length=128)
     name: str | None = None
     age: int | None = None
     lng: UserLanguage | None = None
@@ -44,6 +45,56 @@ class UserUpdateMe(BaseModel):
     rating: int | None = None
     email: str | None = None
     region: str | None = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name_field(cls, name: str | None) -> str | None:
+        if name is None:
+            return None
+        result = UserValidators.validate_name(name)
+        if isinstance(result, MsgErr):
+            raise ValueError(result.error)
+        return name
+
+    @field_validator("sex")
+    @classmethod
+    def validate_sex_field(cls, sex: str | None) -> str | None:
+        if sex is None:
+            return None
+        result = UserValidators.validate_sex(sex)
+        if isinstance(result, MsgErr):
+            raise ValueError(result.error)
+        return sex
+
+    @field_validator("age")
+    @classmethod
+    def validate_age_field(cls, age: int | None) -> int | None:
+        if age is None:
+            return None
+        result = UserValidators.validate_age_str(str(age))
+        if isinstance(result, MsgErr):
+            raise ValueError(result.error)
+        return age
+
+    @field_validator("lng")
+    @classmethod
+    def validate_lng_field(cls, lng: UserLanguage | None) -> UserLanguage | None:
+        if lng is None:
+            return None
+        result = UserValidators.validate_language(lng)
+        if isinstance(result, MsgErr):
+            raise ValueError(result.error)
+        return lng
+
+    @field_validator("email")
+    @classmethod
+    def validate_email_field(cls, email: str | None) -> str | None:
+        if email is None:
+            return None
+        result = UserValidators.validate_language(email)
+        if isinstance(result, MsgErr):
+            raise ValueError(result.error)
+        return email
 
     model_config = ConfigDict(populate_by_name=True)
 

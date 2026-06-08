@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import func, update
 from sqlalchemy.dialects.postgresql import insert
@@ -42,7 +42,7 @@ async def create_user_or_update(
     stmt = insert(User).values(user_id=user_id, reg_stat=reg_stat)
     stmt = stmt.on_conflict_do_update(
         index_elements=[User.user_id],
-        set_={User.reg_stat: stmt.excluded.reg_stat, User.reg_run: datetime.now()},
+        set_={User.reg_stat: stmt.excluded.reg_stat, User.reg_run: datetime.now(UTC)},
     ).returning(User)
     result = await session.execute(stmt)
 

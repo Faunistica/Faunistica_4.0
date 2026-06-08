@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from aiogram import Router
 from aiogram.filters import Command, or_f
@@ -53,6 +53,10 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
 
     async for session in get_session():
         pending = await get_pending_by_code(session, code)
+        if pending and is_enter_expired(
+            pending.code_created_at, settings.TG_CODE_EXPIRE_SECONDS
+        ):
+            pending = None
         if pending is None:
             await message.answer(Messages.confirmation_code_invalid())
             return
@@ -79,14 +83,13 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
             await message.answer(Messages.auth_confirmed())
             return
 
-        now = datetime.now()
         tlg_name = message.from_user.full_name
         tlg_username = message.from_user.username
         await update_pending_by_code(
             session,
             code,
             status=PendingStatus.REGISTRATION,
-            confirmed_at=now,
+            reg_run=datetime.now(UTC),
             telegram_id=message.from_user.id,
             telegram_username=tlg_username,
             telegram_name=tlg_name,

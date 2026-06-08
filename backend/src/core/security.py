@@ -185,9 +185,7 @@ def validate_user_id_path(
 
 
 async def generate_code_for_tg_enter() -> str:
-    for _ in range(10):
-        code = "".join(str(secrets.randbelow(10)) for _ in range(6))
-    return code
+    return "".join(str(secrets.randbelow(10)) for _ in range(6))
 
 
 async def generate_token_for_tg_enter() -> str:

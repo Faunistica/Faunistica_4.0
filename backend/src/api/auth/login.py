@@ -47,11 +47,6 @@ async def login(
     if result.new_hash:
         await user_service.update_user_data(user.user_id, hash=result.new_hash)
 
-    # non-expired password now
-    if UserService.is_password_expired(user):
-        logger.info("Password expired for user: %s", data.username)
-        raise HTTPException(status_code=401, detail="Password expired")
-
     token_payload = TokenPayload(
         sub=str(user.user_id), username=data.username, version=user.token_version
     )
