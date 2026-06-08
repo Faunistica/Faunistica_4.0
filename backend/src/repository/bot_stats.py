@@ -1,5 +1,6 @@
 import logging
 
+from cachetools import TTLCache
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,8 +9,14 @@ from core.model import EventRecord, Publication, User
 
 logger = logging.getLogger(__name__)
 
+_bot_general_cache = TTLCache(maxsize=1, ttl=300)
+_bot_user_cache = TTLCache(maxsize=1024, ttl=300)
+
 
 async def get_bot_general_stats(session: AsyncSession) -> dict:
+    if (cached := _bot_general_cache.get("bot_general_stats")) is not None:
+        return cached
+
     total_users = await session.scalar(
         select(func.count())
         .select_from(User)
@@ -146,7 +153,7 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
     except Exception:
         logger.warning("Could not query legacy records for families_count")
 
-    return {
+    result = {
         "total_users": total_users,
         "avg_age": avg_age,
         "total_publs": total_publs,
@@ -158,9 +165,15 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
         "species_count": species_count,
         "families_count": families_count,
     }
+    _bot_general_cache["bot_general_stats"] = result
+    return result
 
 
 async def get_bot_user_stats(session: AsyncSession, user_id: int) -> dict:
+    key = f"bot_user_stats:{user_id}"
+    if (cached := _bot_user_cache.get(key)) is not None:
+        return cached
+
     processed_publs = await session.scalar(
         select(func.count(func.distinct(EventRecord.publ_id)))
         .select_from(EventRecord)
@@ -258,10 +271,12 @@ async def get_bot_user_stats(session: AsyncSession, user_id: int) -> dict:
     except Exception:
         logger.warning("Could not query legacy records for bot user most_common_species")
 
-    return {
+    result = {
         "processed_publs": processed_publs,
         "rec_ok": rec_ok,
         "check_ratio": check_ratio,
         "species_count": species_count,
         "most_common_species": most_common_species,
     }
+    _bot_user_cache[key] = result
+    return result

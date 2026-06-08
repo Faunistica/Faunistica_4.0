@@ -1,5 +1,6 @@
 import logging
 
+from cachetools import TTLCache
 from sqlalchemy import func, select, text
 from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,9 +11,13 @@ from schema.common import ProjectStats, TopSpeciesItem, UserStats
 
 logger = logging.getLogger(__name__)
 
+_project_stats_cache = TTLCache(maxsize=10, ttl=300)
+_user_stats_cache = TTLCache(maxsize=1024, ttl=300)
+
 
 async def get_project_statistics(session: AsyncSession) -> ProjectStats:
-    # TODO: Performance optimization point - consider caching
+    if (cached := _project_stats_cache.get("project_stats")) is not None:
+        return cached
 
     total_volunteers = await session.scalar(
         select(func.count())
@@ -108,7 +113,7 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         )
     )
 
-    return ProjectStats(
+    result = ProjectStats(
         total_volunteers=total_volunteers or 0,
         total_records=total_records or 0,
         species_count=species_count or 0,
@@ -118,6 +123,8 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         failed_records=failed_records or 0,
         total_users=total_users or 0,
     )
+    _project_stats_cache["project_stats"] = result
+    return result
 
 
 async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:
@@ -129,6 +136,10 @@ async def get_user_by_name(session: AsyncSession, name: str) -> User | None:
 
 
 async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
+    key = f"user_stats:{user_id}"
+    if (cached := _user_stats_cache.get(key)) is not None:
+        return cached
+
     records_entered = await session.scalar(
         select(func.count())
         .select_from(EventRecord)
@@ -419,7 +430,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     except Exception:
         logger.warning("Could not query legacy records for user most_common_year")
 
-    return {
+    result = {
         "records_entered": records_entered or 0,
         "publications_processed": publications_processed or 0,
         "most_common_family": most_common_family,
@@ -434,6 +445,8 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         "distinct_species": distinct_species or 0,
         "most_common_year": most_common_year,
     }
+    _user_stats_cache[key] = result
+    return result
 
 
 async def get_volunteers_achievements(session: AsyncSession) -> list[Row]:
@@ -450,6 +463,8 @@ async def get_volunteers_achievements(session: AsyncSession) -> list[Row]:
 
 
 async def get_cumulative_volunteers(session: AsyncSession) -> list[Row]:
+    if (cached := _project_stats_cache.get("cumulative_volunteers")) is not None:
+        return cached
     stmt = text("""
         SELECT DATE(reg_run) as date, COUNT(*) as cnt
         FROM users
@@ -458,10 +473,14 @@ async def get_cumulative_volunteers(session: AsyncSession) -> list[Row]:
         ORDER BY date
     """)
     result = await session.execute(stmt)
-    return list(result.fetchall())
+    rows = list(result.fetchall())
+    _project_stats_cache["cumulative_volunteers"] = rows
+    return rows
 
 
 async def get_cumulative_records(session: AsyncSession) -> list[Row]:
+    if (cached := _project_stats_cache.get("cumulative_records")) is not None:
+        return cached
     stmt = text("""
         SELECT DATE(datetime) as date, COUNT(*) as cnt
         FROM event_records
@@ -475,10 +494,15 @@ async def get_cumulative_records(session: AsyncSession) -> list[Row]:
         ORDER BY date
     """)
     result = await session.execute(stmt)
-    return list(result.fetchall())
+    rows = list(result.fetchall())
+    _project_stats_cache["cumulative_records"] = rows
+    return rows
 
 
 async def get_progress(session: AsyncSession) -> tuple[int, int]:
+    if (cached := _project_stats_cache.get("progress")) is not None:
+        return cached
+
     admin_ids = [911269241, 412819044, 950994899]
     total_stmt = (
         select(func.count())
@@ -528,4 +552,6 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
 
     capped_total = sum(counts.values())
 
-    return total, capped_total
+    result = (total, capped_total)
+    _project_stats_cache["progress"] = result
+    return result
