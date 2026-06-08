@@ -43,53 +43,29 @@ def mock_bot():
 
 
 class TestStartCommand:
-    async def test_start_command_success(self, mock_message):
-        await start_command(mock_message)
+    async def test_start_command_success(self, mock_message, mock_state):
+        await start_command(mock_message, mock_state)
         mock_message.answer.assert_called_once()
 
-    async def test_start_command_admin_chat(self, mock_message):
+    async def test_start_command_admin_chat(self, mock_message, mock_state):
         from core.config import settings
 
         mock_message.chat.id = settings.ADMIN_CHAT_ID
-        await start_command(mock_message)
+        await start_command(mock_message, mock_state)
         mock_message.answer.assert_not_called()
 
 
 class TestRegisterCommand:
-    async def test_register_new_user(self, mock_message, mock_state, mock_bot):
-        with (
-            patch("bot.handlers.registration.UserService") as mock_user_service_cls,
-            patch("bot.handlers.registration.get_session") as mock_get_session,
-        ):
-            mock_session = AsyncMock()
-            mock_get_session.return_value = _async_session_gen(mock_session)
-            mock_user_service = AsyncMock()
-            mock_user_service_cls.return_value = mock_user_service
-            mock_user_service.get.return_value = None
+    async def test_register_command_success(self, mock_message):
+        await registration_info(mock_message)
+        mock_message.answer.assert_called_once()
 
-            await registration_info(mock_message, mock_state, mock_bot)
-            mock_user_service.start_registration.assert_called_once_with(12345)
-            mock_state.set_state.assert_called_once()
+    async def test_register_command_admin_chat(self, mock_message):
+        from core.config import settings
 
-    async def test_register_existing_completed(
-        self, mock_message, mock_state, mock_bot
-    ):
-        user = MagicMock()
-        user.reg_stat = MagicMock()
-        user.reg_stat.value = "completed"
-        user.name = "TestUser"
-        with (
-            patch("bot.handlers.registration.UserService") as mock_user_service_cls,
-            patch("bot.handlers.registration.get_session") as mock_get_session,
-        ):
-            mock_session = AsyncMock()
-            mock_get_session.return_value = _async_session_gen(mock_session)
-            mock_user_service = AsyncMock()
-            mock_user_service_cls.return_value = mock_user_service
-            mock_user_service.get.return_value = user
-
-            await registration_info(mock_message, mock_state, mock_bot)
-            mock_message.answer.assert_called()
+        mock_message.chat.id = settings.ADMIN_CHAT_ID
+        await registration_info(mock_message)
+        mock_message.answer.assert_not_called()
 
 
 class TestMenuCommand:
