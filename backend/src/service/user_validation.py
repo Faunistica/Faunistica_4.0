@@ -49,8 +49,8 @@ class UserValidators:
         return _LANG_MAP[cleaned]
 
     @staticmethod
-    def validate_language(lang: str) -> Ok | MsgErr:
-        if lang not in get_args(UserLanguage):
+    def validate_language(lang: UserLanguage) -> Ok | MsgErr:
+        if lang not in UserLanguage:
             return MsgErr(error=Messages.invalid_lang())
         return Ok()
 

@@ -147,7 +147,7 @@ class UserService:
         return UserValidators.parse_language(lang)
 
     @staticmethod
-    def validate_language(lang: str) -> Ok | MsgErr:
+    def validate_language(lang: UserLanguage) -> Ok | MsgErr:
         return UserValidators.validate_language(lang)
 
     @staticmethod
