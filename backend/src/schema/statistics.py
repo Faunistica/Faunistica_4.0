@@ -21,14 +21,10 @@ class ProjectStatisticsResponse(BaseModel):
     total_records: int
     species_count: int
     processed_publications_count: int
-    most_common_family: str | None
-    most_common_genus: str | None
-    most_common_species: str | None
-    total_users: int = 0
-    avg_age: float | None = None
     families_count: int = 0
     checks_count: int = 0
     failed_records: int = 0
+    total_users: int = 0
     cumulative_volunteers: list[CumulativePoint] = []
     cumulative_records: list[CumulativePoint] = []
     progress: ProgressInfo | None = None

@@ -57,98 +57,6 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         .where(Action.action == "publ_end_full")
     )
 
-    most_common_family = await session.scalar(
-        select(EventRecord.family)
-        .where(EventRecord.type == RecordType.REC_OK)
-        .group_by(EventRecord.family)
-        .order_by(func.count().desc())
-        .limit(1)
-    )
-    try:
-        async with session.begin_nested():
-            result = await session.execute(
-                text("""
-                    SELECT family FROM (
-                        SELECT family FROM event_records WHERE type = 'rec_ok'
-                        UNION ALL
-                        SELECT tax_fam FROM records WHERE type = 'rec_ok'
-                    ) combined
-                    WHERE family IS NOT NULL AND family != ''
-                    GROUP BY family
-                    ORDER BY COUNT(*) DESC
-                    LIMIT 1
-                """)
-            )
-        most_common_family = result.scalar()
-    except Exception:
-        logger.warning("Could not query legacy records for most_common_family")
-
-    most_common_genus = await session.scalar(
-        select(EventRecord.genus)
-        .where(EventRecord.type == RecordType.REC_OK)
-        .group_by(EventRecord.genus)
-        .order_by(func.count().desc())
-        .limit(1)
-    )
-    try:
-        async with session.begin_nested():
-            result = await session.execute(
-                text("""
-                    SELECT genus FROM (
-                        SELECT genus FROM event_records WHERE type = 'rec_ok'
-                        UNION ALL
-                        SELECT tax_gen FROM records WHERE type = 'rec_ok'
-                    ) combined
-                    WHERE genus IS NOT NULL AND genus != ''
-                    GROUP BY genus
-                    ORDER BY COUNT(*) DESC
-                    LIMIT 1
-                """)
-            )
-        most_common_genus = result.scalar()
-    except Exception:
-        logger.warning("Could not query legacy records for most_common_genus")
-
-    most_common_species = await session.scalar(
-        select(EventRecord.genus + " " + EventRecord.species)
-        .where(EventRecord.type == RecordType.REC_OK)
-        .group_by(EventRecord.genus, EventRecord.species)
-        .order_by(func.count().desc())
-        .limit(1)
-    )
-    try:
-        async with session.begin_nested():
-            result = await session.execute(
-                text("""
-                    SELECT species FROM (
-                        SELECT genus || ' ' || specificepithet AS species
-                        FROM event_records WHERE type = 'rec_ok'
-                        UNION ALL
-                        SELECT tax_gen || ' ' || tax_sp AS species
-                        FROM records WHERE type = 'rec_ok'
-                    ) combined
-                    WHERE species IS NOT NULL AND species != ' '
-                    GROUP BY species
-                    ORDER BY COUNT(*) DESC
-                    LIMIT 1
-                """)
-            )
-        most_common_species = result.scalar()
-    except Exception:
-        logger.warning("Could not query legacy records for most_common_species")
-
-    total_users = await session.scalar(
-        select(func.count())
-        .select_from(User)
-        .where(
-            (User.reg_stat == UserState.REG_COMPLETED)
-            | (User.reg_stat >= UserState.SUPPORT)
-        )
-    )
-
-    avg_age_value = await session.scalar(select(func.avg(User.age)))
-    avg_age = round(avg_age_value, 1) if avg_age_value is not None else None
-
     families_count = await session.scalar(
         select(func.count(func.distinct(EventRecord.family)))
         .select_from(EventRecord)
@@ -191,19 +99,24 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
     except Exception:
         logger.warning("Could not query legacy records for failed_records")
 
+    total_users = await session.scalar(
+        select(func.count())
+        .select_from(User)
+        .where(
+            (User.reg_stat == UserState.REG_COMPLETED)
+            | (User.reg_stat >= UserState.SUPPORT)
+        )
+    )
+
     return ProjectStats(
         total_volunteers=total_volunteers or 0,
         total_records=total_records or 0,
         species_count=species_count or 0,
         processed_publications_count=processed_publications or 0,
-        most_common_family=most_common_family,
-        most_common_genus=most_common_genus,
-        most_common_species=most_common_species,
-        total_users=total_users or 0,
-        avg_age=avg_age,
         families_count=families_count or 0,
         checks_count=checks_count or 0,
         failed_records=failed_records or 0,
+        total_users=total_users or 0,
     )
 
 

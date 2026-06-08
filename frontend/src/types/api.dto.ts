@@ -133,11 +133,7 @@ export interface StatisticsResponse {
     total_records: number;
     species_count: number;
     processed_publications_count: number;
-    most_common_family: string | null;
-    most_common_genus: string | null;
-    most_common_species: string | null;
     total_users: number;
-    avg_age: number | null;
     families_count: number;
     checks_count: number;
     failed_records: number;

@@ -95,14 +95,10 @@ class ProjectStats(TypedDict):
     total_records: int
     species_count: int
     processed_publications_count: int
-    most_common_family: str | None
-    most_common_genus: str | None
-    most_common_species: str | None
-    total_users: int
-    avg_age: float | None
     families_count: int
     checks_count: int
     failed_records: int
+    total_users: int
 
 
 class TopSpeciesItem(TypedDict):

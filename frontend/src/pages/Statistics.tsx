@@ -243,9 +243,6 @@ const Statistics: FC = () => {
                 {projectSecondaryCards.map(({ key, icon, label, field }) => (
                     <StatCard key={key} icon={icon} label={label} value={projectStats?.[field]} />
                 ))}
-                {projectStats?.avg_age != null && (
-                    <StatCard icon={Calendar} label="Средний возраст" value={projectStats.avg_age.toFixed(1)} />
-                )}
             </div>
 
             {projectStats?.progress && (
@@ -359,15 +356,6 @@ const Statistics: FC = () => {
                     </CardContent>
                 </Card>
             )}
-
-            <div className="space-y-3">
-                <SectionHeading>Наиболее распространённые</SectionHeading>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    {commonLabels.map(({ key, label, field }) => (
-                        <LabelCard key={key} label={label} value={projectStats?.[field]} />
-                    ))}
-                </div>
-            </div>
 
             <div className="space-y-3">
                 <SectionHeading>Личная статистика</SectionHeading>
