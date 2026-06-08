@@ -87,9 +87,9 @@ async def create_user_from_survey(
         sex=data.sex,
         reg_stat=UserState.REG_COMPLETED,
         hash=password_hash,
-        hash_date=datetime.now(UTC),
-        reg_run=pending.token_created_at,
-        reg_end=datetime.now(UTC),
+        hash_date=datetime.now(UTC).replace(tzinfo=None),
+        reg_run=pending.token_created_at.replace(tzinfo=None),
+        reg_end=datetime.now(UTC).replace(tzinfo=None),
     )
     if current_user is None:
         raise UserNotCreated(id)
