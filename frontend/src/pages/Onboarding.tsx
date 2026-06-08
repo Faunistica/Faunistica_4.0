@@ -22,10 +22,10 @@ import { useRegisterMutation } from '@/api/authAPI';
 
 const formSchema = z
     .object({
-        name: z.string().min(2, 'Минимум 2 символа'),
-        username: z.string().min(3, 'Минимум 3 символа'),
-        password: z.string().min(6, 'Минимум 6 символов'),
-        age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет'),
+        name: z.string().min(3, 'Минимум 3 символа').max(40, 'Максимум 40 символов').regex(/^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$/, 'Недопустимые символы в имени'),
+        username: z.string().min(3, 'Минимум 3 символа').max(40, 'Максимум 40 символов').regex(/^[a-zA-Z0-9_]+$/, 'Только латинские буквы, цифры и _'),
+        password: z.string().min(8, 'Минимум 8 символов').max(128, 'Максимум 128 символов'),
+        age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет').max(99, 'Возраст должен быть не более 99 лет'),
         sex: z.enum(['M', 'F', 'N'], { message: 'Выберите пол' }),
         langRu: z.boolean().default(false),
         langEn: z.boolean().default(false),
