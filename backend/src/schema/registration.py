@@ -40,14 +40,6 @@ class SurveyRequest(BaseModel):
             raise ValueError(result.error)
         return age
 
-    @field_validator("lng")
-    @classmethod
-    def validate_lng_field(cls, lng: UserLanguage) -> UserLanguage:
-        result = UserService.validate_language(lng)
-        if isinstance(result, MsgErr):
-            raise ValueError(result.error)
-        return lng
-
 
 class RegistrationStartResponse(BaseModel):
     code: str
