@@ -462,8 +462,8 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
                         JOIN publs p ON er.publ_id = p.publ_id
                         WHERE er.user_id = :uid AND er.type = 'rec_ok' AND p.year IS NOT NULL
                         UNION ALL
-                        SELECT eve_yy FROM records
-                        WHERE user_id = :uid AND type = 'rec_ok' AND eve_yy IS NOT NULL
+                        SELECT "eve_YY" FROM records
+                        WHERE user_id = :uid AND type = 'rec_ok' AND "eve_YY" IS NOT NULL
                     ) combined
                     WHERE year IS NOT NULL
                     GROUP BY year
