@@ -491,8 +491,8 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
     )
     total = await session.scalar(total_stmt) or 0
 
-    subq = (
-        select(EventRecord.publ_id, EventRecord.user_id)
+    rows = await session.execute(
+        select(EventRecord.publ_id, func.count(func.distinct(EventRecord.user_id)))
         .join(Publication, EventRecord.publ_id == Publication.publ_id)
         .where(
             EventRecord.type == RecordType.REC_OK,
@@ -501,23 +501,31 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
             Publication.occs == 1,
             EventRecord.user_id.notin_(admin_ids),
         )
-        .distinct()
-        .subquery()
+        .group_by(EventRecord.publ_id)
     )
-    count_stmt = select(func.count()).select_from(subq)
-    distinct_pairs = await session.scalar(count_stmt) or 0
+    counts: dict[int, int] = {}
+    for publ_id, cnt in rows:
+        counts[publ_id] = counts.get(publ_id, 0) + cnt
 
     try:
         async with session.begin_nested():
-            result = await session.execute(
+            rows = await session.execute(
                 text("""
-                    SELECT COUNT(DISTINCT (publ_id, user_id))
+                    SELECT publ_id, COUNT(DISTINCT user_id)
                     FROM records
                     WHERE type = 'rec_ok'
+                    GROUP BY publ_id
                 """)
             )
-        distinct_pairs += result.scalar() or 0
+            for publ_id, cnt in rows:
+                counts[publ_id] = counts.get(publ_id, 0) + cnt
     except Exception:
         logger.warning("Could not query legacy records for progress")
 
-    return total, distinct_pairs
+    for publ_id in counts:
+        if counts[publ_id] > 3:
+            counts[publ_id] = 3
+
+    capped_total = sum(counts.values())
+
+    return total, capped_total
