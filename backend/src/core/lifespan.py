@@ -134,10 +134,10 @@ async def _cleanup_pending_registrations() -> None:
                 confirmed_count = await delete_confirmed_pending(
                     session, confirmed_cutoff
                 )
-                registration_count = None
-                registration_count = await delete_registration_pending(
+                registration_count = 0
+                """registration_count = await delete_registration_pending(
                     session, survey_cutoff
-                )
+                ) """
                 if expired_count or confirmed_count or registration_count:
                     logger.info(
                         "Cleaned pending reg: expired=%d confirmed=%d on_survey=%d",
