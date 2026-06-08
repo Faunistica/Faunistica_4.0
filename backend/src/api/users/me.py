@@ -43,6 +43,6 @@ async def update_current_user(
             raise UsernameAlreadyExistsError(validate_result.error)
     if "password" in update_data:
         update_data["hash"] = get_password_hash(update_data.pop("password"))
-        update_data["hash_date"] = datetime.now(UTC)
+        update_data["hash_date"] = datetime.now(UTC).replace(tzinfo=None)
     await user_service.update_user_data(token.user_id, **update_data)
     await session.commit()

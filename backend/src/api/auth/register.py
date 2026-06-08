@@ -150,7 +150,7 @@ async def registration_status(
                 session,
                 token,
                 status=PendingStatus.CONFIRMED,
-                confirmed_at=datetime.now(UTC),
+                confirmed_at=datetime.now(UTC).replace(tzinfo=None),
             )
             await session.commit()
             return RegistrationStatusResponse(
