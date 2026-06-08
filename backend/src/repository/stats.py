@@ -459,7 +459,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
                     SELECT year FROM (
                         SELECT p.year
                         FROM event_records er
-                        JOIN publications p ON er.publ_id = p.publ_id
+                        JOIN publs p ON er.publ_id = p.publ_id
                         WHERE er.user_id = :uid AND er.type = 'rec_ok' AND p.year IS NOT NULL
                         UNION ALL
                         SELECT eve_yy FROM records
