@@ -3,6 +3,20 @@ import { store } from './store/store';
 import LoadingScreen from './components/LoadingScreen';
 import Layout from './components/layout/Layout';
 import { NavigationWrapper } from './components/NavigationWrapper';
+import Landing from './pages/Landing';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import Instructions from './pages/Instructions';
+import Auth from './pages/Auth';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import TelegramAuth from './pages/Auth/Telegram';
+import Recovery from './pages/Auth/Recovery';
+import Dashboard from './pages/Dashboard';
+import Onboarding from './pages/Onboarding';
+import Support from './pages/Support';
+import Statistics from './pages/Statistics';
+import Settings from './pages/Settings';
 
 const requireAuth = ({ request }: LoaderFunctionArgs) => {
     const { auth } = store.getState().user;
@@ -36,38 +50,30 @@ export const routes: RouteObject[] = [
                     {
                         index: true,
                         loader: requireGuest,
-                        lazy: () =>
-                            import('./pages/Landing').then((m) => ({ Component: m.default })),
+                        Component: Landing,
                         handle: { isLanding: true, isNavigateEnabled: true },
                     },
 
                     {
                         path: 'privacy-policy',
-                        lazy: () =>
-                            import('./pages/PrivacyPolicy').then((m) => ({ Component: m.default })),
+                        Component: PrivacyPolicy,
                     },
 
                     {
                         path: 'terms-of-service',
-                        lazy: () =>
-                            import('./pages/TermsOfService').then((m) => ({
-                                Component: m.default,
-                            })),
+                        Component: TermsOfService,
                     },
 
                     {
                         path: 'instructions',
-                        lazy: () =>
-                            import('./pages/Instructions').then((m) => ({
-                                Component: m.default,
-                            })),
+                        Component: Instructions,
                         handle: { isFullWidth: true },
                     },
 
                     {
                         path: 'auth',
                         loader: requireGuest,
-                        lazy: () => import('./pages/Auth').then((m) => ({ Component: m.default })),
+                        Component: Auth,
                         handle: { isNavigateEnabled: false },
                         children: [
                             {
@@ -76,31 +82,19 @@ export const routes: RouteObject[] = [
                             },
                             {
                                 path: 'login',
-                                lazy: () =>
-                                    import('./pages/Auth/Login').then((m) => ({
-                                        Component: m.default,
-                                    })),
+                                Component: Login,
                             },
                             {
                                 path: 'register',
-                                lazy: () =>
-                                    import('./pages/Auth/Register').then((m) => ({
-                                        Component: m.default,
-                                    })),
+                                Component: Register,
                             },
                             {
                                 path: 'telegram',
-                                lazy: () =>
-                                    import('./pages/Auth/Telegram').then((m) => ({
-                                        Component: m.default,
-                                    })),
+                                Component: TelegramAuth,
                             },
                             {
                                 path: 'recovery',
-                                lazy: () =>
-                                    import('./pages/Auth/Recovery').then((m) => ({
-                                        Component: m.default,
-                                    })),
+                                Component: Recovery,
                             },
                         ],
                     },
@@ -111,17 +105,11 @@ export const routes: RouteObject[] = [
                         children: [
                             {
                                 path: 'dashboard',
-                                lazy: () =>
-                                    import('./pages/Dashboard').then((m) => ({
-                                        Component: m.default,
-                                    })),
+                                Component: Dashboard,
                             },
                             {
                                 path: 'onboarding',
-                                lazy: () =>
-                                    import('./pages/Onboarding').then((m) => ({
-                                        Component: m.default,
-                                    })),
+                                Component: Onboarding,
                                 handle: { isNavigateEnabled: false },
                             },
                             {
@@ -134,24 +122,15 @@ export const routes: RouteObject[] = [
                             },
                             {
                                 path: 'support',
-                                lazy: () =>
-                                    import('./pages/Support').then((m) => ({
-                                        Component: m.default,
-                                    })),
+                                Component: Support,
                             },
                             {
                                 path: 'statistics',
-                                lazy: () =>
-                                    import('./pages/Statistics').then((m) => ({
-                                        Component: m.default,
-                                    })),
+                                Component: Statistics,
                             },
                             {
                                 path: 'settings',
-                                lazy: () =>
-                                    import('./pages/Settings').then((m) => ({
-                                        Component: m.default,
-                                    })),
+                                Component: Settings,
                                 handle: { isFullWidth: true },
                             },
                         ],
