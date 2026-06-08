@@ -236,5 +236,5 @@ class UserService:
         return await increment_token_version(self.session, user_id)
 
     async def full_registration(self, user_id: int, **kw: object) -> User | None:
-        await create_user_or_update(self.session, user_id, UserState(kw["state"]))
+        await create_user_or_update(self.session, user_id, UserState(kw["reg_stat"]))
         return await self._update(user_id, **kw)
