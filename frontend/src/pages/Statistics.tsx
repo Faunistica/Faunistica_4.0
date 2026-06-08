@@ -1,13 +1,4 @@
 import { type FC } from "react";
-import {
-  ResponsiveContainer,
-  Tooltip,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
 import { useAppSelector } from "@/store/store";
 import { statsAPI } from "@/api/statsAPI";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +16,8 @@ import {
   Layers,
 } from "lucide-react";
 import { StatisticsSkeleton } from "@/components/statistics/Skeleton";
-import { PieChartCard } from "@/components/statistics/PieChart";
+import { PieChartCard } from "@/components/statistics/PieChartCard";
+import { CumulativeChart } from "@/components/statistics/CumulativeChart";
 
 const projectCards = [
   { key: "species", icon: Bug, label: "Видов", field: "species_count" as const },
@@ -220,72 +212,20 @@ const Statistics: FC = () => {
             <CardContent>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 {projectStats.cumulative_records.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                      Накоплено записей
-                    </p>
-                    <ResponsiveContainer width="100%" aspect={2}>
-                      <LineChart data={projectStats.cumulative_records}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fontSize: 10 }}
-                          tickFormatter={(v) => {
-                            const d = new Date(v);
-                            return `${d.getMonth() + 1}.${d.getFullYear().toString().slice(2)}`;
-                          }}
-                          className="text-muted-foreground"
-                        />
-                        <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" />
-                        <Tooltip
-                          formatter={(value) => [formatNumber(Number(value)), "Записей"]}
-                          labelFormatter={(v) => new Date(v).toLocaleDateString("ru-RU")}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#3b82f6"
-                          strokeWidth={2}
-                          dot={false}
-                          activeDot={{ r: 4 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <CumulativeChart
+                    data={projectStats.cumulative_records}
+                    title="Накоплено записей"
+                    tooltipLabel="Записей"
+                    lineColor="#3b82f6"
+                  />
                 )}
                 {projectStats.cumulative_volunteers.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                      Всего волонтёров
-                    </p>
-                    <ResponsiveContainer width="100%" aspect={2}>
-                      <LineChart data={projectStats.cumulative_volunteers}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fontSize: 10 }}
-                          tickFormatter={(v) => {
-                            const d = new Date(v);
-                            return `${d.getMonth() + 1}.${d.getFullYear().toString().slice(2)}`;
-                          }}
-                          className="text-muted-foreground"
-                        />
-                        <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" />
-                        <Tooltip
-                          formatter={(value) => [formatNumber(Number(value)), "Волонтёров"]}
-                          labelFormatter={(v) => new Date(v).toLocaleDateString("ru-RU")}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#22c55e"
-                          strokeWidth={2}
-                          dot={false}
-                          activeDot={{ r: 4 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <CumulativeChart
+                    data={projectStats.cumulative_volunteers}
+                    title="Всего волонтёров"
+                    tooltipLabel="Волонтёров"
+                    lineColor="#22c55e"
+                  />
                 )}
               </div>
             </CardContent>

@@ -6,6 +6,10 @@ import { Bug } from "lucide-react";
 
 const PIE_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444"];
 
+function formatNumber(n: number): string {
+  return n.toLocaleString("ru-RU");
+}
+
 export function PieChartCard({
   data,
   error,
