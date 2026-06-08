@@ -139,7 +139,7 @@ async def get_user_by_id(session: AsyncSession, user_id: int) -> User | None:
 
 
 async def get_user_by_name(session: AsyncSession, name: str) -> User | None:
-    return await session.scalar(select(User).where(User.name.like(f"%{name}%")))
+    return await session.scalar(select(User).where(User.name == name))
 
 
 async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:

@@ -15,6 +15,10 @@ export const statsAPI = createApi({
             query: (userId) => `/statistics/users?user_id=${userId}`,
             providesTags: ['stats'],
         }),
+        getUserStatsByName: build.query<Types.UserStatisticsResponse, string>({
+            query: (name) => `/statistics/users?name=${encodeURIComponent(name)}`,
+            providesTags: ['stats'],
+        }),
         downloadReport: build.mutation<null, void>({
             queryFn: async (_params, _api, _extraOptions, baseQuery) => {
                 const result = await baseQuery({

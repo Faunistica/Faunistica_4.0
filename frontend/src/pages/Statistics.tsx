@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import { type FC, useState } from 'react';
 import { useAppSelector } from '@/store/store';
 import { statsAPI } from '@/api/statsAPI';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +14,10 @@ import {
     Calendar,
     TrendingUp,
     Layers,
+    Search,
+    ArrowLeft,
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { StatisticsSkeleton } from '@/components/statistics/Skeleton';
 import { PieChartCard } from '@/components/statistics/PieChartCard';
 import { CumulativeChart } from '@/components/statistics/CumulativeChart';
@@ -133,7 +136,18 @@ const Statistics: FC = () => {
 
     const [downloadReport] = statsAPI.useDownloadReportMutation();
 
+    const [fiendName, setFiendName] = useState<string | null>(null);
+    const [searchInput, setSearchInput] = useState('');
+
+    const {
+        data: fiendStats,
+        isLoading: fiendLoading,
+        isError: fiendError,
+    } = statsAPI.useGetUserStatsByNameQuery(fiendName!, { skip: !fiendName });
+
     const isLoading = projectLoading || userLoading;
+
+    const displayStats = fiendName ? fiendStats : userStats;
 
     if (isLoading) {
         return <StatisticsSkeleton />;
@@ -237,36 +251,94 @@ const Statistics: FC = () => {
                     </Card>
                 )}
 
+            <Card>
+                <CardContent className="flex items-center gap-3 pt-6">
+                    <div className="relative flex-1">
+                        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            placeholder="Поиск пользователя по имени..."
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            onKeyDown={(e) =>
+                                e.key === 'Enter' && setFiendName(searchInput.trim() || null)
+                            }
+                            className="pl-10"
+                        />
+                    </div>
+                    <Button
+                        variant="default"
+                        onClick={() => setFiendName(searchInput.trim() || null)}
+                        disabled={!searchInput.trim()}
+                    >
+                        Найти
+                    </Button>
+                    {fiendName && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                setFiendName(null);
+                                setSearchInput('');
+                            }}
+                        >
+                            <ArrowLeft className="mr-1 size-4" />
+                            К своей статистике
+                        </Button>
+                    )}
+                </CardContent>
+            </Card>
+
             <div className="space-y-3">
                 <h2 className="font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
-                    Личная статистика
+                    {fiendName
+                        ? `Статистика пользователя ${fiendStats?.name ?? fiendName}`
+                        : 'Личная статистика'}
                 </h2>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {personalMainCards.map(({ key, icon, label, field }) => (
-                        <StatCard key={key} icon={icon} label={label} value={userStats?.[field]} />
-                    ))}
-                    {personalDetailedCards.map(({ key, icon, label, field }) => (
-                        <StatCard key={key} icon={icon} label={label} value={userStats?.[field]} />
-                    ))}
-                    {userStats?.most_common_year != null && (
-                        <StatCard
-                            icon={Calendar}
-                            label="Чаще всего год"
-                            value={userStats.most_common_year}
-                        />
-                    )}
-                </div>
-                <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
-                    Наиболее распространённые
-                </h2>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    {commonLabels.map(({ key, label, field }) => (
-                        <LabelCard key={key} label={label} value={userStats?.[field]} />
-                    ))}
-                </div>
+
+                {fiendName && fiendLoading && <StatisticsSkeleton />}
+                {fiendName && fiendError && (
+                    <p className="text-sm text-red-500">Пользователь «{fiendName}» не найден</p>
+                )}
+                {(!fiendName || (fiendStats && !fiendLoading)) && (
+                    <>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {personalMainCards.map(({ key, icon, label, field }) => (
+                                <StatCard
+                                    key={key}
+                                    icon={icon}
+                                    label={label}
+                                    value={displayStats?.[field]}
+                                />
+                            ))}
+                            {personalDetailedCards.map(({ key, icon, label, field }) => (
+                                <StatCard
+                                    key={key}
+                                    icon={icon}
+                                    label={label}
+                                    value={displayStats?.[field]}
+                                />
+                            ))}
+                            {displayStats?.most_common_year != null && (
+                                <StatCard
+                                    icon={Calendar}
+                                    label="Чаще всего год"
+                                    value={displayStats.most_common_year}
+                                />
+                            )}
+                        </div>
+                        <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
+                            Наиболее распространённые
+                        </h2>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {commonLabels.map(({ key, label, field }) => (
+                                <LabelCard key={key} label={label} value={displayStats?.[field]} />
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
 
-            <PieChartCard data={userStats} error={userError} />
+            <PieChartCard data={displayStats} error={fiendName ? fiendError : userError} />
         </div>
     );
 };
