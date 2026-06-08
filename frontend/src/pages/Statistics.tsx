@@ -251,49 +251,52 @@ const Statistics: FC = () => {
                     </Card>
                 )}
 
-            <Card>
-                <CardContent className="flex items-center gap-3 pt-6">
-                    <div className="relative flex-1">
-                        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                            placeholder="Поиск пользователя по имени..."
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            onKeyDown={(e) =>
-                                e.key === 'Enter' && setFiendName(searchInput.trim() || null)
-                            }
-                            className="pl-10"
-                        />
-                    </div>
-                    <Button
-                        variant="default"
-                        onClick={() => setFiendName(searchInput.trim() || null)}
-                        disabled={!searchInput.trim()}
-                    >
-                        Найти
-                    </Button>
-                    {fiendName && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                                setFiendName(null);
-                                setSearchInput('');
-                            }}
-                        >
-                            <ArrowLeft className="mr-1 size-4" />
-                            К своей статистике
-                        </Button>
-                    )}
-                </CardContent>
-            </Card>
-
             <div className="space-y-3">
-                <h2 className="font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
-                    {fiendName
-                        ? `Статистика пользователя ${fiendStats?.name ?? fiendName}`
-                        : 'Личная статистика'}
-                </h2>
+                <div className="flex items-end justify-between">
+                    <h2 className="mb-3 font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
+                        {fiendName
+                            ? `Статистика пользователя ${fiendStats?.name ?? fiendName}`
+                            : 'Личная статистика'}
+                    </h2>
+                    <div className="flex h-16 flex-col-reverse items-end justify-baseline">
+                        <Card className="mb-1 flex flex-row items-center gap-3 p-1">
+                            <div className="relative flex-1">
+                                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    placeholder="Поиск по имени..."
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    onKeyDown={(e) =>
+                                        e.key === 'Enter' &&
+                                        setFiendName(searchInput.trim() || null)
+                                    }
+                                    className="pl-10"
+                                />
+                            </div>
+                            <Button
+                                variant="default"
+                                onClick={() => setFiendName(searchInput.trim() || null)}
+                                disabled={!searchInput.trim()}
+                            >
+                                Найти
+                            </Button>
+                        </Card>
+                        {fiendName && (
+                            <Button
+                                className="px-0"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    setFiendName(null);
+                                    setSearchInput('');
+                                }}
+                            >
+                                <ArrowLeft className="size-4" />
+                                К своей статистике
+                            </Button>
+                        )}
+                    </div>
+                </div>
 
                 {fiendName && fiendLoading && <StatisticsSkeleton />}
                 {fiendName && fiendError && (
@@ -318,13 +321,6 @@ const Statistics: FC = () => {
                                     value={displayStats?.[field]}
                                 />
                             ))}
-                            {displayStats?.most_common_year != null && (
-                                <StatCard
-                                    icon={Calendar}
-                                    label="Чаще всего год"
-                                    value={displayStats.most_common_year}
-                                />
-                            )}
                         </div>
                         <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
                             Наиболее распространённые

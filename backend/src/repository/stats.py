@@ -478,7 +478,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
             "Could not query legacy records for user most_common_year", exc_info=True
         )
 
-    result = {
+    result: UserStats = {
         "records_entered": records_entered or 0,
         "publications_processed": publications_processed or 0,
         "most_common_family": most_common_family,
