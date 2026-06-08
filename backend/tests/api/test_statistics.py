@@ -73,6 +73,7 @@ async def test_get_project_statistics(
     assert "processed_publications_count" in data
     assert data["total_volunteers"] >= 1
     assert "total_users" in data
+    assert data["total_users"] >= 1
     assert data["total_records"] >= 1
     assert data["species_count"] >= 1
 

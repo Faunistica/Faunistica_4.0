@@ -3,15 +3,17 @@ import logging
 from cachetools import TTLCache
 from sqlalchemy import func, select, text
 from sqlalchemy.engine import Row
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config import settings
 from core.enums import RecordType, UserState
 from core.model import Action, EventRecord, Publication, User
 from schema.common import ProjectStats, TopSpeciesItem, UserStats
 
 logger = logging.getLogger(__name__)
 
-_project_stats_cache = TTLCache(maxsize=10, ttl=300)
+_project_stats_cache = TTLCache(maxsize=1, ttl=3600)
 _user_stats_cache = TTLCache(maxsize=1024, ttl=300)
 
 
@@ -39,8 +41,10 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
                 text("SELECT COUNT(*) FROM records WHERE type = 'rec_ok'")
             )
         total_records = (total_records or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records table for total_records")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records table for total_records", exc_info=True
+        )
 
     species_count = await session.scalar(
         select(func.count(func.distinct(EventRecord.genus + " " + EventRecord.species)))
@@ -50,11 +54,15 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(DISTINCT tax_gen || ' ' || tax_sp) FROM records WHERE type = 'rec_ok'")
+                text(
+                    "SELECT COUNT(DISTINCT tax_gen || ' ' || tax_sp) FROM records WHERE type = 'rec_ok'"
+                )
             )
         species_count = (species_count or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for species_count")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for species_count", exc_info=True
+        )
 
     processed_publications = await session.scalar(
         select(func.count(func.distinct(Action.object)))
@@ -70,11 +78,15 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(DISTINCT tax_fam) FROM records WHERE type = 'rec_ok'")
+                text(
+                    "SELECT COUNT(DISTINCT tax_fam) FROM records WHERE type = 'rec_ok'"
+                )
             )
         families_count = (families_count or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for families_count")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for families_count", exc_info=True
+        )
 
     checks_count = await session.scalar(
         select(func.count())
@@ -84,11 +96,13 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(*) FROM records WHERE type IN ('check_ok', 'check_fail')")
+                text(
+                    "SELECT COUNT(*) FROM records WHERE type IN ('check_ok', 'check_fail')"
+                )
             )
         checks_count = (checks_count or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for checks_count")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for checks_count", exc_info=True)
 
     failed_records = await session.scalar(
         select(func.count())
@@ -101,17 +115,10 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
                 text("SELECT COUNT(*) FROM records WHERE type = 'rec_fail'")
             )
         failed_records = (failed_records or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for failed_records")
-
-    total_users = await session.scalar(
-        select(func.count())
-        .select_from(User)
-        .where(
-            (User.reg_stat == UserState.REG_COMPLETED)
-            | (User.reg_stat >= UserState.SUPPORT)
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for failed_records", exc_info=True
         )
-    )
 
     result = ProjectStats(
         total_volunteers=total_volunteers or 0,
@@ -121,7 +128,7 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         families_count=families_count or 0,
         checks_count=checks_count or 0,
         failed_records=failed_records or 0,
-        total_users=total_users or 0,
+        total_users=total_volunteers or 0,
     )
     _project_stats_cache["project_stats"] = result
     return result
@@ -148,12 +155,16 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(*) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                text(
+                    "SELECT COUNT(*) FROM records WHERE user_id = :uid AND type = 'rec_ok'"
+                ),
                 {"uid": user_id},
             )
         records_entered = (records_entered or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for user records_entered")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user records_entered", exc_info=True
+        )
 
     publications_processed = await session.scalar(
         select(func.count(func.distinct(EventRecord.publ_id)))
@@ -163,12 +174,17 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(DISTINCT publ_id) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                text(
+                    "SELECT COUNT(DISTINCT publ_id) FROM records WHERE user_id = :uid AND type = 'rec_ok'"
+                ),
                 {"uid": user_id},
             )
         publications_processed = (publications_processed or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for user publications_processed")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user publications_processed",
+            exc_info=True,
+        )
 
     most_common_family = await session.scalar(
         select(EventRecord.family)
@@ -194,8 +210,10 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
                 {"uid": user_id},
             )
         most_common_family = result.scalar()
-    except Exception:
-        logger.warning("Could not query legacy records for user most_common_family")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user most_common_family", exc_info=True
+        )
 
     most_common_genus = await session.scalar(
         select(EventRecord.genus)
@@ -221,8 +239,10 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
                 {"uid": user_id},
             )
         most_common_genus = result.scalar()
-    except Exception:
-        logger.warning("Could not query legacy records for user most_common_genus")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user most_common_genus", exc_info=True
+        )
 
     most_common_species = await session.scalar(
         select(EventRecord.genus + " " + EventRecord.species)
@@ -250,8 +270,10 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
                 {"uid": user_id},
             )
         most_common_species = result.scalar()
-    except Exception:
-        logger.warning("Could not query legacy records for user most_common_species")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user most_common_species", exc_info=True
+        )
 
     top_species_stmt = (
         select(
@@ -290,7 +312,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
             TopSpeciesItem(species=f"{g} {s}".strip(), count=c)
             for (g, s), c in top_sorted
         ]
-    except Exception:
+    except SQLAlchemyError:
         top_species = [
             TopSpeciesItem(species=f"{r.genus} {r.species}".strip(), count=r.cnt)
             for r in rows
@@ -307,12 +329,16 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(*) FROM records WHERE user_id = :uid AND type IN ('check_ok', 'check_fail')"),
+                text(
+                    "SELECT COUNT(*) FROM records WHERE user_id = :uid AND type IN ('check_ok', 'check_fail')"
+                ),
                 {"uid": user_id},
             )
         checks_count = (checks_count or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for user checks_count")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user checks_count", exc_info=True
+        )
 
     failed_records = await session.scalar(
         select(func.count())
@@ -322,12 +348,16 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(*) FROM records WHERE user_id = :uid AND type = 'rec_fail'"),
+                text(
+                    "SELECT COUNT(*) FROM records WHERE user_id = :uid AND type = 'rec_fail'"
+                ),
                 {"uid": user_id},
             )
         failed_records = (failed_records or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for user failed_records")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user failed_records", exc_info=True
+        )
 
     total_individuals = await session.scalar(
         select(func.sum(func.ceil(EventRecord.quantity)))
@@ -341,12 +371,16 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT SUM(abu) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                text(
+                    "SELECT SUM(abu) FROM records WHERE user_id = :uid AND type = 'rec_ok'"
+                ),
                 {"uid": user_id},
             )
         total_individuals = (total_individuals or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for user total_individuals")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user total_individuals", exc_info=True
+        )
 
     distinct_families = await session.scalar(
         select(func.count(func.distinct(EventRecord.family)))
@@ -356,12 +390,16 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(DISTINCT tax_fam) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                text(
+                    "SELECT COUNT(DISTINCT tax_fam) FROM records WHERE user_id = :uid AND type = 'rec_ok'"
+                ),
                 {"uid": user_id},
             )
         distinct_families = (distinct_families or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for user distinct_families")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user distinct_families", exc_info=True
+        )
 
     distinct_genera = await session.scalar(
         select(func.count(func.distinct(EventRecord.genus)))
@@ -371,12 +409,16 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(DISTINCT tax_gen) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                text(
+                    "SELECT COUNT(DISTINCT tax_gen) FROM records WHERE user_id = :uid AND type = 'rec_ok'"
+                ),
                 {"uid": user_id},
             )
         distinct_genera = (distinct_genera or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for user distinct_genera")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user distinct_genera", exc_info=True
+        )
 
     distinct_species = await session.scalar(
         select(func.count(func.distinct(EventRecord.species)))
@@ -386,12 +428,16 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     try:
         async with session.begin_nested():
             result = await session.execute(
-                text("SELECT COUNT(DISTINCT tax_gen || ' ' || tax_sp) FROM records WHERE user_id = :uid AND type = 'rec_ok'"),
+                text(
+                    "SELECT COUNT(DISTINCT tax_gen || ' ' || tax_sp) FROM records WHERE user_id = :uid AND type = 'rec_ok'"
+                ),
                 {"uid": user_id},
             )
         distinct_species = (distinct_species or 0) + (result.scalar() or 0)
-    except Exception:
-        logger.warning("Could not query legacy records for user distinct_species")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user distinct_species", exc_info=True
+        )
 
     most_common_year = await session.scalar(
         select(Publication.year)
@@ -427,8 +473,10 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
                 {"uid": user_id},
             )
         most_common_year = result.scalar()
-    except Exception:
-        logger.warning("Could not query legacy records for user most_common_year")
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for user most_common_year", exc_info=True
+        )
 
     result = {
         "records_entered": records_entered or 0,
@@ -503,7 +551,7 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
     if (cached := _project_stats_cache.get("progress")) is not None:
         return cached
 
-    admin_ids = [911269241, 412819044, 950994899]
+    admin_ids = settings.ADMIN_USER_IDS
     total_stmt = (
         select(func.count())
         .select_from(Publication)
@@ -543,8 +591,8 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
             )
             for publ_id, cnt in rows:
                 counts[publ_id] = counts.get(publ_id, 0) + cnt
-    except Exception:
-        logger.warning("Could not query legacy records for progress")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for progress", exc_info=True)
 
     for publ_id, value in counts.items():
         counts[publ_id] = min(value, 3)

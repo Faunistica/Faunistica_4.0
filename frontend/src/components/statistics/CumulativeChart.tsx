@@ -35,8 +35,9 @@ export function CumulativeChart({
           <XAxis
             dataKey="date"
             tick={{ fontSize: 10 }}
-            tickFormatter={(v) => {
+            tickFormatter={(v: number | string) => {
               const d = new Date(v);
+              if (isNaN(d.getTime())) return "-";
               return `${d.getMonth() + 1}.${d.getFullYear().toString().slice(2)}`;
             }}
             className="text-muted-foreground"

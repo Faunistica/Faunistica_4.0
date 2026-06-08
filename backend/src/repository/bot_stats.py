@@ -2,6 +2,7 @@ import logging
 
 from cachetools import TTLCache
 from sqlalchemy import func, select, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.enums import RecordType, UserState
@@ -73,8 +74,8 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
                 text("SELECT COUNT(*) FROM records WHERE type = 'rec_ok'")
             )
         rec_ok += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for rec_ok")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for rec_ok", exc_info=True)
 
     rec_fail = await session.scalar(
         select(func.count())
@@ -88,8 +89,8 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
                 text("SELECT COUNT(*) FROM records WHERE type = 'rec_fail'")
             )
         rec_fail += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for rec_fail")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for rec_fail", exc_info=True)
     rec_fail_ratio = round(rec_fail / rec_ok, 2) if rec_ok > 0 else None
 
     check_ok = await session.scalar(
@@ -104,8 +105,8 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
                 text("SELECT COUNT(*) FROM records WHERE type = 'check_ok'")
             )
         check_ok += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for check_ok")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for check_ok", exc_info=True)
 
     check_fail = await session.scalar(
         select(func.count())
@@ -119,8 +120,8 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
                 text("SELECT COUNT(*) FROM records WHERE type = 'check_fail'")
             )
         check_fail += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for check_fail")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for check_fail", exc_info=True)
     check_ratio = round((check_ok + check_fail) / rec_ok, 1) if rec_ok > 0 else None
 
     species_count = await session.scalar(
@@ -135,8 +136,8 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
                 text("SELECT COUNT(DISTINCT tax_gen || ' ' || tax_sp) FROM records WHERE type = 'rec_ok'")
             )
         species_count += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for species_count")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for species_count", exc_info=True)
 
     families_count = await session.scalar(
         select(func.count(func.distinct(EventRecord.family)))
@@ -150,8 +151,8 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
                 text("SELECT COUNT(DISTINCT tax_fam) FROM records WHERE type = 'rec_ok'")
             )
         families_count += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for families_count")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for families_count", exc_info=True)
 
     result = {
         "total_users": total_users,
@@ -187,8 +188,8 @@ async def get_bot_user_stats(session: AsyncSession, user_id: int) -> dict:
                 {"uid": user_id},
             )
         processed_publs += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for bot user processed_publs")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for bot user processed_publs", exc_info=True)
 
     rec_ok = await session.scalar(
         select(func.count())
@@ -203,8 +204,8 @@ async def get_bot_user_stats(session: AsyncSession, user_id: int) -> dict:
                 {"uid": user_id},
             )
         rec_ok += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for bot user rec_ok")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for bot user rec_ok", exc_info=True)
 
     checks = await session.scalar(
         select(func.count())
@@ -222,8 +223,8 @@ async def get_bot_user_stats(session: AsyncSession, user_id: int) -> dict:
                 {"uid": user_id},
             )
         checks += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for bot user checks")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for bot user checks", exc_info=True)
     check_ratio = round(checks / rec_ok, 1) if rec_ok > 0 else None
 
     species_count = await session.scalar(
@@ -239,8 +240,8 @@ async def get_bot_user_stats(session: AsyncSession, user_id: int) -> dict:
                 {"uid": user_id},
             )
         species_count += result.scalar() or 0
-    except Exception:
-        logger.warning("Could not query legacy records for bot user species_count")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for bot user species_count", exc_info=True)
 
     most_common_species = await session.scalar(
         select(EventRecord.genus + " " + EventRecord.species)
@@ -268,8 +269,8 @@ async def get_bot_user_stats(session: AsyncSession, user_id: int) -> dict:
                 {"uid": user_id},
             )
         most_common_species = result.scalar()
-    except Exception:
-        logger.warning("Could not query legacy records for bot user most_common_species")
+    except SQLAlchemyError:
+        logger.warning("Could not query legacy records for bot user most_common_species", exc_info=True)
 
     result = {
         "processed_publs": processed_publs,

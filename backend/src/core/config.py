@@ -53,6 +53,7 @@ class BotSettings(CamelCaseSettings):
     BOT_TOKEN: SecretStr = Field(init=False)
     BOT_PROXY: Url | None = None
     ADMIN_CHAT_ID: int = Field(init=False)
+    ADMIN_USER_IDS: list[int] = [911269241, 412819044, 950994899]
 
 
 class LoggingSettings(CamelCaseSettings):

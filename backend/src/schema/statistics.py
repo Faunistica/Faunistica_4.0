@@ -48,3 +48,5 @@ class UserStatisticsResponse(BaseModel):
     distinct_genera: int = 0
     distinct_species: int = 0
     most_common_year: int | None = None
+
+    model_config = ConfigDict(from_attributes=True)

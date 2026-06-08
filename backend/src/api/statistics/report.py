@@ -7,7 +7,7 @@ from openpyxl import Workbook
 
 from core.dependencies import DBSession
 from core.exceptions import InternalError
-from repository.stats import get_project_statistics, get_progress
+from repository.stats import get_progress, get_project_statistics
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ async def download_report(session: DBSession) -> StreamingResponse:
     wb = Workbook()
     ws = wb.active
     if ws is None:
-        raise InternalError("couldn't create xlxs response")
+        raise InternalError("couldn't create xlsx response")
 
     ws.title = "Report"
 

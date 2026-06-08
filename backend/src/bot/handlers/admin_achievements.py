@@ -37,7 +37,7 @@ async def achievements_command(message: Message) -> None:
             [
                 row.user_id,
                 row.object,
-                str(row.datetime),
+                row.datetime,
                 row.name,
                 row.tlg_name,
                 row.tlg_username,
