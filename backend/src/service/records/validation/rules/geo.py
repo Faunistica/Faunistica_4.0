@@ -2,8 +2,6 @@ from schema.records import RecordData
 from service.geo import UralBorder
 
 from ..constants import (
-    COORD_PRECISION_MAX,
-    COORD_PRECISION_MIN,
     COORD_UNCERTAINTY_MAX,
     COORD_UNCERTAINTY_MIN,
     GEOREF_SOURCES,
@@ -12,7 +10,7 @@ from ..constants import (
     REGION_LON_MAX,
     REGION_LON_MIN,
 )
-from ..helpers import decimal_places, should_skip_geo
+from ..helpers import axis_finest_dp, should_skip_geo, split_verbatim_coords
 from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
 
 
@@ -48,8 +46,11 @@ rule(
 def rule_latitude_precision(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
         return None
-    lat = data.latitude
-    if lat is not None and decimal_places(lat) < COORD_PRECISION_MIN:
+    lat_part, _ = split_verbatim_coords(data.verbatimcoordinates)
+    if lat_part is None:
+        return None
+    dp = axis_finest_dp(lat_part)
+    if dp is not None and dp < 1 and "." in lat_part:
         return "Недостаточна точность широты"
     return None
 
@@ -58,8 +59,11 @@ def rule_latitude_precision(data: RecordData, ctx: RuleContext) -> str | None:
 def rule_latitude_excess_precision(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
         return None
-    lat = data.latitude
-    if lat is not None and decimal_places(lat) > COORD_PRECISION_MAX:
+    lat_part, _ = split_verbatim_coords(data.verbatimcoordinates)
+    if lat_part is None:
+        return None
+    dp = axis_finest_dp(lat_part)
+    if dp is not None and dp > 4:
         return "Невозможно большая точность широты"
     return None
 
@@ -68,8 +72,11 @@ def rule_latitude_excess_precision(data: RecordData, ctx: RuleContext) -> str | 
 def rule_longitude_precision(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
         return None
-    lon = data.longitude
-    if lon is not None and decimal_places(lon) < COORD_PRECISION_MIN:
+    _, lon_part = split_verbatim_coords(data.verbatimcoordinates)
+    if lon_part is None:
+        return None
+    dp = axis_finest_dp(lon_part)
+    if dp is not None and dp < 1 and "." in lon_part:
         return "Недостаточна точность долготы"
     return None
 
@@ -78,8 +85,11 @@ def rule_longitude_precision(data: RecordData, ctx: RuleContext) -> str | None:
 def rule_longitude_excess_precision(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
         return None
-    lon = data.longitude
-    if lon is not None and decimal_places(lon) > COORD_PRECISION_MAX:
+    _, lon_part = split_verbatim_coords(data.verbatimcoordinates)
+    if lon_part is None:
+        return None
+    dp = axis_finest_dp(lon_part)
+    if dp is not None and dp > 4:
         return "Невозможно большая точность долготы"
     return None
 

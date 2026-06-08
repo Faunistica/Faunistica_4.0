@@ -7,8 +7,6 @@ import pytest
 from schema.records import RecordData, Specimen
 from service.records.validation import validate_record
 from service.records.validation.constants import (
-    COORD_PRECISION_MAX,
-    COORD_PRECISION_MIN,
     COORD_UNCERTAINTY_MAX,
     COORD_UNCERTAINTY_MIN,
     GEOREF_SOURCES,
@@ -81,50 +79,62 @@ class TestGeoValidation:
             for e in errors.errors
         )
 
-    # ── Coordinate precision ───────────────────────────────────────────
+    # ── Coordinate precision (from verbatimcoordinates) ────────────────
 
     @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
-    def test_latitude_insufficient_precision(self, _m) -> None:
+    def test_lat_insufficient_precision(self, _m) -> None:
+        data = _valid_data(verbatimcoordinates="55° .' N, 60° 55' E")
+        errors = validate_record(data, language="rus")
+        assert any(
+            e.code == "precision" and "latitude" in (e.fields or [])
+            for e in errors.errors
+        )
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_lat_excess_precision(self, _m) -> None:
+        data = _valid_data(verbatimcoordinates="55° 30.12345' N, 60° 55' E")
+        errors = validate_record(data, language="rus")
+        assert any(
+            e.code == "precision" and "latitude" in (e.fields or [])
+            for e in errors.errors
+        )
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_lon_insufficient_precision(self, _m) -> None:
+        data = _valid_data(verbatimcoordinates="55° 55' N, 60° .' E")
+        errors = validate_record(data, language="rus")
+        assert any(
+            e.code == "precision" and "longitude" in (e.fields or [])
+            for e in errors.errors
+        )
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_lon_excess_precision(self, _m) -> None:
+        data = _valid_data(verbatimcoordinates="55° 55' N, 60° 30.12345' E")
+        errors = validate_record(data, language="rus")
+        assert any(
+            e.code == "precision" and "longitude" in (e.fields or [])
+            for e in errors.errors
+        )
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_dm_valid_precision(self, _m) -> None:
+        """DM input passes both precision checks."""
+        data = _valid_data(verbatimcoordinates="55° 30' N, 60° 55' E")
+        errors = validate_record(data, language="rus")
+        assert not any(e.code == "precision" for e in errors.errors)
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_dms_valid_precision(self, _m) -> None:
+        """DMS input passes both precision checks."""
+        data = _valid_data(verbatimcoordinates="55° 30' 45'' N, 60° 55' 30'' E")
+        errors = validate_record(data, language="rus")
+        assert not any(e.code == "precision" for e in errors.errors)
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    def test_no_verbatim_skips_precision(self, _m) -> None:
+        """Map/DD input without verbatimcoordinates skips precision checks."""
         data = _valid_data(latitude="55.5")
-        errors = validate_record(data, language="rus")
-        assert any(
-            e.code == "precision" and "latitude" in (e.fields or [])
-            for e in errors.errors
-        )
-
-    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
-    def test_latitude_excess_precision(self, _m) -> None:
-        data = _valid_data(latitude="55.1234567")
-        errors = validate_record(data, language="rus")
-        assert any(
-            e.code == "precision" and "latitude" in (e.fields or [])
-            for e in errors.errors
-        )
-
-    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
-    def test_longitude_insufficient_precision(self, _m) -> None:
-        data = _valid_data(longitude="37.5")
-        errors = validate_record(data, language="rus")
-        assert any(
-            e.code == "precision" and "longitude" in (e.fields or [])
-            for e in errors.errors
-        )
-
-    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
-    def test_longitude_excess_precision(self, _m) -> None:
-        data = _valid_data(longitude="37.1234567")
-        errors = validate_record(data, language="rus")
-        assert any(
-            e.code == "precision" and "longitude" in (e.fields or [])
-            for e in errors.errors
-        )
-
-    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
-    @pytest.mark.parametrize("n", range(COORD_PRECISION_MIN, COORD_PRECISION_MAX + 1))
-    def test_valid_precision_levels(self, _m, n: int) -> None:
-        lat = f"55.{'1' * n}"
-        lon = f"37.{'2' * n}"
-        data = _valid_data(latitude=lat, longitude=lon)
         errors = validate_record(data, language="rus")
         assert not any(e.code == "precision" for e in errors.errors)
 
