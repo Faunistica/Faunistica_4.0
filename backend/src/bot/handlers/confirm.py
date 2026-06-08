@@ -85,11 +85,12 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
 
         tlg_name = message.from_user.full_name
         tlg_username = message.from_user.username
+        #try except поймать ошибку, если что-то сломается в upd
         await update_pending_by_code(
             session,
             code,
             status=PendingStatus.REGISTRATION,
-            reg_run=datetime.now(UTC),
+            reg_run=datetime.now(UTC).replace(tzinfo=None),
             telegram_id=message.from_user.id,
             telegram_username=tlg_username,
             telegram_name=tlg_name,
