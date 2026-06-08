@@ -76,22 +76,12 @@ class UserUpdateMe(BaseModel):
             raise ValueError(result.error)
         return age
 
-    @field_validator("lng")
-    @classmethod
-    def validate_lng_field(cls, lng: UserLanguage | None) -> UserLanguage | None:
-        if lng is None:
-            return None
-        result = UserValidators.validate_language(lng)
-        if isinstance(result, MsgErr):
-            raise ValueError(result.error)
-        return lng
-
     @field_validator("email")
     @classmethod
     def validate_email_field(cls, email: str | None) -> str | None:
         if email is None:
             return None
-        result = UserValidators.validate_language(email)
+        result = UserValidators.validate_email(email)
         if isinstance(result, MsgErr):
             raise ValueError(result.error)
         return email
