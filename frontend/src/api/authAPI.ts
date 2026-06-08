@@ -92,7 +92,7 @@ export const authAPI = createApi({
         }),
         register: build.mutation<Types.RegisterResponse, Types.RegisterRequest>({
             query: (userData) => ({
-                url: '/auth/form',
+                url: '/auth/survey',
                 method: 'POST',
                 body: userData,
             }),
