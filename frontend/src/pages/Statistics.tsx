@@ -1,4 +1,5 @@
 import { type FC, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useAppSelector } from '@/store/store';
 import { statsAPI } from '@/api/statsAPI';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import {
     Search,
     ArrowLeft,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { StatisticsSkeleton } from '@/components/statistics/Skeleton';
 import { PieChartCard } from '@/components/statistics/PieChartCard';
@@ -136,8 +138,9 @@ const Statistics: FC = () => {
 
     const [downloadReport] = statsAPI.useDownloadReportMutation();
 
-    const [fiendName, setFiendName] = useState<string | null>(null);
-    const [searchInput, setSearchInput] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const fiendName = searchParams.get('name') || null;
+    const [searchInput, setSearchInput] = useState(fiendName ?? '');
 
     const {
         data: fiendStats,
@@ -266,16 +269,21 @@ const Statistics: FC = () => {
                                     placeholder="Поиск по имени..."
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
-                                    onKeyDown={(e) =>
-                                        e.key === 'Enter' &&
-                                        setFiendName(searchInput.trim() || null)
-                                    }
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            const name = searchInput.trim();
+                                            setSearchParams(name ? { name } : {});
+                                        }
+                                    }}
                                     className="pl-10"
                                 />
                             </div>
                             <Button
                                 variant="default"
-                                onClick={() => setFiendName(searchInput.trim() || null)}
+                                onClick={() => {
+                                    const name = searchInput.trim();
+                                    setSearchParams(name ? { name } : {});
+                                }}
                                 disabled={!searchInput.trim()}
                             >
                                 Найти
@@ -287,7 +295,7 @@ const Statistics: FC = () => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
-                                    setFiendName(null);
+                                    setSearchParams({});
                                     setSearchInput('');
                                 }}
                             >
@@ -305,23 +313,47 @@ const Statistics: FC = () => {
                 {(!fiendName || (fiendStats && !fiendLoading)) && (
                     <>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {personalMainCards.map(({ key, icon, label, field }) => (
-                                <StatCard
-                                    key={key}
-                                    icon={icon}
-                                    label={label}
-                                    value={displayStats?.[field]}
-                                />
-                            ))}
-                            {personalDetailedCards.map(({ key, icon, label, field }) => (
-                                <StatCard
-                                    key={key}
-                                    icon={icon}
-                                    label={label}
-                                    value={displayStats?.[field]}
-                                />
-                            ))}
-                        </div>
+                                {personalMainCards.map(({ key, icon, label, field }) => (
+                                    <StatCard
+                                        key={key}
+                                        icon={icon}
+                                        label={label}
+                                        value={displayStats?.[field]}
+                                    />
+                                ))}
+                                {personalDetailedCards.slice(0, 4).map(({ key, icon, label, field }) => (
+                                    <StatCard
+                                        key={key}
+                                        icon={icon}
+                                        label={label}
+                                        value={displayStats?.[field]}
+                                    />
+                                ))}
+                            </div>
+                            <div
+                                className={cn(
+                                    'grid grid-cols-1 gap-4 sm:grid-cols-2',
+                                    displayStats?.most_common_year != null
+                                        ? 'lg:grid-cols-3'
+                                        : 'lg:grid-cols-2',
+                                )}
+                            >
+                                {personalDetailedCards.slice(4).map(({ key, icon, label, field }) => (
+                                    <StatCard
+                                        key={key}
+                                        icon={icon}
+                                        label={label}
+                                        value={displayStats?.[field]}
+                                    />
+                                ))}
+                                {displayStats?.most_common_year != null && (
+                                    <StatCard
+                                        icon={Calendar}
+                                        label="Чаще всего год"
+                                        value={displayStats.most_common_year}
+                                    />
+                                )}
+                            </div>
                         <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
                             Наиболее распространённые
                         </h2>
