@@ -34,7 +34,6 @@ import {
 const PIE_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444"];
 
 const projectCards = [
-  { key: "records", icon: Database, label: "Всего записей", field: "total_records" as const },
   { key: "species", icon: Bug, label: "Видов", field: "species_count" as const },
   {
     key: "publications",
@@ -44,6 +43,7 @@ const projectCards = [
   },
   { key: "total_users", icon: Users, label: "Пользователей", field: "total_users" as const },
   { key: "families", icon: Layers, label: "Семейств", field: "families_count" as const },
+  { key: "records", icon: Database, label: "Всего записей", field: "total_records" as const },
   { key: "checks", icon: ShieldCheck, label: "Проверок", field: "checks_count" as const },
   { key: "failed", icon: XCircle, label: "Ошибочных записей", field: "failed_records" as const },
 ] as const;
