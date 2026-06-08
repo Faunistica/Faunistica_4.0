@@ -138,6 +138,34 @@ class TestGeoValidation:
         errors = validate_record(data, language="rus")
         assert not any(e.code == "precision" for e in errors.errors)
 
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    @pytest.mark.parametrize(
+        "coord_str",
+        [
+            "55°30' N,60° 55' E",
+            "55° 30'  N, 60°55' E",
+        ],
+    )
+    def test_verbatim_irregular_spacing(self, _m, coord_str: str) -> None:
+        """Irregular spacing in verbatimcoordinates still passes precision."""
+        data = _valid_data(verbatimcoordinates=coord_str)
+        errors = validate_record(data, language="rus")
+        assert not any(e.code == "precision" for e in errors.errors)
+
+    @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)
+    @pytest.mark.parametrize("field", ["latitude", "longitude"])
+    def test_blank_lat_lon_with_verbatim(self, _m, field: str) -> None:
+        """Blank lat/lon with verbatimcoordinates yields required, not out_of_range."""
+        data = _valid_data(**{field: ""}, verbatimcoordinates="55° 30' N, 60° 55' E")
+        errors = validate_record(data, language="rus")
+        assert any(
+            e.code == "required" and field in (e.fields or []) for e in errors.errors
+        )
+        assert not any(
+            e.code == "out_of_range" and field in (e.fields or [])
+            for e in errors.errors
+        )
+
     # ── Coordinate uncertainty ─────────────────────────────────────────
 
     @patch(f"{GEO_PATCH}.UralBorder.contains", return_value=True)

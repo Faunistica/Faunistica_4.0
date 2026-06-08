@@ -10,8 +10,8 @@ from ..constants import (
     REGION_LON_MAX,
     REGION_LON_MIN,
 )
-from ..helpers import axis_finest_dp, should_skip_geo, split_verbatim_coords
-from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
+from ..helpers import axis_finest_dp, nonblank, should_skip_geo, split_verbatim_coords
+from ..rules.base import RuleCategory, RuleContext, required, rule
 
 
 @rule(RuleCategory.GEO, ["latitude"], "required")
@@ -19,7 +19,7 @@ def rule_latitude_required(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
         return None
     v = data.latitude
-    if v is None or (isinstance(v, str) and not v.strip()):
+    if not nonblank(v):
         return "Широта не задана"
     return None
 
@@ -29,7 +29,7 @@ def rule_longitude_required(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
         return None
     v = data.longitude
-    if v is None or (isinstance(v, str) and not v.strip()):
+    if not nonblank(v):
         return "Долгота не задана"
     return None
 
@@ -114,17 +114,16 @@ def rule_coord_uncertainty_max(data: RecordData, ctx: RuleContext) -> str | None
     return None
 
 
-rule(
-    RuleCategory.GEO,
-    ["georef_source"],
-    "invalid",
-    in_set(
-        "georef_source",
-        GEOREF_SOURCES,
-        "Некорректный источник координат. Допустимые значения: "
-        + ", ".join(GEOREF_SOURCES),
-    ),
-)
+@rule(RuleCategory.GEO, ["georef_source"], "invalid")
+def rule_georef_source_invalid(data: RecordData, ctx: RuleContext) -> str | None:
+    v = data.georef_source
+    if not nonblank(v):
+        return None
+    if v not in GEOREF_SOURCES:
+        return "Некорректный источник координат. Допустимые значения: " + ", ".join(
+            GEOREF_SOURCES
+        )
+    return None
 
 
 @rule(RuleCategory.GEO, ["latitude"], "out_of_range")
@@ -132,7 +131,7 @@ def rule_latitude_region(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
         return None
     v = data.latitude
-    if v is None:
+    if not nonblank(v):
         return None
     try:
         lat = float(v)
@@ -148,7 +147,7 @@ def rule_longitude_region(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
         return None
     v = data.longitude
-    if v is None:
+    if not nonblank(v):
         return None
     try:
         lon = float(v)

@@ -1,4 +1,5 @@
 import re
+from typing import TypeGuard
 
 from schema.records import RecordData
 from service.records.validation.constants import CYRILLIC_LANGUAGES
@@ -6,6 +7,11 @@ from service.records.validation.constants import CYRILLIC_LANGUAGES
 _CYRILLIC_RE = re.compile(r"[А-Яа-яЁё]")
 
 _FORBIDDEN_CHARS_RE = re.compile(r"[\t\n\r\f\v]")
+
+
+def nonblank(v: str | None) -> TypeGuard[str]:
+    """True if v is a non-empty (after strip) string. Narrowes str|None → str."""
+    return v is not None and bool(v.strip())
 
 
 def decimal_places(value: float | str) -> int:
@@ -42,8 +48,8 @@ def should_skip_geo(data: RecordData) -> bool:
     return src is None or src.strip() == "" or src.strip().lower() == "none"
 
 
-_DM_AXIS_RE = re.compile(r"^(\d+)° ([\d.]+)' ([NSEW])$")
-_DMS_AXIS_RE = re.compile(r"^(\d+)° (\d+)' ([\d.]+)'' ([NSEW])$")
+_DM_AXIS_RE = re.compile(r"^(\d+)°\s*([\d.]+)'\s*([NSEW])$")
+_DMS_AXIS_RE = re.compile(r"^(\d+)°\s*(\d+)' ([\d.]+)''\s*([NSEW])$")
 
 
 def split_verbatim_coords(verbatim: str | None) -> tuple[str | None, str | None]:
