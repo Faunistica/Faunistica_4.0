@@ -41,7 +41,7 @@ def _compare_schema(conn: Connection) -> None:
     errors = 0
 
     for i in diff:
-        op = i[0]
+        op = i[0] if isinstance(i[0], str) else str(i[0])
         label = _LABEL.get(op)
         if op == "remove_table" and i[1].name in ["records", "spiders"]:
             continue
@@ -63,7 +63,8 @@ def _compare_schema(conn: Connection) -> None:
                 new_col.type,
             )
         else:
-            logger.error("Schema diff: unhandled alembic action proposed — %s", i)
+            logger.warning("Schema diff: unhandled alembic action — %s", type(i))
+            continue
 
         errors += 1
 

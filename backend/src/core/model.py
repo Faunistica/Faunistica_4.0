@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    JSON,
     Double,
     ForeignKey,
     Identity,
@@ -163,3 +164,51 @@ class EventRecord(Base):
     identification_remarks: Mapped[str | None] = mapped_column(
         "identificationremarks", Text
     )
+
+# === ГЕЙМИФИКАЦИЯ ===
+
+class Badge(Base):
+    __tablename__ = "badges"
+
+    id: Mapped[int] = mapped_column(Integer, Identity(start=1), primary_key=True)
+    badge_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    record_threshold: Mapped[int | None] = mapped_column(Integer)
+    conditions: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime_type] = mapped_column(TIMESTAMP, server_default=func.now())
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+
+
+class UserBadge(Base):
+    __tablename__ = "user_badges"
+
+    id: Mapped[int] = mapped_column(Integer, Identity(start=1), primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.user_id", ondelete="CASCADE"))
+    badge_id: Mapped[int] = mapped_column(Integer, ForeignKey("badges.id", ondelete="CASCADE"))
+    awarded_at: Mapped[datetime_type] = mapped_column(TIMESTAMP, server_default=func.now())
+    marathon_id: Mapped[int | None] = mapped_column(Integer)
+
+
+class Marathon(Base):
+    __tablename__ = "marathons"
+
+    id: Mapped[int] = mapped_column(Integer, Identity(start=1), primary_key=True)
+    name: Mapped[str] = mapped_column(String(256), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    starts_at: Mapped[datetime_type] = mapped_column(TIMESTAMP, nullable=False)
+    ends_at: Mapped[datetime_type] = mapped_column(TIMESTAMP, nullable=False)
+    rules: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime_type] = mapped_column(TIMESTAMP, server_default=func.now())
+
+
+class LeaderboardSnapshot(Base):
+    __tablename__ = "leaderboard_snapshots"
+
+    id: Mapped[int] = mapped_column(Integer, Identity(start=1), primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.user_id", ondelete="CASCADE"))
+    period: Mapped[str] = mapped_column(String(16), nullable=False)
+    record_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    rank_delta: Mapped[int | None] = mapped_column(Integer)
+    computed_at: Mapped[datetime_type] = mapped_column(TIMESTAMP, server_default=func.now())
