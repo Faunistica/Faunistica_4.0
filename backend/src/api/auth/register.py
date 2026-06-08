@@ -152,6 +152,7 @@ async def registration_status(
                 status=PendingStatus.CONFIRMED,
                 confirmed_at=datetime.now(UTC),
             )
+            await session.commit()
             return RegistrationStatusResponse(
                 status=pending.status,
                 user_id=current_user.user_id,
