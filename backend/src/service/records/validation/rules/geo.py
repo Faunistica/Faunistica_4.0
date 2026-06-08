@@ -15,6 +15,7 @@ from ..constants import (
 from ..helpers import decimal_places, should_skip_geo
 from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
 
+
 @rule(RuleCategory.GEO, ["latitude"], "required")
 def rule_latitude_required(data: RecordData, ctx: RuleContext) -> str | None:
     if should_skip_geo(data):
@@ -33,6 +34,8 @@ def rule_longitude_required(data: RecordData, ctx: RuleContext) -> str | None:
     if v is None or (isinstance(v, str) and not v.strip()):
         return "Долгота не задана"
     return None
+
+
 rule(
     RuleCategory.GEO,
     ["georef_source"],
@@ -100,6 +103,7 @@ def rule_coord_uncertainty_max(data: RecordData, ctx: RuleContext) -> str | None
         return "Радиус неточности координат недопустимо большой (более 15 км)"
     return None
 
+
 rule(
     RuleCategory.GEO,
     ["georef_source"],
@@ -111,6 +115,7 @@ rule(
         + ", ".join(GEOREF_SOURCES),
     ),
 )
+
 
 @rule(RuleCategory.GEO, ["latitude"], "out_of_range")
 def rule_latitude_region(data: RecordData, ctx: RuleContext) -> str | None:

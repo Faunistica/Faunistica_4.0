@@ -12,12 +12,16 @@ rule(
     required("family", "Семейство обязательно"),
 )
 rule(RuleCategory.TAXONOMY, ["genus"], "required", required("genus", "Род обязателен"))
-rule(
-    RuleCategory.TAXONOMY,
-    ["species"],
-    "required",
-    required("species", "Вид обязателен"),
-)
+
+
+@rule(RuleCategory.TAXONOMY, ["species"], "required")
+def rule_species_required(data: RecordData, ctx: RuleContext) -> str | None:
+    if data.tax_verbatim is True:
+        return None
+    v = data.species
+    if v is None or (isinstance(v, str) and not v.strip()):
+        return "Вид обязателен"
+    return None
 
 
 @rule(RuleCategory.TAXONOMY, ["genus"], "unknown")
