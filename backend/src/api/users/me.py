@@ -1,11 +1,11 @@
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
 from core.dependencies import DBSession, TokenUser
-from core.exceptions import MsgErr, UsernameAlreadyExistsError, UserNotFoundError
+from core.exceptions import MsgErr, UsernameAlreadyExistsError
 from core.security import get_password_hash
 from schema.user import UserFull, UserUpdateMe
 from service.user import UserService
@@ -20,10 +20,7 @@ async def get_current_user(
     token: TokenUser,
     user_service: Annotated[UserService, Depends()],
 ) -> UserFull:
-    user = await user_service.get(token.user_id)
-    if user is None:
-        logger.warning("User not found during lookup: %d", token.user_id)
-        raise UserNotFoundError(token.user_id)
+    user = await user_service.get_expect(token.user_id)
     return UserFull.model_validate(user)
 
 
@@ -46,6 +43,6 @@ async def update_current_user(
             raise UsernameAlreadyExistsError(validate_result.error)
     if "password" in update_data:
         update_data["hash"] = get_password_hash(update_data.pop("password"))
-        update_data["hash_date"] = datetime.now()
+        update_data["hash_date"] = datetime.now(UTC)
     await user_service.update_user_data(token.user_id, **update_data)
     await session.commit()

@@ -1,5 +1,6 @@
 import logging
 from enum import IntEnum, StrEnum
+from typing import Literal
 
 from aiogram.fsm.state import State
 from sqlalchemy import Integer, String, TypeDecorator
@@ -176,6 +177,7 @@ class PendingStatusType(TypeDecorator):
         value: int | None,
         dialect: Dialect,
     ) -> "PendingStatus | None":
-        if value is None:
-            return PendingStatus.CODE_PROCESSING
         return PendingStatus(value)
+
+
+type UserLanguage = Literal["eng", "rus", "all"]
