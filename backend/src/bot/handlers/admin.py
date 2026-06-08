@@ -32,17 +32,45 @@ async def reply(message: Message, bot: Bot) -> None:
         await message.answer(Messages.empty_response_to_user())
         return
 
-    original_message = message.reply_to_message.text
-    try:
-        user_id = int(
-            original_message.replace("\n", " ").split("ID: ")[1].split(" ")[0]
-        )
-    except (IndexError, ValueError):
+    user_id = _extract_user_id(message.reply_to_message.text)
+    if user_id is None:
         await message.answer(Messages.could_not_extract_id())
         return
 
     await bot.send_message(user_id, Messages.response_from_support(reply_text))
     await message.answer(Messages.response_sent())
+
+
+@router.message()
+async def reply_to_user(message: Message, bot: Bot) -> None:
+    if message.chat.id != settings.ADMIN_CHAT_ID:
+        return
+
+    if message.reply_to_message is None or message.reply_to_message.text is None:
+        return
+
+    if message.text is None or not message.text.strip():
+        return
+
+    if message.text.startswith("/"):
+        return
+
+    user_id = _extract_user_id(message.reply_to_message.text)
+    if user_id is None:
+        await message.answer(Messages.could_not_extract_id())
+        return
+
+    await bot.send_message(user_id, Messages.response_from_support(message.text))
+    await message.answer(Messages.response_sent())
+
+
+def _extract_user_id(text: str) -> int | None:
+    for id in ("ID: ", "🪪 ID: "):
+        try:
+            return int(text.replace("\n", " ").split(id)[1].split(" ")[0])
+        except (IndexError, ValueError):
+            continue
+    return None
 
 
 @router.message(Command("logs"))
