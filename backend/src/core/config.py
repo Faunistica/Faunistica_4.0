@@ -91,6 +91,7 @@ class TGAuthSettings(CamelCaseSettings):
     TG_AUTH_POLL_TIMEOUT_SECONDS: int = 25
     REGISTRATION_PENDING_CLEANUP_INTERVAL_SECONDS: int = 10 * 60  # 10 min
     REGISTRATION_PENDING_CONFIRMED_BACKLOG_SECONDS: int = 5 * 60  # 5 min
+    SURVEY_FILLING_INTERVAL_SECONDS: int = 30 * 60  # 30 min
 
 
 class Settings(

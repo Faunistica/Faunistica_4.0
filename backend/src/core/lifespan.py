@@ -18,7 +18,11 @@ from bot import bot
 from core.config import settings
 from core.database import _engine, get_session, init_db, ping_db
 from core.model import Base
-from repository.registration import delete_confirmed_pending, delete_expired_pending
+from repository.registration import (
+    delete_confirmed_pending,
+    delete_expired_pending,
+    delete_registration_pending,
+)
 from schema.geo import RegionData
 
 _ALEMBIC_CFG_PATH = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
@@ -121,17 +125,24 @@ async def _cleanup_pending_registrations() -> None:
                 confirmed_cutoff = now - timedelta(
                     seconds=settings.REGISTRATION_PENDING_CONFIRMED_BACKLOG_SECONDS
                 )
+                survey_cutoff = now - timedelta(
+                    seconds=settings.SURVEY_FILLING_INTERVAL_SECONDS
+                )
                 expired_count = await delete_expired_pending(
                     session, token_expired_cutoff
                 )
                 confirmed_count = await delete_confirmed_pending(
                     session, confirmed_cutoff
                 )
-                if expired_count or confirmed_count:
+                registration_count = await delete_registration_pending(
+                    session, survey_cutoff
+                )
+                if expired_count or confirmed_count or registration_count:
                     logger.info(
-                        "Cleaned pending registrations: expired=%d confirmed=%d",
+                        "Cleaned pending reg: expired=%d confirmed=%d on_survey=%d",
                         expired_count,
                         confirmed_count,
+                        registration_count,
                     )
                 await session.commit()
         except asyncio.CancelledError:

@@ -78,6 +78,15 @@ async def delete_expired_pending(session: AsyncSession, cutoff: datetime) -> int
     return getattr(result, "rowcount", 0) or 0
 
 
+async def delete_registration_pending(session: AsyncSession, cutoff: datetime) -> int:
+    stmt = delete(PendingRegistration).where(
+        PendingRegistration.status == PendingStatus.REGISTRATION,
+        PendingRegistration.reg_run < cutoff,
+    )
+    result = await session.execute(stmt)
+    return getattr(result, "rowcount", 0) or 0
+
+
 async def delete_confirmed_pending(session: AsyncSession, cutoff: datetime) -> int:
     stmt = delete(PendingRegistration).where(
         PendingRegistration.status == PendingStatus.CONFIRMED,

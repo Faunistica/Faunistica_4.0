@@ -146,6 +146,12 @@ async def registration_status(
         if pending.status == PendingStatus.AUTH:
             current_user = await get_validated_user(session, user_id)
             await create_auth_response(response, ip, current_user, action_service)
+            await update_pending_by_token(
+                session,
+                token,
+                status=PendingStatus.CONFIRMED,
+                confirmed_at=datetime.now(UTC),
+            )
             return RegistrationStatusResponse(
                 status=pending.status,
                 user_id=current_user.user_id,
