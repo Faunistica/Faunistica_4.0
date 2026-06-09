@@ -86,7 +86,7 @@ export interface Publication {
 
 export interface UserInfo {
     user_id: number;
-    username: string;
+    username: string | null;
     name: string;
 }
 

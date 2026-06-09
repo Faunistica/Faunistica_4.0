@@ -35,7 +35,11 @@ export const userSlice = createSlice({
                 state.username = action.payload.username;
                 state.name = action.payload.name;
                 state.user_id = action.payload.user_id;
-                localStorage.setItem('username', action.payload.username);
+                if (action.payload.username !== null && action.payload.username !== undefined) {
+                    localStorage.setItem('username', action.payload.username);
+                } else {
+                    localStorage.removeItem('username');
+                }
                 localStorage.setItem('name', action.payload.name);
                 localStorage.setItem('user_id', String(action.payload.user_id));
             }
