@@ -155,7 +155,6 @@ async def _cleanup_pending_registrations() -> None:
             return
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     await init_db()

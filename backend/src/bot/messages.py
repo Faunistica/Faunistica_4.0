@@ -293,6 +293,7 @@ class Messages:
             "Я помню, что вы уже знаете меня, но для доступа "
             "нужно снова зарегистрироваться на сайте и подтвердить код в этом боте."
         )
+
     @staticmethod
     def registration_failed() -> str:
         return (
@@ -300,7 +301,7 @@ class Messages:
             "Мы не смогли сохранить данные о вас в базу. "
             "Попробуйте снова 😔"
         )
-    
+
     @staticmethod
     def unexpected_error() -> str:
         return (

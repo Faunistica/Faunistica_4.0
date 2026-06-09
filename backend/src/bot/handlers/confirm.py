@@ -1,5 +1,5 @@
-from datetime import UTC, datetime
 import logging
+from datetime import UTC, datetime
 
 from aiogram import Router
 from aiogram.filters import Command, or_f
@@ -18,6 +18,7 @@ from service.registration import is_enter_expired
 
 router = Router()
 logger = logging.getLogger(__name__)
+
 
 @router.message(Command("confirm"))
 async def confirm_registration(message: Message, state: FSMContext) -> None:
@@ -101,7 +102,9 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
         except Exception as e:
             await session.rollback()
             await message.answer(Messages.registration_failed())
-            logger.error("Update pending by code for new user failed: %s", str(e), exc_info=True)
+            logger.error(
+                "Update pending by code for new user failed: %s", str(e), exc_info=True
+            )
 
     await message.answer(Messages.registration_confirmed(), parse_mode="HTML")
     await state.clear()
