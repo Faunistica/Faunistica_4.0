@@ -67,8 +67,8 @@ export default function Settings() {
         register,
         control,
         handleSubmit,
-        reset, // ← Добавьте reset
-        formState: { errors },
+        reset,
+        formState: { errors, isDirty },
     } = useForm<FormValues>({
         resolver: zodResolver(
             formSchema,
@@ -90,12 +90,13 @@ export default function Settings() {
 
     useEffect(() => {
         if (user) {
+            const sexValue = user.sex?.trim().toUpperCase();
             reset({
                 username: user.username || '',
                 password: '',
                 name: user.name || '',
                 age: user.age ?? null,
-                sex: user.sex?.trim().toUpperCase() || undefined,
+                sex: (sexValue === 'M' || sexValue === 'F' || sexValue === 'N') ? sexValue : undefined,
                 langRu: user.lng === 'rus' || user.lng === 'all',
                 langEn: user.lng === 'eng' || user.lng === 'all',
                 rating: user.rating === 1 ? 'yes' : 'no',
@@ -125,10 +126,23 @@ export default function Settings() {
                 sex: data.sex ? data.sex.toUpperCase() : null,
                 lng: language,
                 rating: data.rating === 'yes' ? 1 : 0,
-                email: data.email ?? '',
-                region: data.region ?? '',
-                comm: data.comm ?? '',
+                email: data.email || null,
+                region: data.region || null,
+                comm: data.comm || null,
             }).unwrap();
+            reset({
+                username: data.username,
+                password: '',
+                name: data.name,
+                age: data.age,
+                sex: data.sex,
+                langRu: data.langRu,
+                langEn: data.langEn,
+                rating: data.rating,
+                email: data.email,
+                region: data.region,
+                comm: data.comm,
+            });
         } catch (err) {
             toast.error('Сбой обновления');
             console.error('Update failed:', err);
@@ -305,7 +319,7 @@ export default function Settings() {
                                         </div>
                                         <div className="grid grid-cols-1 gap-5">
                                             <div className="space-y-2">
-                                                <Label htmlFor="email">Электронная почта</Label>
+                                                <Label htmlFor="email">Электронная почта <span className="text-slate-400 font-normal">(по желанию)</span></Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <Mail className="size-4 text-slate-400" />
@@ -325,7 +339,7 @@ export default function Settings() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="region">Регион проживания</Label>
+                                                <Label htmlFor="region">Регион проживания <span className="text-slate-400 font-normal">(по желанию)</span></Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <MapPin className="size-4 text-slate-400" />
@@ -422,12 +436,12 @@ export default function Settings() {
                                             семейству.
                                         </p>
                                         <div className="flex grow flex-col pt-2">
-                                            <Label
-                                                htmlFor="preferences"
-                                                className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
-                                            >
-                                                Дополнительная информация (по желанию)
-                                            </Label>
+                                        <Label
+                                            htmlFor="preferences"
+                                            className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
+                                        >
+                                            Дополнительная информация <span className="font-normal text-slate-400">(по желанию)</span>
+                                        </Label>
                                             <Textarea
                                                 id="preferences"
                                                 placeholder="Например: предпочтительно семейство Lycosidae..."
@@ -498,7 +512,7 @@ export default function Settings() {
                         </CardContent>
 
                         <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50 p-6 sm:flex-row sm:items-center sm:justify-between">
-                            {isSuccess ? (
+                            {isSuccess && !isDirty ? (
                                 <span className="text-sm font-medium text-green-600">
                                     Настройки успешно сохранены!
                                 </span>
