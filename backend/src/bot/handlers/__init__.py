@@ -11,10 +11,10 @@ from bot.handlers.support import router as support_router
 
 main_router = Router()
 main_router.include_router(menu_router)
-main_router.include_router(admin_router)
 main_router.include_router(confirm_router)
 main_router.include_router(errors_router)
 main_router.include_router(registration_router)
 main_router.include_router(start_router)
 main_router.include_router(support_router)
+main_router.include_router(admin_router)
 main_router.include_router(fallback_router)
