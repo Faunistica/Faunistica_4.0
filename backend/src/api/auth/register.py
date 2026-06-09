@@ -136,7 +136,7 @@ async def registration_status(
     ] = settings.TG_AUTH_POLL_TIMEOUT_SECONDS,
 ) -> RegistrationStatusResponse | RegistrationStartResponse | None:
 
-    deadline = datetime.now(UTC) + timedelta(seconds=time_out)
+    deadline = datetime.now(UTC).replace(tzinfo=None) + timedelta(seconds=time_out)
 
     for _ in range(time_out * 2 // settings.TG_AUTH_POLL_INTERVAL_SECONDS):
         pending = await get_validated_pending_by_token(session, token, code)
@@ -150,11 +150,11 @@ async def registration_status(
                 session,
                 token,
                 status=PendingStatus.CONFIRMED,
-                confirmed_at=datetime.now(UTC),
+                confirmed_at=datetime.now(UTC).replace(tzinfo=None),
             )
             await session.commit()
             return RegistrationStatusResponse(
-                status=pending.status,
+                status=PendingStatus.AUTH,
                 user_id=current_user.user_id,
                 name=current_user.name,
                 username=current_user.username,
@@ -163,7 +163,7 @@ async def registration_status(
             return RegistrationStatusResponse(
                 status=pending.status,
             )
-        if datetime.now(UTC) >= deadline:
+        if datetime.now(UTC).replace(tzinfo=None) >= deadline:
             await session.rollback()
             return RegistrationStatusResponse(status=PendingStatus.CODE_PROCESSING)
 

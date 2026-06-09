@@ -133,7 +133,7 @@ async def refresh_code(
         session,
         code=new_code,
         token=token,
-        code_created_at=datetime.now(UTC),
+        code_created_at=datetime.now(UTC).replace(tzinfo=None),
     )
     await session.commit()
 
