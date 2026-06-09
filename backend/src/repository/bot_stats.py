@@ -14,6 +14,19 @@ _bot_general_cache = TTLCache(maxsize=1, ttl=300)
 _bot_user_cache = TTLCache(maxsize=1024, ttl=300)
 
 
+async def _legacy_scalar(
+    session: AsyncSession,
+    stmt: object,
+    warning_msg: str,
+) -> object | None:
+    try:
+        async with session.begin_nested():
+            return await session.scalar(stmt)
+    except SQLAlchemyError:
+        logger.warning(warning_msg, exc_info=True)
+        return None
+
+
 async def get_bot_general_stats(session: AsyncSession) -> dict:
     if (cached := _bot_general_cache.get("bot_general_stats")) is not None:
         return cached
@@ -68,16 +81,14 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
         .where(EventRecord.type == RecordType.REC_OK)
     )
     rec_ok = rec_ok or 0
-    try:
-        async with session.begin_nested():
-            result = await session.scalar(
-                select(func.count())
-                .select_from(records_table)
-                .where(records_table.c.type == "rec_ok")
-            )
-        rec_ok += result or 0
-    except SQLAlchemyError:
-        logger.warning("Could not query legacy records for rec_ok", exc_info=True)
+    legacy = await _legacy_scalar(
+        session,
+        select(func.count())
+        .select_from(records_table)
+        .where(records_table.c.type == "rec_ok"),
+        "Could not query legacy records for rec_ok",
+    )
+    rec_ok += legacy or 0
 
     rec_fail = await session.scalar(
         select(func.count())
@@ -85,16 +96,14 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
         .where(EventRecord.type == RecordType.REC_FAIL)
     )
     rec_fail = rec_fail or 0
-    try:
-        async with session.begin_nested():
-            result = await session.scalar(
-                select(func.count())
-                .select_from(records_table)
-                .where(records_table.c.type == "rec_fail")
-            )
-        rec_fail += result or 0
-    except SQLAlchemyError:
-        logger.warning("Could not query legacy records for rec_fail", exc_info=True)
+    legacy = await _legacy_scalar(
+        session,
+        select(func.count())
+        .select_from(records_table)
+        .where(records_table.c.type == "rec_fail"),
+        "Could not query legacy records for rec_fail",
+    )
+    rec_fail += legacy or 0
     rec_fail_ratio = round(rec_fail / rec_ok, 2) if rec_ok > 0 else None
 
     check_ok = await session.scalar(
@@ -103,16 +112,14 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
         .where(EventRecord.type == RecordType.CHECK_OK)
     )
     check_ok = check_ok or 0
-    try:
-        async with session.begin_nested():
-            result = await session.scalar(
-                select(func.count())
-                .select_from(records_table)
-                .where(records_table.c.type == "check_ok")
-            )
-        check_ok += result or 0
-    except SQLAlchemyError:
-        logger.warning("Could not query legacy records for check_ok", exc_info=True)
+    legacy = await _legacy_scalar(
+        session,
+        select(func.count())
+        .select_from(records_table)
+        .where(records_table.c.type == "check_ok"),
+        "Could not query legacy records for check_ok",
+    )
+    check_ok += legacy or 0
 
     check_fail = await session.scalar(
         select(func.count())
@@ -120,16 +127,14 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
         .where(EventRecord.type == RecordType.CHECK_FAIL)
     )
     check_fail = check_fail or 0
-    try:
-        async with session.begin_nested():
-            result = await session.scalar(
-                select(func.count())
-                .select_from(records_table)
-                .where(records_table.c.type == "check_fail")
-            )
-        check_fail += result or 0
-    except SQLAlchemyError:
-        logger.warning("Could not query legacy records for check_fail", exc_info=True)
+    legacy = await _legacy_scalar(
+        session,
+        select(func.count())
+        .select_from(records_table)
+        .where(records_table.c.type == "check_fail"),
+        "Could not query legacy records for check_fail",
+    )
+    check_fail += legacy or 0
     check_ratio = round((check_ok + check_fail) / rec_ok, 1) if rec_ok > 0 else None
 
     species_count = await session.scalar(
@@ -138,24 +143,20 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
         .where(EventRecord.type == RecordType.REC_OK)
     )
     species_count = species_count or 0
-    try:
-        async with session.begin_nested():
-            result = await session.scalar(
-                select(
-                    func.count(
-                        func.distinct(
-                            records_table.c.tax_gen + " " + records_table.c.tax_sp
-                        )
-                    )
+    legacy = await _legacy_scalar(
+        session,
+        select(
+            func.count(
+                func.distinct(
+                    records_table.c.tax_gen + " " + records_table.c.tax_sp
                 )
-                .select_from(records_table)
-                .where(records_table.c.type == "rec_ok")
             )
-        species_count += result or 0
-    except SQLAlchemyError:
-        logger.warning(
-            "Could not query legacy records for species_count", exc_info=True
         )
+        .select_from(records_table)
+        .where(records_table.c.type == "rec_ok"),
+        "Could not query legacy records for species_count",
+    )
+    species_count += legacy or 0
 
     families_count = await session.scalar(
         select(func.count(func.distinct(EventRecord.family)))
@@ -163,18 +164,14 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
         .where(EventRecord.type == RecordType.REC_OK)
     )
     families_count = families_count or 0
-    try:
-        async with session.begin_nested():
-            result = await session.scalar(
-                select(func.count(func.distinct(records_table.c.tax_fam)))
-                .select_from(records_table)
-                .where(records_table.c.type == "rec_ok")
-            )
-        families_count += result or 0
-    except SQLAlchemyError:
-        logger.warning(
-            "Could not query legacy records for families_count", exc_info=True
-        )
+    legacy = await _legacy_scalar(
+        session,
+        select(func.count(func.distinct(records_table.c.tax_fam)))
+        .select_from(records_table)
+        .where(records_table.c.type == "rec_ok"),
+        "Could not query legacy records for families_count",
+    )
+    families_count += legacy or 0
 
     result = {
         "total_users": total_users,
