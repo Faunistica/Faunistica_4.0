@@ -169,7 +169,7 @@ async def registration_status(
             return RegistrationStatusResponse(status=PendingStatus.AWAITING_CODE)
         try:
             await asyncio.sleep(settings.TG_AUTH_POLL_INTERVAL_SECONDS)
-        except Exception:
+        except asyncio.CancelledError:
             return None
     return None
 
