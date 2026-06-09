@@ -151,16 +151,16 @@ async def top_user_species(
         .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
         .group_by(EventRecord.genus, EventRecord.species)
         .order_by(func.count().desc())
-        .limit(limit)
     )
     rows = (await session.execute(stmt)).all()
-    return await _merge_top_species(session, user_id, rows)
+    return await _merge_top_species(session, user_id, rows, limit)
 
 
 async def _merge_top_species(
     session: AsyncSession,
     user_id: int,
     rows: Sequence[Row],
+    limit: int = 4,
 ) -> list[TopSpeciesItem]:
     try:
         async with session.begin_nested():
@@ -176,7 +176,6 @@ async def _merge_top_species(
                 )
                 .group_by(records_table.c.tax_gen, records_table.c.tax_sp)
                 .order_by(func.count().desc())
-                .limit(4)
             )
         legacy_top = {(r.tax_gen, r.tax_sp): r.cnt for r in result.fetchall()}
         species_counts: dict[tuple[str | None, str | None], int] = {}
@@ -185,7 +184,7 @@ async def _merge_top_species(
             species_counts[key] = species_counts.get(key, 0) + r.cnt
         for (g, s), c in legacy_top.items():
             species_counts[(g, s)] = species_counts.get((g, s), 0) + c
-        top_sorted = sorted(species_counts.items(), key=lambda x: -x[1])[:4]
+        top_sorted = sorted(species_counts.items(), key=lambda x: -x[1])[:limit]
         return [
             TopSpeciesItem(species=f"{g} {s}".strip(), count=c)
             for (g, s), c in top_sorted

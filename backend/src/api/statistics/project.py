@@ -19,18 +19,14 @@ async def read_project_statistics(
     stats = await get_project_statistics(session)
 
     vol_rows = await get_cumulative_volunteers(session)
-    cumulative = 0
-    cumulative_volunteers = []
-    for row in vol_rows:
-        cumulative += row.cnt
-        cumulative_volunteers.append(CumulativePoint(date=row.date, count=cumulative))
+    cumulative_volunteers = [
+        CumulativePoint(date=r.date, count=r.cnt) for r in vol_rows
+    ]
 
     rec_rows = await get_cumulative_records(session)
-    cumulative = 0
-    cumulative_records = []
-    for row in rec_rows:
-        cumulative += row.cnt
-        cumulative_records.append(CumulativePoint(date=row.date, count=cumulative))
+    cumulative_records = [
+        CumulativePoint(date=r.date, count=r.cnt) for r in rec_rows
+    ]
 
     total, processed = await get_progress(session)
     if total == 0:

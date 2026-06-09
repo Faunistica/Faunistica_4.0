@@ -1,4 +1,5 @@
 import logging
+from types import SimpleNamespace
 
 from cachetools import TTLCache
 from sqlalchemy import func, select, union_all
@@ -34,7 +35,7 @@ from schema.common import ProjectStats, UserStats
 
 logger = logging.getLogger(__name__)
 
-_project_stats_cache = TTLCache(maxsize=1, ttl=3600)
+_project_stats_cache = TTLCache(maxsize=16, ttl=3600)
 _user_stats_cache = TTLCache(maxsize=1024, ttl=300)
 _bot_general_cache = TTLCache(maxsize=1, ttl=300)
 _bot_user_cache = TTLCache(maxsize=1024, ttl=300)
@@ -81,16 +82,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     if (cached := _user_stats_cache.get(key)) is not None:
         return cached
 
-    er = select(EventRecord.species.label("name")).where(
-        EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK
-    )
-    r = select(
-        (records_table.c.tax_gen + " " + records_table.c.tax_sp).label("name")
-    ).where(records_table.c.user_id == user_id, records_table.c.type == "rec_ok")
-    union_sub = er.union(r).subquery()
-    distinct_species = (
-        await session.scalar(select(func.count(func.distinct(union_sub.c.name)))) or 0
-    )
+    distinct_species = await count_species(session, user_id=user_id)
 
     result: UserStats = {
         "records_entered": await count_total_records(session, user_id=user_id),
@@ -143,8 +135,13 @@ async def get_cumulative_volunteers(session: AsyncSession) -> list[Row]:
     )
     result = await session.execute(stmt)
     rows = list(result.fetchall())
-    _project_stats_cache["cumulative_volunteers"] = rows
-    return rows
+    running = 0
+    accumulated = []
+    for r in rows:
+        running += r.cnt
+        accumulated.append(SimpleNamespace(date=r.date, cnt=running))
+    _project_stats_cache["cumulative_volunteers"] = accumulated
+    return accumulated
 
 
 async def get_cumulative_records(session: AsyncSession) -> list[Row]:
@@ -174,8 +171,13 @@ async def get_cumulative_records(session: AsyncSession) -> list[Row]:
     )
     result = await session.execute(stmt)
     rows = list(result.fetchall())
-    _project_stats_cache["cumulative_records"] = rows
-    return rows
+    running = 0
+    accumulated = []
+    for r in rows:
+        running += r.cnt
+        accumulated.append(SimpleNamespace(date=r.date, cnt=running))
+    _project_stats_cache["cumulative_records"] = accumulated
+    return accumulated
 
 
 async def get_progress(session: AsyncSession) -> tuple[int, int]:
