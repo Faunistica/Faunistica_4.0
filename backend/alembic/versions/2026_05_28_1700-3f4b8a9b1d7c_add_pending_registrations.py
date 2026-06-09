@@ -29,13 +29,18 @@ def upgrade() -> None:
         sa.Column("token", sa.String(length=50), nullable=False),
         sa.Column("status", sa.Integer(), nullable=False),
         sa.Column(
-            "code_created_at", sa.TIMESTAMP(), server_default=func.now(), nullable=False
+            "code_created_at",
+            sa.TIMESTAMP(),
+            server_default=func.now(),
+            nullable=False,
+            unique=True,
         ),
         sa.Column(
             "token_created_at",
             sa.TIMESTAMP(),
             server_default=func.now(),
             nullable=False,
+            unique=True,
         ),
         sa.Column(
             "reg_run",

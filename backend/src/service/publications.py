@@ -38,7 +38,7 @@ class PublicationService:
 
     def _get_current_publ_id(self, user: User) -> int | None:
         """Return items[0] as current publ_id, or None if items is empty."""
-        queue = self.pipe_to_array(user.items) if user.items else []
+        queue = self._pipe_to_array(user.items) if user.items else []
         return queue[0] if queue else None
 
     async def validate_access(
@@ -92,7 +92,7 @@ class PublicationService:
         await self.actions.log_publ_complete(user_id, level, publ_id, ip)
 
         # Advance queue: items includes current at position 0, pop it
-        queue = self.pipe_to_array(user.items) if user.items else []
+        queue = self._pipe_to_array(user.items) if user.items else []
         if queue:
             if queue[0] != publ_id:
                 logger.warning(
@@ -104,7 +104,7 @@ class PublicationService:
                 )
             queue.pop(0)
 
-        new_items = self.array_to_pipe(queue)
+        new_items = self._array_to_pipe(queue)
         next_publ_id = queue[0] if queue else None
 
         stmt = update(User).where(User.user_id == user_id).values(items=new_items)
@@ -148,7 +148,7 @@ class PublicationService:
                 raise ValueError("both user and user_id are None")
             user = await get_user_expect(self.session, user_id)
 
-        publ_ids = self.pipe_to_array(user.items) if user.items else []
+        publ_ids = self._pipe_to_array(user.items) if user.items else []
 
         if not with_queue:
             if not publ_ids:
@@ -165,28 +165,39 @@ class PublicationService:
     @staticmethod
     def generate_started_publications(language: UserLanguage) -> str:
         if language == "all":
-            return PublicationService.array_to_pipe(
-                [
-                    random.choice(settings.STARTED_PUBLICATION_IDS_ENG),  # noqa: S311
-                    random.choice(settings.STARTED_PUBLICATION_IDS_RUS),  # noqa: S311
-                ]
+            return PublicationService._array_to_pipe(
+                random.sample(
+                    settings.STARTED_PUBLICATION_IDS_ENG,
+                    settings.STARTED_PUBLICATION_AMOUNT_ALL // 2,
+                )
+                + random.sample(
+                    settings.STARTED_PUBLICATION_IDS_ENG,
+                    settings.STARTED_PUBLICATION_AMOUNT_ALL // 2
+                    + settings.STARTED_PUBLICATION_AMOUNT_ALL % 2,
+                )
             )
         if language == "eng":
-            return PublicationService.array_to_pipe(
-                random.sample(settings.STARTED_PUBLICATION_IDS_ENG, 2)
+            return PublicationService._array_to_pipe(
+                random.sample(
+                    settings.STARTED_PUBLICATION_IDS_ENG,
+                    settings.STARTED_PUBLICATION_AMOUNT_ENG,
+                )
             )
-        return PublicationService.array_to_pipe(
-            random.sample(settings.STARTED_PUBLICATION_IDS_RUS, 2)
+        return PublicationService._array_to_pipe(
+            random.sample(
+                settings.STARTED_PUBLICATION_IDS_RUS,
+                settings.STARTED_PUBLICATION_AMOUNT_RUS,
+            )
         )
 
     @staticmethod
-    def pipe_to_array(pipe_str: str) -> list[int]:
+    def _pipe_to_array(pipe_str: str) -> list[int]:
         """Convert '123|456|789' to [123, 456, 789]"""
         if not pipe_str:
             return []
         return [int(x) for x in pipe_str.split("|") if x.strip()]
 
     @staticmethod
-    def array_to_pipe(arr: list[int]) -> str:
+    def _array_to_pipe(arr: list[int]) -> str:
         """Convert [123, 456, 789] to '123|456|789'"""
         return "|".join(str(x) for x in arr)

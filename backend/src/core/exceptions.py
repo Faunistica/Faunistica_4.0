@@ -201,13 +201,6 @@ class RegistrationAlreadyStartedError(APIException):
         )
 
 
-class RegistrationNotFoundError(APIException):
-    def __init__(self, code: str) -> None:
-        super().__init__(
-            "REGISTRATION_NOT_FOUND", f"Registration with code '{code}' not found", 404
-        )
-
-
 class UserNotCreated(APIException):
     def __init__(self, id: int) -> None:
         super().__init__("USER_NOT_CREATED", f"User with id {id} can't be created", 409)
