@@ -251,9 +251,9 @@ async def _most_common_combined(
     event_col: Any,  # noqa: ANN401
     event_expr: Any,  # noqa: ANN401
     legacy_expr: Any,  # noqa: ANN401
-    where_extra: list[Any],  # noqa: ANN401
     label: str,
     warning: str,
+    empty_value: str = "",
 ) -> Any:  # noqa: ANN401
     """Most common value across EventRecord + legacy, EventRecord fallback."""
     primary = await session.scalar(
@@ -278,12 +278,14 @@ async def _most_common_combined(
     combined = union_all(er, r).subquery()
     stmt = (
         select(combined.c[label])
+        .where(
+            combined.c[label].isnot(None),
+            combined.c[label] != empty_value,
+        )
         .group_by(combined.c[label])
         .order_by(func.count().desc())
         .limit(1)
     )
-    if where_extra:
-        stmt = stmt.where(*where_extra)
 
     combined_result = await _legacy_scalar(session, stmt, warning)
     return combined_result if combined_result is not None else primary
@@ -296,10 +298,6 @@ async def most_common_family(session: AsyncSession, user_id: int) -> str | None:
         event_col=EventRecord.family,
         event_expr=EventRecord.family,
         legacy_expr=records_table.c.tax_fam,
-        where_extra=[
-            EventRecord.family.isnot(None),
-            EventRecord.family != "",
-        ],
         label="family",
         warning="Could not query legacy records for user most_common_family",
     )
@@ -312,10 +310,6 @@ async def most_common_genus(session: AsyncSession, user_id: int) -> str | None:
         event_col=EventRecord.genus,
         event_expr=EventRecord.genus,
         legacy_expr=records_table.c.tax_gen,
-        where_extra=[
-            EventRecord.genus.isnot(None),
-            EventRecord.genus != "",
-        ],
         label="genus",
         warning="Could not query legacy records for user most_common_genus",
     )
@@ -330,12 +324,9 @@ async def most_common_species(session: AsyncSession, user_id: int) -> str | None
         event_col=event_species,
         event_expr=event_species,
         legacy_expr=legacy_species,
-        where_extra=[
-            event_species.isnot(None),
-            event_species != " ",
-        ],
         label="species",
         warning="Could not query legacy records for user most_common_species",
+        empty_value=" ",
     )
 
 
