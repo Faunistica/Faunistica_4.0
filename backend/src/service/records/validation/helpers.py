@@ -49,7 +49,7 @@ def should_skip_geo(data: RecordData) -> bool:
 
 
 _DM_AXIS_RE = re.compile(r"^(\d+)°\s*([\d.]+)'\s*([NSEW])$")
-_DMS_AXIS_RE = re.compile(r"^(\d+)°\s*(\d+)' ([\d.]+)''\s*([NSEW])$")
+_DMS_AXIS_RE = re.compile(r"^(\d+)°\s*(\d+)'\s*([\d.]+)''\s*([NSEW])$")
 
 
 def split_verbatim_coords(verbatim: str | None) -> tuple[str | None, str | None]:
