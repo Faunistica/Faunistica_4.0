@@ -7,24 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.enums import RecordType, UserState
 from core.model import EventRecord, Publication, User, records_table
+from repository.util import _legacy_scalar
 
 logger = logging.getLogger(__name__)
 
 _bot_general_cache = TTLCache(maxsize=1, ttl=300)
 _bot_user_cache = TTLCache(maxsize=1024, ttl=300)
-
-
-async def _legacy_scalar(
-    session: AsyncSession,
-    stmt: object,
-    warning_msg: str,
-) -> object | None:
-    try:
-        async with session.begin_nested():
-            return await session.scalar(stmt)
-    except SQLAlchemyError:
-        logger.warning(warning_msg, exc_info=True)
-        return None
 
 
 async def get_bot_general_stats(session: AsyncSession) -> dict:
@@ -147,9 +135,7 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
         session,
         select(
             func.count(
-                func.distinct(
-                    records_table.c.tax_gen + " " + records_table.c.tax_sp
-                )
+                func.distinct(records_table.c.tax_gen + " " + records_table.c.tax_sp)
             )
         )
         .select_from(records_table)

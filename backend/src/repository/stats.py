@@ -9,25 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import settings
 from core.enums import RecordType, UserState
 from core.model import Action, EventRecord, Publication, User, records_table
+from repository.util import _legacy_scalar
 from schema.common import ProjectStats, TopSpeciesItem, UserStats
 
 logger = logging.getLogger(__name__)
 
 _project_stats_cache = TTLCache(maxsize=1, ttl=3600)
 _user_stats_cache = TTLCache(maxsize=1024, ttl=300)
-
-
-async def _legacy_scalar(
-    session: AsyncSession,
-    stmt: object,
-    warning_msg: str,
-) -> object | None:
-    try:
-        async with session.begin_nested():
-            return await session.scalar(stmt)
-    except SQLAlchemyError:
-        logger.warning(warning_msg, exc_info=True)
-        return None
 
 
 async def get_project_statistics(session: AsyncSession) -> ProjectStats:
@@ -225,7 +213,8 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
                 records_table.c.type == "rec_ok",
             ),
             "Could not query legacy records for user records_entered",
-        ) or 0
+        )
+        or 0
     )
 
     publications_processed = await session.scalar(
@@ -261,15 +250,18 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         records_table.c.type == "rec_ok",
     )
     combined_family = union_all(er_family, r_family).subquery()
-    most_common_family = await _legacy_scalar(
-        session,
-        select(combined_family.c.family)
-        .where(combined_family.c.family.isnot(None), combined_family.c.family != "")
-        .group_by(combined_family.c.family)
-        .order_by(func.count().desc())
-        .limit(1),
-        "Could not query legacy records for user most_common_family",
-    ) or most_common_family
+    most_common_family = (
+        await _legacy_scalar(
+            session,
+            select(combined_family.c.family)
+            .where(combined_family.c.family.isnot(None), combined_family.c.family != "")
+            .group_by(combined_family.c.family)
+            .order_by(func.count().desc())
+            .limit(1),
+            "Could not query legacy records for user most_common_family",
+        )
+        or most_common_family
+    )
 
     most_common_genus = await session.scalar(
         select(EventRecord.genus)
@@ -287,15 +279,18 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         records_table.c.type == "rec_ok",
     )
     combined_genus = union_all(er_genus, r_genus).subquery()
-    most_common_genus = await _legacy_scalar(
-        session,
-        select(combined_genus.c.genus)
-        .where(combined_genus.c.genus.isnot(None), combined_genus.c.genus != "")
-        .group_by(combined_genus.c.genus)
-        .order_by(func.count().desc())
-        .limit(1),
-        "Could not query legacy records for user most_common_genus",
-    ) or most_common_genus
+    most_common_genus = (
+        await _legacy_scalar(
+            session,
+            select(combined_genus.c.genus)
+            .where(combined_genus.c.genus.isnot(None), combined_genus.c.genus != "")
+            .group_by(combined_genus.c.genus)
+            .order_by(func.count().desc())
+            .limit(1),
+            "Could not query legacy records for user most_common_genus",
+        )
+        or most_common_genus
+    )
 
     most_common_species = await session.scalar(
         select(EventRecord.genus + " " + EventRecord.species)
@@ -317,18 +312,21 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         records_table.c.type == "rec_ok",
     )
     combined_species = union_all(er_species, r_species).subquery()
-    most_common_species = await _legacy_scalar(
-        session,
-        select(combined_species.c.species)
-        .where(
-            combined_species.c.species.isnot(None),
-            combined_species.c.species != " ",
+    most_common_species = (
+        await _legacy_scalar(
+            session,
+            select(combined_species.c.species)
+            .where(
+                combined_species.c.species.isnot(None),
+                combined_species.c.species != " ",
+            )
+            .group_by(combined_species.c.species)
+            .order_by(func.count().desc())
+            .limit(1),
+            "Could not query legacy records for user most_common_species",
         )
-        .group_by(combined_species.c.species)
-        .order_by(func.count().desc())
-        .limit(1),
-        "Could not query legacy records for user most_common_species",
-    ) or most_common_species
+        or most_common_species
+    )
 
     top_species_stmt = (
         select(
@@ -445,9 +443,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         session,
         select(
             func.count(
-                func.distinct(
-                    records_table.c.tax_gen + " " + records_table.c.tax_sp
-                )
+                func.distinct(records_table.c.tax_gen + " " + records_table.c.tax_sp)
             )
         )
         .select_from(records_table)
@@ -488,15 +484,18 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         records_table.c.eve_YY.isnot(None),
     )
     combined_year = union_all(er_year, r_year).subquery()
-    most_common_year = await _legacy_scalar(
-        session,
-        select(combined_year.c.year)
-        .where(combined_year.c.year.isnot(None))
-        .group_by(combined_year.c.year)
-        .order_by(func.count().desc())
-        .limit(1),
-        "Could not query legacy records for user most_common_year",
-    ) or most_common_year
+    most_common_year = (
+        await _legacy_scalar(
+            session,
+            select(combined_year.c.year)
+            .where(combined_year.c.year.isnot(None))
+            .group_by(combined_year.c.year)
+            .order_by(func.count().desc())
+            .limit(1),
+            "Could not query legacy records for user most_common_year",
+        )
+        or most_common_year
+    )
 
     result: UserStats = {
         "records_entered": records_entered or 0,
