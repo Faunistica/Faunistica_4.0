@@ -21,7 +21,7 @@ export const authAPI = createApi({
                     dispatch(
                         login({
                             name: data.name,
-                            username: data.username,
+                            username: data.username ?? null,
                             user_id: data.user_id,
                         }),
                     );
@@ -75,7 +75,7 @@ export const authAPI = createApi({
                         dispatch(
                             login({
                                 name: data.name,
-                                username: data.username,
+                                username: data.username ?? null,
                                 user_id: data.user_id,
                             }),
                         );
