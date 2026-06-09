@@ -40,7 +40,7 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
             result = await session.scalar(
                 select(func.count())
                 .select_from(records_table)
-                .where(records_table.c.type == 'rec_ok')
+                .where(records_table.c.type == "rec_ok")
             )
         total_records = (total_records or 0) + (result or 0)
     except SQLAlchemyError:
@@ -59,12 +59,12 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
                 select(
                     func.count(
                         func.distinct(
-                            records_table.c.tax_gen + ' ' + records_table.c.tax_sp
+                            records_table.c.tax_gen + " " + records_table.c.tax_sp
                         )
                     )
                 )
                 .select_from(records_table)
-                .where(records_table.c.type == 'rec_ok')
+                .where(records_table.c.type == "rec_ok")
             )
         species_count = (species_count or 0) + (result or 0)
     except SQLAlchemyError:
@@ -88,7 +88,7 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
             result = await session.scalar(
                 select(func.count(func.distinct(records_table.c.tax_fam)))
                 .select_from(records_table)
-                .where(records_table.c.type == 'rec_ok')
+                .where(records_table.c.type == "rec_ok")
             )
         families_count = (families_count or 0) + (result or 0)
     except SQLAlchemyError:
@@ -106,7 +106,7 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
             result = await session.scalar(
                 select(func.count())
                 .select_from(records_table)
-                .where(records_table.c.type.in_(['check_ok', 'check_fail']))
+                .where(records_table.c.type.in_(["check_ok", "check_fail"]))
             )
         checks_count = (checks_count or 0) + (result or 0)
     except SQLAlchemyError:
@@ -122,7 +122,7 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
             result = await session.scalar(
                 select(func.count())
                 .select_from(records_table)
-                .where(records_table.c.type == 'rec_fail')
+                .where(records_table.c.type == "rec_fail")
             )
         failed_records = (failed_records or 0) + (result or 0)
     except SQLAlchemyError:
@@ -169,7 +169,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
                 .select_from(records_table)
                 .where(
                     records_table.c.user_id == user_id,
-                    records_table.c.type == 'rec_ok',
+                    records_table.c.type == "rec_ok",
                 )
             )
         records_entered = (records_entered or 0) + (result or 0)
@@ -190,7 +190,7 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
                 .select_from(records_table)
                 .where(
                     records_table.c.user_id == user_id,
-                    records_table.c.type == 'rec_ok',
+                    records_table.c.type == "rec_ok",
                 )
             )
         publications_processed = (publications_processed or 0) + (result or 0)
@@ -209,15 +209,11 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     )
     try:
         async with session.begin_nested():
-            er_family = select(
-                EventRecord.family.label("family")
-            ).where(
+            er_family = select(EventRecord.family.label("family")).where(
                 EventRecord.user_id == user_id,
                 EventRecord.type == RecordType.REC_OK,
             )
-            r_family = select(
-                records_table.c.tax_fam.label("family")
-            ).where(
+            r_family = select(records_table.c.tax_fam.label("family")).where(
                 records_table.c.user_id == user_id,
                 records_table.c.type == "rec_ok",
             )
@@ -244,15 +240,11 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     )
     try:
         async with session.begin_nested():
-            er_genus = select(
-                EventRecord.genus.label("genus")
-            ).where(
+            er_genus = select(EventRecord.genus.label("genus")).where(
                 EventRecord.user_id == user_id,
                 EventRecord.type == RecordType.REC_OK,
             )
-            r_genus = select(
-                records_table.c.tax_gen.label("genus")
-            ).where(
+            r_genus = select(records_table.c.tax_gen.label("genus")).where(
                 records_table.c.user_id == user_id,
                 records_table.c.type == "rec_ok",
             )
@@ -507,18 +499,17 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     )
     try:
         async with session.begin_nested():
-            er_year = select(
-                Publication.year.label("year")
-            ).select_from(EventRecord).join(
-                Publication, EventRecord.publ_id == Publication.publ_id
-            ).where(
-                EventRecord.user_id == user_id,
-                EventRecord.type == RecordType.REC_OK,
-                Publication.year.isnot(None),
+            er_year = (
+                select(Publication.year.label("year"))
+                .select_from(EventRecord)
+                .join(Publication, EventRecord.publ_id == Publication.publ_id)
+                .where(
+                    EventRecord.user_id == user_id,
+                    EventRecord.type == RecordType.REC_OK,
+                    Publication.year.isnot(None),
+                )
             )
-            r_year = select(
-                records_table.c.eve_YY.label("year")
-            ).where(
+            r_year = select(records_table.c.eve_YY.label("year")).where(
                 records_table.c.user_id == user_id,
                 records_table.c.type == "rec_ok",
                 records_table.c.eve_YY.isnot(None),

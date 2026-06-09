@@ -73,7 +73,7 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
             result = await session.scalar(
                 select(func.count())
                 .select_from(records_table)
-                .where(records_table.c.type == 'rec_ok')
+                .where(records_table.c.type == "rec_ok")
             )
         rec_ok += result or 0
     except SQLAlchemyError:
@@ -90,7 +90,7 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
             result = await session.scalar(
                 select(func.count())
                 .select_from(records_table)
-                .where(records_table.c.type == 'rec_fail')
+                .where(records_table.c.type == "rec_fail")
             )
         rec_fail += result or 0
     except SQLAlchemyError:
@@ -108,7 +108,7 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
             result = await session.scalar(
                 select(func.count())
                 .select_from(records_table)
-                .where(records_table.c.type == 'check_ok')
+                .where(records_table.c.type == "check_ok")
             )
         check_ok += result or 0
     except SQLAlchemyError:
@@ -125,7 +125,7 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
             result = await session.scalar(
                 select(func.count())
                 .select_from(records_table)
-                .where(records_table.c.type == 'check_fail')
+                .where(records_table.c.type == "check_fail")
             )
         check_fail += result or 0
     except SQLAlchemyError:
@@ -144,12 +144,12 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
                 select(
                     func.count(
                         func.distinct(
-                            records_table.c.tax_gen + ' ' + records_table.c.tax_sp
+                            records_table.c.tax_gen + " " + records_table.c.tax_sp
                         )
                     )
                 )
                 .select_from(records_table)
-                .where(records_table.c.type == 'rec_ok')
+                .where(records_table.c.type == "rec_ok")
             )
         species_count += result or 0
     except SQLAlchemyError:
@@ -168,7 +168,7 @@ async def get_bot_general_stats(session: AsyncSession) -> dict:
             result = await session.scalar(
                 select(func.count(func.distinct(records_table.c.tax_fam)))
                 .select_from(records_table)
-                .where(records_table.c.type == 'rec_ok')
+                .where(records_table.c.type == "rec_ok")
             )
         families_count += result or 0
     except SQLAlchemyError:
