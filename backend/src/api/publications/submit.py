@@ -8,6 +8,7 @@ from core.dependencies import ClientIP, HTTPClient, TokenUser
 from schema.common import ProcessingLevel
 from service.publications import PublicationService
 from service.telegram import notify_publication_completed
+from service.user import UserService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/publications")
@@ -44,8 +45,9 @@ async def submit_publication(
     bg_tasks: BackgroundTasks,
     http_client: HTTPClient,
     pub_service: Annotated[PublicationService, Depends()],
+    user_service: Annotated[UserService, Depends()],
 ) -> None:
-    await pub_service.submit(
+    remaining = await pub_service.submit(
         token.user_id,
         publ_id,
         data.processing_level,
@@ -55,4 +57,16 @@ async def submit_publication(
         ip,
     )
 
-    bg_tasks.add_task(notify_publication_completed, http_client, publ_id, data.comment)
+    user = await user_service.get(token.user_id)
+    tlg_username = user.tlg_username if user else None
+
+    bg_tasks.add_task(
+        notify_publication_completed,
+        http_client,
+        publ_id,
+        token.user_id,
+        token.name,
+        tlg_username,
+        data.comment,
+        remaining,
+    )

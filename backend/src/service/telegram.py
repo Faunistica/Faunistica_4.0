@@ -81,12 +81,37 @@ def _get_issue_type(issue_type: str) -> str:
 async def notify_publication_completed(
     client: aiohttp.ClientSession,
     publ_id: int,
-    comment: str | None = None,
+    user_id: int,
+    name: str,
+    tlg_username: str | None,
+    comment: str | None,
+    remaining: int,
 ) -> None:
     try:
-        text = f"✅ Публикация #{publ_id} завершена"
+        username_part = f" @{tlg_username}" if tlg_username else ""
+        user_line = f"👤 {name} (ID: {user_id}{username_part})"
+
+        if remaining == 0:
+            text = (
+                f"🚨 Пользователь исчерпал все публикации\n"
+                f"{user_line}\n"
+                f"📄 Публикация #{publ_id}\n"
+                f"Все публикации исчерпаны! Требуется назначение."
+            )
+        elif remaining == 1:
+            text = (
+                f"⚠️ У пользователя осталась последняя публикация\n"
+                f"{user_line}\n"
+                f"📄 Публикация #{publ_id}\n"
+                f"Осталась 1 публикация."
+            )
+        else:
+            text = f"✅ Публикация #{publ_id} завершена\n{user_line}"
+            text += f"\nОсталось публикаций: {remaining}."
+
         if comment:
-            text += f"\n📬 Комментарий: {comment}"
+            text += f"\n📬 Комментарий:\n---\n{comment}"
+
         await _notify_admin(client, text)
     except Exception:
         logger.exception("Failed to send completion notification for publ %d", publ_id)

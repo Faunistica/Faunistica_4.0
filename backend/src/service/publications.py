@@ -87,7 +87,7 @@ class PublicationService:
         publ_id: int,
         level: ProcessingLevel,
         ip: str | None,
-    ) -> Publication | None:
+    ) -> tuple[Publication | None, int]:
         await self.actions.log_publ_complete(user_id, level, publ_id, ip)
 
         user = await get_user_expect(self.session, user_id)
@@ -95,6 +95,7 @@ class PublicationService:
         if publ_id in queue:
             queue.remove(publ_id)
 
+        remaining = len(queue)
         new_items = self._array_to_pipe(queue)
         next_publ_id = queue[0] if queue else None
 
@@ -102,10 +103,10 @@ class PublicationService:
         await self.session.execute(stmt)
 
         if next_publ_id is None:
-            return None
+            return (None, remaining)
 
         next_publ = await get_publication_expect(self.session, next_publ_id)
-        return Publication.model_validate(next_publ)
+        return (Publication.model_validate(next_publ), remaining)
 
     async def get_draft_record_ids(self, user_id: int, publ_id: int) -> list[str]:
         stmt = (
@@ -132,7 +133,7 @@ class PublicationService:
         material_status: str | None,
         comment: str | None,
         ip: str | None,
-    ) -> None:
+    ) -> int:
         await self.validate_access(publ_id, user_id=user_id)
 
         draft_ids = await self.get_draft_record_ids(user_id, publ_id)
@@ -155,8 +156,9 @@ class PublicationService:
         if comment:
             await self.actions.log_publ_comment(user_id, publ_id, comment, ip)
 
-        await self._advance_queue(user_id, publ_id, level, ip)
+        _, remaining = await self._advance_queue(user_id, publ_id, level, ip)
         await self.session.commit()
+        return remaining
 
     async def assign_current(self, user_id: int) -> Publication | None:
         """Return current publication from items[0], or None if queue empty."""
