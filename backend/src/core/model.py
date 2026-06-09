@@ -71,7 +71,7 @@ class PendingRegistration(Base):
     token: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     status: Mapped[PendingStatus] = mapped_column(
         PendingStatusType,
-        default=PendingStatus.CODE_PROCESSING,
+        default=PendingStatus.AWAITING_CODE,
         server_default="0",
     )
     code_created_at: Mapped[datetime_type] = mapped_column(

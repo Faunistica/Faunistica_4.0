@@ -7,11 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from core.config import settings
 from core.dependencies import ClientIP, DBSession
 from core.enums import PendingStatus
+from core.model import User
 from core.rate_limiter import limiter
 from core.security import (
     generate_code_for_tg_enter,
     generate_token_for_tg_enter,
     get_password_hash,
+    set_response_token_cookies,
 )
 from repository.registration import (
     create_pending_registration,
@@ -19,6 +21,7 @@ from repository.registration import (
     get_pending_by_token,
     update_pending_by_token,
 )
+from schema.jwt import TokenPayload
 from schema.registration import (
     RegistrationStartResponse,
     RegistrationStatusResponse,
@@ -27,7 +30,6 @@ from schema.registration import (
 from service.actions import ActionService
 from service.publications import PublicationService
 from service.registration import (
-    create_auth_response,
     create_user_from_survey,
     get_validated_pending_by_code,
     get_validated_pending_by_token,
@@ -101,25 +103,19 @@ async def survey_filling(
     pending, user_id = await get_validated_pending_by_code(session, data.code)
     password_hash = get_password_hash(data.password)
     items = PublicationService.generate_started_publications(data.lng)
-    try:
-        current_user = await create_user_from_survey(
-            data, items, password_hash, pending, user_id, user_service
-        )
-        await session.commit()
-    except Exception as e:
-        await session.rollback()
-        raise e
-
+    current_user = await create_user_from_survey(
+        data, items, password_hash, pending, user_id, user_service
+    )
     await create_auth_response(response, ip, current_user, action_service)
     await update_pending_by_token(
         session,
         data.token,
-        status=PendingStatus.CONFIRMED,
+        status=PendingStatus.COMPLETED,
         confirmed_at=datetime.now(UTC).replace(tzinfo=None),
     )
     await session.commit()
     return RegistrationStatusResponse(
-        status=PendingStatus.CONFIRMED,
+        status=PendingStatus.COMPLETED,
     )
 
 
@@ -145,30 +141,54 @@ async def registration_status(
         if is_enter_expired(pending.code_created_at, settings.TG_CODE_EXPIRE_SECONDS):
             return await refresh_code(session, token)
 
-        if pending.status == PendingStatus.AUTH and pending.telegram_id is not None:
+        if (
+            pending.status == PendingStatus.AWAITING_API_LOGIN
+            and pending.telegram_id is not None
+        ):
             current_user = await get_validated_user(session, pending.telegram_id)
             await create_auth_response(response, ip, current_user, action_service)
             await update_pending_by_token(
                 session,
                 token,
-                status=PendingStatus.CONFIRMED,
+                status=PendingStatus.COMPLETED,
                 confirmed_at=datetime.now(UTC).replace(tzinfo=None),
             )
             await session.commit()
             return RegistrationStatusResponse(
-                status=PendingStatus.AUTH,
+                status=PendingStatus.AWAITING_API_LOGIN,
                 user_id=current_user.user_id,
                 name=current_user.name,
                 username=current_user.username,
             )
-        if pending.status == PendingStatus.REGISTRATION:
+        if pending.status == PendingStatus.AWAITING_API_REGISTRATION:
             return RegistrationStatusResponse(
                 status=pending.status,
             )
         if datetime.now(UTC).replace(tzinfo=None) >= deadline:
             await session.rollback()
-            return RegistrationStatusResponse(status=PendingStatus.CODE_PROCESSING)
+            return RegistrationStatusResponse(status=PendingStatus.AWAITING_CODE)
 
         await session.rollback()
         await asyncio.sleep(settings.TG_AUTH_POLL_INTERVAL_SECONDS)
     return None
+
+
+async def create_auth_response(
+    response: Response,
+    ip: ClientIP,
+    current_user: User,
+    action_service: ActionService,
+) -> TokenPayload:
+    if current_user.name is None:
+        raise HTTPException(status_code=403, detail="Name is null")
+
+    token_payload = TokenPayload(
+        sub=str(current_user.user_id),
+        username=current_user.name,
+        version=current_user.token_version,
+    )
+
+    set_response_token_cookies(response, token_payload)
+    await action_service.log_login(current_user.user_id, ip)
+
+    return token_payload

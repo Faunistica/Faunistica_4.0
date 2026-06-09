@@ -199,7 +199,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         await app.state.http_session.close()
         logger.info("Shutting down bot...")
         bot_task.cancel()
-        await bot_task
         logger.info("Stopping registration cleanup...")
         cleanup_task.cancel()
+        await asyncio.gather(bot_task, cleanup_task)
         await cleanup_task

@@ -44,7 +44,7 @@ class UserUpdateMe(BaseModel):
     sex: str | None = None
     rating: int | None = None
     email: str | None = None
-    region: str | None = None
+    region: str | None = Field(None, max_length=255)
 
     @field_validator("name")
     @classmethod
@@ -91,7 +91,9 @@ class UserUpdateMe(BaseModel):
 
 class UserLookupResponse(BaseModel):
     user_id: int
-    username: str | None
+    username: str | None = Field(
+        None, min_length=3, max_length=40, pattern=r"^[a-zA-Z0-9_]+$"
+    )
 
 
 class UserUpdate(BaseModel):

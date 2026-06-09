@@ -12,9 +12,9 @@ class SurveyRequest(BaseModel):
     sex: str
     age: int
     lng: UserLanguage
-    comm: str
-    code: str
-    token: str
+    comm: str = Field(max_length=255)
+    code: str = Field(min_length=4, max_length=20)
+    token: str = Field(min_length=20, max_length=50)
 
     @field_validator("name")
     @classmethod

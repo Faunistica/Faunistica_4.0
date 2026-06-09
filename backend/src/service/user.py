@@ -15,6 +15,7 @@ from core.model import User
 from repository.user import (
     count_users_with_username,
     create_user_or_update,
+    find_user_by_name,
     find_user_by_username,
     get_user,
     get_user_expect,
@@ -100,6 +101,9 @@ class UserService:
 
     async def find_by_username(self, username: str) -> User | None:
         return await find_user_by_username(self.session, username)
+
+    async def find_by_name(self, name: str) -> User | None:
+        return await find_user_by_name(self.session, name)
 
     # ========== Validation ==========
 
@@ -235,6 +239,8 @@ class UserService:
     async def increment_token_version(self, user_id: int) -> int:
         return await increment_token_version(self.session, user_id)
 
-    async def full_registration(self, user_id: int, **kw: object) -> User | None:
+    async def complete_full_registration(
+        self, user_id: int, **kw: object
+    ) -> User | None:
         await create_user_or_update(self.session, user_id, UserState(kw["reg_stat"]))
         return await self._update(user_id, **kw)

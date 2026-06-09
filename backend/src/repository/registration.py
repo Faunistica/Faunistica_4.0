@@ -71,27 +71,27 @@ async def delete_pending_by_code(session: AsyncSession, code: str) -> None:
 
 async def delete_expired_pending(session: AsyncSession, cutoff: datetime) -> int:
     stmt = delete(PendingRegistration).where(
-        PendingRegistration.status == PendingStatus.CODE_PROCESSING,
+        PendingRegistration.status == PendingStatus.AWAITING_CODE,
         PendingRegistration.token_created_at < cutoff,
     )
     result = await session.execute(stmt)
-    return getattr(result, "rowcount", 0) or 0
+    return getattr(result, "rowcount", 0)
 
 
 async def delete_registration_pending(session: AsyncSession, cutoff: datetime) -> int:
     stmt = delete(PendingRegistration).where(
-        PendingRegistration.status == PendingStatus.REGISTRATION,
+        PendingRegistration.status == PendingStatus.AWAITING_API_REGISTRATION,
         PendingRegistration.reg_run < cutoff,
     )
     result = await session.execute(stmt)
-    return getattr(result, "rowcount", 0) or 0
+    return getattr(result, "rowcount", 0)
 
 
 async def delete_confirmed_pending(session: AsyncSession, cutoff: datetime) -> int:
     stmt = delete(PendingRegistration).where(
-        PendingRegistration.status == PendingStatus.CONFIRMED,
+        PendingRegistration.status == PendingStatus.COMPLETED,
         PendingRegistration.confirmed_at.is_not(None),
         PendingRegistration.confirmed_at < cutoff,
     )
     result = await session.execute(stmt)
-    return getattr(result, "rowcount", 0) or 0
+    return getattr(result, "rowcount", 0)
