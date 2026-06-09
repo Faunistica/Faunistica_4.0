@@ -210,18 +210,19 @@ class Messages:
     ) -> str:
         stats_text = (
             "<b>Общая статистика: </b>\n\n"
-            f"Всего зарегистрированных участников: {general_stats['total_users']} "
-            f"Средний возраст участника: {general_stats['avg_age']} "
-            f"Всего публикаций на очереди в оцифровку: {general_stats['total_publs']}, "
+            f"Всего зарегистрированных участников: {general_stats['total_users']}"
+            f"\nСредний возраст участника: {general_stats['avg_age']}"
+            "\nВсего публикаций на очереди в оцифровку: "
+            f"{general_stats['total_publs']},\n"
             f"из них на русском языке {general_stats['rus_publs']}, "
-            f"на английском языке {general_stats['eng_publs']}.\n"
-            f"Всего записей внесено волонтерами: {general_stats['rec_ok']}. "
-            f"На одну успешную запись приходится "
+            f"на английском языке {general_stats['eng_publs']}."
+            f"\nВсего записей внесено волонтерами: {general_stats['rec_ok']}."
+            f"\nНа одну успешную запись приходится "
             f"{general_stats.get('rec_fail_ratio', 0) or 0} неудачных попыток, "
-            f"а также {general_stats.get('check_ratio', 0) or 0} проверок. "
-            f"Эти записи содержат информацию о {general_stats['species_count']} видах, "
-            f"относящихся к {general_stats['families_count']} семействам.\n"
-            "Это очень хорошая статистика! Надеемся, ваш вклад ее улучшит ^_^ "
+            f"а также {general_stats.get('check_ratio', 0) or 0} проверок."
+            f"\nЭти записи содержат информацию о {general_stats['species_count']} "
+            f"видах, относящихся к {general_stats['families_count']} семействам."
+            "\nЭто очень хорошая статистика!\nНадеемся, ваш вклад ее улучшит ^_^"
         )
 
         if personal_stats is not None:
