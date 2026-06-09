@@ -240,4 +240,4 @@ async def get_legacy_records_for_export(
         .order_by(records_table.c["datetime"].desc())
     )
     result = await session.execute(stmt)
-    return [row._mapping for row in result.all()]
+    return [dict(row._mapping) for row in result.all()]
