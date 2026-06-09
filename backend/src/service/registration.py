@@ -53,9 +53,11 @@ async def get_validated_pending_by_token(
     session: DBSession,
     token: str,
     code: str,
+    *,
+    populate_existing: bool = False,
 ) -> PendingRegistration:
 
-    pending = await get_pending_by_token(session, token)
+    pending = await get_pending_by_token(session, token, populate_existing=populate_existing)
     if pending is None:
         raise HTTPException(status_code=404, detail="Pending by code not found")
     if pending.code != code:

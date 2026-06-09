@@ -137,7 +137,7 @@ async def registration_status(
     deadline = datetime.now(UTC).replace(tzinfo=None) + timedelta(seconds=time_out)
 
     for _ in range(time_out * 2 // settings.TG_AUTH_POLL_INTERVAL_SECONDS):
-        pending = await get_validated_pending_by_token(session, token, code)
+        pending = await get_validated_pending_by_token(session, token, code, populate_existing=True)
         if is_enter_expired(pending.code_created_at, settings.TG_CODE_EXPIRE_SECONDS):
             return await refresh_code(session, token)
 
