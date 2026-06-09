@@ -1,8 +1,9 @@
 import logging
 from collections.abc import Sequence
+from typing import Any
 
 from cachetools import TTLCache
-from sqlalchemy import func, select, union_all
+from sqlalchemy import and_, func, select, union_all
 from sqlalchemy.engine import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,21 +40,21 @@ async def count_total_users(session: AsyncSession) -> int:
 
 
 async def count_total_records(session: AsyncSession, user_id: int | None = None) -> int:
-    event_filter = [EventRecord.type == RecordType.REC_OK]
-    legacy_filter = [records_table.c.type == RecordType.REC_OK.value]
+    event_condition = EventRecord.type == RecordType.REC_OK
+    legacy_condition = records_table.c.type == RecordType.REC_OK.value
     if user_id is not None:
-        event_filter.append(EventRecord.user_id == user_id)
-        legacy_filter.append(records_table.c.user_id == user_id)
+        event_condition = and_(event_condition, EventRecord.user_id == user_id)
+        legacy_condition = and_(legacy_condition, records_table.c.user_id == user_id)
 
     count = (
         await session.scalar(
-            select(func.count()).select_from(EventRecord).where(*event_filter)
+            select(func.count()).select_from(EventRecord).where(event_condition)
         )
         or 0
     )
     legacy = await _legacy_scalar(
         session,
-        select(func.count()).select_from(records_table).where(*legacy_filter),
+        select(func.count()).select_from(records_table).where(legacy_condition),
         "Could not query legacy records for total_records",
     )
     return count + (legacy or 0)
@@ -62,60 +63,60 @@ async def count_total_records(session: AsyncSession, user_id: int | None = None)
 async def count_failed_records(
     session: AsyncSession, user_id: int | None = None
 ) -> int:
-    event_filter = [EventRecord.type == RecordType.REC_FAIL]
-    legacy_filter = [records_table.c.type == RecordType.REC_FAIL.value]
+    event_condition = EventRecord.type == RecordType.REC_FAIL
+    legacy_condition = records_table.c.type == RecordType.REC_FAIL.value
     if user_id is not None:
-        event_filter.append(EventRecord.user_id == user_id)
-        legacy_filter.append(records_table.c.user_id == user_id)
+        event_condition = and_(event_condition, EventRecord.user_id == user_id)
+        legacy_condition = and_(legacy_condition, records_table.c.user_id == user_id)
 
     count = (
         await session.scalar(
-            select(func.count()).select_from(EventRecord).where(*event_filter)
+            select(func.count()).select_from(EventRecord).where(event_condition)
         )
         or 0
     )
     legacy = await _legacy_scalar(
         session,
-        select(func.count()).select_from(records_table).where(*legacy_filter),
+        select(func.count()).select_from(records_table).where(legacy_condition),
         "Could not query legacy records for failed_records",
     )
     return count + (legacy or 0)
 
 
 async def count_checks(session: AsyncSession, user_id: int | None = None) -> int:
-    event_filter = [EventRecord.type.in_([RecordType.CHECK_OK, RecordType.CHECK_FAIL])]
-    legacy_filter = [records_table.c.type.in_(["check_ok", "check_fail"])]
+    event_condition = EventRecord.type.in_([RecordType.CHECK_OK, RecordType.CHECK_FAIL])
+    legacy_condition = records_table.c.type.in_(["check_ok", "check_fail"])
     if user_id is not None:
-        event_filter.append(EventRecord.user_id == user_id)
-        legacy_filter.append(records_table.c.user_id == user_id)
+        event_condition = and_(event_condition, EventRecord.user_id == user_id)
+        legacy_condition = and_(legacy_condition, records_table.c.user_id == user_id)
 
     count = (
         await session.scalar(
-            select(func.count()).select_from(EventRecord).where(*event_filter)
+            select(func.count()).select_from(EventRecord).where(event_condition)
         )
         or 0
     )
     legacy = await _legacy_scalar(
         session,
-        select(func.count()).select_from(records_table).where(*legacy_filter),
+        select(func.count()).select_from(records_table).where(legacy_condition),
         "Could not query legacy records for checks",
     )
     return count + (legacy or 0)
 
 
 async def count_species(session: AsyncSession, user_id: int | None = None) -> int:
-    event_filter = [EventRecord.type == RecordType.REC_OK]
-    legacy_filter = [records_table.c.type == RecordType.REC_OK.value]
+    event_condition = EventRecord.type == RecordType.REC_OK
+    legacy_condition = records_table.c.type == RecordType.REC_OK.value
     if user_id is not None:
-        event_filter.append(EventRecord.user_id == user_id)
-        legacy_filter.append(records_table.c.user_id == user_id)
+        event_condition = and_(event_condition, EventRecord.user_id == user_id)
+        legacy_condition = and_(legacy_condition, records_table.c.user_id == user_id)
 
     er = select((EventRecord.genus + " " + EventRecord.species).label("name")).where(
-        *event_filter
+        event_condition
     )
     r = select(
         (records_table.c.tax_gen + " " + records_table.c.tax_sp).label("name")
-    ).where(*legacy_filter)
+    ).where(legacy_condition)
     union_sub = er.union(r).subquery()
     return (
         await _legacy_scalar(
@@ -128,14 +129,14 @@ async def count_species(session: AsyncSession, user_id: int | None = None) -> in
 
 
 async def count_families(session: AsyncSession, user_id: int | None = None) -> int:
-    event_filter = [EventRecord.type == RecordType.REC_OK]
-    legacy_filter = [records_table.c.type == RecordType.REC_OK.value]
+    event_condition = EventRecord.type == RecordType.REC_OK
+    legacy_condition = records_table.c.type == RecordType.REC_OK.value
     if user_id is not None:
-        event_filter.append(EventRecord.user_id == user_id)
-        legacy_filter.append(records_table.c.user_id == user_id)
+        event_condition = and_(event_condition, EventRecord.user_id == user_id)
+        legacy_condition = and_(legacy_condition, records_table.c.user_id == user_id)
 
-    er = select(EventRecord.family.label("name")).where(*event_filter)
-    r = select(records_table.c.tax_fam.label("name")).where(*legacy_filter)
+    er = select(EventRecord.family.label("name")).where(event_condition)
+    r = select(records_table.c.tax_fam.label("name")).where(legacy_condition)
     union_sub = er.union(r).subquery()
     return (
         await _legacy_scalar(
@@ -148,14 +149,14 @@ async def count_families(session: AsyncSession, user_id: int | None = None) -> i
 
 
 async def count_genera(session: AsyncSession, user_id: int | None = None) -> int:
-    event_filter = [EventRecord.type == RecordType.REC_OK]
-    legacy_filter = [records_table.c.type == RecordType.REC_OK.value]
+    event_condition = EventRecord.type == RecordType.REC_OK
+    legacy_condition = records_table.c.type == RecordType.REC_OK.value
     if user_id is not None:
-        event_filter.append(EventRecord.user_id == user_id)
-        legacy_filter.append(records_table.c.user_id == user_id)
+        event_condition = and_(event_condition, EventRecord.user_id == user_id)
+        legacy_condition = and_(legacy_condition, records_table.c.user_id == user_id)
 
-    er = select(EventRecord.genus.label("name")).where(*event_filter)
-    r = select(records_table.c.tax_gen.label("name")).where(*legacy_filter)
+    er = select(EventRecord.genus.label("name")).where(event_condition)
+    r = select(records_table.c.tax_gen.label("name")).where(legacy_condition)
     union_sub = er.union(r).subquery()
     return (
         await _legacy_scalar(
@@ -247,15 +248,14 @@ async def sum_user_individuals(session: AsyncSession, user_id: int) -> float:
 async def _most_common_combined(
     session: AsyncSession,
     user_id: int,
-    event_col,
-    legacy_col,
-    event_expr,
-    legacy_expr,
-    where_extra,
+    event_col: Any,  # noqa: ANN401
+    event_expr: Any,  # noqa: ANN401
+    legacy_expr: Any,  # noqa: ANN401
+    where_extra: list[Any],  # noqa: ANN401
     label: str,
     warning: str,
-):
-    """Internal: most common value across EventRecord + legacy with EventRecord fallback."""
+) -> Any:  # noqa: ANN401
+    """Most common value across EventRecord + legacy, EventRecord fallback."""
     primary = await session.scalar(
         select(event_expr)
         .where(
@@ -294,7 +294,6 @@ async def most_common_family(session: AsyncSession, user_id: int) -> str | None:
         session,
         user_id,
         event_col=EventRecord.family,
-        legacy_col=records_table.c.tax_fam,
         event_expr=EventRecord.family,
         legacy_expr=records_table.c.tax_fam,
         where_extra=[
@@ -311,7 +310,6 @@ async def most_common_genus(session: AsyncSession, user_id: int) -> str | None:
         session,
         user_id,
         event_col=EventRecord.genus,
-        legacy_col=records_table.c.tax_gen,
         event_expr=EventRecord.genus,
         legacy_expr=records_table.c.tax_gen,
         where_extra=[
@@ -330,7 +328,6 @@ async def most_common_species(session: AsyncSession, user_id: int) -> str | None
         session,
         user_id,
         event_col=event_species,
-        legacy_col=legacy_species,
         event_expr=event_species,
         legacy_expr=legacy_species,
         where_extra=[
