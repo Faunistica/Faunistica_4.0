@@ -149,8 +149,11 @@ async def _cleanup_pending_registrations() -> None:
             return
         except Exception:
             logger.exception("Failed to clean pending registrations")
+        try:
+            await asyncio.sleep(settings.REGISTRATION_PENDING_CLEANUP_INTERVAL_SECONDS)
+        except asyncio.CancelledError:
+            return
 
-        await asyncio.sleep(settings.REGISTRATION_PENDING_CLEANUP_INTERVAL_SECONDS)
 
 
 @asynccontextmanager
