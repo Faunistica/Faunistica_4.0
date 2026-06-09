@@ -48,9 +48,9 @@ async def export_records(
     service: Annotated[RecordService, Depends()],
     token: TokenUser,
     publ_id: Annotated[
-        int,
+        int | None,
         Query(ge=1, description="Publication ID"),
-    ],
+    ] = None,
     user_id: Annotated[int | None, Query(description="User ID")] = None,
     scope: Annotated[
         Literal["user", "project"],
@@ -67,6 +67,7 @@ async def export_records(
         publ_id=publ_id,
         page=1,
         page_size=settings.MAX_USER_RECORDS_PER_PUBLICATION,
+        validate=False,
     )
 
     if format == "csv":

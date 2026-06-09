@@ -15,6 +15,7 @@ from schema.records import RecordData, RecordFull, Specimen
 logger = logging.getLogger(__name__)
 
 COLUMN_MAPPING: dict[str, str] = {
+    "publ_id": "Publication",
     "country": "Country",
     "region": "Region",
     "district": "District",

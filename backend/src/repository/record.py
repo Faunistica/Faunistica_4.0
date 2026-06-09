@@ -73,6 +73,32 @@ async def delete_record(session: AsyncSession, record_id: UUID) -> EventRecord |
     return result.scalar_one_or_none()
 
 
+async def get_user_records(
+    session: AsyncSession,
+    user_id: int,
+    sort: Literal["created_at", "updated_at"] = "created_at",
+) -> tuple[Sequence[EventRecord], int]:
+    order_col = getattr(EventRecord, sort, EventRecord.created_at)
+
+    where_condition = and_(
+        EventRecord.user_id == user_id,
+        EventRecord.type != RecordType.REC_DEL,
+    )
+
+    count_stmt = select(func.count()).where(where_condition)
+    count_result = await session.execute(count_stmt)
+    total = count_result.scalar_one()
+
+    stmt = (
+        select(EventRecord)
+        .where(where_condition)
+        .order_by(EventRecord.publ_id.desc(), order_col.desc(), EventRecord.id)
+    )
+
+    result = await session.execute(stmt)
+    return result.scalars().all(), total
+
+
 async def get_records_paginated(
     session: AsyncSession,
     user_id: int,

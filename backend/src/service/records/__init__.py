@@ -13,6 +13,7 @@ from core.enums import RecordType
 from core.exceptions import (
     ImportLimitExceededError,
     NoPublicationsAssignedError,
+    PivotWithoutPublID,
     PublicationForbiddenError,
     RecordForbiddenError,
     RecordLimitExceededError,
@@ -176,14 +177,17 @@ class RecordService:
     async def list_records(
         self,
         user_id: int,
-        publ_id: int,
+        publ_id: int | None,
         page: int = 1,
         page_size: int = 20,
         sort: Literal["created_at", "updated_at"] = "created_at",
         pivot_record_id: UUID | None = None,
+        validate: bool = True,
     ) -> PaginatedResponse[RecordFull]:
         """List records with pagination, filtered by user_id and publ_id."""
         if pivot_record_id is not None:
+            if publ_id is None:
+                raise PivotWithoutPublID(pivot_record_id)
             result = await repo.get_record_page(
                 self.session,
                 pivot_record_id,
@@ -197,22 +201,33 @@ class RecordService:
 
             page, _ = result
 
-        records, total = await repo.get_records_paginated(
-            self.session, user_id, publ_id, page=page, page_size=page_size, sort=sort
-        )
-
-        # Fetch language once — all records in a list share the same publ_id
         language = None
-        if records:
-            publ = await get_publication(self.session, records[0].publ_id)
-            language = publ.language if publ else None
+        if publ_id is not None:
+            records, total = await repo.get_records_paginated(
+                self.session,
+                user_id,
+                publ_id,
+                page=page,
+                page_size=page_size,
+                sort=sort,
+            )
+
+            # Fetch language once — all records in a list share the same publ_id
+            if records:
+                publ = await get_publication(self.session, records[0].publ_id)
+                language = publ.language if publ else None
+        else:
+            records, total = await repo.get_user_records(
+                self.session, user_id, sort=sort
+            )
 
         items: list[RecordFull] = []
         for r in records:
             full = _enrich_record(r)
-            record_data = RecordData.model_validate(r)
-            errors = validate_record(record_data, language=language)
-            full.errors = _errors_to_schema(errors)
+            if validate:
+                record_data = RecordData.model_validate(r)
+                errors = validate_record(record_data, language=language)
+                full.errors = _errors_to_schema(errors)
             items.append(full)
 
         pages = (total + page_size - 1) // page_size if page_size > 0 else 0
