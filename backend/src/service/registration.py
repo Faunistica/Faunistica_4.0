@@ -70,6 +70,7 @@ async def get_validated_pending_by_token(
 
 async def create_user_from_survey(
     data: SurveyRequest,
+    items: str,
     password_hash: str,
     pending: PendingRegistration,
     id: int,
@@ -85,6 +86,7 @@ async def create_user_from_survey(
         lng=data.lng,
         comm=data.comm,
         sex=data.sex,
+        items=items,
         reg_stat=UserState.REG_COMPLETED,
         hash=password_hash,
         hash_date=datetime.now(UTC).replace(tzinfo=None),
