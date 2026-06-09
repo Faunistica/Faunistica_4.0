@@ -295,6 +295,14 @@ class Messages:
         )
 
     @staticmethod
+    def registration_failed() -> str:
+        return (
+            "Здравствуйте, тут такая проблемка...\n"
+            "Мы не смогли сохранить данные о вас в базу. "
+            "Попробуйте снова 😔"
+        )
+
+    @staticmethod
     def unexpected_error() -> str:
         return (
             "⚠️ Мне жаль, но вы столкнулись с непредвиденной ошибкой.\n"

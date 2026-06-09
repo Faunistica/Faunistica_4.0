@@ -3,7 +3,7 @@ import json
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import aiohttp
@@ -118,7 +118,7 @@ async def _cleanup_pending_registrations() -> None:
     while True:
         try:
             async for session in get_session():
-                now = datetime.now()
+                now = datetime.now(UTC).replace(tzinfo=None)
                 token_expired_cutoff = now - timedelta(
                     seconds=settings.TG_TOKEN_EXPIRE_SECONDS
                 )
@@ -134,10 +134,9 @@ async def _cleanup_pending_registrations() -> None:
                 confirmed_count = await delete_confirmed_pending(
                     session, confirmed_cutoff
                 )
-                registration_count = 0
-                """registration_count = await delete_registration_pending(
+                registration_count = await delete_registration_pending(
                     session, survey_cutoff
-                ) """
+                )
                 if expired_count or confirmed_count or registration_count:
                     logger.info(
                         "Cleaned pending reg: expired=%d confirmed=%d on_survey=%d",
@@ -150,8 +149,10 @@ async def _cleanup_pending_registrations() -> None:
             return
         except Exception:
             logger.exception("Failed to clean pending registrations")
-
-        await asyncio.sleep(settings.REGISTRATION_PENDING_CLEANUP_INTERVAL_SECONDS)
+        try:
+            await asyncio.sleep(settings.REGISTRATION_PENDING_CLEANUP_INTERVAL_SECONDS)
+        except asyncio.CancelledError:
+            return
 
 
 @asynccontextmanager

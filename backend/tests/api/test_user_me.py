@@ -50,7 +50,6 @@ async def test_put_me_update_email(
     assert response.status_code == 200
 
 
-
 @pytest.mark.asyncio
 async def test_put_me_invalid_language(
     authenticated_client: AsyncClient,

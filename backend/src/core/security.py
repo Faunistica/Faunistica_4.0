@@ -84,7 +84,7 @@ def set_response_token_cookies(response: Response, payload: TokenPayload) -> Non
 
 
 def create_access_token(payload: TokenPayload) -> str:
-    expires = datetime.now(UTC) + timedelta(
+    expires = datetime.now(UTC).replace(tzinfo=None) + timedelta(
         seconds=settings.ACCESS_TOKEN_EXPIRE_SECONDS
     )
 
@@ -100,7 +100,7 @@ def create_access_token(payload: TokenPayload) -> str:
 
 
 def create_refresh_token(payload: TokenPayload) -> str:
-    expires = datetime.now(UTC) + timedelta(
+    expires = datetime.now(UTC).replace(tzinfo=None) + timedelta(
         seconds=settings.REFRESH_TOKEN_EXPIRE_SECONDS
     )
 
