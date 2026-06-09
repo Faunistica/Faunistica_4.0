@@ -7,9 +7,8 @@ from aiogram import Bot
 from fastapi import Depends
 
 from bot.messages import Messages
-from core.config import settings
 from core.dependencies import DBSession
-from core.enums import UserLanguage, UserState
+from core.enums import UserState
 from core.exceptions import MsgErr, Ok, UsernameAlreadyExistsError
 from core.model import User
 from repository.user import (
@@ -134,47 +133,6 @@ class UserService:
         except UsernameAlreadyExistsError:
             return MsgErr(error=Messages.username_already_exists())
 
-    @staticmethod
-    def validate_name(name: str) -> Ok | MsgErr:
-        return UserValidators.validate_name(name)
-
-    @staticmethod
-    def validate_sex(sex: str) -> Ok | MsgErr:
-        return UserValidators.validate_sex(sex)
-
-    @staticmethod
-    def validate_age_str(age_str: str) -> Ok | MsgErr:
-        return UserValidators.validate_age_str(age_str)
-
-    @staticmethod
-    def parse_language(lang: str) -> UserLanguage | MsgErr:
-        return UserValidators.parse_language(lang)
-
-    @staticmethod
-    def validate_language(lang: UserLanguage) -> Ok | MsgErr:
-        return UserValidators.validate_language(lang)
-
-    @staticmethod
-    def validate_email(email: str) -> Ok | MsgErr:
-        return UserValidators.validate_email(email)
-
-    @staticmethod
-    def get_missing_survey_fields(user: User) -> list[str]:
-        fields = ["age", "comm", "lng", "rating", "region", "email", "sex"]
-        missing = []
-        for field in fields:
-            value = getattr(user, field, None)
-            if value is None or (field in ("comm", "email", "region") and value == ""):
-                missing.append(field)
-        return missing
-
-    @staticmethod
-    def is_password_expired(user: User) -> bool:
-        if user.hash_date is None:
-            return False
-        minutes = (datetime.now() - user.hash_date).total_seconds() / 60
-        return minutes > settings.PASSWORD_EXPIRE_MINUTES
-
     # ========== Mutations ==========
 
     async def _update(self, user_id: int, **kw: Any) -> User | None:  # noqa: ANN401
@@ -187,14 +145,14 @@ class UserService:
         await self._update(user_id, reg_stat=UserState.REG_NAME)
 
     async def set_name(self, user_id: int, name: str) -> Ok | MsgErr:
-        result = self.validate_name(name)
+        result = UserValidators.validate_name(name)
         if isinstance(result, MsgErr):
             return result
         await self._update(user_id, name=name, reg_stat=UserState.REG_AGE)
         return Ok()
 
     async def set_age(self, user_id: int, age_str: str) -> Ok | MsgErr:
-        result = self.validate_age_str(age_str)
+        result = UserValidators.validate_age_str(age_str)
         if isinstance(result, MsgErr):
             return result
         await self._update(
@@ -206,7 +164,7 @@ class UserService:
         await self._update(user_id, comm=comm, reg_stat=UserState.REG_LANGUAGE)
 
     async def set_language_and_complete(self, user_id: int, lang: str) -> Ok | MsgErr:
-        parsed = self.parse_language(lang)
+        parsed = UserValidators.parse_language(lang)
         if isinstance(parsed, MsgErr):
             return parsed
         await self._update(

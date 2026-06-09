@@ -1,9 +1,12 @@
 import re
+from datetime import datetime
 from typing import get_args
 
 from bot.messages import Messages
+from core.config import settings
 from core.enums import UserLanguage
 from core.exceptions import MsgErr, Ok
+from core.model import User
 
 _NAME_REGEX = re.compile(r"^[а-яА-ЯёЁa-zA-Z0-9\_.]+$")
 _EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
@@ -63,3 +66,20 @@ class UserValidators:
         if not _EMAIL_REGEX.fullmatch(email):
             return MsgErr(error=Messages.not_email())
         return Ok()
+
+    @staticmethod
+    def get_missing_survey_fields(user: User) -> list[str]:
+        fields = ["age", "comm", "lng", "rating", "region", "email", "sex"]
+        missing = []
+        for field in fields:
+            value = getattr(user, field, None)
+            if value is None or (field in ("comm", "email", "region") and value == ""):
+                missing.append(field)
+        return missing
+
+    @staticmethod
+    def is_password_expired(user: User) -> bool:
+        if user.hash_date is None:
+            return False
+        minutes = (datetime.now() - user.hash_date).total_seconds() / 60
+        return minutes > settings.PASSWORD_EXPIRE_MINUTES

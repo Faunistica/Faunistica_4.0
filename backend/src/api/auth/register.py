@@ -167,9 +167,10 @@ async def registration_status(
         if datetime.now(UTC).replace(tzinfo=None) >= deadline:
             await session.rollback()
             return RegistrationStatusResponse(status=PendingStatus.AWAITING_CODE)
-
-        await session.rollback()
-        await asyncio.sleep(settings.TG_AUTH_POLL_INTERVAL_SECONDS)
+        try:
+            await asyncio.sleep(settings.TG_AUTH_POLL_INTERVAL_SECONDS)
+        except Exception:
+            return None
     return None
 
 
