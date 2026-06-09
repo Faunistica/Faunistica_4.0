@@ -31,9 +31,11 @@ async def get_pending_by_code(
 
 
 async def get_pending_by_token(
-    session: AsyncSession, token: str
+    session: AsyncSession, token: str, populate_existing: bool = False
 ) -> PendingRegistration | None:
     stmt = select(PendingRegistration).where(PendingRegistration.token == token)
+    if populate_existing:
+        stmt = stmt.execution_options(populate_existing=True)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
