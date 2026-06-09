@@ -20,6 +20,12 @@ async def find_user_by_username(session: AsyncSession, username: str) -> User | 
     return result.scalar_one_or_none()
 
 
+async def find_user_by_name(session: AsyncSession, name: str) -> User | None:
+    stmt = select(User).where(User.name == name)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
 async def get_user_expect(session: AsyncSession, user_id: int) -> User:
     user = await get_user(session, user_id)
     if user is None:
@@ -68,6 +74,12 @@ async def update_user(
 
 async def count_users_with_username(session: AsyncSession, username: str) -> int:
     stmt = select(func.count()).select_from(User).where(User.username == username)
+    result = await session.execute(stmt)
+    return result.scalar_one()
+
+
+async def count_users_with_name(session: AsyncSession, name: str) -> int:
+    stmt = select(func.count()).select_from(User).where(User.name == name)
     result = await session.execute(stmt)
     return result.scalar_one()
 

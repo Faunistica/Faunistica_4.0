@@ -1,22 +1,20 @@
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Response
+from fastapi import Depends, HTTPException
 
-from core.dependencies import ClientIP, DBSession
+from core.dependencies import DBSession
 from core.enums import UserState
 from core.exceptions import UserNotCreated, UserNotFoundError
 from core.model import PendingRegistration, User
-from core.security import generate_code_for_tg_enter, set_response_token_cookies
+from core.security import generate_code_for_tg_enter
 from repository.registration import (
     get_pending_by_code,
     get_pending_by_token,
     update_pending_by_token,
 )
 from repository.user import get_user
-from schema.jwt import TokenPayload
 from schema.registration import RegistrationStartResponse, SurveyRequest
-from service.actions import ActionService
 from service.user import UserService
 
 
@@ -76,7 +74,7 @@ async def create_user_from_survey(
     id: int,
     user_service: Annotated[UserService, Depends()],
 ) -> User:
-    current_user = await user_service.full_registration(
+    current_user = await user_service.complete_full_registration(
         user_id=id,
         tlg_name=pending.telegram_name,
         tlg_username=pending.telegram_username,
@@ -96,27 +94,6 @@ async def create_user_from_survey(
     if current_user is None:
         raise UserNotCreated(id)
     return current_user
-
-
-async def create_auth_response(
-    response: Response,
-    ip: ClientIP,
-    current_user: User,
-    action_service: ActionService,
-) -> TokenPayload:
-    if current_user.name is None:
-        raise HTTPException(status_code=403, detail="Name is null")
-
-    token_payload = TokenPayload(
-        sub=str(current_user.user_id),
-        username=current_user.name,
-        version=current_user.token_version,
-    )
-
-    set_response_token_cookies(response, token_payload)
-    await action_service.log_login(current_user.user_id, ip)
-
-    return token_payload
 
 
 async def refresh_code(

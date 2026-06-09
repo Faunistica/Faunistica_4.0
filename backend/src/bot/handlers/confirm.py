@@ -61,16 +61,19 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
         ):
             pending = None
         if pending is None:
+            await state.clear()
             await message.answer(Messages.confirmation_code_invalid())
             return
 
-        if pending.status == PendingStatus.CODE_PROCESSING and is_enter_expired(
+        if pending.status == PendingStatus.AWAITING_CODE and is_enter_expired(
             pending.code_created_at, settings.TG_CODE_EXPIRE_SECONDS
         ):
+            await state.clear()
             await message.answer(Messages.confirmation_code_expired())
             return
 
-        if pending.status != PendingStatus.CODE_PROCESSING:
+        if pending.status != PendingStatus.AWAITING_CODE:
+            await state.clear()
             await message.answer(Messages.confirmation_code_used())
             return
 
@@ -79,11 +82,12 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
             await update_pending_by_code(
                 session,
                 code,
-                status=PendingStatus.AUTH,
+                status=PendingStatus.AWAITING_API_LOGIN,
                 telegram_id=message.from_user.id,
             )
             await session.commit()
             await message.answer(Messages.auth_confirmed())
+            await state.clear()
             return
 
         tlg_name = message.from_user.full_name
@@ -93,7 +97,7 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
             await update_pending_by_code(
                 session,
                 code,
-                status=PendingStatus.REGISTRATION,
+                status=PendingStatus.AWAITING_API_REGISTRATION,
                 reg_run=datetime.now(UTC).replace(tzinfo=None),
                 telegram_id=message.from_user.id,
                 telegram_username=tlg_username,
