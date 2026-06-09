@@ -60,16 +60,19 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
         ):
             pending = None
         if pending is None:
+            await state.clear()
             await message.answer(Messages.confirmation_code_invalid())
             return
 
         if pending.status == PendingStatus.AWAITING_CODE and is_enter_expired(
             pending.code_created_at, settings.TG_CODE_EXPIRE_SECONDS
         ):
+            await state.clear()
             await message.answer(Messages.confirmation_code_expired())
             return
 
         if pending.status != PendingStatus.AWAITING_CODE:
+            await state.clear()
             await message.answer(Messages.confirmation_code_used())
             return
 
@@ -83,6 +86,7 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
             )
             await session.commit()
             await message.answer(Messages.auth_confirmed())
+            await state.clear()
             return
 
         tlg_name = message.from_user.full_name
