@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import aiohttp
+from aiohttp_socks import ProxyConnector
 from alembic.autogenerate import compare_metadata
 from alembic.config import Config
 from alembic.migration import MigrationContext
@@ -169,7 +170,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     if settings.BOT_PROXY is not None:
         proxy_url = settings.BOT_PROXY.unicode_string()
         if proxy_url.startswith(("socks5://", "socks4://")):
-            from aiohttp_socks import ProxyConnector
             connector = ProxyConnector.from_url(proxy_url)
             app.state.http_session = aiohttp.ClientSession(connector=connector)
         else:
