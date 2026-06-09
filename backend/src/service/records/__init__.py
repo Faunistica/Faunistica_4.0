@@ -242,7 +242,7 @@ class RecordService:
         publ_id: int,
     ) -> bytes:
         records = await repo.get_event_records_for_export(
-            self.session, user_id, publ_id
+            self.session, user_id, publ_id, only_submitted=False
         )
         items = [_enrich_record(r) for r in records]
         return records_to_excel(items)
@@ -251,7 +251,9 @@ class RecordService:
         self,
         user_id: int,
     ) -> bytes:
-        event_records = await repo.get_event_records_for_export(self.session, user_id)
+        event_records = await repo.get_event_records_for_export(
+            self.session, user_id, only_submitted=True
+        )
         legacy_records = await repo.get_legacy_records_for_export(self.session, user_id)
         items = [_enrich_record(r) for r in event_records]
         return records_to_excel_all(items, legacy_records)

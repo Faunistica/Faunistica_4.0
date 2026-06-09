@@ -208,10 +208,16 @@ async def get_event_records_for_export(
     session: AsyncSession,
     user_id: int,
     publ_id: int | None = None,
+    only_submitted: bool = False,
 ) -> Sequence[EventRecord]:
+    if only_submitted:
+        type_filter = EventRecord.type == RecordType.REC_OK
+    else:
+        type_filter = EventRecord.type != RecordType.REC_DEL
+
     where = and_(
         EventRecord.user_id == user_id,
-        EventRecord.type == RecordType.REC_OK,
+        type_filter,
     )
     if publ_id is not None:
         where = and_(where, EventRecord.publ_id == publ_id)
