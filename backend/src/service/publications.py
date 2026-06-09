@@ -1,11 +1,14 @@
 import logging
+import random
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import update
 
 from core import model
+from core.config import settings
 from core.dependencies import DBSession
+from core.enums import UserLanguage
 from core.exceptions import (
     NoPublicationsAssignedError,
     PublicationForbiddenError,
@@ -159,12 +162,27 @@ class PublicationService:
         publications = await get_publications_by_ids(self.session, publ_ids)
         return [Publication.model_validate(p) for p in publications]
 
-    def _pipe_to_array(self, pipe_str: str) -> list[int]:
+    @staticmethod
+    def generate_started_publications(language: UserLanguage) -> str:
+        if language == "all":
+            return PublicationService.array_to_pipe(
+                [
+                    random.choice(settings.STARTED_PUBLICATION_IDS_ENG),
+                    random.choice(settings.STARTED_PUBLICATION_IDS_RUS),
+                ]
+            )
+        if language == "eng":
+            return random.sample(settings.STARTED_PUBLICATION_IDS_ENG, 2)
+        return random.sample(settings.STARTED_PUBLICATION_IDS_RUS, 2)
+
+    @staticmethod
+    def pipe_to_array(pipe_str: str) -> list[int]:
         """Convert '123|456|789' to [123, 456, 789]"""
         if not pipe_str:
             return []
         return [int(x) for x in pipe_str.split("|") if x.strip()]
 
-    def _array_to_pipe(self, arr: list[int]) -> str:
+    @staticmethod
+    def array_to_pipe(arr: list[int]) -> str:
         """Convert [123, 456, 789] to '123|456|789'"""
         return "|".join(str(x) for x in arr)

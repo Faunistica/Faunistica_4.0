@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
+from service.publications import PublicationService
 from core.config import settings
 from core.dependencies import ClientIP, DBSession
 from core.enums import PendingStatus
@@ -99,9 +100,10 @@ async def survey_filling(
     await user_service.check_username_unique(data.username)
     pending, user_id = await get_validated_pending_by_code(session, data.code)
     password_hash = get_password_hash(data.password)
+    items = PublicationService.generate_started_publications(data.lng)
     try:
         current_user = await create_user_from_survey(
-            data, password_hash, pending, user_id, user_service
+            data, items, password_hash, pending, user_id, user_service
         )
         await session.commit()
     except Exception as e:

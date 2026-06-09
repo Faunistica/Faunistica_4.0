@@ -36,7 +36,7 @@ def yes_no() -> ReplyKeyboardMarkup:
 commands = [
     BotCommand(command="start", description="Запустить бота"),
     BotCommand(command="menu", description="Меню"),
-    BotCommand(command="registration", description="Информация о регистрации"),
+    BotCommand(command="register", description="Информация о регистрации"),
     BotCommand(command="confirm", description="Подтверждение кода"),
     BotCommand(command="support", description="Поддержка"),
 ]

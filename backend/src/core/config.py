@@ -11,7 +11,6 @@ from pydantic_settings import (
     YamlConfigSettingsSource,
 )
 
-# from core.exceptions import APIException
 
 
 def to_camel_case(string: str) -> str:
@@ -94,6 +93,11 @@ class TGAuthSettings(CamelCaseSettings):
     SURVEY_FILLING_INTERVAL_SECONDS: int = 30 * 60  # 30 min
 
 
+class StartedPublications(CamelCaseSettings):
+    STARTED_PUBLICATION_IDS_ENG: list[int] = [3378, 3411]
+    STARTED_PUBLICATION_IDS_RUS: list[int] = [815, 2739, 5287]
+
+
 class Settings(
     DatabaseSettings,
     SecuritySettings,
@@ -102,6 +106,7 @@ class Settings(
     AppSettings,
     DataSettings,
     TGAuthSettings,
+    StartedPublications,
 ):
     model_config = SettingsConfigDict(
         yaml_file=Path("config.yaml"),
