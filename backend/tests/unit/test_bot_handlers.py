@@ -4,12 +4,12 @@ import pytest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, User
 
-from bot.states import ConfirmStates
-from bot.handlers.confirm import confirm_registration
 from bot.handlers.admin import logs, reply
+from bot.handlers.confirm import confirm_registration
 from bot.handlers.menu import cancel, menu
 from bot.handlers.registration import registration_info
 from bot.handlers.start import start_command
+from bot.states import ConfirmStates
 
 
 async def _async_session_gen(session):
@@ -58,43 +58,6 @@ class TestStartCommand:
 
 
 class TestRegisterCommand:
-    async def test_register_new_user(self, mock_message, mock_state, mock_bot):
-        with (
-            patch("bot.handlers.registration.UserService") as mock_user_service_cls,
-            patch("bot.handlers.registration.get_session") as mock_get_session,
-        ):
-            mock_session = AsyncMock()
-            mock_get_session.return_value = _async_session_gen(mock_session)
-            mock_user_service = AsyncMock()
-            mock_user_service_cls.return_value = mock_user_service
-            mock_user_service.get.return_value = None
-
-            await registration_info(mock_message, mock_state, mock_bot)
-            mock_user_service.start_registration.assert_called_once_with(12345)
-            mock_state.set_state.assert_called_once()
-
-    async def test_register_existing_completed(
-        self, mock_message, mock_state, mock_bot
-    ):
-        user = MagicMock()
-        user.reg_stat = MagicMock()
-        user.reg_stat.value = "completed"
-        user.name = "TestUser"
-        with (
-            patch("bot.handlers.registration.UserService") as mock_user_service_cls,
-            patch("bot.handlers.registration.get_session") as mock_get_session,
-        ):
-            mock_session = AsyncMock()
-            mock_get_session.return_value = _async_session_gen(mock_session)
-            mock_user_service = AsyncMock()
-            mock_user_service_cls.return_value = mock_user_service
-            mock_user_service.get.return_value = user
-
-            await registration_info(mock_message, mock_state, mock_bot)
-            mock_message.answer.assert_called()
-
-
-class TestRegisterCommand:
     async def test_register_new_user_no_args(self, mock_message):
         await registration_info(mock_message)
         mock_message.answer.assert_called_once()
@@ -118,7 +81,7 @@ class TestConfirmCommand:
 
             mock_message.answer.assert_called_once()
             mock_state.set_state.assert_called_once_with(ConfirmStates.waiting_for_code)
-            mock_handle_code.assert_not_called() 
+            mock_handle_code.assert_not_called()
 
     async def test_confirm_with_code_arg(self, mock_message, mock_state):
         mock_message.text = "/confirm"
@@ -128,7 +91,9 @@ class TestConfirmCommand:
 
             mock_message.answer.assert_called_once()
             mock_state.set_state.assert_called_once_with(ConfirmStates.waiting_for_code)
-            mock_handle_code.assert_not_called() 
+            mock_handle_code.assert_not_called()
+
+
 class TestMenuCommand:
     async def test_menu_command_success(self, mock_message):
         await menu(mock_message)
