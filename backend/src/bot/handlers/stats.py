@@ -7,7 +7,7 @@ from bot.messages import Messages
 from core.config import settings
 from core.dependencies import get_session
 from core.exceptions import HandlerError
-from repository.bot_stats import get_bot_general_stats, get_bot_user_stats
+from repository.stats import get_bot_general_stats, get_bot_user_stats
 from repository.user import get_user
 
 router = Router()
