@@ -50,29 +50,16 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
             "Could not query legacy records table for total_records", exc_info=True
         )
 
-    species_count = await session.scalar(
-        select(func.count(func.distinct(EventRecord.genus + " " + EventRecord.species)))
-        .select_from(EventRecord)
-        .where(EventRecord.type == RecordType.REC_OK)
+    er = select((EventRecord.genus + " " + EventRecord.species).label("name")).where(
+        EventRecord.type == RecordType.REC_OK
     )
-    try:
-        async with session.begin_nested():
-            result = await session.scalar(
-                select(
-                    func.count(
-                        func.distinct(
-                            records_table.c.tax_gen + " " + records_table.c.tax_sp
-                        )
-                    )
-                )
-                .select_from(records_table)
-                .where(records_table.c.type == "rec_ok")
-            )
-        species_count = (species_count or 0) + (result or 0)
-    except SQLAlchemyError:
-        logger.warning(
-            "Could not query legacy records for species_count", exc_info=True
-        )
+    r = select(
+        (records_table.c.tax_gen + " " + records_table.c.tax_sp).label("name")
+    ).where(records_table.c.type == "rec_ok")
+    union_sub = er.union(r).subquery()
+    species_count = (
+        await session.scalar(select(func.count(func.distinct(union_sub.c.name)))) or 0
+    )
 
     processed_publications = await session.scalar(
         select(func.count(func.distinct(Action.object)))
@@ -80,23 +67,16 @@ async def get_project_statistics(session: AsyncSession) -> ProjectStats:
         .where(Action.action == "publ_end_full")
     )
 
-    families_count = await session.scalar(
-        select(func.count(func.distinct(EventRecord.family)))
-        .select_from(EventRecord)
-        .where(EventRecord.type == RecordType.REC_OK)
+    er = select(EventRecord.family.label("name")).where(
+        EventRecord.type == RecordType.REC_OK
     )
-    try:
-        async with session.begin_nested():
-            result = await session.scalar(
-                select(func.count(func.distinct(records_table.c.tax_fam)))
-                .select_from(records_table)
-                .where(records_table.c.type == "rec_ok")
-            )
-        families_count = (families_count or 0) + (result or 0)
-    except SQLAlchemyError:
-        logger.warning(
-            "Could not query legacy records for families_count", exc_info=True
-        )
+    r = select(records_table.c.tax_fam.label("name")).where(
+        records_table.c.type == "rec_ok"
+    )
+    union_sub = er.union(r).subquery()
+    families_count = (
+        await session.scalar(select(func.count(func.distinct(union_sub.c.name)))) or 0
+    )
 
     checks_count = await session.scalar(
         select(func.count())
@@ -218,22 +198,16 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
         or 0
     )
 
-    publications_processed = await session.scalar(
-        select(func.count(func.distinct(EventRecord.publ_id)))
-        .select_from(EventRecord)
-        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
+    er = select(EventRecord.publ_id.label("id")).where(
+        EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK
     )
-    legacy = await _legacy_scalar(
-        session,
-        select(func.count(func.distinct(records_table.c.publ_id)))
-        .select_from(records_table)
-        .where(
-            records_table.c.user_id == user_id,
-            records_table.c.type == "rec_ok",
-        ),
-        "Could not query legacy records for user publications_processed",
+    r = select(records_table.c.publ_id.label("id")).where(
+        records_table.c.user_id == user_id, records_table.c.type == "rec_ok"
     )
-    publications_processed = (publications_processed or 0) + (legacy or 0)
+    union_sub = er.union(r).subquery()
+    publications_processed = (
+        await session.scalar(select(func.count(func.distinct(union_sub.c.id)))) or 0
+    )
 
     most_common_family = await session.scalar(
         select(EventRecord.family)
@@ -401,60 +375,38 @@ async def get_user_statistics(session: AsyncSession, user_id: int) -> UserStats:
     )
     total_individuals = (total_individuals or 0) + (legacy or 0)
 
-    distinct_families = await session.scalar(
-        select(func.count(func.distinct(EventRecord.family)))
-        .select_from(EventRecord)
-        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
+    er = select(EventRecord.family.label("name")).where(
+        EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK
     )
-    legacy = await _legacy_scalar(
-        session,
-        select(func.count(func.distinct(records_table.c.tax_fam)))
-        .select_from(records_table)
-        .where(
-            records_table.c.user_id == user_id,
-            records_table.c.type == "rec_ok",
-        ),
-        "Could not query legacy records for user distinct_families",
+    r = select(records_table.c.tax_fam.label("name")).where(
+        records_table.c.user_id == user_id, records_table.c.type == "rec_ok"
     )
-    distinct_families = (distinct_families or 0) + (legacy or 0)
+    union_sub = er.union(r).subquery()
+    distinct_families = (
+        await session.scalar(select(func.count(func.distinct(union_sub.c.name)))) or 0
+    )
 
-    distinct_genera = await session.scalar(
-        select(func.count(func.distinct(EventRecord.genus)))
-        .select_from(EventRecord)
-        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
+    er = select(EventRecord.genus.label("name")).where(
+        EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK
     )
-    legacy = await _legacy_scalar(
-        session,
-        select(func.count(func.distinct(records_table.c.tax_gen)))
-        .select_from(records_table)
-        .where(
-            records_table.c.user_id == user_id,
-            records_table.c.type == "rec_ok",
-        ),
-        "Could not query legacy records for user distinct_genera",
+    r = select(records_table.c.tax_gen.label("name")).where(
+        records_table.c.user_id == user_id, records_table.c.type == "rec_ok"
     )
-    distinct_genera = (distinct_genera or 0) + (legacy or 0)
+    union_sub = er.union(r).subquery()
+    distinct_genera = (
+        await session.scalar(select(func.count(func.distinct(union_sub.c.name)))) or 0
+    )
 
-    distinct_species = await session.scalar(
-        select(func.count(func.distinct(EventRecord.species)))
-        .select_from(EventRecord)
-        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
+    er = select(EventRecord.species.label("name")).where(
+        EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK
     )
-    legacy = await _legacy_scalar(
-        session,
-        select(
-            func.count(
-                func.distinct(records_table.c.tax_gen + " " + records_table.c.tax_sp)
-            )
-        )
-        .select_from(records_table)
-        .where(
-            records_table.c.user_id == user_id,
-            records_table.c.type == "rec_ok",
-        ),
-        "Could not query legacy records for user distinct_species",
+    r = select(
+        (records_table.c.tax_gen + " " + records_table.c.tax_sp).label("name")
+    ).where(records_table.c.user_id == user_id, records_table.c.type == "rec_ok")
+    union_sub = er.union(r).subquery()
+    distinct_species = (
+        await session.scalar(select(func.count(func.distinct(union_sub.c.name)))) or 0
     )
-    distinct_species = (distinct_species or 0) + (legacy or 0)
 
     most_common_year = await session.scalar(
         select(Publication.year)
@@ -572,7 +524,12 @@ async def get_cumulative_records(session: AsyncSession) -> list[Row]:
         .where(records_table.c.type == "rec_ok")
         .group_by(func.date(records_table.c.datetime))
     )
-    stmt = union_all(er_stmt, r_stmt).order_by(er_stmt.c.date)
+    union_sub = union_all(er_stmt, r_stmt).subquery()
+    stmt = (
+        select(union_sub.c.date, func.sum(union_sub.c.cnt).label("cnt"))
+        .group_by(union_sub.c.date)
+        .order_by(union_sub.c.date)
+    )
     result = await session.execute(stmt)
     rows = list(result.fetchall())
     _project_stats_cache["cumulative_records"] = rows
@@ -595,6 +552,10 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
     )
     total = await session.scalar(total_stmt) or 0
 
+    eligible_publs = select(Publication.publ_id).where(
+        Publication.ural == 1, Publication.spec == 1, Publication.occs == 1
+    )
+
     rows = await session.execute(
         select(EventRecord.publ_id, func.count(func.distinct(EventRecord.user_id)))
         .join(Publication, EventRecord.publ_id == Publication.publ_id)
@@ -609,20 +570,35 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
     )
     counts: dict[int, int] = {}
     for publ_id, cnt in rows:
-        counts[publ_id] = counts.get(publ_id, 0) + cnt
+        counts[publ_id] = cnt
 
     try:
         async with session.begin_nested():
+            er_pairs = (
+                select(EventRecord.publ_id, EventRecord.user_id)
+                .join(Publication, EventRecord.publ_id == Publication.publ_id)
+                .where(
+                    EventRecord.type == RecordType.REC_OK,
+                    Publication.ural == 1,
+                    Publication.spec == 1,
+                    Publication.occs == 1,
+                    EventRecord.user_id.notin_(admin_ids),
+                )
+            )
+            r_pairs = select(records_table.c.publ_id, records_table.c.user_id).where(
+                records_table.c.type == "rec_ok",
+                records_table.c.user_id.notin_(admin_ids),
+                records_table.c.publ_id.in_(eligible_publs),
+            )
+            union_pairs = er_pairs.union(r_pairs).subquery()
             rows = await session.execute(
                 select(
-                    records_table.c.publ_id,
-                    func.count(func.distinct(records_table.c.user_id)),
-                )
-                .where(records_table.c.type == "rec_ok")
-                .group_by(records_table.c.publ_id)
+                    union_pairs.c.publ_id,
+                    func.count(func.distinct(union_pairs.c.user_id)),
+                ).group_by(union_pairs.c.publ_id)
             )
             for publ_id, cnt in rows:
-                counts[publ_id] = counts.get(publ_id, 0) + cnt
+                counts[publ_id] = cnt
     except SQLAlchemyError:
         logger.warning("Could not query legacy records for progress", exc_info=True)
 

@@ -346,6 +346,8 @@ def records_to_excel_all(
     event_records: Sequence[RecordFull],
     legacy_records: list[dict],
 ) -> bytes:
+    # TODO: switch to Workbook(write_only=True) for large exports;
+    # write-only mode doesn't support cell-level formatting (bold headers)
     wb = Workbook()
 
     # Sheet v4 — event_records (same format as per-publication export)

@@ -376,11 +376,13 @@ const Statistics: FC = () => {
                                 <LabelCard key={key} label={label} value={displayStats?.[field]} />
                             ))}
                         </div>
+                        <PieChartCard
+                            data={displayStats}
+                            error={fiendName ? fiendError : userError}
+                        />
                     </>
                 )}
             </div>
-
-            <PieChartCard data={displayStats} error={fiendName ? fiendError : userError} />
         </div>
     );
 };
