@@ -95,11 +95,7 @@ async def count_species(session: AsyncSession, user_id: int | None = None) -> in
     event_count = (
         await session.scalar(
             select(
-                func.count(
-                    func.distinct(
-                        EventRecord.genus + " " + EventRecord.species
-                    )
-                )
+                func.count(func.distinct(EventRecord.genus + " " + EventRecord.species))
             )
             .select_from(EventRecord)
             .where(event_condition)
@@ -110,9 +106,7 @@ async def count_species(session: AsyncSession, user_id: int | None = None) -> in
         session,
         select(
             func.count(
-                func.distinct(
-                    records_table.c.tax_gen + " " + records_table.c.tax_sp
-                )
+                func.distinct(records_table.c.tax_gen + " " + records_table.c.tax_sp)
             )
         )
         .select_from(records_table)

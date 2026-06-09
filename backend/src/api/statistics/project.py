@@ -24,9 +24,7 @@ async def read_project_statistics(
     ]
 
     rec_rows = await get_cumulative_records(session)
-    cumulative_records = [
-        CumulativePoint(date=r.date, count=r.cnt) for r in rec_rows
-    ]
+    cumulative_records = [CumulativePoint(date=r.date, count=r.cnt) for r in rec_rows]
 
     total, processed = await get_progress(session)
     if total == 0:
