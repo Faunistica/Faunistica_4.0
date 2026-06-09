@@ -13,7 +13,6 @@ from core.enums import RecordType
 from core.exceptions import (
     ImportLimitExceededError,
     NoPublicationsAssignedError,
-    PivotWithoutPublID,
     PublicationForbiddenError,
     RecordForbiddenError,
     RecordLimitExceededError,
@@ -28,7 +27,12 @@ from repository.user import get_user_expect
 from schema.common import PaginatedResponse
 from schema.records import RecordData, RecordFull, RecordValidationError
 from service.actions import ActionService
-from service.export import ParseResult, is_row_empty
+from service.export import (
+    ParseResult,
+    is_row_empty,
+    records_to_excel,
+    records_to_excel_all,
+)
 from service.publications import PublicationService
 from service.records.validation import validate_record
 from service.records.validation.errors import ErrorCollection
@@ -177,7 +181,7 @@ class RecordService:
     async def list_records(
         self,
         user_id: int,
-        publ_id: int | None,
+        publ_id: int,
         page: int = 1,
         page_size: int = 20,
         sort: Literal["created_at", "updated_at"] = "created_at",
@@ -186,8 +190,6 @@ class RecordService:
     ) -> PaginatedResponse[RecordFull]:
         """List records with pagination, filtered by user_id and publ_id."""
         if pivot_record_id is not None:
-            if publ_id is None:
-                raise PivotWithoutPublID(pivot_record_id)
             result = await repo.get_record_page(
                 self.session,
                 pivot_record_id,
@@ -201,25 +203,19 @@ class RecordService:
 
             page, _ = result
 
-        language = None
-        if publ_id is not None:
-            records, total = await repo.get_records_paginated(
-                self.session,
-                user_id,
-                publ_id,
-                page=page,
-                page_size=page_size,
-                sort=sort,
-            )
+        records, total = await repo.get_records_paginated(
+            self.session,
+            user_id,
+            publ_id,
+            page=page,
+            page_size=page_size,
+            sort=sort,
+        )
 
-            # Fetch language once — all records in a list share the same publ_id
-            if records:
-                publ = await get_publication(self.session, records[0].publ_id)
-                language = publ.language if publ else None
-        else:
-            records, total = await repo.get_user_records(
-                self.session, user_id, sort=sort
-            )
+        language = None
+        if records:
+            publ = await get_publication(self.session, records[0].publ_id)
+            language = publ.language if publ else None
 
         items: list[RecordFull] = []
         for r in records:
@@ -239,6 +235,26 @@ class RecordService:
             page_size=page_size,
             pages=pages,
         )
+
+    async def export_records(
+        self,
+        user_id: int,
+        publ_id: int,
+    ) -> bytes:
+        records = await repo.get_event_records_for_export(
+            self.session, user_id, publ_id
+        )
+        items = [_enrich_record(r) for r in records]
+        return records_to_excel(items)
+
+    async def export_all_records(
+        self,
+        user_id: int,
+    ) -> bytes:
+        event_records = await repo.get_event_records_for_export(self.session, user_id)
+        legacy_records = await repo.get_legacy_records_for_export(self.session, user_id)
+        items = [_enrich_record(r) for r in event_records]
+        return records_to_excel_all(items, legacy_records)
 
     async def _get_and_check_ownership(
         self,

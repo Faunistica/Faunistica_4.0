@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.enums import RecordType
-from core.model import EventRecord
+from core.model import EventRecord, records_table
 from schema.records import RecordMetadata, SpecimenDbRow
 
 logger = logging.getLogger(__name__)
@@ -202,3 +202,42 @@ async def delete_records_by_user_and_publ(
         and_(EventRecord.user_id == user_id, EventRecord.publ_id == publ_id)
     )
     await session.execute(stmt)
+
+
+async def get_event_records_for_export(
+    session: AsyncSession,
+    user_id: int,
+    publ_id: int | None = None,
+) -> Sequence[EventRecord]:
+    where = and_(
+        EventRecord.user_id == user_id,
+        EventRecord.type == RecordType.REC_OK,
+    )
+    if publ_id is not None:
+        where = and_(where, EventRecord.publ_id == publ_id)
+
+    stmt = (
+        select(EventRecord)
+        .where(where)
+        .order_by(EventRecord.created_at.desc(), EventRecord.id)
+    )
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
+async def get_legacy_records_for_export(
+    session: AsyncSession,
+    user_id: int,
+) -> list[dict]:
+    stmt = (
+        select(records_table)
+        .where(
+            and_(
+                records_table.c["user_id"] == user_id,
+                records_table.c["type"] == "rec_ok",
+            )
+        )
+        .order_by(records_table.c["datetime"].desc())
+    )
+    result = await session.execute(stmt)
+    return [row._mapping for row in result.all()]

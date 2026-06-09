@@ -8,7 +8,7 @@ import pytest
 from conftest import SeedData
 from fastapi import status
 from httpx import AsyncClient
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.enums import RecordType
@@ -384,33 +384,6 @@ async def test_export_records_default(
 
 
 @pytest.mark.asyncio
-async def test_export_records_project_non_admin_403(
-    authenticated_client: AsyncClient, seed_data
-) -> None:
-    """Test export with scope=project returns 403 for non-admin."""
-    user = seed_data["users"][0]
-    response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&scope=project"
-    )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-@pytest.mark.asyncio
-async def test_export_records_csv(authenticated_client: AsyncClient, seed_data) -> None:
-    """Test export returns CSV file with user's records."""
-    user = seed_data["users"][0]
-    response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&format=csv"
-    )
-    assert response.status_code == 200
-    assert "text/csv" in response.headers["content-type"]
-    assert "attachment" in response.headers["content-disposition"]
-    assert "records.csv" in response.headers["content-disposition"]
-    content = response.text
-    assert "Genus" in content or "Family" in content
-
-
-@pytest.mark.asyncio
 async def test_export_records_xlsx_default(
     authenticated_client: AsyncClient, seed_data
 ) -> None:
@@ -425,6 +398,26 @@ async def test_export_records_xlsx_default(
         == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     assert "records.xlsx" in response.headers["content-disposition"]
+
+
+@pytest.mark.asyncio
+async def test_export_all_records(authenticated_client: AsyncClient, seed_data) -> None:
+    """Test export-all returns 2-sheet Excel file."""
+    user = seed_data["users"][0]
+    response = await authenticated_client.get(
+        f"/api/records/export-all?user_id={user.user_id}"
+    )
+    assert response.status_code == 200
+    assert (
+        response.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    assert "records_all.xlsx" in response.headers["content-disposition"]
+
+    wb = load_workbook(io.BytesIO(response.content))
+    assert "v4" in wb.sheetnames
+    assert "v2" in wb.sheetnames
+    wb.close()
 
 
 @pytest.mark.asyncio

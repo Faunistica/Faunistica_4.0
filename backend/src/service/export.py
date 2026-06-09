@@ -7,6 +7,7 @@ from typing import Any, Literal, TypedDict
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails, InitErrorDetails
 
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 COLUMN_MAPPING: dict[str, str] = {
     "publ_id": "Publication",
+    "created_at": "Created",
     "country": "Country",
     "region": "Region",
     "district": "District",
@@ -70,7 +72,13 @@ SPECIMEN_HEADER_MAP: dict[
     "Unknown Juvenile Quantity": ("none", "juvenile"),  # juveniles
 }
 
-REVERSE_COLUMN_MAPPING: dict[str, str] = {v: k for k, v in COLUMN_MAPPING.items()}
+
+def _build_reverse_mapping() -> dict[str, str]:
+    skip = {"publ_id", "created_at"}
+    return {v: k for k, v in COLUMN_MAPPING.items() if k not in skip}
+
+
+REVERSE_COLUMN_MAPPING = _build_reverse_mapping()
 
 
 class SpecimenColumnError(TypedDict):
@@ -281,6 +289,87 @@ def records_to_excel(records: Sequence[RecordFull]) -> bytes:
         specimen_vals = _specimens_to_columns(record.specimens or [])
         row.extend(specimen_vals[h] for h in list(SPECIMEN_HEADER_MAP))
         ws.append(row)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.read()
+
+
+LEGACY_COLUMNS: list[str] = [
+    "publ_id",
+    "datetime",
+    "adm_country",
+    "adm_region",
+    "adm_district",
+    "adm_loc",
+    "geo_nn",
+    "geo_ee",
+    "geo_nn_raw",
+    "geo_ee_raw",
+    "geo_origin",
+    "geo_REM",
+    "geo_uncert",
+    "adm_verbatim",
+    "eve_YY",
+    "eve_MM",
+    "eve_DD",
+    "eve_YY_end",
+    "eve_MM_end",
+    "eve_DD_end",
+    "eve_day.def",
+    "eve_habitat",
+    "eve_effort",
+    "eve_REM",
+    "abu_coll",
+    "abu",
+    "abu_details",
+    "abu_ind_rem",
+    "tax_fam",
+    "tax_gen",
+    "tax_sp",
+    "tax_sp.def",
+    "tax_nsp",
+    "type_status",
+    "tax_REM",
+]
+
+
+def _style_sheet(ws: Worksheet, headers: list[str]) -> None:
+    ws.append(headers)
+    for col in range(1, len(headers) + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 20
+        ws.cell(row=1, column=col).font = Font(bold=True)
+
+
+def records_to_excel_all(
+    event_records: Sequence[RecordFull],
+    legacy_records: list[dict],
+) -> bytes:
+    wb = Workbook()
+
+    # Sheet v4 — event_records (same format as per-publication export)
+    ws_v4 = wb.active
+    if ws_v4 is None:
+        raise RuntimeError("Workbook has no active sheet")
+    ws_v4.title = "v4"
+
+    v4_headers = list(COLUMN_MAPPING.values()) + list(SPECIMEN_HEADER_MAP)
+    _style_sheet(ws_v4, v4_headers)
+
+    for record in reversed(event_records):
+        row = [getattr(record, field, None) for field in COLUMN_MAPPING]
+        specimen_vals = _specimens_to_columns(record.specimens or [])
+        row.extend(specimen_vals[h] for h in list(SPECIMEN_HEADER_MAP))
+        ws_v4.append(row)
+
+    # Sheet v2 — legacy records
+    ws_v2 = wb.create_sheet("v2")
+    _style_sheet(ws_v2, LEGACY_COLUMNS)
+
+    for row_data in reversed(legacy_records):
+        row = [row_data.get(col) for col in LEGACY_COLUMNS]
+        ws_v2.append(row)
 
     output = io.BytesIO()
     wb.save(output)
