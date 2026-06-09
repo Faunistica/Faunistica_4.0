@@ -164,29 +164,43 @@ class PublicationService:
 
     @staticmethod
     def generate_started_publications(language: UserLanguage) -> str:
+        eng_publ = settings.STARTED_PUBLICATION_IDS_ENG
+        rus_publ = settings.STARTED_PUBLICATION_IDS_RUS
         if language == "all":
             return PublicationService._array_to_pipe(
                 random.sample(
-                    settings.STARTED_PUBLICATION_IDS_ENG,
-                    settings.STARTED_PUBLICATION_AMOUNT_ALL // 2,
+                    eng_publ,
+                    min(
+                        settings.STARTED_PUBLICATION_AMOUNT_ALL // 2,
+                        len(eng_publ),
+                    ),
                 )
                 + random.sample(
-                    settings.STARTED_PUBLICATION_IDS_ENG,
-                    settings.STARTED_PUBLICATION_AMOUNT_ALL // 2
-                    + settings.STARTED_PUBLICATION_AMOUNT_ALL % 2,
+                    rus_publ,
+                    min(
+                        settings.STARTED_PUBLICATION_AMOUNT_ALL // 2
+                        + settings.STARTED_PUBLICATION_AMOUNT_ALL % 2,
+                        len(rus_publ),
+                    ),
                 )
             )
         if language == "eng":
             return PublicationService._array_to_pipe(
                 random.sample(
-                    settings.STARTED_PUBLICATION_IDS_ENG,
-                    settings.STARTED_PUBLICATION_AMOUNT_ENG,
+                    eng_publ,
+                    min(
+                        settings.STARTED_PUBLICATION_AMOUNT_ENG,
+                        len(eng_publ),
+                    ),
                 )
             )
         return PublicationService._array_to_pipe(
             random.sample(
-                settings.STARTED_PUBLICATION_IDS_RUS,
-                settings.STARTED_PUBLICATION_AMOUNT_RUS,
+                rus_publ,
+                min(
+                    settings.STARTED_PUBLICATION_AMOUNT_RUS,
+                    len(rus_publ),
+                ),
             )
         )
 
