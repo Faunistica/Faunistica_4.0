@@ -4,6 +4,8 @@ import pytest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, User
 
+from bot.states import ConfirmStates
+from bot.handlers.confirm import confirm_registration
 from bot.handlers.admin import logs, reply
 from bot.handlers.menu import cancel, menu
 from bot.handlers.registration import registration_info
@@ -43,15 +45,15 @@ def mock_bot():
 
 
 class TestStartCommand:
-    async def test_start_command_success(self, mock_message):
-        await start_command(mock_message)
+    async def test_start_command_success(self, mock_message, mock_state):
+        await start_command(mock_message, mock_state)
         mock_message.answer.assert_called_once()
 
-    async def test_start_command_admin_chat(self, mock_message):
+    async def test_start_command_admin_chat(self, mock_message, mock_state):
         from core.config import settings
 
         mock_message.chat.id = settings.ADMIN_CHAT_ID
-        await start_command(mock_message)
+        await start_command(mock_message, mock_state)
         mock_message.answer.assert_not_called()
 
 
@@ -92,6 +94,41 @@ class TestRegisterCommand:
             mock_message.answer.assert_called()
 
 
+class TestRegisterCommand:
+    async def test_register_new_user_no_args(self, mock_message):
+        await registration_info(mock_message)
+        mock_message.answer.assert_called_once()
+
+    async def test_register_with_code_arg(self, mock_message):
+        mock_message.text = "/register 123456"
+        mock_message.from_user.id = 12345
+        mock_message.chat.id = 12345
+
+        with (
+            patch("bot.handlers.registration.handle_code_input") as mock_handle_code,
+        ):
+            await registration_info(mock_message)
+            mock_handle_code.assert_called_once_with(mock_message, "123456")
+
+
+class TestConfirmCommand:
+    async def test_confirm_no_args(self, mock_message, mock_state):
+        with patch("bot.handlers.registration.handle_code_input") as mock_handle_code:
+            await confirm_registration(mock_message, mock_state)
+
+            mock_message.answer.assert_called_once()
+            mock_state.set_state.assert_called_once_with(ConfirmStates.waiting_for_code)
+            mock_handle_code.assert_not_called() 
+
+    async def test_confirm_with_code_arg(self, mock_message, mock_state):
+        mock_message.text = "/confirm"
+
+        with patch("bot.handlers.registration.handle_code_input") as mock_handle_code:
+            await confirm_registration(mock_message, mock_state)
+
+            mock_message.answer.assert_called_once()
+            mock_state.set_state.assert_called_once_with(ConfirmStates.waiting_for_code)
+            mock_handle_code.assert_not_called() 
 class TestMenuCommand:
     async def test_menu_command_success(self, mock_message):
         await menu(mock_message)
