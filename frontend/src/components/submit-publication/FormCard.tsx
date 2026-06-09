@@ -330,7 +330,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Вы не оставили ни одной зиписи о находках в этой публикации. <br />
+                            Вы не оставили ни одной записи о находках в этой публикации. <br />
                             Всё равно завершить обработку?
                         </AlertDialogDescription>
                     </AlertDialogHeader>

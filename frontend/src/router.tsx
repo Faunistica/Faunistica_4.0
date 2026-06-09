@@ -147,6 +147,7 @@ export const routes: RouteObject[] = [
                             },
                             {
                                 path: 'publication/:id/submit',
+                                loader: requireInteractablePublication,
                                 lazy: () =>
                                     import('./pages/SubmitPublication').then((m) => ({
                                         Component: m.default,

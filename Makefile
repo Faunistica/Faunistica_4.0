@@ -1,4 +1,4 @@
-.PHONY: lint format lint-all format-all
+.PHONY: lint format test
 
 lint:
 	@echo "Linting backend..."

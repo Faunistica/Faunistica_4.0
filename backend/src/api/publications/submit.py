@@ -2,7 +2,7 @@ import logging
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from core.dependencies import ClientIP, HTTPClient, TokenUser
 from schema.common import ProcessingLevel
@@ -17,7 +17,7 @@ class PublicationSubmit(BaseModel):
     processing_level: ProcessingLevel
     urals_scope: Literal["yes", "no"] | None = None
     material_status: Literal["yes", "no"] | None = None
-    comment: str | None = None
+    comment: Annotated[str | None, Field(default=None, max_len=1000)]
 
 
 class SubmitStatusResponse(BaseModel):

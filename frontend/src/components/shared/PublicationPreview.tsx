@@ -32,7 +32,7 @@ export const PublicationPreview: FC<PublicationPreviewProps> = ({ publication, b
 
                 <CardTitle
                     className="line-clamp-2 text-lg font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
-                    title={publication.name || 'Без названия'}
+                    title={publication.name || 'Название публикации отсутствует'}
                 >
                     {publication.name || 'Название публикации отсутствует'}
                 </CardTitle>

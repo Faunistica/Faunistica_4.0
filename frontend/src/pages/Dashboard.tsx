@@ -14,7 +14,7 @@ const Dashboard: FC = () => {
     if (isLoading) return <div className="p-4 text-slate-500">Загрузка публикаций...</div>;
     if (isError) return <div className="p-4 text-red-500">Ошибка при загрузке публикаций.</div>;
 
-    const [availible, queue] = useMemo(() => {
+    const [available, queue] = useMemo(() => {
         const splitIndex = currentPublications.findIndex((item) => !item.interactable);
 
         return splitIndex === -1
@@ -25,7 +25,7 @@ const Dashboard: FC = () => {
     return (
         <>
             <div className="grid grid-cols-1 gap-8">
-                {availible.length > 0 && (
+                {available.length > 0 && (
                     <section>
                         <div className="mb-2 flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -33,11 +33,11 @@ const Dashboard: FC = () => {
                                     Доступно к обработке
                                 </h2>
                                 <Badge className="rounded-md border-none bg-amber-100 px-2 font-bold text-amber-800 hover:bg-amber-100">
-                                    {availible.length}
+                                    {available.length}
                                 </Badge>
                             </div>
                         </div>
-                        {availible.map((pub) => (
+                        {available.map((pub) => (
                             <PublicationRow key={pub.publ_id} publication={pub} mode="available" />
                         ))}
                     </section>

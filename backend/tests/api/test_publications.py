@@ -224,21 +224,21 @@ async def test_submit_advances_queue(
         user_db.items = f"{publ1_id}|{publ2_id}|{publ3.publ_id}"
         await session.commit()
 
-    # Complete first -> advances to publ2
+    # Submit first -> advances to publ2
     response = await authenticated_client.post(
         f"/api/publications/{publ1_id}/submit",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
-    # Complete second -> advances to publ3
+    # Submit second -> advances to publ3
     response = await authenticated_client.post(
         f"/api/publications/{publ2_id}/submit",
         json={"processing_level": "full"},
     )
     assert response.status_code == 204
 
-    # Complete third -> queue empty
+    # Submit third -> queue empty
     response = await authenticated_client.post(
         f"/api/publications/{publ3.publ_id}/submit",
         json={"processing_level": "full"},

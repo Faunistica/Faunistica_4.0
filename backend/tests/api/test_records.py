@@ -663,7 +663,9 @@ async def test_import_user_without_publ(
 
 
 @pytest.mark.asyncio
-async def test_import_file_size_limit(authenticated_client: AsyncClient) -> None:
+async def test_import_file_size_limit(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing file that exceeds size limit."""
     from core.config import settings
 
@@ -671,7 +673,7 @@ async def test_import_file_size_limit(authenticated_client: AsyncClient) -> None
 
     response = await authenticated_client.post(
         "/api/records/import",
-        params={"publ_id": 1},
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "large.xlsx",
