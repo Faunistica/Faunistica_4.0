@@ -9,6 +9,7 @@ export const publAPI = createApi({
     endpoints: (build) => ({
         getCurrentPublication: build.query<Types.Publication[], { list: boolean }>({
             query: ({ list }) => `/publications/current/?list_all=${list}`,
+            providesTags: ['publications'],
         }),
         getPublicationById: build.query<Types.Publication, number>({
             query: (id) => `/publications/${id}`,
