@@ -26,8 +26,7 @@ async def reply(message: Message, bot: Bot) -> None:
         return
 
     reply_text = (
-        message.text
-        .replace(f"/reply@{settings.BOT_USERNAME}", "")
+        message.text.replace(f"/reply@{settings.BOT_USERNAME}", "")
         .replace("/reply", "")
         .strip()
     )
