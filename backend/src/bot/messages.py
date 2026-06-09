@@ -1,3 +1,6 @@
+from core.config import settings
+
+
 class Messages:
     # ========== START MESSAGE ========== #
 
@@ -9,7 +12,7 @@ class Messages:
             '<a href="https://vk.com/data_web">Паутина данных</a>, '
             "очень рад, что Вы им заинтересовались. "
             "Для регистрации заполните форму на "
-            '<a href="https://faunistica.ru/">нашем сайте</a> '
+            f'<a href="{settings.SITE_URL}">нашем сайте</a> '
             "и подтвердите код в этом боте командой /confirm.\n\n"
             "Если хотите ознакомиться со списком команд, вызовите /menu."
         )
@@ -20,7 +23,7 @@ class Messages:
     def registration_via_site() -> str:
         return (
             "Регистрация теперь проходит через сайт. "
-            "Заполните форму на https://faunistica.ru/ и отправьте "
+            f"Заполните форму на {settings.SITE_URL}/ и отправьте "
             "код подтверждения командой /confirm <код>"
         )
 
@@ -42,7 +45,7 @@ class Messages:
 
     @staticmethod
     def registration_confirmed() -> str:
-        return "Пройдите анкету на сайте https://faunistica.ru/\n"
+        return f"Пройдите анкету на сайте {settings.SITE_URL}/\n"
 
     @staticmethod
     def auth_confirmed() -> str:
@@ -63,7 +66,7 @@ class Messages:
     def not_registered() -> str:
         return (
             "Увы, вас пока нет среди зарегистрированных пользователей.\n"
-            "Зарегистрируйтесь на сайте https://faunistica.ru/ "
+            f"Зарегистрируйтесь на сайте {settings.SITE_URL}/ "
             "и подтвердите код в этом боте командой /confirm."
         )
 
@@ -283,7 +286,7 @@ class Messages:
             "Простите, но по техническим причинам не могу вам дать "
             "воспользоваться данной командой на этапе регистрации. 😔\n\n"
             "Если вы столкнулись с проблемой, "
-            "напишите в [форму](https://faunistica.ru/feedback)"
+            f"напишите в [форму]({settings.SITE_URL}/feedback)"
         )
 
     @staticmethod

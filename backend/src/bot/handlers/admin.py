@@ -26,7 +26,7 @@ async def reply(message: Message, bot: Bot) -> None:
         return
 
     reply_text = (
-        message.text.replace("/reply@FaunisticaV3Bot", "").replace("/reply", "").strip()
+        message.text.replace(f"/reply@{settings.BOT_USERNAME}", "").replace("/reply", "").strip()
     )
     if not reply_text:
         await message.answer(Messages.empty_response_to_user())
