@@ -12,7 +12,6 @@ from pydantic_settings import (
 )
 
 
-
 def to_camel_case(string: str) -> str:
     components = string.split("_")
     return "".join(c.title() for c in components)

@@ -4,7 +4,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
-from service.publications import PublicationService
 from core.config import settings
 from core.dependencies import ClientIP, DBSession
 from core.enums import PendingStatus
@@ -26,6 +25,7 @@ from schema.registration import (
     SurveyRequest,
 )
 from service.actions import ActionService
+from service.publications import PublicationService
 from service.registration import (
     create_auth_response,
     create_user_from_survey,
