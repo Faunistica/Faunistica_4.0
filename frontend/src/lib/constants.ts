@@ -116,5 +116,4 @@ export const LAT_MIN = -90;
 export const LAT_MAX = 90;
 export const LNG_MIN = -180;
 export const LNG_MAX = 180;
-export const UNCERTAINTY_MIN = 30;
 export const UNCERTAINTY_MAX = 15000;
