@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Link } from 'react-router';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
+import TermsConsent from './TermsConsent';
 import TelegramQRCode from '@/components/qr/TelegramQRCode';
 
 const TelegramAuth: FC = () => {
@@ -115,23 +116,7 @@ const TelegramAuth: FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm/relaxed text-slate-500">
-                {'Продолжая, вы соглашаетесь с нашими '}
-                <Link
-                    to="/terms-of-service"
-                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
-                >
-                    Условиями обслуживания
-                </Link>
-                {' и '}
-                <Link
-                    to="/privacy-policy"
-                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
-                >
-                    Политикой конфиденциальности
-                </Link>
-                {'.'}
-            </p>
+            <TermsConsent />
         </div>
     );
 };

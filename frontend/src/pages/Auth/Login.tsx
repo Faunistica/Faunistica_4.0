@@ -18,6 +18,7 @@ import {
 import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { authAPI } from '@/api/authAPI';
+import TermsConsent from './TermsConsent';
 import type { LoginRequest } from '@/types/api.dto';
 
 const Login: FC = () => {
@@ -136,23 +137,7 @@ const Login: FC = () => {
                 </CardFooter>
             </Card>
 
-            <p className="px-4 text-center text-sm/relaxed text-slate-500">
-                {'Продолжая, вы соглашаетесь с нашими '}
-                <Link
-                    to="/terms-of-service"
-                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
-                >
-                    Условиями обслуживания
-                </Link>
-                {' и '}
-                <Link
-                    to="/privacy-policy"
-                    className="underline underline-offset-4 transition-colors hover:text-slate-900"
-                >
-                    Политикой конфиденциальности
-                </Link>
-                {'.'}
-            </p>
+            <TermsConsent />
         </div>
     );
 };
