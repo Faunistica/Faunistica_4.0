@@ -1,6 +1,5 @@
 from pathlib import Path
 
-# import requests
 from pydantic import ConfigDict, Field, SecretStr, computed_field
 from pydantic_core import Url
 from pydantic_extra_types.dsn import PostgresDsn
@@ -95,6 +94,9 @@ class TGAuthSettings(CamelCaseSettings):
 class StartedPublications(CamelCaseSettings):
     STARTED_PUBLICATION_IDS_ENG: list[int] = [3378, 3411]
     STARTED_PUBLICATION_IDS_RUS: list[int] = [815, 2739, 5287]
+    STARTED_PUBLICATION_AMOUNT_ENG: int = 2
+    STARTED_PUBLICATION_AMOUNT_RUS: int = 2
+    STARTED_PUBLICATION_AMOUNT_ALL: int = 2
 
 
 class Settings(
