@@ -43,7 +43,8 @@ async def confirm_registration(message: Message, state: FSMContext) -> None:
         lambda msg: (
             msg.text and len(msg.text.strip()) == 6 and msg.text.strip().isdigit()
         ),
-    )
+    ),
+    ~Command("start", "menu", "register", "confirm", "support", "cancel"),
 )
 async def handle_code_input(message: Message, state: FSMContext) -> None:
     if message.from_user is None or message.text is None:

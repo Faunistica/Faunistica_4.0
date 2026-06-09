@@ -25,6 +25,5 @@ async def registration_info(message: Message) -> None:
 
     await message.answer(
         Messages.registration_via_site(),
-        parse_mode="HTML",
         disable_web_page_preview=True,
     )

@@ -41,10 +41,8 @@ async def reply(message: Message, bot: Bot) -> None:
     await message.answer(Messages.response_sent())
 
 
-@router.message()
+@router.message(lambda msg: msg.chat.id == settings.ADMIN_CHAT_ID)
 async def reply_to_user(message: Message, bot: Bot) -> None:
-    if message.chat.id != settings.ADMIN_CHAT_ID:
-        return
 
     if message.reply_to_message is None or message.reply_to_message.text is None:
         return
