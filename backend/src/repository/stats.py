@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Sequence
 
 from cachetools import TTLCache
 from sqlalchemy import func, select, union_all
@@ -156,7 +157,7 @@ async def get_user_by_name(session: AsyncSession, name: str) -> User | None:
 async def _merge_top_species(
     session: AsyncSession,
     user_id: int,
-    rows: list[Row],
+    rows: Sequence[Row],
 ) -> list[TopSpeciesItem]:
     try:
         async with session.begin_nested():

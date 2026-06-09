@@ -2,15 +2,16 @@ import logging
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.selectable import TypedReturnsRows
 
 logger = logging.getLogger(__name__)
 
 
-async def _legacy_scalar(
+async def _legacy_scalar[T](
     session: AsyncSession,
-    stmt: object,
+    stmt: TypedReturnsRows[tuple[T]],
     warning_msg: str,
-) -> object | None:
+) -> T | None:
     try:
         async with session.begin_nested():
             return await session.scalar(stmt)
