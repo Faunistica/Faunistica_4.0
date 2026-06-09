@@ -69,7 +69,8 @@ export const authAPI = createApi({
                     const { data } = await queryFulfilled;
                     if (
                         (data.status === 'authorized' || data.status === 1) &&
-                        data.user_id && data.name
+                        data.user_id &&
+                        data.name
                     ) {
                         dispatch(
                             login({

@@ -40,15 +40,42 @@ import { toast } from 'sonner';
 
 const formSchema = z
     .object({
-        username: z.string().min(3, 'Минимум 3 символа').max(40, 'Максимум 40 символов').regex(/^[a-zA-Z0-9_]+$/, 'Только латинские буквы, цифры и _').optional().or(z.literal('')),
-        password: z.string().min(8, 'Минимум 8 символов').max(128, 'Максимум 128 символов').optional().or(z.literal('')),
-        name: z.string().min(3, 'Минимум 3 символа').max(40, 'Максимум 40 символов').regex(/^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$/, 'Недопустимые символы в имени'),
-        age: z.coerce.number().min(14, 'Возраст должен быть не менее 14 лет').max(99, 'Возраст должен быть не более 99 лет').nullable().optional(),
+        username: z
+            .string()
+            .min(3, 'Минимум 3 символа')
+            .max(40, 'Максимум 40 символов')
+            .regex(/^[a-zA-Z0-9_]+$/, 'Только латинские буквы, цифры и _')
+            .optional()
+            .or(z.literal('')),
+        password: z
+            .string()
+            .min(8, 'Минимум 8 символов')
+            .max(128, 'Максимум 128 символов')
+            .optional()
+            .or(z.literal('')),
+        name: z
+            .string()
+            .min(3, 'Минимум 3 символа')
+            .max(40, 'Максимум 40 символов')
+            .regex(/^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$/, 'Недопустимые символы в имени'),
+        age: z.coerce
+            .number()
+            .min(14, 'Возраст должен быть не менее 14 лет')
+            .max(99, 'Возраст должен быть не более 99 лет')
+            .nullable()
+            .optional(),
         sex: z.enum(['M', 'F', 'N']).nullable().optional(),
         langRu: z.boolean().default(false),
         langEn: z.boolean().default(false),
         rating: z.enum(['yes', 'no']),
-        email: z.string().min(5, 'Минимум 5 символов').max(100, 'Максимум 100 символов').email('Некорректный email').or(z.literal('')).nullable().optional(),
+        email: z
+            .string()
+            .min(5, 'Минимум 5 символов')
+            .max(100, 'Максимум 100 символов')
+            .email('Некорректный email')
+            .or(z.literal(''))
+            .nullable()
+            .optional(),
         region: z.string().nullable().optional(),
         comm: z.string().nullable().optional(),
     })
@@ -96,7 +123,8 @@ export default function Settings() {
                 password: '',
                 name: user.name || '',
                 age: user.age ?? null,
-                sex: (sexValue === 'M' || sexValue === 'F' || sexValue === 'N') ? sexValue : undefined,
+                sex:
+                    sexValue === 'M' || sexValue === 'F' || sexValue === 'N' ? sexValue : undefined,
                 langRu: user.lng === 'rus' || user.lng === 'all',
                 langEn: user.lng === 'eng' || user.lng === 'all',
                 rating: user.rating === 1 ? 'yes' : 'no',
@@ -184,9 +212,7 @@ export default function Settings() {
                                         </div>
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="username">
-                                                    Логин
-                                                </Label>
+                                                <Label htmlFor="username">Логин</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -319,7 +345,12 @@ export default function Settings() {
                                         </div>
                                         <div className="grid grid-cols-1 gap-5">
                                             <div className="space-y-2">
-                                                <Label htmlFor="email">Электронная почта <span className="text-slate-400 font-normal">(по желанию)</span></Label>
+                                                <Label htmlFor="email">
+                                                    Электронная почта{' '}
+                                                    <span className="font-normal text-slate-400">
+                                                        (по желанию)
+                                                    </span>
+                                                </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <Mail className="size-4 text-slate-400" />
@@ -339,7 +370,12 @@ export default function Settings() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="region">Регион проживания <span className="text-slate-400 font-normal">(по желанию)</span></Label>
+                                                <Label htmlFor="region">
+                                                    Регион проживания{' '}
+                                                    <span className="font-normal text-slate-400">
+                                                        (по желанию)
+                                                    </span>
+                                                </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <MapPin className="size-4 text-slate-400" />
@@ -415,13 +451,13 @@ export default function Settings() {
                                         </div>
                                         {(errors as Record<string, { message?: string }>)
                                             .languages_error && (
-                                                <span className="block pt-1 text-xs text-red-500">
-                                                    {
-                                                        (errors as Record<string, { message?: string }>)
-                                                            .languages_error?.message
-                                                    }
-                                                </span>
-                                            )}
+                                            <span className="block pt-1 text-xs text-red-500">
+                                                {
+                                                    (errors as Record<string, { message?: string }>)
+                                                        .languages_error?.message
+                                                }
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Предпочтения */}
@@ -436,12 +472,15 @@ export default function Settings() {
                                             семейству.
                                         </p>
                                         <div className="flex grow flex-col pt-2">
-                                        <Label
-                                            htmlFor="preferences"
-                                            className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
-                                        >
-                                            Дополнительная информация <span className="font-normal text-slate-400">(по желанию)</span>
-                                        </Label>
+                                            <Label
+                                                htmlFor="preferences"
+                                                className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
+                                            >
+                                                Дополнительная информация{' '}
+                                                <span className="font-normal text-slate-400">
+                                                    (по желанию)
+                                                </span>
+                                            </Label>
                                             <Textarea
                                                 id="preferences"
                                                 placeholder="Например: предпочтительно семейство Lycosidae..."

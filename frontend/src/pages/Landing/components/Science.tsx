@@ -33,9 +33,10 @@ export default function Science() {
                                 К настоящему времени создана платформа для перевода данных в
                                 стандарт <strong>DarwinCore</strong>. В сотрудничестве с К.Г.
                                 Михайловым разработано веб-приложение{' '}
-                                <a href="https://faunistics.international/arachnolibrary/" >
+                                <a href="https://faunistics.international/arachnolibrary/">
                                     <strong>Arachnolibrary</strong>
-                                </a>, база которого уже содержит 5200 источников.
+                                </a>
+                                , база которого уже содержит 5200 источников.
                             </p>
 
                             <div className="flex flex-wrap gap-4 pt-4">
@@ -56,6 +57,6 @@ export default function Science() {
                     </div>
                 </div>
             </div>
-        </section >
+        </section>
     );
 }

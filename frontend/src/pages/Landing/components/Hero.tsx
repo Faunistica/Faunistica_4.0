@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router';
 
 export default function Hero() {
-
     return (
         <section className="relative w-full overflow-hidden bg-white py-12 md:py-24 lg:py-32">
             <div className="relative z-10 mx-auto w-full max-w-7xl px-4 md:px-6">
@@ -21,8 +20,7 @@ export default function Hero() {
                                 Оцифруй биологическое наследие
                             </h1>
                             <p className="max-w-[600px] leading-relaxed text-slate-600 md:text-xl">
-                                Мы превращаем тысячи научных статей в
-                                открытую цифровую базу данных
+                                Мы превращаем тысячи научных статей в открытую цифровую базу данных
                             </p>
                         </div>
                         <div className="flex flex-col gap-4 sm:flex-row">
@@ -31,7 +29,9 @@ export default function Hero() {
                                 size="lg"
                                 className="h-12 gap-2 bg-slate-900 px-8 text-base text-white hover:bg-slate-800"
                             >
-                                <Link to="/auth/register">Стать волонтером <ArrowRight className="size-4" /></Link>
+                                <Link to="/auth/register">
+                                    Стать волонтером <ArrowRight className="size-4" />
+                                </Link>
                             </Button>
                             <Button
                                 asChild
@@ -56,7 +56,8 @@ export default function Hero() {
                                     Модельная группа: Пауки
                                 </div>
                                 <p className="text-sm text-slate-200">
-                                    Идеальный старт для отработки технологий работы с биологическими данными
+                                    Идеальный старт для отработки технологий работы с биологическими
+                                    данными
                                 </p>
                             </div>
                         </div>
