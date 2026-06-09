@@ -172,8 +172,8 @@ class TestAdvanceQueue:
 
         self.mock_log.assert_called_once_with(1, expected_level, 123, ip)
         mock_session.commit.assert_not_called()
-        assert result is not None
-        assert result.publ_id == 456
+        assert result[0] is not None
+        assert result[0].publ_id == 456
 
 
 # ============================================================================
@@ -192,7 +192,10 @@ class TestSubmit:
                 publication_service, "get_draft_record_ids", new_callable=AsyncMock
             ) as self.mock_drafts,
             patch.object(
-                publication_service, "_advance_queue", new_callable=AsyncMock
+                publication_service,
+                "_advance_queue",
+                new_callable=AsyncMock,
+                return_value=(None, 0),
             ) as self.mock_advance,
             patch.object(
                 publication_service.actions,
