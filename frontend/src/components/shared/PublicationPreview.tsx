@@ -18,7 +18,7 @@ export const PublicationPreview: FC<PublicationPreviewProps> = ({ publication, b
             />
             <CardHeader className="w-full min-w-0 flex-1 pl-1">
                 <div className="flex flex-wrap items-center gap-2">
-                    {publication.ural && (
+                    {!!publication.ural && (
                         <Badge className="h-5 rounded-full border border-blue-200 bg-blue-50 px-2.5 text-[10px] font-medium text-blue-700">
                             Урал
                         </Badge>
