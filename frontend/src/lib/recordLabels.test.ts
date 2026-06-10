@@ -54,13 +54,13 @@ function makeRecord(overrides: Partial<RecordFull> = {}): RecordFull {
 
 describe('locationSummary', () => {
     it('joins non-empty fields with comma', () => {
-        const record = makeRecord({ country: 'RU', region: 'Tatarstan', locality: 'Kazan' });
-        expect(locationSummary(record)).toBe('RU, Tatarstan, Kazan');
+        const record = makeRecord({ country: 'Россия', region: 'Tatarstan', locality: 'Kazan' });
+        expect(locationSummary(record)).toBe('Россия, Tatarstan, Kazan');
     });
 
     it('filters out empty fields', () => {
-        const record = makeRecord({ country: 'RU', region: '', district: '', locality: '' });
-        expect(locationSummary(record)).toBe('RU');
+        const record = makeRecord({ country: 'Россия', region: '', district: '', locality: '' });
+        expect(locationSummary(record)).toBe('Россия');
     });
 
     it('returns empty string when all fields empty', () => {
@@ -70,12 +70,12 @@ describe('locationSummary', () => {
 
     it('includes district when present', () => {
         const record = makeRecord({
-            country: 'RU',
+            country: 'Россия',
             region: 'Tatarstan',
             district: 'Zelenodolsky',
             locality: 'Kazan',
         });
-        expect(locationSummary(record)).toBe('RU, Tatarstan, Zelenodolsky, Kazan');
+        expect(locationSummary(record)).toBe('Россия, Tatarstan, Zelenodolsky, Kazan');
     });
 });
 

@@ -8,7 +8,7 @@ from core.enums import UserLanguage
 from core.exceptions import MsgErr, Ok
 from core.model import User
 
-_NAME_REGEX = re.compile(r"^[а-яА-ЯёЁa-zA-Z0-9\_.]+$")
+_NAME_REGEX = re.compile(r"^[а-яА-ЯёЁa-zA-Z0-9\_]+$")
 _EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 _LANG_MAP: dict[str, UserLanguage] = {"1": "all", "2": "eng", "3": "rus"}

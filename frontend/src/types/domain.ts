@@ -82,6 +82,7 @@ export interface Publication {
     spec?: number | boolean;
     e_author?: string | null;
     e_name?: string | null;
+    interactable?: boolean;
 }
 
 export interface UserInfo {
