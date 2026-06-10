@@ -2,7 +2,7 @@ import logging
 from types import SimpleNamespace
 
 from cachetools import TTLCache
-from sqlalchemy import func, select, union_all
+from sqlalchemy import func, select
 from sqlalchemy.engine import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -155,27 +155,34 @@ async def get_cumulative_records(session: AsyncSession) -> list[Row]:
         .where(EventRecord.type == RecordType.REC_OK)
         .group_by(func.date(EventRecord.created_at))
     )
-    r_stmt = (
-        select(
-            func.date(records_table.c.datetime).label("date"),
-            func.count().label("cnt"),
+    result = await session.execute(er_stmt)
+    per_date: dict[str, int] = {}
+    for r in result:
+        per_date[r.date] = per_date.get(r.date, 0) + r.cnt
+
+    try:
+        r_stmt = (
+            select(
+                func.date(records_table.c.datetime).label("date"),
+                func.count().label("cnt"),
+            )
+            .where(records_table.c.type == "rec_ok")
+            .group_by(func.date(records_table.c.datetime))
         )
-        .where(records_table.c.type == "rec_ok")
-        .group_by(func.date(records_table.c.datetime))
-    )
-    union_sub = union_all(er_stmt, r_stmt).subquery()
-    stmt = (
-        select(union_sub.c.date, func.sum(union_sub.c.cnt).label("cnt"))
-        .group_by(union_sub.c.date)
-        .order_by(union_sub.c.date)
-    )
-    result = await session.execute(stmt)
-    rows = list(result.fetchall())
+        legacy_result = await session.execute(r_stmt)
+        for r in legacy_result:
+            per_date[r.date] = per_date.get(r.date, 0) + r.cnt
+    except SQLAlchemyError:
+        logger.warning(
+            "Could not query legacy records for cumulative_records", exc_info=True
+        )
+
+    sorted_dates = sorted(per_date.items())
     running = 0
     accumulated = []
-    for r in rows:
-        running += r.cnt
-        accumulated.append(SimpleNamespace(date=r.date, cnt=running))
+    for date, cnt in sorted_dates:
+        running += cnt
+        accumulated.append(SimpleNamespace(date=date, cnt=running))
     _project_stats_cache["cumulative_records"] = accumulated
     return accumulated
 
@@ -249,7 +256,7 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
     for publ_id, value in counts.items():
         counts[publ_id] = min(value, 3)
 
-    processed = sum(counts.values()) // 3
+    processed = sum(1 for v in counts.values() if v >= 3)
 
     result = (total, processed)
     _project_stats_cache["progress"] = result
