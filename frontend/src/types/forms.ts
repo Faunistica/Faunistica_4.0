@@ -1,12 +1,5 @@
 import { z } from 'zod';
-import {
-    LAT_MIN,
-    LAT_MAX,
-    LNG_MIN,
-    LNG_MAX,
-    UNCERTAINTY_MIN,
-    UNCERTAINTY_MAX,
-} from '@/lib/constants';
+import { LAT_MIN, LAT_MAX, LNG_MIN, LNG_MAX, UNCERTAINTY_MAX } from '@/lib/constants';
 import type { QuantityField } from '@/lib/constants';
 
 export const recordFormSchema = z.object({
@@ -28,7 +21,6 @@ export const recordFormSchema = z.object({
         .max(LNG_MAX, `Макс. ${LNG_MAX}`),
     coordinate_uncertainty: z.coerce
         .number<number>()
-        .min(UNCERTAINTY_MIN, `Мин. ${UNCERTAINTY_MIN}`)
         .max(UNCERTAINTY_MAX, `Макс. ${UNCERTAINTY_MAX}`)
         .nullish(),
     location_remarks: z.string().nullish(),

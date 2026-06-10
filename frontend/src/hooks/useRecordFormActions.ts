@@ -16,7 +16,6 @@ import { useRecordIDs } from '@/hooks/useRecordIDs';
 import { type FormStore } from '@/store/formStore';
 
 export interface RecordFormActions {
-    save: () => Promise<void>;
     submit: () => Promise<void>;
     onNavigate: (targetId: string) => void;
     create: () => Promise<void>;
@@ -169,7 +168,6 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
 
     return useMemo(
         () => ({
-            save: save('manual'),
             submit: save('submit'),
             onNavigate,
             create,

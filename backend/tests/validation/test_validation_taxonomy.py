@@ -74,6 +74,16 @@ class TestTaxonomyValidation:
             for e in errors.errors
         )
 
+    @patch(f"{TAXONOMY_PATCH}.family_genus_known", return_value=True)
+    @patch(f"{TAXONOMY_PATCH}.genus_species_known", return_value=True)
+    def test_species_not_required_when_verbatim(self, _m1, _m2) -> None:
+        data = _valid_data(tax_verbatim=True, species=None)
+        errors = validate_record(data, language="rus")
+        assert not any(
+            e.code == "required" and "species" in (e.fields or [])
+            for e in errors.errors
+        )
+
     # ── Unknown combos ─────────────────────────────────────────────────
 
     @patch(f"{TAXONOMY_PATCH}.family_genus_known", return_value=False)
