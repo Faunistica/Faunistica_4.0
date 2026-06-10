@@ -166,6 +166,7 @@ def build_user(data: dict, password: str, dev_tg_id: int = 1) -> dict:
     user = {**data}
     if user.get("user_id") is None or user["user_id"] == 0:
         user["user_id"] = dev_tg_id
+    user["username"] = user["name"]
     user["hash"] = get_password_hash(password)
     user["hash_date"] = datetime.now(UTC).replace(tzinfo=None)
     return user
