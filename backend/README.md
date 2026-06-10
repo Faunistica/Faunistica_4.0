@@ -100,7 +100,7 @@ volumes:
 
 - Python 3.13+
 - [uv](https://github.com/astral-sh/uv)
-- [Docker](https://docs.docker.com/engine/install) + Docker Compose
+- [Docker](https://docs.docker.com/engine/install) + [Docker Compose](https://docs.docker.com/compose)
 - make (опционально)
 
 ### Локальный запуск

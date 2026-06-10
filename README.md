@@ -15,4 +15,4 @@
 ## Развёртывание
 
 Примеры production-конфигураций (all-docker и hybrid) — в [examples/](examples/).
-Там же: production `config.yaml`, nginx-конфиги, лимиты памяти, настройка PostgreSQL через Unix-сокет, HTTPS.
+Там же: production `config.yaml`, [nginx](https://nginx.org)-конфиги, лимиты памяти, настройка PostgreSQL через Unix-сокет, HTTPS.

@@ -2,13 +2,13 @@
 
 > ⚠️ **Перед использованием** образы должны быть собраны и опубликованы в registry
 > (см. `ghcr.io/faunistica/backend` и `ghcr.io/faunistica/frontend`).
-> Либо соберите локально: `docker build -t ghcr.io/faunistica/backend backend/`.
+> Либо соберите локально: `docker build -t ghcr.io/faunistica/backend backend/` ([Docker](https://docs.docker.com)).
 
 ## Варианты
 
 ### [all-docker](./all-docker/) — всё в Docker
 PostgreSQL, бэкенд и фронтенд — каждый в своём контейнере. \
-Отдельный nginx-контейнер **не нужен**: фронтенд-контейнер сам проксирует
+Отдельный [nginx](https://nginx.org)-контейнер **не нужен**: фронтенд-контейнер сам проксирует
 `/api/*` на бэкенд через смонтированный nginx-конфиг.
 
 ```
@@ -67,7 +67,7 @@ volumes:
 
 **Для включения HTTPS:**
 ```bash
-# certbot (рекомендуется)
+# [certbot](https://certbot.eff.org) (рекомендуется)
 certbot certonly --standalone -d faunistica.ru
 # или acme.sh
 acme.sh --issue --standalone -d faunistica.ru
