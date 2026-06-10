@@ -1,4 +1,4 @@
-import { capitalizeFirstLetter, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MapPin, Trash2 } from 'lucide-react';
 import { NavLink } from 'react-router';
@@ -14,23 +14,10 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { createSelector } from '@reduxjs/toolkit';
-import type { RecordFull } from '@/types/domain';
 import { useRecordByIdQuery } from '@/api/recordAPI';
-import { computeRecordStatus } from '@/lib/recordStatus';
 import { RecordStatusIndicator } from '@/components/form/sidebar/RecordStatusIndicator';
+import { selectRecordSummary } from '@/lib/recordSelectors';
 import { useCallback } from 'react';
-
-const selectSidebarRecordItem = createSelector(
-    [(result: { data?: RecordFull }) => result.data],
-    (record) => ({
-        status: record ? computeRecordStatus(record) : 'empty',
-        recordName: capitalizeFirstLetter(
-            record?.species || record?.genus || record?.family || 'Новая запись',
-        ),
-        recordLocation: record?.locality || record?.region || 'Нет данных о месте',
-    }),
-);
 
 export const SidebarRecordItem = ({
     publ_id,
@@ -49,7 +36,7 @@ export const SidebarRecordItem = ({
 
     const { status, recordName, recordLocation } = useRecordByIdQuery(
         { record_id },
-        { selectFromResult: selectSidebarRecordItem },
+        { selectFromResult: selectRecordSummary },
     );
 
     const handleClick = useCallback(() => {

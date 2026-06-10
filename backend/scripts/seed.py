@@ -4,7 +4,7 @@ import asyncio
 import logging
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import select
@@ -167,7 +167,7 @@ def build_user(data: dict, password: str, dev_tg_id: int = 1) -> dict:
     if user.get("user_id") is None or user["user_id"] == 0:
         user["user_id"] = dev_tg_id
     user["hash"] = get_password_hash(password)
-    user["hash_date"] = datetime.now()
+    user["hash_date"] = datetime.now(UTC).replace(tzinfo=None)
     return user
 
 

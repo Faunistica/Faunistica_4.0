@@ -8,13 +8,33 @@ export const publAPI = createApi({
     tagTypes: ['publications'],
     endpoints: (build) => ({
         getCurrentPublication: build.query<Types.Publication[], { list: boolean }>({
-            query: ({ list }) => `/publications/current/?list_all=${list}`,
+            query: ({ list }) => `/publications/current?list_all=${list}`,
+            providesTags: ['publications'],
         }),
         getPublicationById: build.query<Types.Publication, number>({
             query: (id) => `/publications/${id}`,
             providesTags: (_result, _error, id) => [{ type: 'publications', id }],
         }),
+        getSubmitStatus: build.query<Types.SubmitStatusResponse, number>({
+            query: (publ_id) => `/publications/${publ_id}/submit-status`,
+        }),
+        submitPublication: build.mutation<
+            void,
+            { publ_id: number; data: Types.SubmitPublicationRequest }
+        >({
+            query: ({ publ_id, data }) => ({
+                url: `/publications/${publ_id}/submit`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['publications'],
+        }),
     }),
 });
 
-export const { useGetCurrentPublicationQuery, useGetPublicationByIdQuery } = publAPI;
+export const {
+    useGetCurrentPublicationQuery,
+    useGetPublicationByIdQuery,
+    useGetSubmitStatusQuery,
+    useSubmitPublicationMutation,
+} = publAPI;

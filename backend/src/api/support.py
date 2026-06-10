@@ -22,7 +22,7 @@ async def submit_support(
     client: HTTPClient,
     user_service: Annotated[UserService, Depends()],
 ) -> None:
-    user = await user_service.find_by_username(data.user_name)
+    user = await user_service.find_by_username(data.username)
 
     try:
         await telegram.support_message(client, data, user.user_id if user else None)

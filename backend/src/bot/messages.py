@@ -1,6 +1,4 @@
-from collections.abc import Mapping
-
-from schema.common import Publication
+from core.config import settings
 
 
 class Messages:
@@ -13,69 +11,54 @@ class Messages:
             "Я - телеграм-бот проекта "
             '<a href="https://vk.com/data_web">Паутина данных</a>, '
             "очень рад, что Вы им заинтересовались. "
-            "С удовольствием зарегистрирую вас как нового участника "
-            "и дам пароль для входа на "
-            '<a href="https://faunistica.ru/">наш сайт научного волонтерства</a>.\n\n'
-            "Если хотите начать регистрацию, вызовите /register.\n"
+            "Для регистрации заполните форму на "
+            f'<a href="{settings.SITE_URL}">нашем сайте</a> '
+            "и подтвердите код в этом боте командой /confirm.\n\n"
             "Если хотите ознакомиться со списком команд, вызовите /menu."
         )
 
     # ========== REGISTER MESSAGE ========== #
 
     @staticmethod
-    def registration_start() -> str:
+    def registration_via_site() -> str:
         return (
-            "Давайте начнем регистрацию!\n\n"
-            "Напоминаем, что регистрироваться и участвовать в нашем проекте "
-            "могут совершеннолетние.\n"
-            "Несовершеннолетние от 14 до 18 лет тоже могут участвовать, "
-            "но должны регистрироваться с согласия и в присутствии родителей.\n\n"
-            '<a href="https://sozontov.cc/user_agreement">'
-            "Пользовательское соглашение</a> принимаете?\n(да/нет)"
+            "Регистрация теперь проходит через сайт. "
+            f"Заполните форму на {settings.SITE_URL}/ и отправьте "
+            "код подтверждения командой /confirm <код>"
         )
 
     @staticmethod
-    def already_registered(first_name: str | None) -> str:
-        if first_name is not None:
-            return f"Вы уже зарегистрированы под именем {first_name}!"
-        return "Вы уже зарегистрированы!"
+    def request_confirmation_code() -> str:
+        return "Пожалуйста, отправьте код подтверждения"
 
     @staticmethod
-    def old_user(first_name: str | None) -> str:
-        first = f"Привет, {first_name}!\n" if first_name else "Привет!"
-        return first + (
-            "Странно... Помню ваше имя, но все остальные данные "
-            "как-будто кто-то обнулил 😅\n\n"
-            "Чтобы я снова вспомнил вас, попрошу пройти регистрацию снова. "
-            "Начнем прямо сейчас!"
-        )
+    def confirmation_code_invalid() -> str:
+        return "Не удалось найти такой код. Проверьте его и попробуйте снова."
 
     @staticmethod
-    def consent_taken() -> str:
-        return "Ваше согласие учтено 👌"
+    def confirmation_code_expired() -> str:
+        return "Срок действия кода истек. Запросите новый код на сайте."
+
+    @staticmethod
+    def confirmation_code_used() -> str:
+        return "Этот код уже был использован."
+
+    @staticmethod
+    def registration_confirmed() -> str:
+        return f"Пройдите анкету на сайте {settings.SITE_URL}/\n"
+
+    @staticmethod
+    def auth_confirmed() -> str:
+        return "Вход подтвержден!"
 
     @staticmethod
     def maybe_later() -> str:
         return "Ничего, может быть позже... 😌"
 
     @staticmethod
-    def ask_name() -> str:
-        return "Пожалуйста, напишите как мне к вам обращаться 🙃"
-
-    @staticmethod
-    def registration_complete() -> str:
+    def username_already_exists() -> str:
         return (
-            "Спасибо за ответ, ваша регистрация закончена!\n\n"
-            "В дальнейшем вы можете изменить имя командой /rename\n\n"
-            "Также будет очень любезно с вашей стороны пройти небольшой опрос. "
-            "Он поможет понять социологию и мотивацию участников-волонтёров. "
-            'Для того, чтобы начать его, напишите "Опрос" или нажмите на /sociology'
-        )
-
-    @staticmethod
-    def name_already_exists() -> str:
-        return (
-            "Ой-ой... кто-то уже выбрал такое имя 🥺\n\n"
+            "Ой-ой... кто-то уже выбрал такое имя пользователя 🥺\n\n"
             "Попробуйте добавить фамилию, цифру или любимое животное."
         )
 
@@ -83,13 +66,9 @@ class Messages:
     def not_registered() -> str:
         return (
             "Увы, вас пока нет среди зарегистрированных пользователей.\n"
-            "Желаете зарегистрироваться?\n"
-            "/register ← Нажмите сюда"
+            f"Зарегистрируйтесь на сайте {settings.SITE_URL}/ "
+            "и подтвердите код в этом боте командой /confirm."
         )
-
-    @staticmethod
-    def greeting(name: str) -> str:
-        return f"Приятно познакомиться, {name}! 🤗"
 
     @staticmethod
     def age_too_low() -> str:
@@ -102,60 +81,6 @@ class Messages:
             "при регистрации с родителями! "
             "Продолжайте только если они находятся рядом."
         )
-
-    # ========== AUTH MESSAGE ========== #
-
-    @staticmethod
-    def auth_success() -> str:
-        return (
-            "<b>Вы успешно авторизованы!</b>\n"
-            "Уже готовлю новый пароль специально для вас! 🤭"
-        )
-
-    @staticmethod
-    def no_publications_left() -> str:
-        return (
-            "Ой-ой... ваша очередь публикаций подошла к концу.\n"
-            "Я уже в курсе и работаю над этим изо всех своих цифровых сил 🥺"
-        )
-
-    @staticmethod
-    def current_publication(publ_info: Publication) -> str:
-        return (
-            f"<b>Ваша текущая публикация</b>\n\n"
-            f"Статья: {publ_info.name}\n"
-            f"Автор(ы): {publ_info.author}\n\n"
-            f'<a href="https://faunistica.ru/files/{publ_info.pdf_file}">'
-            "Ссылка на статью</a>\n\n"
-            "Пожалуйста, не забудьте ознакомиться с инструкцией: "
-            '<a href="https://faunistica.ru/instruction/">веб-страница</a>'
-        )
-
-    @staticmethod
-    def new_password(temp: str, username: str | None) -> str:
-        if username:
-            return (
-                "Ваш **новый пароль** для [сервиса](https://faunistica.ru/) 🥳\n\n"
-                f"P.S. ваш никнейм 🤫: {username}\n\n"
-                "Действует бессрочно (пока не забудете):\n"
-                f"```{temp}```"
-            )
-
-        return (
-            "Ваш **новый пароль** для [сервиса](https://faunistica.ru/) 🥳\n\n"
-            "Действует бессрочно (пока не забудете):\n"
-            f"```{temp}```"
-        )
-
-    # ========== RENAME MESSAGE ========== #
-
-    @staticmethod
-    def rename_success(name: str) -> str:
-        return f"Классный выбор! Приятно познакомиться, {name}! 🤗"
-
-    @staticmethod
-    def same_name(name: str) -> str:
-        return f"Извините, но у вас уже установлено имя {name}"
 
     # ========== SUPPORT MESSAGE ========== #
 
@@ -200,8 +125,6 @@ class Messages:
         return (
             f"Пользователь @{username}, ID: {user_id} обратился в поддержку:\n\n{text}"
         )
-
-    # ========== STATS MESSAGE ========== #
 
     @staticmethod
     def statistics(
@@ -251,78 +174,12 @@ class Messages:
         return "Вы уверены, что это email? Я вот не очень 🙃"
 
     @staticmethod
-    def ask_age() -> str:
-        return "Пожалуйста, укажите ваш возраст (цифрой)."
-
-    @staticmethod
-    def ask_publication_preferences() -> str:
-        return (
-            "Какие публикации вы хотели бы получать и в каком порядке?\n"
-            "Быть может у вас есть какие-то предпочтения по региону, "
-            "автору или семейству? "
-            "По сложности, объему, по наличию описаний новых для науки видов? "
-            "Сообщите о них и мы постараемся это учесть.\n\n"
-            "В противном случае напишите случайную цифру от 0 до 9 "
-            "и мы поймём, что вы предпочитаете сюрпризы🥳"
-        )
-
-    @staticmethod
-    def ask_language() -> str:
-        return (
-            "Значительная часть публикаций написана на английском языке. "
-            "Вы владеете им и готовы обрабатывать такие публикации?\n\n"
-            "Ответьте цифрой, пожалуйста (1/2/3):\n"
-            "1 - Владею, хочу получать публикации на обоих языках\n"
-            "2 - Владею, хочу получать публикации только на английском языке\n"
-            "3 - Не владею, хочу получать публикации только на русском языке\n"
-        )
-
-    @staticmethod
-    def ask_region() -> str:
-        return (
-            "В каком регионе вы живёте? Насленный пункт тоже можете указать, "
-            "хоть это и не обязательно. Просто будем рады его учесть🙂"
-        )
-
-    @staticmethod
-    def ask_email() -> str:
-        return (
-            "Пожалуйста, сообщите свой адрес почты (предпочтительно), телефон "
-            "или другие контактные данные, чтобы мы могли связаться с вами "
-            "по дополнительным вопросам, в т.ч. вопросам поощрения 🙂"
-        )
-
-    @staticmethod
     def age_too_high() -> str:
         return (
             "??? Вы не шутите? "
             "Старейший человек на Земле это "
             "[Мария Браньяс Морера](https://www.fontanka.ru/2023/01/26/72007319). "
             "Если вы не она, то введите корректный возраст, пожалуйста\n☺️"
-        )
-
-    @staticmethod
-    def age_accepted() -> str:
-        return "Возраст учтен, спасибо!"
-
-    @staticmethod
-    def publication_preferences_accepted(preferences: str) -> str:
-        return f"Вы указали следующие пожелания: {preferences}"
-
-    @staticmethod
-    def sociology_question(question_num: int) -> str:
-        questions = {
-            1: "Укажите ваш пол, пожалуйста (мужской/женский)",
-            2: "Согласны ли вы на отображение вашего имени "
-            "в публичной таблице рейтинга?",
-        }
-        return questions.get(question_num, "Вопрос не найден 😱")
-
-    @staticmethod
-    def sociology_completed() -> str:
-        return (
-            "Вы ответили на все имеющиеся вопросы! Спасибо вам!\n\n "
-            "Возможно, позже появятся новые. \nОставайтесь с нами!"
         )
 
     # ========== REPLY MESSAGE ========== #
@@ -376,15 +233,7 @@ class Messages:
         return (
             "Вы вызвали меню 🥳\n\n"
             "<b>/start</b> — общая информация о проекте 🚀\n"
-            "<b>/register</b> — поможет зарегистрироваться, "
-            "чтобы получить доступ к нашему сервису 🕸\n"
-            "<b>/auth</b> — если вы ещё не получили пароль и статью "
-            "(или забыли), жмите, но только после регистрации 🔒\n"
-            "<b>/sociology</b> — небольшой опросник, "
-            "который поможет нам побольше познакомиться 🕷\n"
-            "<b>/stats</b> — если хотите посмотреть статистику проекта, "
-            "ну и собственную, конечно же 📈\n"
-            "<b>/rename</b> — хотите, чтобы я обращался к вам по-другому? Жмите! ↺\n"
+            "<b>/confirm</b> — подтвердить код регистрации с сайта 🧾\n"
             "<b>/support</b> — как только заметите что-то неработающее, "
             "нажимайте (чайник починить не смогу) 🛠\n"
             "<b>/menu</b> — вы это читаете 😱\n"
@@ -426,8 +275,8 @@ class Messages:
     @staticmethod
     def registration_not_finished() -> str:
         return (
-            "Извините, но вы не завершили начатую ранее регистрацию 👉🏻👈🏻\n"
-            "Может вернемся к этому?"
+            "Извините, но вы не завершили регистрацию на сайте 👉🏻👈🏻\n"
+            "Пожалуйста, завершите ее и подтвердите код в этом боте."
         )
 
     @staticmethod
@@ -435,16 +284,20 @@ class Messages:
         return "Ответ слишком короткий, не могу такое принять 🙁"
 
     @staticmethod
+    def invalid_sex() -> str:
+        return "Недопустимое значение пола"
+
+    @staticmethod
+    def invalid_lang() -> str:
+        return "Недопустимое значение языка"
+
+    @staticmethod
     def message_too_long() -> str:
         return "У меня плохая память, я точно не смогу запомнить такой длинный ответ 🫣"
 
     @staticmethod
     def invalid_characters() -> str:
-        return (
-            "В ответе содержатся недопустимые символы, "
-            "пожалуйста, используйте только буквы русского и латинского "
-            "алфавита и цифры 🚫"
-        )
+        return "В ответе содержатся недопустимые символы"
 
     @staticmethod
     def message_no_digits() -> str:
@@ -474,14 +327,23 @@ class Messages:
             "Простите, но по техническим причинам не могу вам дать "
             "воспользоваться данной командой на этапе регистрации. 😔\n\n"
             "Если вы столкнулись с проблемой, "
-            "напишите в [форму](https://faunistica.ru/feedback)"
+            f"напишите в [форму]({settings.SITE_URL}/feedback)"
         )
 
     @staticmethod
     def register_for_old() -> str:
         return (
             "Здравствуйте, тут такая проблемка...\n"
-            "Я помню, что вы уже знаете меня, но попрошу выполнить команду /register"
+            "Я помню, что вы уже знаете меня, но для доступа "
+            "нужно снова зарегистрироваться на сайте и подтвердить код в этом боте."
+        )
+
+    @staticmethod
+    def registration_failed() -> str:
+        return (
+            "Здравствуйте, тут такая проблемка...\n"
+            "Мы не смогли сохранить данные о вас в базу. "
+            "Попробуйте снова 😔"
         )
 
     @staticmethod

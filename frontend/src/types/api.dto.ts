@@ -110,6 +110,17 @@ export interface UploadExcelResponse {
     errors: ImportError[];
 }
 
+export interface SubmitPublicationRequest {
+    processing_level: 'full' | 'ural' | 'part' | 'skip';
+    urals_scope?: 'yes' | 'no' | null;
+    material_status?: 'yes' | 'no' | null;
+    comment?: string | null;
+}
+
+export interface SubmitStatusResponse {
+    draft_record_ids: string[];
+}
+
 export interface SupportRequest {
     link: string;
     user_name: string;
@@ -164,4 +175,71 @@ export interface UserStatisticsResponse {
     distinct_genera: number;
     distinct_species: number;
     most_common_year: number | null;
+}
+
+export interface TelegramAuthInitResponse {
+    code: string;
+    code_expires_in: number;
+    token: string;
+    token_expires_in: number;
+    bot_url: string;
+}
+
+export interface TelegramAuthStatusResponse {
+    status?: 'pending' | 'need_registration' | 'authorized' | 0 | 1 | 2 | 3;
+    code?: string;
+    code_expires_in?: number;
+    user_id?: number;
+    name?: string;
+    username?: string;
+}
+
+export interface RegisterRequest {
+    token: string;
+    code: string;
+    name: string;
+    username: string;
+    password: string;
+    age: number;
+    rating: boolean;
+    sex: 'M' | 'F' | 'N';
+    lng: 'rus' | 'eng' | 'all';
+    comm?: string;
+}
+
+export interface RegisterResponse {
+    message: string;
+    user_id: number;
+}
+
+export interface UserFull {
+    user_id: number;
+    name: string;
+    tlg_name?: string | null;
+    tlg_username?: string | null;
+    reg_stat?: number | null;
+    username?: string | null;
+    items?: string;
+    age?: number | null;
+    lng?: 'eng' | 'rus' | 'all' | null;
+    comm?: string | null;
+    reg_run?: string | null;
+    reg_end?: string | null;
+    sex?: string | null;
+    rating?: number | null;
+    email?: string | null;
+    region?: string | null;
+}
+
+export interface UserUpdateMeRequest {
+    username?: string | null;
+    password?: string | null;
+    name?: string | null;
+    age?: number | null;
+    lng?: 'eng' | 'rus' | 'all' | null;
+    comm?: string | null;
+    sex?: string | null;
+    rating?: number | null;
+    email?: string | null;
+    region?: string | null;
 }

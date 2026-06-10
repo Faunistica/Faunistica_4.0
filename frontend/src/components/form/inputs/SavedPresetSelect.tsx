@@ -149,7 +149,7 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className
                     Заполнить как у другой записи
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-fit" align="end">
+            <DropdownMenuContent className="w-fit max-w-screen" align="end">
                 {presets.map((p) => (
                     <DropdownMenuItem
                         key={p.recordId}

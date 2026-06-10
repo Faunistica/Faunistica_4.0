@@ -1,6 +1,6 @@
 import { type FC, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, PanelLeft, Globe, LogOut, Settings as SettingsIcon, Check } from 'lucide-react';
+import { Menu, X, PanelLeft, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useRouteHandle } from '@/hooks/useRouteMeta';
 import { useAppSelector } from '@/store/store';
@@ -13,7 +13,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUserPhoto } from '@/hooks/useUserPhoto';
 
 interface HeaderProps {
     isSidebarEnabled?: boolean;
@@ -24,16 +25,10 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isLanding, isNavigateEnabled = true } = useRouteHandle();
 
-    const { username, auth } = useAppSelector((state) => state.user);
+    const { name, auth, user_id } = useAppSelector((state) => state.user);
+    const photoUrl = useUserPhoto(auth ? user_id : null);
     const [logout] = useLogoutMutation();
     const navigate = useNavigate();
-
-    const [language, setLanguage] = useState(localStorage.getItem('language') || 'ru');
-
-    const handleLanguageChange = (lang: string) => {
-        setLanguage(lang);
-        localStorage.setItem('language', lang);
-    };
 
     const handleLogout = async () => {
         try {
@@ -156,42 +151,12 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             )}
                         </nav>
                         <div className="flex items-center gap-3">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="size-9 rounded-full"
-                                    >
-                                        <Globe className="size-5 text-slate-600" />
-                                        <span className="sr-only">Сменить язык</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="z-150">
-                                    <DropdownMenuItem
-                                        onClick={() => handleLanguageChange('ru')}
-                                        className="cursor-pointer justify-between"
-                                    >
-                                        Русский
-                                        {language === 'ru' && <Check className="ml-4 size-4" />}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => handleLanguageChange('en')}
-                                        className="cursor-pointer justify-between"
-                                    >
-                                        English
-                                        {language === 'en' && <Check className="ml-4 size-4" />}
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
                             {!auth ? (
                                 <Button
                                     asChild
-                                    variant="default"
-                                    className="bg-[#229ED9] text-white shadow-sm hover:bg-[#1E8CC0]"
+                                    className="bg-slate-900 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                                 >
-                                    <Link to="/auth/login">Личный кабинет</Link>
+                                    <Link to="/auth/login">Войти</Link>
                                 </Button>
                             ) : (
                                 <DropdownMenu>
@@ -201,9 +166,15 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                             className="relative size-9 overflow-hidden rounded-full p-0 transition-transform hover:scale-105"
                                         >
                                             <Avatar className="size-9">
+                                                {photoUrl && (
+                                                    <AvatarImage
+                                                        src={photoUrl}
+                                                        alt={name || 'Фото профиля'}
+                                                    />
+                                                )}
                                                 <AvatarFallback className="bg-slate-900 text-xs font-bold text-white">
-                                                    {username
-                                                        ? username.substring(0, 2).toUpperCase()
+                                                    {name
+                                                        ? name.substring(0, 2).toUpperCase()
                                                         : 'US'}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -213,7 +184,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                         <DropdownMenuLabel className="font-normal">
                                             <div className="flex flex-col space-y-1">
                                                 <p className="text-sm leading-none font-medium text-slate-900">
-                                                    {username || 'Пользователь'}
+                                                    {name || 'Пользователь'}
                                                 </p>
                                                 <p className="text-xs leading-none text-slate-500">
                                                     Волонтёр

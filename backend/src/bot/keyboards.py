@@ -1,4 +1,12 @@
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from aiogram import Bot
+from aiogram.types import (
+    BotCommand,
+    BotCommandScopeAllPrivateChats,
+    KeyboardButton,
+    MenuButtonCommands,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+)
 
 
 def remove() -> ReplyKeyboardRemove:
@@ -23,3 +31,18 @@ def yes_no() -> ReplyKeyboardMarkup:
         resize_keyboard=True,
         one_time_keyboard=True,
     )
+
+
+commands = [
+    BotCommand(command="start", description="Запустить бота"),
+    BotCommand(command="menu", description="Меню"),
+    BotCommand(command="register", description="Информация о регистрации"),
+    BotCommand(command="confirm", description="Подтверждение кода"),
+    BotCommand(command="support", description="Поддержка"),
+]
+
+
+async def setup_bot_commands(bot: Bot) -> None:
+    """Установка команд бота и кнопки меню"""
+    await bot.set_my_commands(commands=commands, scope=BotCommandScopeAllPrivateChats())
+    await bot.set_chat_menu_button(menu_button=MenuButtonCommands())

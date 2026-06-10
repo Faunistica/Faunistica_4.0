@@ -11,6 +11,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useRecordForm } from '@/hooks/useRecordForm';
+import { useRecordPublGuard } from '@/hooks/useRecordPublGuard';
 
 interface OutletContextType {
     isSidebarOpen: boolean;
@@ -54,12 +55,16 @@ const FormFilling: FC = () => {
     const { id } = useParams<{ id: string }>();
     const publ_id = Number(id);
 
+    const { isValidating } = useRecordPublGuard(publ_id);
+
     const methods = useForm<RecordForm>({
         resolver: zodResolver(recordFormSchema),
         defaultValues: FORM_DEFAULT_VALUES,
         mode: 'onBlur',
         reValidateMode: 'onChange',
     });
+
+    if (isValidating) return <LoadingScreen />;
 
     return (
         <FormProvider {...methods}>

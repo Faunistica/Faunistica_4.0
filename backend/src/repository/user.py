@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import func, update
 from sqlalchemy.dialects.postgresql import insert
@@ -15,7 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 async def find_user_by_username(session: AsyncSession, username: str) -> User | None:
-    stmt = select(User).where(User.name == username)
+    stmt = select(User).where(User.username == username)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def find_user_by_name(session: AsyncSession, name: str) -> User | None:
+    stmt = select(User).where(User.name == name)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -42,7 +48,10 @@ async def create_user_or_update(
     stmt = insert(User).values(user_id=user_id, reg_stat=reg_stat)
     stmt = stmt.on_conflict_do_update(
         index_elements=[User.user_id],
-        set_={User.reg_stat: stmt.excluded.reg_stat, User.reg_run: datetime.now()},
+        set_={
+            User.reg_stat: stmt.excluded.reg_stat,
+            User.reg_run: datetime.now(UTC).replace(tzinfo=None),
+        },
     ).returning(User)
     result = await session.execute(stmt)
 
@@ -61,6 +70,12 @@ async def update_user(
     result = await session.execute(stmt)
 
     return result.scalar_one_or_none()
+
+
+async def count_users_with_username(session: AsyncSession, username: str) -> int:
+    stmt = select(func.count()).select_from(User).where(User.username == username)
+    result = await session.execute(stmt)
+    return result.scalar_one()
 
 
 async def count_users_with_name(session: AsyncSession, name: str) -> int:

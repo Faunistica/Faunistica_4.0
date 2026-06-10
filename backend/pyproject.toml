@@ -113,4 +113,3 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 pythonpath = [".", "src"]
 addopts = "-W ignore::DeprecationWarning --cov src --cov scripts --cov-report=html --cov-report=term"
-

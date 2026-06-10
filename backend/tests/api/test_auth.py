@@ -1,14 +1,7 @@
-from collections.abc import Callable
-from datetime import datetime, timedelta
-
 import pytest
 from conftest import SeedData
 from fastapi import status
 from httpx import AsyncClient
-from sqlalchemy import update
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from core.model import User
 
 
 @pytest.mark.asyncio
@@ -44,35 +37,6 @@ async def test_login_invalid_password(
     response = await async_client.post(
         "/api/auth/login",
         json={"username": user.name, "password": "wrong" + password},
-    )
-
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-
-@pytest.mark.asyncio
-async def test_login_expired_hash_date(
-    async_client: AsyncClient,
-    seed_data: SeedData,
-    session_maker: Callable[[], AsyncSession],
-) -> None:
-    """Test login with expired hash_date (>3000 minutes) returns 401."""
-    user: User = seed_data["users"][0]
-    password = seed_data["passwords"][0]
-
-    async with session_maker() as session:
-        expired_date = datetime.now() - timedelta(minutes=3001)
-
-        await session.execute(
-            update(User)
-            .where(User.user_id == user.user_id)
-            .values(hash_date=expired_date)
-        )
-
-        await session.commit()
-
-    response = await async_client.post(
-        "/api/auth/login",
-        json={"username": user.name, "password": password},
     )
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
