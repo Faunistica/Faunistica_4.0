@@ -4,6 +4,7 @@ from ..helpers import (
     contains_forbidden_chars,
     has_cyrillic_in_foreign_text,
     has_range_separator,
+    nonblank,
 )
 from ..rules.base import RuleCategory, RuleContext, required, rule
 
@@ -19,7 +20,7 @@ rule(
 def rule_interval_no_separator(data: RecordData, ctx: RuleContext) -> str | None:
     if (
         data.is_interval is True
-        and data.verbatim_date is not None
+        and nonblank(data.verbatim_date)
         and not has_range_separator(data.verbatim_date)
     ):
         return "Указан интервал дат, но значение не содержит разделителя интервала"

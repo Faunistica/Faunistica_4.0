@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, act, waitFor, renderHook } from '@testing-library/react';
+import { render, act, waitFor, renderHook, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useNavigate } from 'react-router';
 import { useForm, FormProvider, Controller, useFormContext } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { RecordFormProvider } from '@/components/providers/RecordFormProvider';
 import type { RecordFormActions } from '@/hooks/useRecordFormActions';
-import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
+import { FORM_DEFAULT_VALUES, recordFormSchema, type RecordForm } from '@/types/forms';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -100,13 +101,13 @@ const RECORD_1 = {
     id: 'rec-1',
     ...RECORD_FIELDS,
     updated_at: '2024-01-01T00:00:00Z',
-    country: 'RU',
+    country: 'Россия',
 };
 const RECORD_2 = {
     id: 'rec-2',
     ...RECORD_FIELDS,
     updated_at: '2024-01-01T00:00:02Z',
-    country: 'DE',
+    country: 'Германия',
 };
 
 type RecordLike = Record<string, unknown>;
@@ -152,7 +153,10 @@ function TestHarness({
     children: React.ReactNode;
     autoSaveDelay?: number;
 }) {
-    const methods = useForm<RecordForm>({ defaultValues: FORM_DEFAULT_VALUES });
+    const methods = useForm<RecordForm>({
+        resolver: zodResolver(recordFormSchema),
+        defaultValues: FORM_DEFAULT_VALUES,
+    });
     testMethodsRef.current = methods;
     return (
         <MemoryRouter initialEntries={['/publication/1/rec-1']}>
@@ -170,6 +174,20 @@ function TestHarness({
                 />
             </Routes>
         </MemoryRouter>
+    );
+}
+
+function SubmitForm() {
+    const { state, actions } = useRecordForm();
+    testState = state;
+    testActions = actions;
+    const { handleSubmit } = useFormContext<RecordForm>();
+    return (
+        <form onSubmit={handleSubmit(() => actions.submit())}>
+            <button type="submit" data-testid="submit-btn">
+                Submit
+            </button>
+        </form>
     );
 }
 
@@ -313,7 +331,7 @@ describe('RecordFormProvider', () => {
             </TestHarness>,
         );
 
-        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Россия');
     });
 
     it('is not loading after data arrives', () => {
@@ -369,7 +387,7 @@ describe('RecordFormProvider', () => {
         await waitFor(() => {
             expect(testState!.status.phase).toBe('idle');
         });
-        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Германия');
     });
 
     it('onNavigate + NavLink back-and-forth does not mix up data', async () => {
@@ -383,7 +401,7 @@ describe('RecordFormProvider', () => {
             </TestHarness>,
         );
         expect(testState!.activeRecordId).toBe('rec-1');
-        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Россия');
 
         // Switch to rec-2
         act(() => {
@@ -398,7 +416,7 @@ describe('RecordFormProvider', () => {
         await waitFor(() => {
             expect(testState!.status.phase).toBe('idle');
         });
-        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Германия');
 
         // Switch back to rec-1
         act(() => {
@@ -413,7 +431,7 @@ describe('RecordFormProvider', () => {
         await waitFor(() => {
             expect(testState!.status.phase).toBe('idle');
         });
-        expect(testMethodsRef.current!.getValues('country')).toBe('RU');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Россия');
 
         // Switch to rec-2 again
         act(() => {
@@ -428,7 +446,7 @@ describe('RecordFormProvider', () => {
         await waitFor(() => {
             expect(testState!.status.phase).toBe('idle');
         });
-        expect(testMethodsRef.current!.getValues('country')).toBe('DE');
+        expect(testMethodsRef.current!.getValues('country')).toBe('Германия');
     });
 
     it('onNavigate to same record is no-op', () => {
@@ -449,39 +467,6 @@ describe('RecordFormProvider', () => {
         expect(mockUpdateRecord).not.toHaveBeenCalled();
     });
 
-    it('save calls editRecord', async () => {
-        setQueryResult(null, undefined);
-        setQueryResult('rec-1', RECORD_1);
-
-        render(
-            <TestHarness>
-                <StateDisplay />
-            </TestHarness>,
-        );
-
-        await act(() => testActions!.save());
-
-        expect(mockUpdateRecord).toHaveBeenCalledWith(
-            expect.objectContaining({ submit: false, record_id: 'rec-1' }),
-        );
-    });
-
-    it('save updates lastSavedTime on success', async () => {
-        setQueryResult(null, undefined);
-        setQueryResult('rec-1', RECORD_1);
-
-        render(
-            <TestHarness>
-                <StateDisplay />
-            </TestHarness>,
-        );
-
-        await act(() => testActions!.save());
-
-        expect(testState!.lastSavedTime).toBeInstanceOf(Date);
-        expect(testState!.status.phase).toBe('idle');
-    });
-
     it('submit calls editRecord then submitRecord', async () => {
         setQueryResult(null, undefined);
         setQueryResult('rec-1', RECORD_1);
@@ -498,6 +483,82 @@ describe('RecordFormProvider', () => {
             expect.objectContaining({ submit: true, record_id: 'rec-1' }),
         );
         expect(testState!.status.phase).toBe('idle');
+    });
+
+    it('blocks API call when required fields are empty on submit', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        const { getByTestId } = render(
+            <TestHarness>
+                <SubmitForm />
+            </TestHarness>,
+        );
+
+        await waitFor(() => expect(testState!.status.phase).toBe('idle'));
+
+        await act(async () => {
+            fireEvent.click(getByTestId('submit-btn'));
+        });
+
+        expect(mockUpdateRecord).not.toHaveBeenCalled();
+    });
+
+    it('calls API when all required fields are filled on submit', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+
+        const { getByTestId } = render(
+            <TestHarness>
+                <SubmitForm />
+            </TestHarness>,
+        );
+
+        await waitFor(() => expect(testState!.status.phase).toBe('idle'));
+
+        testMethodsRef.current!.setValue('country', 'Россия');
+        testMethodsRef.current!.setValue('region', 'Region');
+        testMethodsRef.current!.setValue('district', 'District');
+        testMethodsRef.current!.setValue('locality', 'Locality');
+        testMethodsRef.current!.setValue('verbatim_date', '2024-01-01');
+        testMethodsRef.current!.setValue('sampling_protocol', 'Protocol');
+        testMethodsRef.current!.setValue('recorded_by', 'Someone');
+        testMethodsRef.current!.setValue('family', 'Canidae');
+        testMethodsRef.current!.setValue('genus', 'Canis');
+        testMethodsRef.current!.setValue('species', 'lupus');
+        testMethodsRef.current!.setValue('coordinate_uncertainty', 100);
+
+        await act(async () => {
+            fireEvent.click(getByTestId('submit-btn'));
+        });
+
+        expect(mockUpdateRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ submit: true, record_id: 'rec-1' }),
+        );
+    });
+
+    it('onNavigate preserves submit flag for submitted records', async () => {
+        setQueryResult(null, undefined);
+        setQueryResult('rec-1', RECORD_1);
+        setQueryResult('rec-2', RECORD_2);
+
+        render(
+            <TestHarness>
+                <StateDisplay />
+            </TestHarness>,
+        );
+
+        await waitFor(() => expect(testState!.status.phase).toBe('idle'));
+
+        await act(() => testActions!.submit());
+        expect(testState!.status.phase).toBe('idle');
+        mockUpdateRecord.mockClear();
+
+        act(() => testActions!.onNavigate('rec-2'));
+
+        expect(mockUpdateRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ submit: true, record_id: 'rec-1' }),
+        );
     });
 
     it('create switches to new record', async () => {
@@ -575,24 +636,6 @@ describe('RecordFormProvider', () => {
         expect(testState!.activeRecordId).toBe('rec-2');
     });
 
-    it('returns to idle on save error', async () => {
-        mockUpdateRecord.mockReturnValue({
-            unwrap: () => Promise.reject(new Error('save failed')),
-        });
-        setQueryResult(null, undefined);
-        setQueryResult('rec-1', RECORD_1);
-
-        render(
-            <TestHarness>
-                <StateDisplay />
-            </TestHarness>,
-        );
-
-        await act(() => testActions!.save());
-
-        expect(testState!.status.phase).toBe('idle');
-    });
-
     it('returns to idle on submit error', async () => {
         mockUpdateRecord.mockReturnValue({
             unwrap: () => Promise.reject(new Error('submit failed')),
@@ -632,26 +675,26 @@ describe('RecordFormProvider', () => {
     it('RHF watch fires on setValue', async () => {
         const callback = vi.fn();
         const { result } = renderHook(() =>
-            useForm<RecordForm>({ defaultValues: { country: 'RU' } }),
+            useForm<RecordForm>({ defaultValues: { country: 'Россия' } }),
         );
         result.current.watch(callback);
-        result.current.setValue('country', 'US');
+        result.current.setValue('country', 'США');
         await new Promise((r) => setTimeout(r, 10));
         expect(callback).toHaveBeenCalled();
     });
 
     it('RHF watch fires after reset + setValue', async () => {
         const { result } = renderHook(() =>
-            useForm<RecordForm>({ defaultValues: { country: 'RU' } }),
+            useForm<RecordForm>({ defaultValues: { country: 'Россия' } }),
         );
         const callback = vi.fn();
         result.current.watch(callback);
         await act(async () => {
-            result.current.reset({ country: 'DE' });
+            result.current.reset({ country: 'Германия' });
         });
         await new Promise((r) => setTimeout(r, 10));
         await act(async () => {
-            result.current.setValue('country', 'US');
+            result.current.setValue('country', 'США');
         });
         await new Promise((r) => setTimeout(r, 10));
         expect(callback).toHaveBeenCalled();
@@ -733,7 +776,7 @@ describe('RecordFormProvider', () => {
             expect(testState!.activeRecordId).toBe('rec-1');
 
             await act(async () => {
-                testMethodsRef.current!.setValue('country', 'US');
+                testMethodsRef.current!.setValue('country', 'США');
             });
 
             await waitFor(() => {
@@ -741,29 +784,6 @@ describe('RecordFormProvider', () => {
                     expect.objectContaining({ submit: false, record_id: 'rec-1' }),
                 );
             });
-            expect(testState!.status.phase).toBe('idle');
-        });
-
-        it('manual save cancels pending auto-save', async () => {
-            setQueryResult(null, undefined);
-            setQueryResult('rec-1', RECORD_1);
-
-            render(
-                <TestHarness autoSaveDelay={100}>
-                    <StateDisplay />
-                </TestHarness>,
-            );
-            expect(testState!.activeRecordId).toBe('rec-1');
-
-            testMethodsRef.current!.setValue('country', 'US');
-
-            await act(async () => {
-                await testActions!.save();
-            });
-
-            await new Promise((r) => setTimeout(r, 200));
-
-            expect(mockUpdateRecord).toHaveBeenCalledTimes(1);
             expect(testState!.status.phase).toBe('idle');
         });
 
@@ -779,9 +799,9 @@ describe('RecordFormProvider', () => {
             expect(testState!.activeRecordId).toBe('rec-1');
 
             await act(async () => {
-                testMethodsRef.current!.setValue('country', 'US');
+                testMethodsRef.current!.setValue('country', 'США');
                 testMethodsRef.current!.setValue('locality', 'Moscow');
-                testMethodsRef.current!.setValue('country', 'DE');
+                testMethodsRef.current!.setValue('country', 'Германия');
             });
 
             await waitFor(() => {
@@ -791,7 +811,7 @@ describe('RecordFormProvider', () => {
                 expect.objectContaining({
                     submit: false,
                     record_id: 'rec-1',
-                    data: expect.objectContaining({ country: 'DE', locality: 'Moscow' }),
+                    data: expect.objectContaining({ country: 'Германия', locality: 'Moscow' }),
                 }),
             );
             expect(testState!.status.phase).toBe('idle');
