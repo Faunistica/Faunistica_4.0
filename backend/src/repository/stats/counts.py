@@ -92,28 +92,28 @@ async def count_species(session: AsyncSession, user_id: int | None = None) -> in
         event_condition = and_(event_condition, EventRecord.user_id == user_id)
         legacy_condition = and_(legacy_condition, records_table.c.user_id == user_id)
 
-    event_count = (
-        await session.scalar(
-            select(
-                func.count(func.distinct(EventRecord.genus + " " + EventRecord.species))
-            )
-            .select_from(EventRecord)
-            .where(event_condition)
-        )
-        or 0
-    )
-    legacy_count = await _legacy_scalar(
+    event_key = EventRecord.genus + " " + EventRecord.species
+    legacy_key = records_table.c.tax_gen + " " + records_table.c.tax_sp
+
+    event_select = select(event_key.label("key")).where(event_condition)
+    legacy_select = select(legacy_key.label("key")).where(legacy_condition)
+
+    union_subq = event_select.union(legacy_select).subquery()
+    result = await _legacy_scalar(
         session,
-        select(
-            func.count(
-                func.distinct(records_table.c.tax_gen + " " + records_table.c.tax_sp)
-            )
-        )
-        .select_from(records_table)
-        .where(legacy_condition),
+        select(func.count(func.distinct(union_subq.c.key))),
         "Could not query records for species_count",
     )
-    return event_count + (legacy_count or 0)
+    if result is not None:
+        return result
+
+    event_only = (
+        select(func.count(func.distinct(event_key)))
+        .select_from(EventRecord)
+        .where(event_condition)
+    )
+
+    return (await session.scalar(event_only)) or 0
 
 
 async def count_families(session: AsyncSession, user_id: int | None = None) -> int:
@@ -123,22 +123,28 @@ async def count_families(session: AsyncSession, user_id: int | None = None) -> i
         event_condition = and_(event_condition, EventRecord.user_id == user_id)
         legacy_condition = and_(legacy_condition, records_table.c.user_id == user_id)
 
-    event_count = (
-        await session.scalar(
-            select(func.count(func.distinct(EventRecord.family)))
-            .select_from(EventRecord)
-            .where(event_condition)
-        )
-        or 0
+    event_key = EventRecord.family
+    legacy_key = records_table.c.tax_fam
+
+    event_select = select(event_key.label("key")).where(event_condition)
+    legacy_select = select(legacy_key.label("key")).where(legacy_condition)
+
+    event_only = (
+        select(func.count(func.distinct(event_key)))
+        .select_from(EventRecord)
+        .where(event_condition)
     )
-    legacy_count = await _legacy_scalar(
+
+    union_subq = event_select.union(legacy_select).subquery()
+    result = await _legacy_scalar(
         session,
-        select(func.count(func.distinct(records_table.c.tax_fam)))
-        .select_from(records_table)
-        .where(legacy_condition),
+        select(func.count(func.distinct(union_subq.c.key))),
         "Could not query records for families_count",
     )
-    return event_count + (legacy_count or 0)
+    if result is not None:
+        return result
+
+    return (await session.scalar(event_only)) or 0
 
 
 async def count_genera(session: AsyncSession, user_id: int | None = None) -> int:
@@ -148,22 +154,28 @@ async def count_genera(session: AsyncSession, user_id: int | None = None) -> int
         event_condition = and_(event_condition, EventRecord.user_id == user_id)
         legacy_condition = and_(legacy_condition, records_table.c.user_id == user_id)
 
-    event_count = (
-        await session.scalar(
-            select(func.count(func.distinct(EventRecord.genus)))
-            .select_from(EventRecord)
-            .where(event_condition)
-        )
-        or 0
+    event_key = EventRecord.genus
+    legacy_key = records_table.c.tax_gen
+
+    event_select = select(event_key.label("key")).where(event_condition)
+    legacy_select = select(legacy_key.label("key")).where(legacy_condition)
+
+    event_only = (
+        select(func.count(func.distinct(event_key)))
+        .select_from(EventRecord)
+        .where(event_condition)
     )
-    legacy_count = await _legacy_scalar(
+
+    union_subq = event_select.union(legacy_select).subquery()
+    result = await _legacy_scalar(
         session,
-        select(func.count(func.distinct(records_table.c.tax_gen)))
-        .select_from(records_table)
-        .where(legacy_condition),
+        select(func.count(func.distinct(union_subq.c.key))),
         "Could not query records for genera_count",
     )
-    return event_count + (legacy_count or 0)
+    if result is not None:
+        return result
+
+    return (await session.scalar(event_only)) or 0
 
 
 async def count_processed_publications(session: AsyncSession) -> int:
@@ -200,28 +212,37 @@ async def avg_user_age(session: AsyncSession) -> float | None:
 
 
 async def count_user_publications(session: AsyncSession, user_id: int) -> int:
-    event_count = (
-        await session.scalar(
-            select(func.count(func.distinct(EventRecord.publ_id)))
-            .select_from(EventRecord)
-            .where(
-                EventRecord.user_id == user_id,
-                EventRecord.type == RecordType.REC_OK,
-            )
-        )
-        or 0
+    event_condition = and_(
+        EventRecord.user_id == user_id,
+        EventRecord.type == RecordType.REC_OK,
     )
-    legacy_count = await _legacy_scalar(
+    legacy_condition = and_(
+        records_table.c.user_id == user_id,
+        records_table.c.type == "rec_ok",
+    )
+
+    event_key = EventRecord.publ_id
+    legacy_key = records_table.c.publ_id
+
+    event_select = select(event_key.label("key")).where(event_condition)
+    legacy_select = select(legacy_key.label("key")).where(legacy_condition)
+
+    event_only = (
+        select(func.count(func.distinct(event_key)))
+        .select_from(EventRecord)
+        .where(event_condition)
+    )
+
+    union_subq = event_select.union(legacy_select).subquery()
+    result = await _legacy_scalar(
         session,
-        select(func.count(func.distinct(records_table.c.publ_id)))
-        .select_from(records_table)
-        .where(
-            records_table.c.user_id == user_id,
-            records_table.c.type == "rec_ok",
-        ),
+        select(func.count(func.distinct(union_subq.c.key))),
         "Could not query records for user publications",
     )
-    return event_count + (legacy_count or 0)
+    if result is not None:
+        return result
+
+    return (await session.scalar(event_only)) or 0
 
 
 async def sum_user_individuals(session: AsyncSession, user_id: int) -> float:

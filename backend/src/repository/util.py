@@ -12,6 +12,10 @@ async def _legacy_scalar[T](
     stmt: TypedReturnsRows[tuple[T]],
     warning_msg: str,
 ) -> T | None:
+    """
+    Runs stmt and returns None if it fails
+    Intended to use for queries that use legacy 'records' table
+    """
     try:
         async with session.begin_nested():
             return await session.scalar(stmt)
