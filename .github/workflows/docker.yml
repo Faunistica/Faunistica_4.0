@@ -17,6 +17,10 @@ env:
   BACKEND_IMAGE: faunistica/backend
   FRONTEND_IMAGE: faunistica/frontend
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   changes:
     runs-on: ubuntu-latest
