@@ -51,8 +51,12 @@ async def _count_distinct_combined[T](
     legacy_key: SQLColumnExpression[T],
     types: list[RecordType],
     user_id: int | None = None,
+    event_extra_filter: SQLColumnExpression | None = None,
+    legacy_extra_filter: SQLColumnExpression | None = None,
 ) -> int:
-    event_filter, legacy_filter = _build_filters(types, user_id)
+    event_filter, legacy_filter = _build_filters(
+        types, user_id, event_extra_filter, legacy_extra_filter
+    )
 
     event_subq = select(event_key.label("k")).where(event_filter)
     legacy_subq = select(legacy_key.label("k")).where(legacy_filter)
@@ -123,28 +127,58 @@ async def count_checks(session: AsyncSession, user_id: int | None = None) -> int
 async def count_species(session: AsyncSession, user_id: int | None = None) -> int:
     event_key = EventRecord.genus + " " + EventRecord.species
     legacy_key = records_table.c.tax_gen + " " + records_table.c.tax_sp
+    event_filter = and_(
+        EventRecord.genus.isnot(None),
+        EventRecord.genus != "",
+        EventRecord.species.isnot(None),
+        EventRecord.species != "",
+    )
+    legacy_filter = and_(
+        records_table.c.tax_gen.isnot(None),
+        records_table.c.tax_gen != "",
+        records_table.c.tax_sp.isnot(None),
+        records_table.c.tax_sp != "",
+    )
     return await _count_distinct_combined(
-        session, event_key, legacy_key, [RecordType.REC_OK], user_id
+        session,
+        event_key,
+        legacy_key,
+        [RecordType.REC_OK],
+        user_id,
+        event_extra_filter=event_filter,
+        legacy_extra_filter=legacy_filter,
     )
 
 
 async def count_families(session: AsyncSession, user_id: int | None = None) -> int:
+    event_filter = and_(EventRecord.family.isnot(None), EventRecord.family != "")
+    legacy_filter = and_(
+        records_table.c.tax_fam.isnot(None), records_table.c.tax_fam != ""
+    )
     return await _count_distinct_combined(
         session,
         EventRecord.family,
         records_table.c.tax_fam,
         [RecordType.REC_OK],
         user_id,
+        event_extra_filter=event_filter,
+        legacy_extra_filter=legacy_filter,
     )
 
 
 async def count_genera(session: AsyncSession, user_id: int | None = None) -> int:
+    event_filter = and_(EventRecord.genus.isnot(None), EventRecord.genus != "")
+    legacy_filter = and_(
+        records_table.c.tax_gen.isnot(None), records_table.c.tax_gen != ""
+    )
     return await _count_distinct_combined(
         session,
         EventRecord.genus,
         records_table.c.tax_gen,
         [RecordType.REC_OK],
         user_id,
+        event_extra_filter=event_filter,
+        legacy_extra_filter=legacy_filter,
     )
 
 

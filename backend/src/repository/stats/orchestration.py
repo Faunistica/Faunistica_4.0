@@ -173,7 +173,10 @@ async def get_cumulative_records(session: AsyncSession) -> list[Row]:
             func.date(EventRecord.created_at).label("date"),
             func.count().label("cnt"),
         )
-        .where(EventRecord.type == RecordType.REC_OK)
+        .where(
+            EventRecord.type == RecordType.REC_OK,
+            EventRecord.created_at.isnot(None),
+        )
         .group_by(func.date(EventRecord.created_at))
     )
     result = await session.execute(er_stmt)
@@ -186,7 +189,10 @@ async def get_cumulative_records(session: AsyncSession) -> list[Row]:
             func.date(records_table.c.datetime).label("date"),
             func.count().label("cnt"),
         )
-        .where(records_table.c.type == "rec_ok")
+        .where(
+            records_table.c.type == "rec_ok",
+            records_table.c.datetime.isnot(None),
+        )
         .group_by(func.date(records_table.c.datetime))
     )
     legacy_result = await session.execute(r_stmt)

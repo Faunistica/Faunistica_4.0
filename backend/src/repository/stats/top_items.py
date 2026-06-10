@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import SQLColumnExpression, func, select, union_all
+from sqlalchemy import SQLColumnExpression, and_, func, select, union_all
 from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,15 +17,21 @@ async def _most_common_combined[T](
     legacy_expr: SQLColumnExpression[T],
     label: str,
     empty_value: str = "",
+    event_extra: SQLColumnExpression | None = None,
+    legacy_extra: SQLColumnExpression | None = None,
 ) -> T | None:
-    er = select(event_expr.label(label)).where(
+    er_filter = and_(
         EventRecord.user_id == user_id,
         EventRecord.type == RecordType.REC_OK,
+        *(event_extra,) if event_extra else (),
     )
-    r = select(legacy_expr.label(label)).where(
+    er = select(event_expr.label(label)).where(er_filter)
+    r_filter = and_(
         records_table.c.user_id == user_id,
         records_table.c.type == "rec_ok",
+        *(legacy_extra,) if legacy_extra else (),
     )
+    r = select(legacy_expr.label(label)).where(r_filter)
     combined = union_all(er, r).subquery()
     stmt = (
         select(combined.c[label])
@@ -65,6 +71,18 @@ async def most_common_genus(session: AsyncSession, user_id: int) -> str | None:
 async def most_common_species(session: AsyncSession, user_id: int) -> str | None:
     event_species = EventRecord.genus + " " + EventRecord.species
     legacy_species = records_table.c.tax_gen + " " + records_table.c.tax_sp
+    event_filter = and_(
+        EventRecord.genus.isnot(None),
+        EventRecord.genus != "",
+        EventRecord.species.isnot(None),
+        EventRecord.species != "",
+    )
+    legacy_filter = and_(
+        records_table.c.tax_gen.isnot(None),
+        records_table.c.tax_gen != "",
+        records_table.c.tax_sp.isnot(None),
+        records_table.c.tax_sp != "",
+    )
     return await _most_common_combined(
         session,
         user_id,
@@ -73,6 +91,8 @@ async def most_common_species(session: AsyncSession, user_id: int) -> str | None
         legacy_expr=legacy_species,
         label="species",
         empty_value=" ",
+        event_extra=event_filter,
+        legacy_extra=legacy_filter,
     )
 
 
@@ -111,7 +131,14 @@ async def top_user_species(
             EventRecord.species,
             func.count().label("cnt"),
         )
-        .where(EventRecord.user_id == user_id, EventRecord.type == RecordType.REC_OK)
+        .where(
+            EventRecord.user_id == user_id,
+            EventRecord.type == RecordType.REC_OK,
+            EventRecord.genus.isnot(None),
+            EventRecord.genus != "",
+            EventRecord.species.isnot(None),
+            EventRecord.species != "",
+        )
         .group_by(EventRecord.genus, EventRecord.species)
         .order_by(func.count().desc())
     )
@@ -134,16 +161,24 @@ async def _merge_top_species(
         .where(
             records_table.c.user_id == user_id,
             records_table.c.type == "rec_ok",
+            records_table.c.tax_gen.isnot(None),
+            records_table.c.tax_gen != "",
+            records_table.c.tax_sp.isnot(None),
+            records_table.c.tax_sp != "",
         )
         .group_by(records_table.c.tax_gen, records_table.c.tax_sp)
         .order_by(func.count().desc())
     )
     legacy_top = {(r.tax_gen, r.tax_sp): r.cnt for r in result.fetchall()}
-    species_counts: dict[tuple[str | None, str | None], int] = {}
+    species_counts: dict[tuple[str, str], int] = {}
     for r in rows:
+        if not r.genus or not r.species:
+            continue
         key = (r.genus, r.species)
         species_counts[key] = species_counts.get(key, 0) + r.cnt
     for (g, s), c in legacy_top.items():
+        if not g or not s:
+            continue
         species_counts[(g, s)] = species_counts.get((g, s), 0) + c
     top_sorted = sorted(species_counts.items(), key=lambda x: -x[1])[:limit]
     return [
