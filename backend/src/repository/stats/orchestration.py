@@ -2,7 +2,6 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from types import SimpleNamespace
-from typing import TypeVar
 
 from cachetools import TTLCache
 from sqlalchemy import func, select
@@ -43,10 +42,9 @@ _bot_user_cache = TTLCache(maxsize=1024, ttl=300)
 _cache_locks: dict[int, asyncio.Lock] = {}
 
 
-F = TypeVar("F", bound=Callable[..., Awaitable[object]])
-
-
-def cached(cache: TTLCache, key: str) -> Callable[[F], F]:
+def cached[F: Callable[..., Awaitable[object]]](
+    cache: TTLCache, key: str
+) -> Callable[[F], F]:
     def decorator(func: F) -> F:
         @wraps(func)
         async def wrapper(*args: object, **kwargs: object) -> object:
@@ -65,7 +63,7 @@ def cached(cache: TTLCache, key: str) -> Callable[[F], F]:
                 cache[resolved] = result
                 return result
 
-        return wrapper  # type: ignore[return-type]  # ty:ignore[invalid-return-type]
+        return wrapper  # ty:ignore[invalid-return-type]
 
     return decorator
 
