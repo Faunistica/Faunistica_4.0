@@ -58,6 +58,7 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
                     </div>
                     {publication.pdf_file && (
                         <Button
+                            type="button"
                             variant="outline"
                             className="w-full shrink-0 gap-2 border-slate-300 md:w-auto"
                             onClick={openPdf}
