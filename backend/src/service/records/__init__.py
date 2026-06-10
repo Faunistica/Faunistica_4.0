@@ -12,7 +12,6 @@ from core.dependencies import DBSession
 from core.enums import RecordType
 from core.exceptions import (
     ImportLimitExceededError,
-    NoPublicationsAssignedError,
     PublicationForbiddenError,
     RecordForbiddenError,
     RecordLimitExceededError,
@@ -27,8 +26,12 @@ from repository.user import get_user_expect
 from schema.common import PaginatedResponse
 from schema.records import RecordData, RecordFull, RecordValidationError
 from service.actions import ActionService
-from service.export import ParseResult, is_row_empty
-from service.milestone import check_and_log_milestone
+from service.export import (
+    ParseResult,
+    is_row_empty,
+    records_to_excel,
+    records_to_excel_all,
+)
 from service.publications import PublicationService
 from service.records.validation import validate_record
 from service.records.validation.errors import ErrorCollection
@@ -133,10 +136,6 @@ class RecordService:
         if updated is None:
             raise RecordStaleError(record_id)
 
-        if updated.type == RecordType.REC_OK:
-            await check_and_log_milestone(
-                self.session, user_id, updated, self.action_service
-            )
         await self.session.commit()
 
         full = _enrich_record(updated)
@@ -146,11 +145,15 @@ class RecordService:
     async def get_record(
         self,
         record_id: UUID,
+        user_id: int,
     ) -> RecordFull:
         """Get a record by ID"""
         record = await repo.get_record(self.session, record_id)
         if record is None:
             raise RecordNotFoundError(record_id)
+
+        if record.user_id != user_id:
+            raise RecordForbiddenError
 
         full = _enrich_record(record)
         publ = await get_publication(self.session, record.publ_id)
@@ -186,6 +189,7 @@ class RecordService:
         page_size: int = 20,
         sort: Literal["created_at", "updated_at"] = "created_at",
         pivot_record_id: UUID | None = None,
+        validate: bool = True,
     ) -> PaginatedResponse[RecordFull]:
         """List records with pagination, filtered by user_id and publ_id."""
         if pivot_record_id is not None:
@@ -203,10 +207,14 @@ class RecordService:
             page, _ = result
 
         records, total = await repo.get_records_paginated(
-            self.session, user_id, publ_id, page=page, page_size=page_size, sort=sort
+            self.session,
+            user_id,
+            publ_id,
+            page=page,
+            page_size=page_size,
+            sort=sort,
         )
 
-        # Fetch language once — all records in a list share the same publ_id
         language = None
         if records:
             publ = await get_publication(self.session, records[0].publ_id)
@@ -215,9 +223,10 @@ class RecordService:
         items: list[RecordFull] = []
         for r in records:
             full = _enrich_record(r)
-            record_data = RecordData.model_validate(r)
-            errors = validate_record(record_data, language=language)
-            full.errors = _errors_to_schema(errors)
+            if validate:
+                record_data = RecordData.model_validate(r)
+                errors = validate_record(record_data, language=language)
+                full.errors = _errors_to_schema(errors)
             items.append(full)
 
         pages = (total + page_size - 1) // page_size if page_size > 0 else 0
@@ -229,6 +238,28 @@ class RecordService:
             page_size=page_size,
             pages=pages,
         )
+
+    async def export_records(
+        self,
+        user_id: int,
+        publ_id: int,
+    ) -> bytes:
+        records = await repo.get_event_records_for_export(
+            self.session, user_id, publ_id, only_submitted=False
+        )
+        items = [_enrich_record(r) for r in records]
+        return records_to_excel(items)
+
+    async def export_all_records(
+        self,
+        user_id: int,
+    ) -> bytes:
+        event_records = await repo.get_event_records_for_export(
+            self.session, user_id, only_submitted=True
+        )
+        legacy_records = await repo.get_legacy_records_for_export(self.session, user_id)
+        items = [_enrich_record(r) for r in event_records]
+        return records_to_excel_all(items, legacy_records)
 
     async def _get_and_check_ownership(
         self,
@@ -263,26 +294,19 @@ class RecordService:
         user_id: int,
         ip: str | None,
         total_count: int,
+        publ_id: int,
     ) -> ImportResult:
         """Import records from parsed Excel/CSV rows."""
         user = await get_user_expect(self.session, user_id)
-        queue = await self.publication_service.get_current(user=user)
-        if len(queue) == 0:
-            raise NoPublicationsAssignedError(user_id)
-
-        publ = queue[0]
-
-        # Always ok now, but rules may change
-        await self.publication_service.validate_access(publ.publ_id, user=user)
+        publ = await self.publication_service.validate_access(publ_id, user=user)
 
         if total_count > settings.MAX_USER_RECORDS_PER_PUBLICATION:
             raise ImportLimitExceededError(
-                publ.publ_id, total_count, settings.MAX_USER_RECORDS_PER_PUBLICATION
+                publ_id, total_count, settings.MAX_USER_RECORDS_PER_PUBLICATION
             )
 
         event_records: list[EventRecord] = []
         all_errors: list[ImportError] = []
-        last_ok = None
 
         async for i, (record_data, error) in a.enumerate(records, 1):
             if error:
@@ -300,8 +324,8 @@ class RecordService:
             metadata, _ = _create_record_metadata(
                 record_data,
                 user_id,
-                publ.publ_id,
-                language=publ.language,
+                publ_id,
+                language=publ.language if publ else None,
                 submission_type="submit",
                 ip=ip,
                 import_errors=["Ошибка при импорте"] if error else None,
@@ -315,23 +339,10 @@ class RecordService:
 
             event_records.append(record)
 
-            if metadata.type == RecordType.REC_OK:
-                last_ok = record
-
         # Delete old records, then insert — all in one transaction
-        await repo.delete_records_by_user_and_publ(self.session, user_id, publ.publ_id)
+        await repo.delete_records_by_user_and_publ(self.session, user_id, publ_id)
 
         self.session.add_all(event_records)
-
-        if last_ok is not None:
-            await check_and_log_milestone(
-                self.session,
-                user_id,
-                # FIXME: This should be the exact record, that broke the record,
-                # but here we use the last one, which might not be expected
-                last_ok,
-                self.action_service,
-            )
 
         await self.session.commit()
 

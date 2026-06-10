@@ -2,7 +2,9 @@ from datetime import datetime
 from enum import Enum, StrEnum
 from typing import TypedDict
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from core.config import settings
 
 
 class PaginatedResponse[T](BaseModel):
@@ -38,6 +40,7 @@ class UserInfo(BaseModel):
 
 class UserLoginResponse(BaseModel):
     user_id: int
+    name: str
     username: str
 
 
@@ -64,13 +67,26 @@ class Publication(BaseModel):
     spec: int | None = None
     e_author: str | None = None
     e_name: str | None = None
+    interactable: bool = True
+
+    @model_validator(mode="after")
+    def _prepend_file_url_prefix(self) -> "Publication":
+        prefix = settings.PUBLICATION_FILES_BASE_URL
+        if not prefix:
+            return self
+        prefix = prefix.rstrip("/") + "/"
+        for field in ("pdf_file", "bib_file", "arj_file"):
+            value = getattr(self, field, None)
+            if value and not value.startswith(("http://", "https://", "/")):
+                setattr(self, field, prefix + value)
+        return self
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class SupportRequest(BaseModel):
     link: str
-    user_name: str
+    username: str
     text: str = Field(min_length=10)
     issue_type: str
 
@@ -90,20 +106,20 @@ class WinnerInfo(BaseModel):
     datetime: datetime
 
 
-class MilestoneInfo(BaseModel):
-    milestone: int
-    user_id: int
-    datetime: datetime
-
-
 class ProjectStats(TypedDict):
     total_volunteers: int
     total_records: int
     species_count: int
     processed_publications_count: int
-    most_common_family: str | None
-    most_common_genus: str | None
-    most_common_species: str | None
+    families_count: int
+    checks_count: int
+    failed_records: int
+    total_users: int
+
+
+class TopSpeciesItem(TypedDict):
+    species: str
+    count: int
 
 
 class UserStats(TypedDict):
@@ -112,6 +128,14 @@ class UserStats(TypedDict):
     most_common_family: str | None
     most_common_genus: str | None
     most_common_species: str | None
+    top_species: list[TopSpeciesItem]
+    checks_count: int
+    failed_records: int
+    total_individuals: float
+    distinct_families: int
+    distinct_genera: int
+    distinct_species: int
+    most_common_year: int | None
 
 
 class ProcessingLevel(StrEnum):

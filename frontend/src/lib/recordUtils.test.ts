@@ -95,14 +95,14 @@ describe('draftToRecordData', () => {
 
     it('copies text fields from draft to record data', () => {
         const result = draftToRecordData({
-            country: 'RU',
+            country: 'Россия',
             region: 'Test Region',
             locality: 'Test Locality',
             verbatim_date: '2024-01-15',
             recorded_by: 'Ivanov',
         });
 
-        expect(result.country).toBe('RU');
+        expect(result.country).toBe('Россия');
         expect(result.region).toBe('Test Region');
         expect(result.locality).toBe('Test Locality');
         expect(result.verbatim_date).toBe('2024-01-15');
@@ -130,7 +130,7 @@ describe('toFormPartial', () => {
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
         ip: null,
-        country: 'RU',
+        country: 'Россия',
         region: 'Test Region',
         district: 'Test District',
         locality: 'Test Locality',
@@ -171,7 +171,7 @@ describe('toFormPartial', () => {
     it('includes all scalar fields including nulls', () => {
         const result = toFormPartial(baseRecord);
 
-        expect(result.country).toBe('RU');
+        expect(result.country).toBe('Россия');
         expect(result.region).toBe('Test Region');
         expect(result.latitude).toBe(55.5);
         expect(result.longitude).toBe(37.2);
@@ -262,7 +262,7 @@ describe('toFormPartial', () => {
     it('includes required blocking fields', () => {
         const result = toFormPartial(baseRecord);
 
-        expect(result.country).toBe('RU');
+        expect(result.country).toBe('Россия');
         expect(result.region).toBe('Test Region');
         expect(result.district).toBe('Test District');
         expect(result.locality).toBe('Test Locality');

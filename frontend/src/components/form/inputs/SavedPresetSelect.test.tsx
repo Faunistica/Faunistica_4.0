@@ -98,13 +98,13 @@ const RECORD_1 = {
     id: 'rec-1',
     ...RECORD_FIELDS,
     updated_at: '2024-01-01T00:00:00Z',
-    country: 'RU',
+    country: 'Россия',
 };
 const RECORD_2 = {
     id: 'rec-2',
     ...RECORD_FIELDS,
     updated_at: '2024-01-01T00:00:02Z',
-    country: 'DE',
+    country: 'Германия',
 };
 
 type RecordLike = Record<string, unknown>;

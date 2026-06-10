@@ -1,5 +1,6 @@
 import logging
 from enum import IntEnum, StrEnum
+from typing import Literal
 
 from aiogram.fsm.state import State
 from sqlalchemy import Integer, String, TypeDecorator
@@ -149,3 +150,34 @@ class UserState(IntEnum):
         }
 
         return mapping.get(self)
+
+
+class PendingStatus(IntEnum):
+    AWAITING_CODE = 0
+    AWAITING_API_LOGIN = 1
+    AWAITING_API_REGISTRATION = 2
+    COMPLETED = 3
+
+
+class PendingStatusType(TypeDecorator):
+    impl = Integer
+    cache_ok = True
+
+    def process_bind_param(
+        self,
+        value: "PendingStatus | int | None",
+        dialect: Dialect,
+    ) -> int:
+        if value is None:
+            return PendingStatus.AWAITING_CODE
+        return int(value)
+
+    def process_result_value(
+        self,
+        value: int | None,
+        dialect: Dialect,
+    ) -> "PendingStatus | None":
+        return PendingStatus(value)
+
+
+type UserLanguage = Literal["eng", "rus", "all"]

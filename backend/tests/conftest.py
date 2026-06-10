@@ -30,6 +30,9 @@ from core.rate_limiter import limiter
 from core.security import create_access_token, create_refresh_token
 from schema.jwt import TokenPayload
 
+# Tests expect only the first publication in queue to be interactable
+settings.INTERACTABLE_QUEUE_COUNT = 1
+
 
 def md5_hash(password: str) -> str:
     return hashlib.md5(password.encode()).hexdigest()  # noqa: S324 - testing legacy MD5
@@ -113,6 +116,7 @@ async def seed_data(
         return User(
             user_id=d["user_id"],
             reg_stat=UserState.REG_COMPLETED,
+            username=d["username"],
             name=d["username"],
             tlg_name=d["username"],
             tlg_username=d["username"],

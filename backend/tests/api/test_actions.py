@@ -191,25 +191,6 @@ async def test_log_bot_rename(session_maker, seed_data: SeedData) -> None:
 
 
 @pytest.mark.asyncio
-async def test_log_milestone(session_maker, seed_data: SeedData) -> None:
-    user = seed_data["users"][0]
-
-    async with session_maker() as session:
-        service = ActionService(session)
-        await service.log_milestone(
-            user_id=user.user_id,
-            milestone=100,
-            ip="127.0.0.1",
-        )
-        await session.commit()
-
-        result = await session.execute(select(Action).where(Action.action == "fau_50"))
-        action = result.scalar_one_or_none()
-        assert action is not None
-        assert action.object == "100"
-
-
-@pytest.mark.asyncio
 async def test_get_winner_info_no_action(session_maker, seed_data: SeedData) -> None:
     user = seed_data["users"][0]
 
@@ -236,33 +217,3 @@ async def test_get_winner_info_no_object(session_maker, seed_data: SeedData) -> 
         service = ActionService(session)
         info = await service.get_winner_info(user.user_id)
         assert info is None
-
-
-@pytest.mark.asyncio
-async def test_get_last_milestone(session_maker, seed_data: SeedData) -> None:
-    user_id = seed_data["users"][0].user_id
-
-    async with session_maker() as session:
-        action = Action(
-            user_id=user_id,
-            action="fau_50",
-            object="100",
-            datetime=datetime.now(),
-        )
-        session.add(action)
-        await session.commit()
-
-        service = ActionService(session)
-        result = await service.get_last_milestone(user_id)
-        assert result is not None
-        assert result.milestone == 100
-
-
-@pytest.mark.asyncio
-async def test_get_last_milestone_none(session_maker, seed_data: SeedData) -> None:
-    user = seed_data["users"][0]
-
-    async with session_maker() as session:
-        service = ActionService(session)
-        result = await service.get_last_milestone(user.user_id)
-        assert result is None

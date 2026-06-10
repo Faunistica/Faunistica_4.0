@@ -21,6 +21,7 @@ dependencies = [
     "argon2-cffi>=25.1.0",
     "aiohttp>=3.13.3",
     "fastapi[standard]>=0.136.1",
+    "cachetools>=7.1.4",
 ]
 
 [build-system]
@@ -109,4 +110,3 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 pythonpath = [".", "src"]
 addopts = "-W ignore::DeprecationWarning --cov src --cov scripts --cov-report=html --cov-report=term"
-

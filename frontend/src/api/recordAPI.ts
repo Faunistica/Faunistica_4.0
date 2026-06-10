@@ -131,11 +131,36 @@ export const recordAPI = createApi({
                 const url = window.URL.createObjectURL(blob);
                 Object.assign(document.createElement('a'), {
                     href: url,
-                    download: `данные_faunistica_${params.publ_id || 'все'}.xlsx`,
+                    download: `data_faunistics_${params.publ_id || 'all'}.xlsx`,
                 }).click();
                 window.URL.revokeObjectURL(url);
 
                 // RTK query wouldn't cache a blob
+                return { data: null };
+            },
+        }),
+        exportAllRecords: build.mutation<null, void>({
+            queryFn: async (_params, _api, _extraOptions, baseQuery) => {
+                const result = await baseQuery({
+                    url: '/records/export-all',
+                    method: 'GET',
+                    responseHandler: (response: Response) => response.blob(),
+                });
+
+                if (result.error) return { error: result.error };
+
+                if (!(result.data instanceof Blob)) {
+                    return { error: { status: 'CUSTOM_ERROR', error: 'Expected Blob response' } };
+                }
+
+                const blob = result.data;
+                const url = window.URL.createObjectURL(blob);
+                Object.assign(document.createElement('a'), {
+                    href: url,
+                    download: 'данные_faunistica.xlsx',
+                }).click();
+                window.URL.revokeObjectURL(url);
+
                 return { data: null };
             },
         }),
@@ -158,5 +183,6 @@ export const {
     useUpdateRecordMutation,
     useDeleteRecordMutation,
     useDownloadRecordsMutation,
+    useExportAllRecordsMutation,
     useUploadExcelMutation,
 } = recordAPI;

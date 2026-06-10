@@ -7,8 +7,8 @@ from bot.messages import Messages
 from core.config import settings
 from core.dependencies import get_session
 from core.exceptions import HandlerError
-from repository.stats import get_project_statistics, get_user_statistics
-from repository.user import get_user_expect
+from repository.stats import get_bot_general_stats, get_bot_user_stats
+from repository.user import get_user
 
 router = Router()
 
@@ -22,15 +22,19 @@ async def stats_command(message: Message) -> None:
         return
 
     async for session in get_session():
-        project_stats = await get_project_statistics(session)
+        general_stats = await get_bot_general_stats(session)
         user_stats = None
 
-        user = await get_user_expect(session, message.from_user.id)
+        user = await get_user(session, message.from_user.id)
         if user is not None:
-            user_stats = await get_user_statistics(session, message.from_user.id)
+            has_current_publ = bool(user.items)
+            stats = await get_bot_user_stats(session, message.from_user.id)
+            if has_current_publ and stats["processed_publs"] > 0:
+                stats["processed_publs"] -= 1
+            user_stats = stats
 
         await message.answer(
-            Messages.statistics(project_stats, user_stats),
+            Messages.statistics(general_stats, user_stats),
             parse_mode="HTML",
             reply_markup=keyboards.remove(),
         )

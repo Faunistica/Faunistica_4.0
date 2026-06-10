@@ -13,10 +13,12 @@ router = APIRouter(prefix="/records/{record_id}")
 @router.get("")
 async def get_record(
     record_id: UUID,
+    token: TokenUser,
     service: Annotated[RecordService, Depends()],
 ) -> RecordFull:
     return await service.get_record(
         record_id=record_id,
+        user_id=token.user_id,
     )
 
 

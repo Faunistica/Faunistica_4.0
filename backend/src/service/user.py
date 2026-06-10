@@ -6,31 +6,28 @@ from typing import Annotated, Any
 from aiogram import Bot
 from fastapi import Depends
 
-from bot.generate_pass import generate_secure_password
 from bot.messages import Messages
-from core.config import settings
 from core.dependencies import DBSession
 from core.enums import UserState
-from core.exceptions import MsgErr, Ok
+from core.exceptions import MsgErr, Ok, UsernameAlreadyExistsError
 from core.model import User
-from core.security import get_password_hash
 from repository.user import (
-    count_users_with_name,
+    count_users_with_username,
     create_user_or_update,
+    find_user_by_name,
     find_user_by_username,
     get_user,
     get_user_expect,
     increment_token_version,
     update_user,
 )
-from schema.user import UserLanguage, UserUpdate
+from schema.user import UserUpdate
 from service.actions import ActionService
+from service.user_validation import UserValidators
 
 logger = logging.getLogger(__name__)
 
-_NAME_REGEX = re.compile(r"^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$")
-
-_LANG_MAP: dict[str, UserLanguage] = {"1": "all", "2": "eng", "3": "rus"}
+_USERNAME_REGEX = re.compile(r"^[a-zA-Z0-9_]+$")
 
 
 REGISTERED_STATES = (
@@ -104,64 +101,37 @@ class UserService:
     async def find_by_username(self, username: str) -> User | None:
         return await find_user_by_username(self.session, username)
 
+    async def find_by_name(self, name: str) -> User | None:
+        return await find_user_by_name(self.session, name)
+
     # ========== Validation ==========
 
-    async def validate_name(
-        self, name: str, *, exclude_user_id: int | None = None
-    ) -> Ok | MsgErr:
-        if len(name) < 3:
-            return MsgErr(error=Messages.message_too_short())
-        if len(name) > 40:
-            return MsgErr(error=Messages.message_too_long())
-        if not _NAME_REGEX.fullmatch(name):
-            return MsgErr(error=Messages.invalid_characters())
-
-        other = await count_users_with_name(self.session, name)
+    async def check_username_unique(
+        self, username: str, exclude_user_id: int | None = None
+    ) -> None:
+        other = await count_users_with_username(self.session, username)
         if other > 0:
             if exclude_user_id is not None:
                 user = await get_user(self.session, exclude_user_id)
-                if user and user.name == name:
-                    return Ok()
-            return MsgErr(error=Messages.name_already_exists())
+                if user and user.username == username:
+                    return
+            raise UsernameAlreadyExistsError(username)
 
-        return Ok()
-
-    @staticmethod
-    def validate_age_str(age_str: str) -> Ok | MsgErr:
-        if len(age_str) > 5:
+    async def validate_username(
+        self, username: str, *, exclude_user_id: int | None = None
+    ) -> Ok | MsgErr:
+        if len(username) < 3:
+            return MsgErr(error=Messages.message_too_short())
+        if len(username) > 40:
             return MsgErr(error=Messages.message_too_long())
-        if not age_str.isdigit():
-            return MsgErr(error=Messages.message_no_digits())
-        age = int(age_str)
-        if age > 99:
-            return MsgErr(error=Messages.age_too_high())
-        if age < 14:
-            return MsgErr(error=Messages.age_too_low())
-        return Ok()
+        if not _USERNAME_REGEX.fullmatch(username):
+            return MsgErr(error=Messages.invalid_characters())
 
-    @staticmethod
-    def parse_language(lang: str) -> UserLanguage | MsgErr:
-        cleaned = lang.strip().replace(" ", "").replace(",", "").replace(".", "")
-        if len(cleaned) > 1 or cleaned not in _LANG_MAP:
-            return MsgErr(error=Messages.selection_not_recognized())
-        return _LANG_MAP[cleaned]
-
-    @staticmethod
-    def get_missing_survey_fields(user: User) -> list[str]:
-        fields = ["age", "comm", "lng", "rating", "region", "email", "sex"]
-        missing = []
-        for field in fields:
-            value = getattr(user, field, None)
-            if value is None or (field in ("comm", "email", "region") and value == ""):
-                missing.append(field)
-        return missing
-
-    @staticmethod
-    def is_password_expired(user: User) -> bool:
-        if user.hash_date is None:
-            return False
-        minutes = (datetime.now() - user.hash_date).total_seconds() / 60
-        return minutes > settings.PASSWORD_EXPIRE_MINUTES
+        try:
+            await self.check_username_unique(username, exclude_user_id)
+            return Ok()
+        except UsernameAlreadyExistsError:
+            return MsgErr(error=Messages.username_already_exists())
 
     # ========== Mutations ==========
 
@@ -176,14 +146,14 @@ class UserService:
         await self._update(user_id, reg_stat=UserState.REG_NAME)
 
     async def set_name(self, user_id: int, name: str) -> Ok | MsgErr:
-        result = await self.validate_name(name)
+        result = UserValidators.validate_name(name)
         if isinstance(result, MsgErr):
             return result
         await self._update(user_id, name=name, reg_stat=UserState.REG_AGE)
         return Ok()
 
     async def set_age(self, user_id: int, age_str: str) -> Ok | MsgErr:
-        result = self.validate_age_str(age_str)
+        result = UserValidators.validate_age_str(age_str)
         if isinstance(result, MsgErr):
             return result
         await self._update(
@@ -195,7 +165,7 @@ class UserService:
         await self._update(user_id, comm=comm, reg_stat=UserState.REG_LANGUAGE)
 
     async def set_language_and_complete(self, user_id: int, lang: str) -> Ok | MsgErr:
-        parsed = self.parse_language(lang)
+        parsed = UserValidators.parse_language(lang)
         if isinstance(parsed, MsgErr):
             return parsed
         await self._update(
@@ -205,28 +175,6 @@ class UserService:
             reg_end=datetime.now(),
         )
         return Ok()
-
-    async def rename_user(self, user_id: int, new_name: str) -> Ok | MsgErr:
-        user = await self.get_expect(user_id)
-        if new_name == user.name:
-            return MsgErr(error=Messages.same_name(new_name))
-
-        result = await self.validate_name(new_name, exclude_user_id=user_id)
-        if isinstance(result, MsgErr):
-            return result
-
-        if self.actions:
-            await self.actions.log_bot_rename(
-                user_id=user_id, old=user.name, new=new_name
-            )
-        await self._update(user_id, name=new_name, reg_stat=UserState.REG_COMPLETED)
-        return Ok()
-
-    async def generate_password(self, user_id: int) -> str:
-        password = generate_secure_password()
-        hashed = get_password_hash(password)
-        await self._update(user_id, hash=hashed, hash_date=datetime.now())
-        return password
 
     async def cancel_action(self, user: User) -> Ok | MsgErr:
         if user.reg_stat == UserState.DATA_CLEARED:
@@ -249,3 +197,9 @@ class UserService:
 
     async def increment_token_version(self, user_id: int) -> int:
         return await increment_token_version(self.session, user_id)
+
+    async def complete_full_registration(
+        self, user_id: int, **kw: object
+    ) -> User | None:
+        await create_user_or_update(self.session, user_id, UserState(kw["reg_stat"]))
+        return await self._update(user_id, **kw)

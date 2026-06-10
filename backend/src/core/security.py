@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import logging
+import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
@@ -83,7 +84,7 @@ def set_response_token_cookies(response: Response, payload: TokenPayload) -> Non
 
 
 def create_access_token(payload: TokenPayload) -> str:
-    expires = datetime.now(UTC) + timedelta(
+    expires = datetime.now(UTC).replace(tzinfo=None) + timedelta(
         seconds=settings.ACCESS_TOKEN_EXPIRE_SECONDS
     )
 
@@ -99,7 +100,7 @@ def create_access_token(payload: TokenPayload) -> str:
 
 
 def create_refresh_token(payload: TokenPayload) -> str:
-    expires = datetime.now(UTC) + timedelta(
+    expires = datetime.now(UTC).replace(tzinfo=None) + timedelta(
         seconds=settings.REFRESH_TOKEN_EXPIRE_SECONDS
     )
 
@@ -181,3 +182,11 @@ def validate_user_id_path(
     token: Annotated[UserMinimal, Depends(get_jwt_user)],
 ) -> int:
     return validate_user_id(user_id, token.user_id)
+
+
+async def generate_code_for_tg_enter() -> str:
+    return "".join(str(secrets.randbelow(10)) for _ in range(6))
+
+
+async def generate_token_for_tg_enter() -> str:
+    return secrets.token_urlsafe(32)
