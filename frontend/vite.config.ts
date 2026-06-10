@@ -8,7 +8,11 @@ import babel from '@rolldown/plugin-babel';
 export default defineConfig({
     plugins: [
         react(),
-        tailwindcss(),
+        tailwindcss({
+            optimize: {
+                minify: true,
+            },
+        }),
         babel({
             presets: [reactCompilerPreset()],
         }),

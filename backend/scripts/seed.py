@@ -122,12 +122,12 @@ PUBL_DATA: list[dict] = [
     },
 ]
 
-PASSWORDS = ["dev", "test"]
+PASSWORDS = ["password", "test"]
 
 USER_DATA: list[dict] = [
     {
         "user_id": 0,
-        "name": "DEV",
+        "name": "DEV_USERNAME",
         "tlg_username": "dev_user",
         "tlg_name": "Dev User",
         "reg_stat": 1,
