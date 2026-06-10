@@ -139,6 +139,31 @@ export const recordAPI = createApi({
                 return { data: null };
             },
         }),
+        exportAllRecords: build.mutation<null, void>({
+            queryFn: async (_params, _api, _extraOptions, baseQuery) => {
+                const result = await baseQuery({
+                    url: '/records/export-all',
+                    method: 'GET',
+                    responseHandler: (response: Response) => response.blob(),
+                });
+
+                if (result.error) return { error: result.error };
+
+                if (!(result.data instanceof Blob)) {
+                    return { error: { status: 'CUSTOM_ERROR', error: 'Expected Blob response' } };
+                }
+
+                const blob = result.data;
+                const url = window.URL.createObjectURL(blob);
+                Object.assign(document.createElement('a'), {
+                    href: url,
+                    download: 'данные_faunistica.xlsx',
+                }).click();
+                window.URL.revokeObjectURL(url);
+
+                return { data: null };
+            },
+        }),
         uploadExcel: build.mutation<Types.UploadExcelResponse, FormData>({
             query: (formData) => ({
                 url: '/records/import',
@@ -158,5 +183,6 @@ export const {
     useUpdateRecordMutation,
     useDeleteRecordMutation,
     useDownloadRecordsMutation,
+    useExportAllRecordsMutation,
     useUploadExcelMutation,
 } = recordAPI;

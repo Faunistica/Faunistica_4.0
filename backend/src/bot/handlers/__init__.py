@@ -1,6 +1,7 @@
 from aiogram import Router
 
 from bot.handlers.admin import router as admin_router
+from bot.handlers.admin_achievements import router as admin_achievements_router
 from bot.handlers.confirm import router as confirm_router
 from bot.handlers.errors import router as errors_router
 from bot.handlers.fallback import router as fallback_router
@@ -10,6 +11,7 @@ from bot.handlers.start import router as start_router
 from bot.handlers.support import router as support_router
 
 main_router = Router()
+main_router.include_router(admin_achievements_router)
 main_router.include_router(menu_router)
 main_router.include_router(confirm_router)
 main_router.include_router(errors_router)

@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 from core.config import settings
 
 
@@ -125,6 +127,47 @@ class Messages:
         return (
             f"Пользователь @{username}, ID: {user_id} обратился в поддержку:\n\n{text}"
         )
+
+    @staticmethod
+    def statistics(
+        general_stats: Mapping[str, object],
+        personal_stats: Mapping[str, object] | None = None,
+    ) -> str:
+        stats_text = (
+            "<b>Общая статистика: </b>\n\n"
+            f"Всего зарегистрированных участников: {general_stats['total_users']}"
+            f"\nСредний возраст участника: {general_stats['avg_age']}"
+            "\nВсего публикаций на очереди в оцифровку: "
+            f"{general_stats['total_publs']},\n"
+            f"из них на русском языке {general_stats['rus_publs']}, "
+            f"на английском языке {general_stats['eng_publs']}."
+            f"\nВсего записей внесено волонтерами: {general_stats['rec_ok']}."
+            f"\nНа одну успешную запись приходится "
+            f"{general_stats.get('rec_fail_ratio', 0) or 0} неудачных попыток, "
+            f"а также {general_stats.get('check_ratio', 0) or 0} проверок."
+            f"\nЭти записи содержат информацию о {general_stats['species_count']} "
+            f"видах, относящихся к {general_stats['families_count']} семействам."
+            "\nЭто очень хорошая статистика!\nНадеемся, ваш вклад ее улучшит ^_^"
+        )
+
+        if personal_stats is not None:
+            stats_text += (
+                "\n\n<b>Персональная статистика:</b>\n"
+                f"Вы полностью обработали "
+                f"{personal_stats['processed_publs']} публикаций, "
+                "в процессе обработки: 1 публикация. "
+                f"Вы внесли {personal_stats['rec_ok']} записей.\n"
+                f"На каждую успешную запись приходится "
+                f"{personal_stats.get('check_ratio', 0) or 0} проверок.\n"
+                f"Вашими стараниями в базе оказалось "
+                f"{personal_stats['species_count']} видов.\n"
+                f"Чаще всего вы встречали вид: "
+                f"<i>{personal_stats['most_common_species']}</i>\n"
+                "Это очень хорошая статистика! "
+                "Надеемся, вы сможете сделать ещё лучше ^_^ "
+            )
+
+        return stats_text
 
     # ========== SOCIOLOGY MESSAGE ========== #
 

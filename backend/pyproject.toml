@@ -23,6 +23,7 @@ dependencies = [
     "pandas>=3.0.3",
     "aiohttp>=3.13.3",
     "fastapi[standard]>=0.136.1",
+    "cachetools>=7.1.4",
 ]
 
 [build-system]
