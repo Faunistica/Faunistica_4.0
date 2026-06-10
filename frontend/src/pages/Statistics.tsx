@@ -130,8 +130,10 @@ function ProgressCard({ progress }: { progress: ProgressInfo }) {
     }, []);
 
     const total = progress.total_publications;
-    const processedPct = total > 0 ? Math.min((progress.processed_publications / total) * 100, 100) : 0;
-    const fullyPct = total > 0 ? Math.min((progress.fully_processed_publications / total) * 100, 100) : 0;
+    const processedPct =
+        total > 0 ? Math.min((progress.processed_publications / total) * 100, 100) : 0;
+    const fullyPct =
+        total > 0 ? Math.min((progress.fully_processed_publications / total) * 100, 100) : 0;
 
     return (
         <Card>
@@ -144,9 +146,7 @@ function ProgressCard({ progress }: { progress: ProgressInfo }) {
             <CardContent className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Охват</span>
-                    <span className="font-semibold">
-                        {(progress.coverage * 100).toFixed(1)}%
-                    </span>
+                    <span className="font-semibold">{(progress.coverage * 100).toFixed(1)}%</span>
                 </div>
                 <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
                     <div className="relative h-full">
@@ -171,20 +171,22 @@ function ProgressCard({ progress }: { progress: ProgressInfo }) {
                             Частично (1-2 волонтёра)
                         </span>
                     </div>
-                    <div className="text-emerald-500 font-medium">
-                        {(progress.fully_processed_publications / total * 100).toFixed(1)}%
+                    <div className="font-medium text-emerald-500">
+                        {((progress.fully_processed_publications / total) * 100).toFixed(1)}%
                     </div>
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
                     <span>
                         Обработано: {formatNumber(progress.processed_publications)}
                         {progress.fully_processed_publications > 0 && (
-                            <> (из них полностью: {formatNumber(progress.fully_processed_publications)})</>
+                            <>
+                                {' '}
+                                (из них полностью:{' '}
+                                {formatNumber(progress.fully_processed_publications)})
+                            </>
                         )}
                     </span>
-                    <span>
-                        Всего: {formatNumber(total)}
-                    </span>
+                    <span>Всего: {formatNumber(total)}</span>
                 </div>
             </CardContent>
         </Card>
@@ -273,9 +275,7 @@ const Statistics: FC = () => {
                 ))}
             </div>
 
-            {projectStats?.progress && (
-                <ProgressCard progress={projectStats.progress} />
-            )}
+            {projectStats?.progress && <ProgressCard progress={projectStats.progress} />}
 
             {projectStats &&
                 (projectStats.cumulative_records.length > 0 ||

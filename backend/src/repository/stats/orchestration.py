@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from types import SimpleNamespace
@@ -46,9 +47,13 @@ def cached[F: Callable[..., Awaitable[object]]](
     cache: TTLCache, key: str
 ) -> Callable[[F], F]:
     def decorator(func: F) -> F:
+        sig = inspect.signature(func)
+
         @wraps(func)
         async def wrapper(*args: object, **kwargs: object) -> object:
-            resolved = key.format(*args, **kwargs)
+            bound = sig.bind(*args, **kwargs)
+            bound.apply_defaults()
+            resolved = key.format(**bound.arguments)
 
             if (cached_val := cache.get(resolved)) is not None:
                 return cached_val
