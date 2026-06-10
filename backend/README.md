@@ -137,9 +137,9 @@ make run
 ### Проверка кода
 
 ```bash
-make lint     # ruff + ty
-make format   # ruff format + isort
-make test     # pytest с coverage
+make lint
+make format
+make test
 ```
 
 Отдельные команды описаны в [Makefile](Makefile).

@@ -16,7 +16,7 @@ pnpm dev
 ```
 
 Фронтенд запустится на `http://localhost:5173` и будет проксировать API-запросы
-на бэкенд через `VITE_API_URL` (см. ниже).
+на бэкенд через `VITE_API_URL`
 
 ## Переменная VITE_API_URL
 
@@ -36,17 +36,19 @@ VITE_API_URL=http://localhost:8000/api
 ## Сборка
 
 ```bash
-pnpm build    # tsc -b && vite build
+pnpm build
 ```
 
 Результат — в `dist/`.
 
+Локально результат сборки можно проверить с помощью `pnpm preview`
+(настройке `AllowedOrigins` на бэкенде для корректной работы).
+
 ## Проверка кода
 
 ```bash
-pnpm lint        # oxlint
-pnpm lint:fix    # oxlint --fix
-pnpm format      # oxfmt
-pnpm typecheck   # tsc -b --noEmit
-pnpm test        # vitest
+pnpm lint
+pnpm format
+pnpm typecheck
+pnpm test
 ```
