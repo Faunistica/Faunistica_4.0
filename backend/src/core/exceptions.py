@@ -196,3 +196,24 @@ class ImportLimitExceededError(APIException):
 class InvalidTokenError(APIException):
     def __init__(self, detail: str = "Invalid token") -> None:
         super().__init__("INVALID_TOKEN", detail, 401)
+
+
+class UsernameAlreadyExistsError(APIException):
+    def __init__(self, username: str) -> None:
+        super().__init__(
+            "USERNAME_ALREADY_EXISTS", f"Username '{username}' already exists", 409
+        )
+
+
+class RegistrationAlreadyStartedError(APIException):
+    def __init__(self, username: str) -> None:
+        super().__init__(
+            "REGISTRATION_ALREADY_STARTED",
+            f"Registration for username '{username}' already started",
+            409,
+        )
+
+
+class UserNotCreated(APIException):
+    def __init__(self, id: int) -> None:
+        super().__init__("USER_NOT_CREATED", f"User with id {id} can't be created", 409)

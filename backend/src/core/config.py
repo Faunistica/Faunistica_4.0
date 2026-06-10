@@ -53,6 +53,7 @@ class BotSettings(CamelCaseSettings):
     BOT_TOKEN: SecretStr = Field(init=False)
     BOT_PROXY: Url | None = None
     ADMIN_CHAT_ID: int = Field(init=False)
+    BOT_USERNAME: str | None = None
 
 
 class LoggingSettings(CamelCaseSettings):
@@ -82,6 +83,24 @@ class DataSettings(CamelCaseSettings):
     URAL_BORDER_PATH: Path = Path("data/ural_border.geojson")
 
 
+class TGAuthSettings(CamelCaseSettings):
+    TG_TOKEN_EXPIRE_SECONDS: int = 60 * 60  # 60min
+    TG_CODE_EXPIRE_SECONDS: int = 15 * 60  # 15min
+    TG_AUTH_POLL_INTERVAL_SECONDS: int = 1
+    TG_AUTH_POLL_TIMEOUT_SECONDS: int = 25
+    REGISTRATION_PENDING_CLEANUP_INTERVAL_SECONDS: int = 10 * 60  # 10 min
+    REGISTRATION_PENDING_CONFIRMED_BACKLOG_SECONDS: int = 5 * 60  # 5 min
+    SURVEY_FILLING_INTERVAL_SECONDS: int = 30 * 60  # 30 min
+
+
+class StartedPublications(CamelCaseSettings):
+    STARTED_PUBLICATION_IDS_ENG: list[int] = [3378, 3411]
+    STARTED_PUBLICATION_IDS_RUS: list[int] = [815, 2739, 5287]
+    STARTED_PUBLICATION_AMOUNT_ENG: int = 2
+    STARTED_PUBLICATION_AMOUNT_RUS: int = 2
+    STARTED_PUBLICATION_AMOUNT_ALL: int = 2
+
+
 class Settings(
     DatabaseSettings,
     SecuritySettings,
@@ -89,6 +108,8 @@ class Settings(
     LoggingSettings,
     AppSettings,
     DataSettings,
+    TGAuthSettings,
+    StartedPublications,
 ):
     model_config = SettingsConfigDict(
         yaml_file=Path("config.yaml"),

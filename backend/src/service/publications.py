@@ -1,4 +1,5 @@
 import logging
+import random
 from typing import Annotated
 
 from fastapi import Depends
@@ -7,7 +8,7 @@ from sqlalchemy import or_, select, update
 from core import model
 from core.config import settings
 from core.dependencies import DBSession
-from core.enums import RecordType
+from core.enums import RecordType, UserLanguage
 from core.exceptions import (
     NoPublicationsAssignedError,
     PublicationForbiddenError,
@@ -211,12 +212,56 @@ class PublicationService:
             results.append(pub)
         return results
 
-    def _pipe_to_array(self, pipe_str: str) -> list[int]:
+    @staticmethod
+    def generate_started_publications(language: UserLanguage) -> str:
+        eng_publ = settings.STARTED_PUBLICATION_IDS_ENG
+        rus_publ = settings.STARTED_PUBLICATION_IDS_RUS
+        if language == "all":
+            return PublicationService._array_to_pipe(
+                random.sample(
+                    eng_publ,
+                    min(
+                        settings.STARTED_PUBLICATION_AMOUNT_ALL // 2,
+                        len(eng_publ),
+                    ),
+                )
+                + random.sample(
+                    rus_publ,
+                    min(
+                        settings.STARTED_PUBLICATION_AMOUNT_ALL // 2
+                        + settings.STARTED_PUBLICATION_AMOUNT_ALL % 2,
+                        len(rus_publ),
+                    ),
+                )
+            )
+        if language == "eng":
+            return PublicationService._array_to_pipe(
+                random.sample(
+                    eng_publ,
+                    min(
+                        settings.STARTED_PUBLICATION_AMOUNT_ENG,
+                        len(eng_publ),
+                    ),
+                )
+            )
+        return PublicationService._array_to_pipe(
+            random.sample(
+                rus_publ,
+                min(
+                    settings.STARTED_PUBLICATION_AMOUNT_RUS,
+                    len(rus_publ),
+                ),
+            )
+        )
+
+    @staticmethod
+    def _pipe_to_array(pipe_str: str) -> list[int]:
         """Convert '123|456|789' to [123, 456, 789]"""
         if not pipe_str:
             return []
         return [int(x) for x in pipe_str.split("|") if x.strip()]
 
-    def _array_to_pipe(self, arr: list[int]) -> str:
+    @staticmethod
+    def _array_to_pipe(arr: list[int]) -> str:
         """Convert [123, 456, 789] to '123|456|789'"""
         return "|".join(str(x) for x in arr)

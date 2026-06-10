@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 
 @router.get("/lookup")
 async def lookup_user(
-    name: Annotated[str, Query(..., description="Username to lookup")],
+    username: Annotated[str, Query(..., description="Username to lookup")],
     user_service: Annotated[UserService, Depends()],
 ) -> UserLookupResponse:
-    user = await user_service.find_by_username(name)
+    user = await user_service.find_by_username(username)
     if user is None:
-        logger.info("User lookup failed: %s", name)
-        raise UserNotFoundError(name)
+        logger.info("User lookup failed: %s", username)
+        raise UserNotFoundError(username)
 
-    return UserLookupResponse(user_id=user.user_id, name=user.name)
+    return UserLookupResponse(user_id=user.user_id, username=user.username)

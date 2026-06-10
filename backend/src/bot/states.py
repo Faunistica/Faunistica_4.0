@@ -25,3 +25,7 @@ class SociologyStates(StatesGroup):
     waiting_for_rating_agreement = State()
     waiting_for_region = State()
     waiting_for_email = State()
+
+
+class ConfirmStates(StatesGroup):
+    waiting_for_code = State()

@@ -19,7 +19,7 @@ async def test_support_with_valid_username(
             "/api/support",
             json={
                 "link": "http://example.com",
-                "user_name": user.name,
+                "username": user.username,
                 "text": "Test support request",
                 "issue_type": "bug",
             },

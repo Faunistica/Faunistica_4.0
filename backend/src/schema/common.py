@@ -85,7 +85,7 @@ class Publication(BaseModel):
 
 class SupportRequest(BaseModel):
     link: str
-    user_name: str
+    username: str
     text: str = Field(min_length=10)
     issue_type: str
 

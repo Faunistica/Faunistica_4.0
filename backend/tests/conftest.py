@@ -116,6 +116,7 @@ async def seed_data(
         return User(
             user_id=d["user_id"],
             reg_stat=UserState.REG_COMPLETED,
+            username=d["username"],
             name=d["username"],
             tlg_name=d["username"],
             tlg_username=d["username"],
