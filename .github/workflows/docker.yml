@@ -46,7 +46,7 @@ jobs:
             -e BOT_TOKEN=dummy \
             -e ADMIN_CHAT_ID=-1 \
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:edge
-          sleep 3
+          sleep 10
           docker exec test-backend /scripts/healthcheck.py
           docker rm -f test-backend
 
