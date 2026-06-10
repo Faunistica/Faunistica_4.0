@@ -20,7 +20,6 @@ permissions:
 
 jobs:
   build-backend:
-    needs: changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -52,7 +51,6 @@ jobs:
           docker rm -f test-backend
 
   build-frontend:
-    needs: changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
