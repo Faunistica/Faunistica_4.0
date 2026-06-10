@@ -1,10 +1,8 @@
-import logging
 from types import SimpleNamespace
 
 from cachetools import TTLCache
 from sqlalchemy import func, select
 from sqlalchemy.engine import Row
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
@@ -32,8 +30,6 @@ from repository.stats.top_items import (
     top_user_species,
 )
 from schema.common import ProjectStats, UserStats
-
-logger = logging.getLogger(__name__)
 
 _project_stats_cache = TTLCache(maxsize=16, ttl=3600)
 _user_stats_cache = TTLCache(maxsize=1024, ttl=300)
@@ -160,22 +156,17 @@ async def get_cumulative_records(session: AsyncSession) -> list[Row]:
     for r in result:
         per_date[r.date] = per_date.get(r.date, 0) + r.cnt
 
-    try:
-        r_stmt = (
-            select(
-                func.date(records_table.c.datetime).label("date"),
-                func.count().label("cnt"),
-            )
-            .where(records_table.c.type == "rec_ok")
-            .group_by(func.date(records_table.c.datetime))
+    r_stmt = (
+        select(
+            func.date(records_table.c.datetime).label("date"),
+            func.count().label("cnt"),
         )
-        legacy_result = await session.execute(r_stmt)
-        for r in legacy_result:
-            per_date[r.date] = per_date.get(r.date, 0) + r.cnt
-    except SQLAlchemyError:
-        logger.warning(
-            "Could not query legacy records for cumulative_records", exc_info=True
-        )
+        .where(records_table.c.type == "rec_ok")
+        .group_by(func.date(records_table.c.datetime))
+    )
+    legacy_result = await session.execute(r_stmt)
+    for r in legacy_result:
+        per_date[r.date] = per_date.get(r.date, 0) + r.cnt
 
     sorted_dates = sorted(per_date.items())
     running = 0
@@ -207,8 +198,8 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
         Publication.ural == 1, Publication.spec == 1, Publication.occs == 1
     )
 
-    rows = await session.execute(
-        select(EventRecord.publ_id, func.count(func.distinct(EventRecord.user_id)))
+    er_pairs = (
+        select(EventRecord.publ_id, EventRecord.user_id)
         .join(Publication, EventRecord.publ_id == Publication.publ_id)
         .where(
             EventRecord.type == RecordType.REC_OK,
@@ -217,44 +208,21 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
             Publication.occs == 1,
             EventRecord.user_id.notin_(admin_ids),
         )
-        .group_by(EventRecord.publ_id)
     )
-    counts: dict[int, int] = {}
-    for publ_id, cnt in rows:
-        counts[publ_id] = cnt
+    r_pairs = select(records_table.c.publ_id, records_table.c.user_id).where(
+        records_table.c.type == "rec_ok",
+        records_table.c.user_id.notin_(admin_ids),
+        records_table.c.publ_id.in_(eligible_publs),
+    )
+    union_pairs = er_pairs.union(r_pairs).subquery()
+    rows = await session.execute(
+        select(
+            union_pairs.c.publ_id,
+            func.count(func.distinct(union_pairs.c.user_id)),
+        ).group_by(union_pairs.c.publ_id)
+    )
 
-    try:
-        async with session.begin_nested():
-            er_pairs = (
-                select(EventRecord.publ_id, EventRecord.user_id)
-                .join(Publication, EventRecord.publ_id == Publication.publ_id)
-                .where(
-                    EventRecord.type == RecordType.REC_OK,
-                    Publication.ural == 1,
-                    Publication.spec == 1,
-                    Publication.occs == 1,
-                    EventRecord.user_id.notin_(admin_ids),
-                )
-            )
-            r_pairs = select(records_table.c.publ_id, records_table.c.user_id).where(
-                records_table.c.type == "rec_ok",
-                records_table.c.user_id.notin_(admin_ids),
-                records_table.c.publ_id.in_(eligible_publs),
-            )
-            union_pairs = er_pairs.union(r_pairs).subquery()
-            rows = await session.execute(
-                select(
-                    union_pairs.c.publ_id,
-                    func.count(func.distinct(union_pairs.c.user_id)),
-                ).group_by(union_pairs.c.publ_id)
-            )
-            for publ_id, cnt in rows:
-                counts[publ_id] = cnt
-    except SQLAlchemyError:
-        logger.warning("Could not query legacy records for progress", exc_info=True)
-
-    for publ_id, value in counts.items():
-        counts[publ_id] = min(value, 3)
+    counts = {publ_id: min(cnt, 3) for publ_id, cnt in rows}
 
     processed = sum(1 for v in counts.values() if v >= 3)
 
