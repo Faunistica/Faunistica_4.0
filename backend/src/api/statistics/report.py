@@ -15,7 +15,7 @@ router = APIRouter()
 @router.get("/report")
 async def download_report(session: DBSession) -> StreamingResponse:
     stats = await get_project_statistics(session)
-    total, processed = await get_progress(session)
+    total, processed, _ = await get_progress(session)
 
     wb = Workbook()
     ws = wb.active

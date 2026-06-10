@@ -14,6 +14,7 @@ class ProgressInfo(BaseModel):
     coverage: float
     total_publications: int
     processed_publications: int
+    fully_processed_publications: int = 0
 
 
 class ProjectStatisticsResponse(BaseModel):

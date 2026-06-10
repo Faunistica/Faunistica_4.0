@@ -178,7 +178,7 @@ async def get_cumulative_records(session: AsyncSession) -> list[Row]:
     return accumulated
 
 
-async def get_progress(session: AsyncSession) -> tuple[int, int]:
+async def get_progress(session: AsyncSession) -> tuple[int, int, int]:
     if (cached := _project_stats_cache.get("progress")) is not None:
         return cached
 
@@ -224,9 +224,10 @@ async def get_progress(session: AsyncSession) -> tuple[int, int]:
 
     counts = {publ_id: min(cnt, 3) for publ_id, cnt in rows}
 
-    processed = sum(1 for v in counts.values() if v >= 3)
+    processed = sum(counts.values()) // 3
+    fully_processed = sum(1 for v in counts.values() if v >= 3)
 
-    result = (total, processed)
+    result = (total, processed, fully_processed)
     _project_stats_cache["progress"] = result
     return result
 

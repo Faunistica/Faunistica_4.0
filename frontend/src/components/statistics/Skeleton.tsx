@@ -42,8 +42,12 @@ export const StatisticsSkeleton = () => {
                         <Skeleton className="h-4 w-14" />
                     </div>
                     <Skeleton className="h-2.5 w-full rounded-full" />
+                    <div className="flex gap-4">
+                        <Skeleton className="h-3 w-44" />
+                        <Skeleton className="h-3 w-36" />
+                    </div>
                     <div className="flex justify-between">
-                        <Skeleton className="h-3 w-28" />
+                        <Skeleton className="h-3 w-48" />
                         <Skeleton className="h-3 w-16" />
                     </div>
                 </CardContent>

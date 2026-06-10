@@ -126,6 +126,7 @@ export interface ProgressInfo {
     coverage: number;
     total_publications: number;
     processed_publications: number;
+    fully_processed_publications: number;
 }
 
 export interface StatisticsResponse {

@@ -1,4 +1,4 @@
-import { type FC, useState, useCallback } from 'react';
+import { type FC, useState, useCallback, useEffect } from 'react';
 import { useAppSelector } from '@/store/store';
 import { statsAPI } from '@/api/statsAPI';
 import { recordAPI } from '@/api/recordAPI';
@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { StatisticsSkeleton } from '@/components/statistics/Skeleton';
 import { PieChartCard } from '@/components/statistics/PieChartCard';
 import { CumulativeChart } from '@/components/statistics/CumulativeChart';
+import type { ProgressInfo } from '@/types/api.dto';
 
 const projectCards = [
     { key: 'species', icon: Bug, label: 'Видов', field: 'species_count' as const },
@@ -121,6 +122,75 @@ function LabelCard({ label, value }: { label: string; value: string | null | und
     );
 }
 
+function ProgressCard({ progress }: { progress: ProgressInfo }) {
+    const [animate, setAnimate] = useState(false);
+    useEffect(() => {
+        const timer = setTimeout(() => setAnimate(true), 100);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const total = progress.total_publications;
+    const processedPct = total > 0 ? Math.min((progress.processed_publications / total) * 100, 100) : 0;
+    const fullyPct = total > 0 ? Math.min((progress.fully_processed_publications / total) * 100, 100) : 0;
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <BookOpen className="size-4" />
+                    Прогресс оцифровки
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Охват</span>
+                    <span className="font-semibold">
+                        {(progress.coverage * 100).toFixed(1)}%
+                    </span>
+                </div>
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="relative h-full">
+                        <div
+                            className="absolute inset-0 rounded-full bg-primary transition-all duration-1000 ease-out"
+                            style={{ width: animate ? `${processedPct}%` : '0%' }}
+                        />
+                        <div
+                            className="absolute inset-0 rounded-full bg-emerald-500 transition-all duration-1000 ease-out"
+                            style={{ width: animate ? `${fullyPct}%` : '0%' }}
+                        />
+                    </div>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                            <span className="size-2.5 rounded-sm bg-emerald-500" />
+                            Полностью (3+ волонтёров)
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="size-2.5 rounded-sm bg-primary" />
+                            Частично (1-2 волонтёра)
+                        </span>
+                    </div>
+                    <div className="text-emerald-500 font-medium">
+                        {(progress.fully_processed_publications / total * 100).toFixed(1)}%
+                    </div>
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>
+                        Обработано: {formatNumber(progress.processed_publications)}
+                        {progress.fully_processed_publications > 0 && (
+                            <> (из них полностью: {formatNumber(progress.fully_processed_publications)})</>
+                        )}
+                    </span>
+                    <span>
+                        Всего: {formatNumber(total)}
+                    </span>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 const Statistics: FC = () => {
     const userId = useAppSelector((state) => state.user.user_id);
 
@@ -204,37 +274,7 @@ const Statistics: FC = () => {
             </div>
 
             {projectStats?.progress && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                            <BookOpen className="size-4" />
-                            Прогресс оцифровки
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Охват</span>
-                            <span className="font-semibold">
-                                {(projectStats.progress.coverage * 100).toFixed(1)}%
-                            </span>
-                        </div>
-                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
-                            <div
-                                className="h-full rounded-full bg-primary transition-all"
-                                style={{ width: `${projectStats.progress.coverage * 100}%` }}
-                            />
-                        </div>
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>
-                                Обработано:{' '}
-                                {formatNumber(projectStats.progress.processed_publications)}
-                            </span>
-                            <span>
-                                Всего: {formatNumber(projectStats.progress.total_publications)}
-                            </span>
-                        </div>
-                    </CardContent>
-                </Card>
+                <ProgressCard progress={projectStats.progress} />
             )}
 
             {projectStats &&
