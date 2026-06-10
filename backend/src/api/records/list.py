@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import UUID4
 
+from core.config import settings
 from core.dependencies import TokenUser
 from schema.common import PaginatedResponse
 from schema.records import RecordFull
-from service.export import records_to_csv, records_to_excel
 from service.publications import PublicationService
 from service.records import RecordService
 
@@ -52,12 +52,13 @@ async def list_records(
 @router.get("/export", response_model=None)
 async def export_records(
     service: Annotated[RecordService, Depends()],
+    publ_service: Annotated[PublicationService, Depends()],
     token: TokenUser,
     publ_id: Annotated[int, Query(ge=1, description="Publication ID")],
-    user_id: Annotated[int | None, Query(description="User ID")] = None,
 ) -> StreamingResponse:
+    await publ_service.validate_access(publ_id, user_id=token.user_id)
     content = await service.export_records(
-        user_id=user_id or token.user_id,
+        user_id=token.user_id,
         publ_id=publ_id,
     )
 

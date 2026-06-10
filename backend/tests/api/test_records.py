@@ -421,7 +421,9 @@ async def test_export_all_records(authenticated_client: AsyncClient, seed_data) 
 
 
 @pytest.mark.asyncio
-async def test_import_from_excel(authenticated_client: AsyncClient) -> None:
+async def test_import_from_excel(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing records from Excel file."""
     import io
 
