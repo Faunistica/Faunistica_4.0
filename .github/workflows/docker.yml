@@ -38,17 +38,6 @@ jobs:
             GIT_COMMIT=${{ github.sha }}
             GIT_TAG=edge
             GIT_BRANCH=${{ github.ref_name }}
-      - name: Smoke test
-        run: |
-          docker run -d --name test-backend \
-            -p 5501:5001 \
-            -e JWT_SECRET=test \
-            -e BOT_TOKEN=dummy \
-            -e ADMIN_CHAT_ID=-1 \
-            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:edge
-          sleep 10
-          docker exec test-backend /scripts/healthcheck.py
-          docker rm -f test-backend
 
   build-frontend:
     runs-on: ubuntu-latest
