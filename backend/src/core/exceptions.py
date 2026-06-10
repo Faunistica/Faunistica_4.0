@@ -59,9 +59,12 @@ class APIException(Exception):
 def api_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.info(exc)
     if isinstance(exc, APIException):
+        content: dict = {"error": exc.error_code, "message": exc.message}
+        if hasattr(exc, "draft_record_ids"):
+            content["draft_record_ids"] = exc.draft_record_ids
         return JSONResponse(
             status_code=exc.status_code,
-            content={"error": exc.error_code, "message": exc.message},
+            content=content,
         )
     raise exc
 
@@ -136,6 +139,16 @@ class ActionLoggingError(APIException):
 class InternalError(APIException):
     def __init__(self, details: str) -> None:
         super().__init__("INTERNAL_ERROR", details, 500)
+
+
+class UnsubmittedRecordsError(APIException):
+    def __init__(self, draft_ids: list[str]) -> None:
+        self.draft_record_ids = draft_ids
+        super().__init__(
+            "UNSUBMITTED_RECORDS",
+            f"Publication has {len(draft_ids)} unsubmitted records",
+            409,
+        )
 
 
 class PublicationCompletedError(APIException):

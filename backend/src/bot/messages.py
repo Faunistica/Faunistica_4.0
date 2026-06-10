@@ -125,7 +125,7 @@ class Messages:
             f"<b>Ваша текущая публикация</b>\n\n"
             f"Статья: {publ_info.name}\n"
             f"Автор(ы): {publ_info.author}\n\n"
-            f'<a href="https://faunistica.ru/files/{publ_info.pdf_file}">'
+            f'<a href="{publ_info.pdf_file or ""}">'
             "Ссылка на статью</a>\n\n"
             "Пожалуйста, не забудьте ознакомиться с инструкцией: "
             '<a href="https://faunistica.ru/instruction/">веб-страница</a>'

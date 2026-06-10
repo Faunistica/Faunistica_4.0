@@ -4,3 +4,4 @@ AllowedOrigins:
   - "http://localhost:5174"
   - "http://localhost:8000"
 GlobalRateLimit: 100/minute
+InteractableQueueCount: 2

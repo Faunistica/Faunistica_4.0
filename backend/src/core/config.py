@@ -71,6 +71,8 @@ class AppSettings(CamelCaseSettings):
     ALLOWED_ORIGINS: list[str] = []
     MAX_IMPORT_FILE_BYTES: int = 5 * 1024 * 1024  # 5MB
     MAX_USER_RECORDS_PER_PUBLICATION: int = 1000
+    INTERACTABLE_QUEUE_COUNT: int = 1
+    PUBLICATION_FILES_BASE_URL: str = "https://faunistics.international/arachnolibrary/"
 
 
 class DataSettings(CamelCaseSettings):
