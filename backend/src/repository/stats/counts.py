@@ -5,16 +5,30 @@ from core.enums import RecordType, UserState
 from core.model import Action, EventRecord, Publication, User, records_table
 
 
-async def _count_rows_combined(
-    session: AsyncSession,
+def _build_filters(
     types: list[RecordType],
     user_id: int | None = None,
-) -> int:
+    event_extra: SQLColumnExpression | None = None,
+    legacy_extra: SQLColumnExpression | None = None,
+) -> tuple:
     event_filter = EventRecord.type.in_(types)
     legacy_filter = records_table.c.type.in_([t.value for t in types])
     if user_id is not None:
         event_filter = and_(event_filter, EventRecord.user_id == user_id)
         legacy_filter = and_(legacy_filter, records_table.c.user_id == user_id)
+    if event_extra is not None:
+        event_filter = and_(event_filter, event_extra)
+    if legacy_extra is not None:
+        legacy_filter = and_(legacy_filter, legacy_extra)
+    return event_filter, legacy_filter
+
+
+async def _count_rows_combined(
+    session: AsyncSession,
+    types: list[RecordType],
+    user_id: int | None = None,
+) -> int:
+    event_filter, legacy_filter = _build_filters(types, user_id)
 
     event_n = (
         await session.scalar(
@@ -38,11 +52,7 @@ async def _count_distinct_combined[T](
     types: list[RecordType],
     user_id: int | None = None,
 ) -> int:
-    event_filter = EventRecord.type.in_(types)
-    legacy_filter = records_table.c.type.in_([t.value for t in types])
-    if user_id is not None:
-        event_filter = and_(event_filter, EventRecord.user_id == user_id)
-        legacy_filter = and_(legacy_filter, records_table.c.user_id == user_id)
+    event_filter, legacy_filter = _build_filters(types, user_id)
 
     event_subq = select(event_key.label("k")).where(event_filter)
     legacy_subq = select(legacy_key.label("k")).where(legacy_filter)
@@ -59,15 +69,9 @@ async def _sum_combined[T](
     event_extra_filter: SQLColumnExpression | None = None,
     legacy_extra_filter: SQLColumnExpression | None = None,
 ) -> float:
-    event_filter = EventRecord.type.in_(types)
-    legacy_filter = records_table.c.type.in_([t.value for t in types])
-    if user_id is not None:
-        event_filter = and_(event_filter, EventRecord.user_id == user_id)
-        legacy_filter = and_(legacy_filter, records_table.c.user_id == user_id)
-    if event_extra_filter is not None:
-        event_filter = and_(event_filter, event_extra_filter)
-    if legacy_extra_filter is not None:
-        legacy_filter = and_(legacy_filter, legacy_extra_filter)
+    event_filter, legacy_filter = _build_filters(
+        types, user_id, event_extra_filter, legacy_extra_filter
+    )
 
     event_n = (
         await session.scalar(
