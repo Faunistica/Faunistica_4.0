@@ -6,6 +6,7 @@ import { recordAPI } from '../api/recordAPI.ts';
 import { statsAPI } from '../api/statsAPI.ts';
 import { publAPI } from '../api/publAPI.ts';
 import { utilAPI } from '../api/utilAPI.ts';
+import { userAPI } from '../api/userAPI.ts';
 
 const rootReducer = combineReducers({
     user: userReducer,
@@ -14,6 +15,7 @@ const rootReducer = combineReducers({
     [statsAPI.reducerPath]: statsAPI.reducer,
     [publAPI.reducerPath]: publAPI.reducer,
     [utilAPI.reducerPath]: utilAPI.reducer,
+    [userAPI.reducerPath]: userAPI.reducer,
 });
 
 export const store = configureStore({
@@ -25,6 +27,7 @@ export const store = configureStore({
             statsAPI.middleware,
             publAPI.middleware,
             utilAPI.middleware,
+            userAPI.middleware,
         ),
 });
 

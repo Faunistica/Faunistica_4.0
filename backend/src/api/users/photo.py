@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
-from core.dependencies import HTTPClient
+from core.dependencies import HTTPClient, TokenUser
 from core.rate_limiter import limiter
 from service import telegram
 
@@ -14,14 +14,14 @@ router = APIRouter()
 @router.get("/photo")
 @limiter.limit("1/minute")
 async def get_photo(
-    request: Request, user_id: int, client: HTTPClient
+    request: Request, user: TokenUser, client: HTTPClient
 ) -> StreamingResponse:
     """
     Получение фотографии профиля пользователя из Telegram.
 
     Возвращает изображение в формате JPEG.
     """
-    photo = await telegram.fetch_photo(client, user_id)
+    photo = await telegram.fetch_photo(client, user.user_id)
     if not photo:
         logger.warning("No photo found")
         raise HTTPException(404, detail="No photo found")

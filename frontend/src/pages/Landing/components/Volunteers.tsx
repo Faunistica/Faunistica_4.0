@@ -2,6 +2,7 @@ import { Trophy, BookOpen, Users, ShieldCheck, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Link } from 'react-router';
 
 export default function Volunteers() {
     return (
@@ -67,8 +68,13 @@ export default function Volunteers() {
                         </div>
 
                         <div className="pt-6">
-                            <Button className="w-full bg-white font-semibold text-slate-900 hover:bg-slate-100 sm:w-auto">
-                                Смотреть инструкцию волонтера
+                            <Button
+                                asChild
+                                size="lg"
+                                variant="outline"
+                                className="h-12 border-slate-300 bg-white px-8 text-base text-slate-700 hover:bg-slate-50"
+                            >
+                                <Link to="/instructions">Смотреть инструкцию волонтера</Link>
                             </Button>
                         </div>
                     </div>

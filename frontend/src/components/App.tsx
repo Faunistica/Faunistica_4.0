@@ -39,7 +39,18 @@ async function verifyAuthInBackground(setNetworkError: (value: boolean) => void)
             });
 
             if (refreshResponse.ok) {
-                return;
+                const retryResponse = await fetch(`${API_BASE}/users/me`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                if (retryResponse.ok) {
+                    const data: unknown = await retryResponse.json();
+                    if (isUserInfo(data)) {
+                        store.dispatch(login(data));
+                    }
+                    return;
+                }
             }
         }
 

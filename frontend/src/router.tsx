@@ -117,9 +117,9 @@ export const routes: RouteObject[] = [
                                     })),
                             },
                             {
-                                path: 'recovery',
+                                path: 'onboarding',
                                 lazy: () =>
-                                    import('./pages/Auth/Recovery').then((m) => ({
+                                    import('./pages/Onboarding').then((m) => ({
                                         Component: m.default,
                                     })),
                             },

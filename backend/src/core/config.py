@@ -67,6 +67,7 @@ class LoggingSettings(CamelCaseSettings):
 
 class AppSettings(CamelCaseSettings):
     DEV_MODE: bool = False
+    SITE_URL: str = "https://faunistica.ru"
     # TODO: Check if other type is better
     GLOBAL_RATE_LIMIT: str = "100/minute"
     ALLOWED_ORIGINS: list[str] = []
