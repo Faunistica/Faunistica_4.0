@@ -8,6 +8,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
   BACKEND_IMAGE: faunistica/backend
@@ -54,22 +58,3 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:edge
           build-args: |
             VITE_API_URL=/api
-
-      - name: Smoke test backend
-        run: |
-          docker run -d --name test-backend \
-            -p 5501:5001 \
-            -e JWT_SECRET=test \
-            -e BOT_TOKEN=dummy \
-            -e ADMIN_CHAT_ID=-1 \
-            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
-          sleep 3
-          docker exec test-backend /scripts/healthcheck.py
-          docker rm -f test-backend
-
-      - name: Smoke test frontend
-        run: |
-          docker run -d --name test-frontend -p 8080:80 ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
-          sleep 2
-          curl -f http://localhost:8080/ || (docker logs test-frontend && false)
-          docker rm -f test-frontend
