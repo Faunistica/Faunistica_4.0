@@ -8,7 +8,7 @@ from sqlalchemy import or_, select, update
 from core import model
 from core.config import settings
 from core.dependencies import DBSession
-from core.enums import UserLanguage, RecordType
+from core.enums import RecordType, UserLanguage
 from core.exceptions import (
     NoPublicationsAssignedError,
     PublicationForbiddenError,
