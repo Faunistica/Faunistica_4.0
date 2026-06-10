@@ -23,13 +23,13 @@ async def _most_common_combined[T](
     er_filter = and_(
         EventRecord.user_id == user_id,
         EventRecord.type == RecordType.REC_OK,
-        *(event_extra,) if event_extra else (),
+        *(event_extra,) if event_extra is not None else (),
     )
     er = select(event_expr.label(label)).where(er_filter)
     r_filter = and_(
         records_table.c.user_id == user_id,
         records_table.c.type == "rec_ok",
-        *(legacy_extra,) if legacy_extra else (),
+        *(legacy_extra,) if legacy_extra is not None else (),
     )
     r = select(legacy_expr.label(label)).where(r_filter)
     combined = union_all(er, r).subquery()
