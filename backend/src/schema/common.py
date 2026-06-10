@@ -2,7 +2,9 @@ from datetime import datetime
 from enum import Enum, StrEnum
 from typing import TypedDict
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from core.config import settings
 
 
 class PaginatedResponse[T](BaseModel):
@@ -64,6 +66,19 @@ class Publication(BaseModel):
     spec: int | None = None
     e_author: str | None = None
     e_name: str | None = None
+    interactable: bool = True
+
+    @model_validator(mode="after")
+    def _prepend_file_url_prefix(self) -> "Publication":
+        prefix = settings.PUBLICATION_FILES_BASE_URL
+        if not prefix:
+            return self
+        prefix = prefix.rstrip("/") + "/"
+        for field in ("pdf_file", "bib_file", "arj_file"):
+            value = getattr(self, field, None)
+            if value and not value.startswith(("http://", "https://", "/")):
+                setattr(self, field, prefix + value)
+        return self
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -12,7 +12,6 @@ from core.dependencies import DBSession
 from core.enums import RecordType
 from core.exceptions import (
     ImportLimitExceededError,
-    NoPublicationsAssignedError,
     PublicationForbiddenError,
     RecordForbiddenError,
     RecordLimitExceededError,
@@ -146,11 +145,15 @@ class RecordService:
     async def get_record(
         self,
         record_id: UUID,
+        user_id: int,
     ) -> RecordFull:
         """Get a record by ID"""
         record = await repo.get_record(self.session, record_id)
         if record is None:
             raise RecordNotFoundError(record_id)
+
+        if record.user_id != user_id:
+            raise RecordForbiddenError
 
         full = _enrich_record(record)
         publ = await get_publication(self.session, record.publ_id)
@@ -263,21 +266,15 @@ class RecordService:
         user_id: int,
         ip: str | None,
         total_count: int,
+        publ_id: int,
     ) -> ImportResult:
         """Import records from parsed Excel/CSV rows."""
         user = await get_user_expect(self.session, user_id)
-        queue = await self.publication_service.get_current(user=user)
-        if len(queue) == 0:
-            raise NoPublicationsAssignedError(user_id)
-
-        publ = queue[0]
-
-        # Always ok now, but rules may change
-        await self.publication_service.validate_access(publ.publ_id, user=user)
+        publ = await self.publication_service.validate_access(publ_id, user=user)
 
         if total_count > settings.MAX_USER_RECORDS_PER_PUBLICATION:
             raise ImportLimitExceededError(
-                publ.publ_id, total_count, settings.MAX_USER_RECORDS_PER_PUBLICATION
+                publ_id, total_count, settings.MAX_USER_RECORDS_PER_PUBLICATION
             )
 
         event_records: list[EventRecord] = []
@@ -300,8 +297,8 @@ class RecordService:
             metadata, _ = _create_record_metadata(
                 record_data,
                 user_id,
-                publ.publ_id,
-                language=publ.language,
+                publ_id,
+                language=publ.language if publ else None,
                 submission_type="submit",
                 ip=ip,
                 import_errors=["Ошибка при импорте"] if error else None,
@@ -319,7 +316,7 @@ class RecordService:
                 last_ok = record
 
         # Delete old records, then insert — all in one transaction
-        await repo.delete_records_by_user_and_publ(self.session, user_id, publ.publ_id)
+        await repo.delete_records_by_user_and_publ(self.session, user_id, publ_id)
 
         self.session.add_all(event_records)
 
