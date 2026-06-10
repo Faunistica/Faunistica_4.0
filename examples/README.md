@@ -18,7 +18,7 @@ postgres → backend:5001 → frontend:80 (статический SPA + /api/ �
 ```bash
 cd examples/all-docker
 cp ../.env.example .env
-cp ../config.yaml .
+cp ../config.yaml .       # копирует production-версию (examples/config.yaml), не путать с backend/config.yaml
 # отредактировать .env
 docker compose up -d
 ```
@@ -30,7 +30,7 @@ docker compose up -d
 ```bash
 cd examples/hybrid
 cp ../.env.example .env
-cp ../config.yaml .
+cp ../config.yaml .       # копирует production-версию (examples/config.yaml), не путать с backend/config.yaml
 # отредактировать .env, указать DB_HOST=/var/run/postgresql
 docker compose up -d
 # скопировать nginx/faunistica.conf в /etc/nginx/sites-available/

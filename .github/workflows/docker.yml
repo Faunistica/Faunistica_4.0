@@ -84,6 +84,8 @@ jobs:
           push: true
           load: true
           tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:edge
+          build-args: |
+            VITE_API_URL=/api
       - name: Smoke test
         run: |
           docker run -d --name test-frontend -p 8080:80 ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:edge

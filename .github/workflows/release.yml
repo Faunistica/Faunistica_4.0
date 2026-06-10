@@ -52,6 +52,8 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:edge
+          build-args: |
+            VITE_API_URL=/api
 
       - name: Smoke test backend
         run: |

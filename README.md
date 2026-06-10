@@ -12,7 +12,7 @@
 ### Требуемые инструменты
 
 - [Docker](https://docs.docker.com/engine/install) + [Docker Compose](https://docs.docker.com/compose/install)
-- [Python 3.11+](https://www.python.org/)
+- [Python 3.13+](https://www.python.org/)
 - [uv](https://github.com/astral-sh/uv) - Менеджер пакетов Python
 - [Node.js 22+](https://nodejs.org/)
 - [pnpm](https://pnpm.io)
