@@ -96,12 +96,50 @@ volumes:
 
 ## Разработка
 
+### Требования
+
+- Python 3.13+
+- [uv](https://github.com/astral-sh/uv)
+- [Docker](https://docs.docker.com/engine/install) + Docker Compose
+- make (опционально)
+
+### Локальный запуск
+
 ```bash
 cd backend
 cp .env.example .env
-# отредактировать .env
-docker compose up -d      # поднять PostgreSQL
-make run                  # запустить сервер
+# отредактировать .env (BOT_TOKEN, ADMIN_CHAT_ID, JWT_SECRET и др.)
+
+# Запустить PostgreSQL
+docker compose up -d
+
+# Установить зависимости и запустить сервер
+make run
+# или вручную: uv sync && uv run fastapi dev src/app.py --port 8000
 ```
 
-Подробнее — в корневом [README.md](../README.md).
+Сервер будет доступен на `http://localhost:8000`.
+
+### Тестовые данные
+
+```bash
+./init.sh
+```
+
+Скрипт создаёт пользователя `DEV_USERNAME` с паролем `password`.
+
+### Переменная VITE_API_URL
+
+Для локальной разработки фронтенд обращается к бэкенду через
+`VITE_API_URL=http://localhost:8000/api` (см. `frontend/.env.example`).
+Порт 8000 — значение по умолчанию для `fastapi dev`.
+
+### Проверка кода
+
+```bash
+make lint     # ruff + ty
+make format   # ruff format + isort
+make test     # pytest с coverage
+```
+
+Отдельные команды описаны в [Makefile](Makefile).

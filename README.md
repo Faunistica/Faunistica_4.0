@@ -7,105 +7,15 @@
 [Faunistica 4.0](https://faunistica.ru/): Система обработки научных литературных источников и регистрации на этой основе данных о находках пауков.\
 Программа предназначена для извлечения и структурирования данных из научных публикаций, содержащих упоминания о находках экземпляров пауков, и последующего формирования стандартизированной базы данных. Она ориентирована на использование биологами-исследователями и волонтерами для систематизации сведений об распространении пауков, что способствует углубленному изучению экологии и биогеографии.
 
-## Инструкция для разработчиков
+## Разработка
 
-### Требуемые инструменты
+- [Бэкенд](backend/README.md) — FastAPI, PostgreSQL, SQLAlchemy, aiogram
+- [Фронтенд](frontend/README.md) — React, TypeScript, Vite, Redux Toolkit
 
-- [Docker](https://docs.docker.com/engine/install) + [Docker Compose](https://docs.docker.com/compose/install)
-- [Python 3.13+](https://www.python.org/)
-- [uv](https://github.com/astral-sh/uv) - Менеджер пакетов Python
-- [Node.js 22+](https://nodejs.org/)
-- [pnpm](https://pnpm.io)
-- [Git](https://git-scm.com)
-- make - опционально, без него запускайте линтеры вручную
+## Развёртывание
 
-### Локальный запуск
-
-#### Backend
-
-```bash
-cd backend
-cp .env.example .env
-# Заполнить .env (см. секцию "Переменные окружения")
-
-# Запуск БД
-docker compose up -d
-
-# Запуск backend сервера
-make run # или fastapi dev в виртуальном окружении
-```
-
-После запуска проекта можно добавить тестовые данные в бдскриптом init.sh
-
-```bash
-./init.sh
-```
-
-Скрипт создает пользователя с именем `DEV_USERNAME` и паролем `password`
-
-#### Frontend
-
-```bash
-cd frontend
-pnpm install
-pnpm dev
-```
-
-### Проверка кода
-
-В корневой директории проекта:
-
-```bash
-# Линтинг всего проекта
-make lint
-
-# Форматирование всего проекта
-make format
-```
-
-Или для отдельных частей:
-
-```bash
-make -C backend lint
-make -C backend format
-make -C frontend lint
-make -C frontend format
-```
-
-## Docker-развёртывание
-
-Примеры production-конфигураций (all-docker и hybrid) находятся в [examples/](examples/).
-Там же — production `config.yaml` и объяснение настроек nginx, TLS, лимитов памяти и подключения к PostgreSQL.
-
-Детальное описание системы конфигурации бэкенда — в [backend/README.md](backend/README.md).
-
-### Переменные окружения
-
-#### Обязательные
-
-- `BOT_TOKEN` - Токен Telegram бота
-- `ADMIN_CHAT_ID` - ID чата администратора. Переменная необходима, но используется\
-  только для части функционала.
-- `DB_NAME` - Имя базы данных
-- `DB_HOST` - Хост базы данных
-- `DB_PORT` - Порт базы данных
-- `DB_USER` - Пользователь БД
-- `DB_PASSWORD` - Пароль БД
-- `JWT_SECRET` - Секрет для JWT (HS256). \
-  Сгенерировать: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
-- `ENCRYPT_SECRET` - Секрет для шифрования
-
-#### Опциональные
-
-- `DEV_TG_ID` - Ваш ID в телеграме.\
-  Используется скриптом `init.sh` при создании тестового пользователя
-- `BOT_PROXY` - SOCKS5/HTTP прокси для бота
-- `ACCESS_TOKEN_EXPIRE` - Время жизни ACCESS токена в минутах
-- `REFRESH_TOKEN_EXPIRE` - Время жизни REFRESH токена в днях
-- `LOG_LEVEL` - Уровень логирования: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
-- `DB_ECHO` - Логировать SQL-запросы: `true`/`false`
-- `PGADMIN_DEFAULT_EMAIL` - Email для входа в pgAdmin (по умолчанию: `admin@example.com`)
-- `PGADMIN_DEFAULT_PASSWORD` - Пароль для входа в pgAdmin (по умолчанию: `admin`)
+Примеры production-конфигураций (all-docker и hybrid) — в [examples/](examples/).
+Там же: production `config.yaml`, nginx-конфиги, лимиты памяти, настройка PostgreSQL через Unix-сокет, HTTPS.
 
 ## ✍🏻 Дополнительная информация
 
