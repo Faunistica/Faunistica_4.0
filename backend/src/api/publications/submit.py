@@ -21,19 +21,19 @@ class PublicationSubmit(BaseModel):
     comment: Annotated[str | None, Field(default=None, max_len=1000)]
 
 
-class SubmitStatusResponse(BaseModel):
+class DraftsResponse(BaseModel):
     draft_record_ids: list[str]
 
 
-@router.get("/{publ_id}/submit-status")
-async def submit_status(
+@router.get("/{publ_id}/drafts")
+async def get_drafts(
     publ_id: int,
     token: TokenUser,
     pub_service: Annotated[PublicationService, Depends()],
-) -> SubmitStatusResponse:
+) -> DraftsResponse:
     await pub_service.validate_access(publ_id, user_id=token.user_id)
     draft_ids = await pub_service.get_draft_record_ids(token.user_id, publ_id)
-    return SubmitStatusResponse(draft_record_ids=draft_ids)
+    return DraftsResponse(draft_record_ids=draft_ids)
 
 
 @router.post("/{publ_id}/submit", status_code=status.HTTP_204_NO_CONTENT)

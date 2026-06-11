@@ -1,8 +1,8 @@
 import { type FC } from 'react';
 import { useParams, Link } from 'react-router';
 import { motion } from 'motion/react';
-import { useGetPublicationByIdQuery, useGetSubmitStatusQuery } from '@/api/publAPI';
-import { ArrowLeft, Flower2 } from 'lucide-react';
+import { useGetPublicationByIdQuery, useGetDraftRecordIdsQuery } from '@/api/publAPI';
+import { ArrowLeft, Flower2, AlertTriangle } from 'lucide-react';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Card } from '@/components/ui/card';
 import FormCard from '@/components/submit-publication/FormCard';
@@ -18,9 +18,32 @@ const SubmitPublication: FC = () => {
     const publ_id = Number(id);
 
     const { data: pub, isLoading: pubLoading } = useGetPublicationByIdQuery(publ_id);
-    const { data: status, isLoading: statusLoading } = useGetSubmitStatusQuery(publ_id);
+    const {
+        data: status,
+        isLoading: statusLoading,
+        isError: statusError,
+    } = useGetDraftRecordIdsQuery(publ_id);
 
     if (pubLoading || statusLoading) return <LoadingScreen />;
+
+    if (statusError) {
+        return (
+            <div className="py-6">
+                <div className="mx-auto max-w-2xl">
+                    <Card className="p-6 sm:p-8">
+                        <div className="flex flex-col items-center gap-3 text-center">
+                            <AlertTriangle className="size-8 text-red-500" />
+                            <h2 className="text-lg font-semibold">Ошибка загрузки черновиков</h2>
+                            <p className="text-sm text-muted-foreground">
+                                Не удалось проверить наличие неотправленных записей. Попробуйте
+                                обновить страницу.
+                            </p>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        );
+    }
 
     const draftIds = status?.draft_record_ids ?? [];
     const hasDrafts = draftIds.length > 0;
