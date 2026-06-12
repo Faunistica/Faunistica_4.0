@@ -1,13 +1,13 @@
 sequenceDiagram
-    actor User
-    participant Frontend as Frontend
-    participant API as API
-    participant DB as PostgreSQL
+    actor U as Пользователь
+    participant F as Фронтенд
+    participant A as API
+    participant D as БД
 
-    User->>Frontend: Enter username + password
-    Frontend->>API: POST /api/auth/login
-    API->>DB: Find user by username
-    API->>API: Verify password (Argon2)
-    API->>API: Set JWT cookies
-    API-->>Frontend: {user_id, name, username}
-    Frontend->>User: Redirect to /dashboard
+    U->>F: Вводит username + password
+    F->>A: POST /api/auth/login
+    A->>D: Поиск пользователя по username
+    A->>A: Проверка пароля (Argon2)
+    A->>A: Устанавливает JWT cookies
+    A-->>F: {user_id, name, username}
+    F->>U: Перенаправляет на /dashboard

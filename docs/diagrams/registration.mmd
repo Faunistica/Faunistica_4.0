@@ -1,31 +1,31 @@
 sequenceDiagram
-    actor User
-    participant Frontend as Frontend
-    participant API as API
-    participant Bot as Telegram Bot
-    participant DB as PostgreSQL
+    actor U as Пользователь
+    participant F as Фронтенд
+    participant A as API
+    participant B as Telegram Бот
+    participant D as БД
 
-    User->>Frontend: Click register
-    Frontend->>API: POST /api/auth/code
-    API->>DB: INSERT pending (code, AWAITING_CODE)
-    API-->>Frontend: {code, token, bot_url}
-    Frontend->>User: Show code, QR, deep link
+    U->>F: Нажимает «Регистрация»
+    F->>A: POST /api/auth/code
+    A->>D: INSERT pending (code, AWAITING_CODE)
+    A-->>F: {code, token, bot_url}
+    F->>U: Показывает код, QR, ссылку
 
-    User->>Bot: Enter code in Telegram
-    Bot->>DB: Lookup pending by code
-    Bot->>DB: UPDATE status = AWAITING_API_REGISTRATION
-    Bot-->>User: Registration confirmed!
+    U->>B: Вводит код в Telegram
+    B->>D: Поиск pending по коду
+    B->>D: UPDATE status = AWAITING_API_REGISTRATION
+    B-->>U: Регистрация подтверждена!
 
-    loop Poll every 1s
-        Frontend->>API: GET /api/auth/code/status
-        API-->>Frontend: {status: AWAITING_API_REGISTRATION}
+    loop Опрос каждую 1с
+        F->>A: GET /api/auth/code/status
+        A-->>F: {status: AWAITING_API_REGISTRATION}
     end
 
-    Frontend->>User: Show onboarding form
-    User->>Frontend: Fill: username, password, name,<br/>age, sex, lang, comm, rating, agreement
-    Frontend->>API: POST /api/auth/survey
-    API->>API: Hash password, create user
-    API->>DB: reg_stat = REG_COMPLETED
-    API->>API: Set JWT cookies
-    API-->>Frontend: {status: COMPLETED}
-    Frontend->>User: Redirect to /dashboard
+    F->>U: Показывает форму регистрации
+    U->>F: Заполняет: username, password, name,<br/>age, sex, lang, comm, rating, agreement
+    F->>A: POST /api/auth/survey
+    A->>A: Хеширует пароль, создаёт пользователя
+    A->>D: reg_stat = REG_COMPLETED
+    A->>A: Устанавливает JWT cookies
+    A-->>F: {status: COMPLETED}
+    F->>U: Перенаправляет на /dashboard

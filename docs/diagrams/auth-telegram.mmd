@@ -1,24 +1,24 @@
 sequenceDiagram
-    actor User
-    participant Frontend as Frontend
-    participant API as API
-    participant Bot as Telegram Bot
-    participant DB as PostgreSQL
+    actor U as Пользователь
+    participant F as Фронтенд
+    participant A as API
+    participant B as Telegram Бот
+    participant D as БД
 
-    User->>Frontend: Click login via Telegram
-    Frontend->>API: POST /api/auth/code
-    API-->>Frontend: {code, token, bot_url}
-    Frontend->>User: Show code, QR, deep link
+    U->>F: Нажимает «Войти через Telegram»
+    F->>A: POST /api/auth/code
+    A-->>F: {code, token, bot_url}
+    F->>U: Показывает код, QR, ссылку
 
-    User->>Bot: Enter code in Telegram
-    Bot->>DB: Lookup user by telegram_id
-    Bot->>DB: UPDATE status = AWAITING_API_LOGIN
-    Bot-->>User: Auth confirmed!
+    U->>B: Вводит код в Telegram
+    B->>D: Поиск пользователя по telegram_id
+    B->>D: UPDATE status = AWAITING_API_LOGIN
+    B-->>U: Авторизация подтверждена!
 
-    loop Poll every 1s
-        Frontend->>API: GET /api/auth/code/status
-        API-->>Frontend: {status: AWAITING_API_LOGIN}
+    loop Опрос каждую 1с
+        F->>A: GET /api/auth/code/status
+        A-->>F: {status: AWAITING_API_LOGIN}
     end
 
-    API->>API: Set JWT cookies
-    Frontend->>User: Redirect to /dashboard
+    A->>A: Устанавливает JWT cookies
+    F->>U: Перенаправляет на /dashboard
