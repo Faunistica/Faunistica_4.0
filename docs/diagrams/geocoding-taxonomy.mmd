@@ -1,0 +1,25 @@
+flowchart LR
+    subgraph Geo[Geocoding]
+        G1[DMS input:<br/>deg/min/sec]
+        G2[dms_to_degrees<br/>decimal degrees]
+        G3[GET /api/geo/reverse-geocode]
+        G4[Nominatim<br/>reverse lookup]
+        G5[country, region, district]
+
+        G1-->G2-->G3-->G4-->G5
+
+        G6[GET /api/geo/search<br/>suggestions]
+        G7[locations.json<br/>region/district filter]
+        G6-->G7
+    end
+
+    subgraph Taxon[Taxonomy]
+        T1[GET /api/taxonomy/suggest<br/>GET /api/taxonomy/autofill]
+        T2[species_export.csv<br/>filter by family/genus/species]
+        T3[Sorted suggestions<br/>or family/genus autofill]
+
+        T1-->T2-->T3
+    end
+
+    Geo --> R[Record form<br/>populated]
+    Taxon --> R
