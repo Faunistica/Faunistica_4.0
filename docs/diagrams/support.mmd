@@ -1,11 +1,11 @@
 sequenceDiagram
-    actor User
-    actor Admin
-    participant Bot as Telegram Bot
+    actor U as Пользователь
+    actor Adm as Администратор
+    participant B as Telegram Бот
 
-    User->>Bot: /support
-    Bot->>User: Ask for question text
-    User->>Bot: Send question
-    Bot->>Admin: Forward to admin chat
-    Admin->>Bot: /reply Answer text
-    Bot->>User: Forward reply
+    U->>B: /support
+    B->>U: Запрашивает текст вопроса
+    U->>B: Отправляет вопрос
+    B->>Adm: Пересылает в чат администратора
+    Adm->>B: /reply Текст ответа
+    B->>U: Пересылает ответ

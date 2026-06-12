@@ -1,18 +1,11 @@
 flowchart TD
-    Start([User selects<br/>publication]) --> Pub[GET /api/publications/current]
-    Pub --> Geo[GeographyCard<br/>location + coordinates]
-    Pub --> Coll[CollectionEventCard<br/>collection parameters]
-    Pub --> Tax[TaxonomyCard<br/>taxonomic classification]
-    Pub --> Quan[QuantitiesCard<br/>quantitative characteristics]
-    Pub --> Art[ArticleSourceCard<br/>publication info]
-
-    Geo & Coll & Tax & Quan & Art --> Auto{Autosave?}
-
-    Auto -->|2s debounce| Save[PUT /api/records/id<br/>submission_type=autosave]
-    Auto -->|Manual save| Save
-
+    Start([Пользователь выбирает<br/>публикацию]) --> Pub[GET /api/publications/current]
+    Pub --> Form[Заполнение формы:<br/>география, таксоны,<br/>сбор, количественные хар-ки]
+    Form --> Auto{Автосохранение?}
+    Auto -->|2с задержка| Save[PUT /api/records/id<br/>submission_type=autosave]
+    Auto -->|Вручную| Save
     Save --> Submit[PUT /api/records/id/submit]
-    Submit --> Valid[validate_record<br/>5 rule modules]
+    Submit --> Valid[validate_record<br/>5 модулей проверки]
     Valid --> Ok[REC_OK]
-    Ok --> Sidebar[View in FormSidebar]
-    Ok --> Export[Export XLSX<br/>/api/records/export]
+    Ok --> Sidebar[Просмотр в FormSidebar]
+    Ok --> Export[Экспорт XLSX<br/>/api/records/export]

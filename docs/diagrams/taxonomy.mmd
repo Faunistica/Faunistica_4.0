@@ -1,0 +1,9 @@
+flowchart LR
+    Suggest[GET /api/taxonomy/suggest<br/>field + query + family + genus]
+    Autofill[GET /api/taxonomy/autofill<br/>field + text]
+    CSV[species_export.csv]
+    ResultSuggest[Отфильтрованные подсказки<br/>семейство / род / вид]
+    ResultAutofill[Автозаполнение<br/>семейство + род]
+
+    Suggest --> CSV --> ResultSuggest
+    Autofill --> CSV --> ResultAutofill

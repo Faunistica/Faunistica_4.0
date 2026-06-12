@@ -1,0 +1,30 @@
+flowchart LR
+    subgraph Frontend[Фронтенд — выбор формата координат]
+        DD[DD<br/>Десятичные градусы]
+        DM[DM<br/>Градусы + минуты]
+        DMS[DMS<br/>Градусы + минуты + секунды]
+    end
+
+    DD --> DDval[latitude = 55.7558]
+    DM --> Conv1[convertToDM → convertToDD]
+    DMS --> Conv2[convertToDMS → convertToDD]
+    Conv1 --> DDval
+    Conv2 --> DDval
+
+    subgraph Backend[Бэкенд — получение адреса]
+        Req[GET /api/geo/reverse-geocode<br/>degrees_n, degrees_e<br/>minutes_n?, seconds_n?]
+        DMS2[geo.dms_to_degrees<br/>DMS → десятичные градусы]
+        Nom[Nominatim reverse geocoding]
+        Addr[Страна, регион, район]
+    end
+
+    DDval --> Req
+    Req --> DMS2 --> Nom --> Addr
+
+    subgraph Search[Подсказки регионов]
+        GeoSearch[GET /api/geo/search<br/>field=region / district]
+        JSON[locations.json]
+        Res[Список подсказок]
+    end
+
+    GeoSearch --> JSON --> Res
