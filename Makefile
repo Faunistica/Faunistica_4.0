@@ -28,4 +28,3 @@ diagrams:
 	mmdc -i docs/diagrams/taxonomy.mmd -o docs/diagrams/taxonomy.svg -b transparent -c docs/diagrams/mermaid-config.json
 	mmdc -i docs/diagrams/architecture.mmd -o docs/diagrams/architecture.svg -b transparent -c docs/diagrams/mermaid-config.json
 	mmdc -i docs/diagrams/support.mmd -o docs/diagrams/support.svg -b transparent -c docs/diagrams/mermaid-config.json
-	mmdc -i docs/diagrams/db-schema.mmd -o docs/diagrams/db-schema.svg -b transparent -c docs/diagrams/mermaid-config.json
