@@ -1,3 +1,8 @@
+---
+title: Faunistica — Документация
+layout: page
+---
+
 # Faunistica — Документация
 
 ## Архитектура
