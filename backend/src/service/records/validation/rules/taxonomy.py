@@ -2,7 +2,7 @@ from schema.records import RecordData
 from service.taxon import family_genus_known, genus_species_known
 
 from ..constants import TAXON_RANKS, TYPE_STATUSES
-from ..helpers import contains_forbidden_chars, has_cyrillic_in_foreign_text
+from ..helpers import contains_forbidden_chars, has_cyrillic_in_foreign_text, nonblank
 from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
 
 rule(
@@ -12,20 +12,24 @@ rule(
     required("family", "Семейство обязательно"),
 )
 rule(RuleCategory.TAXONOMY, ["genus"], "required", required("genus", "Род обязателен"))
-rule(
-    RuleCategory.TAXONOMY,
-    ["species"],
-    "required",
-    required("species", "Вид обязателен"),
-)
+
+
+@rule(RuleCategory.TAXONOMY, ["species"], "required")
+def rule_species_required(data: RecordData, ctx: RuleContext) -> str | None:
+    if data.tax_verbatim is True:
+        return None
+    v = data.species
+    if not nonblank(v):
+        return "Вид обязателен"
+    return None
 
 
 @rule(RuleCategory.TAXONOMY, ["genus"], "unknown")
 def rule_family_genus_known(data: RecordData, ctx: RuleContext) -> str | None:
     if (
         data.tax_verbatim is not True
-        and data.family is not None
-        and data.genus is not None
+        and nonblank(data.family)
+        and nonblank(data.genus)
         and not family_genus_known(data.family, data.genus)
     ):
         return "Неизвестная комбинация семейства и рода"
@@ -36,8 +40,8 @@ def rule_family_genus_known(data: RecordData, ctx: RuleContext) -> str | None:
 def rule_genus_species_known(data: RecordData, ctx: RuleContext) -> str | None:
     if (
         data.tax_verbatim is not True
-        and data.genus is not None
-        and data.species is not None
+        and nonblank(data.genus)
+        and nonblank(data.species)
         and not genus_species_known(data.genus, data.species)
     ):
         return "Неизвестная комбинация рода и вида"

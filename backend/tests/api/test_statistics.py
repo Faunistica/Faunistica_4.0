@@ -7,7 +7,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.enums import UserState
+from core.enums import RecordType, UserState
 from core.model import Action, EventRecord, Publication, User
 
 
@@ -46,7 +46,7 @@ async def test_get_project_statistics(
             id=uuid4(),
             publ_id=test_publ_id,
             user_id=test_user_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="TestGenus",
             species="test_species",
             family="TestFamily",
@@ -71,10 +71,9 @@ async def test_get_project_statistics(
     assert "total_records" in data
     assert "species_count" in data
     assert "processed_publications_count" in data
-    assert "most_common_family" in data
-    assert "most_common_genus" in data
-    assert "most_common_species" in data
     assert data["total_volunteers"] >= 1
+    assert "total_users" in data
+    assert data["total_users"] >= 1
     assert data["total_records"] >= 1
     assert data["species_count"] >= 1
 
@@ -99,7 +98,7 @@ async def test_get_user_statistics_by_id(
             id=uuid4(),
             publ_id=publ_id,
             user_id=user.user_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             genus="GenusA",
             species="species_a",
             family="FamilyA",

@@ -9,9 +9,9 @@ from pydantic import BaseModel, Json
 
 from core.config import settings
 from core.dependencies import DBSession
+from core.enums import RecordType
 from core.exceptions import (
     ImportLimitExceededError,
-    NoPublicationsAssignedError,
     PublicationForbiddenError,
     RecordForbiddenError,
     RecordLimitExceededError,
@@ -24,17 +24,28 @@ from repository.publication import get_publication
 from repository.record import count_records_by_user_publ
 from repository.user import get_user_expect
 from schema.common import PaginatedResponse
-from schema.records import (
-    RecordData,
-    RecordFull,
-)
+from schema.records import RecordData, RecordFull, RecordValidationError
 from service.actions import ActionService
-from service.export import ParseResult, is_row_empty
-from service.milestone import check_and_log_milestone
+from service.export import (
+    ParseResult,
+    is_row_empty,
+    records_to_excel,
+    records_to_excel_all,
+)
 from service.publications import PublicationService
+from service.records.validation import validate_record
 from service.records.validation.errors import ErrorCollection
 
 from .util import _create_record_metadata, _enrich_record, _flatten_for_db
+
+
+def _errors_to_schema(
+    errors: ErrorCollection,
+) -> list[RecordValidationError] | None:
+    lst = errors.to_list()
+    if not lst:
+        return None
+    return [RecordValidationError.model_validate(e) for e in lst]
 
 
 class ImportError(BaseModel):
@@ -65,7 +76,7 @@ class RecordService:
         publ_id: int,
         ip: str | None = None,
         submission_type: Literal["submit", "autosave"] = "autosave",
-    ) -> tuple[RecordFull, ErrorCollection]:
+    ) -> RecordFull:
         """Create a new record (autosave by default, or submit)."""
         await self.publication_service.validate_access(publ_id, user_id=user_id)
         count = await count_records_by_user_publ(self.session, user_id, publ_id)
@@ -91,7 +102,9 @@ class RecordService:
         record = await repo.create_record(self.session, metadata)
         await self.session.commit()
 
-        return RecordFull.model_validate(record), errors
+        full = RecordFull.model_validate(record)
+        full.errors = _errors_to_schema(errors)
+        return full
 
     async def update_record(
         self,
@@ -100,7 +113,7 @@ class RecordService:
         data: RecordData,
         ip: str | None = None,
         submission_type: Literal["submit", "autosave"] = "autosave",
-    ) -> tuple[RecordFull, ErrorCollection]:
+    ) -> RecordFull:
         """Update a record with optimistic locking via updated_at."""
         record = await self._get_and_check_ownership(record_id, user_id)
 
@@ -123,24 +136,32 @@ class RecordService:
         if updated is None:
             raise RecordStaleError(record_id)
 
-        if updated.type == "rec_ok":
-            await check_and_log_milestone(
-                self.session, user_id, updated, self.action_service
-            )
         await self.session.commit()
 
-        return _enrich_record(updated), errors
+        full = _enrich_record(updated)
+        full.errors = _errors_to_schema(errors)
+        return full
 
     async def get_record(
         self,
         record_id: UUID,
+        user_id: int,
     ) -> RecordFull:
         """Get a record by ID"""
         record = await repo.get_record(self.session, record_id)
         if record is None:
             raise RecordNotFoundError(record_id)
 
-        return _enrich_record(record)
+        if record.user_id != user_id:
+            raise RecordForbiddenError
+
+        full = _enrich_record(record)
+        publ = await get_publication(self.session, record.publ_id)
+        language = publ.language if publ else None
+        record_data = RecordData.model_validate(record)
+        errors = validate_record(record_data, language=language)
+        full.errors = _errors_to_schema(errors)
+        return full
 
     async def delete_record(
         self,
@@ -153,8 +174,8 @@ class RecordService:
         Otherwise, hard-delete.
         """
         record = await self._get_and_check_ownership(record_id, user_id)
-        if record.type == "rec_ok":
-            record.type = "rec_del"
+        if record.type == RecordType.REC_OK:
+            record.type = RecordType.REC_DEL
         else:
             await repo.delete_record(self.session, record.id)
 
@@ -163,26 +184,82 @@ class RecordService:
     async def list_records(
         self,
         user_id: int,
-        publ_id: int | None,
+        publ_id: int,
         page: int = 1,
         page_size: int = 20,
         sort: Literal["created_at", "updated_at"] = "created_at",
+        pivot_record_id: UUID | None = None,
+        validate: bool = True,
     ) -> PaginatedResponse[RecordFull]:
         """List records with pagination, filtered by user_id and publ_id."""
+        if pivot_record_id is not None:
+            result = await repo.get_record_page(
+                self.session,
+                pivot_record_id,
+                user_id,
+                publ_id,
+                page_size=page_size,
+                sort=sort,
+            )
+            if result is None:
+                raise RecordNotFoundError(pivot_record_id)
+
+            page, _ = result
+
         records, total = await repo.get_records_paginated(
-            self.session, user_id, publ_id, page=page, page_size=page_size, sort=sort
+            self.session,
+            user_id,
+            publ_id,
+            page=page,
+            page_size=page_size,
+            sort=sort,
         )
 
-        # TODO: Check math
+        language = None
+        if records:
+            publ = await get_publication(self.session, records[0].publ_id)
+            language = publ.language if publ else None
+
+        items: list[RecordFull] = []
+        for r in records:
+            full = _enrich_record(r)
+            if validate:
+                record_data = RecordData.model_validate(r)
+                errors = validate_record(record_data, language=language)
+                full.errors = _errors_to_schema(errors)
+            items.append(full)
+
         pages = (total + page_size - 1) // page_size if page_size > 0 else 0
 
         return PaginatedResponse(
-            items=[_enrich_record(r) for r in records],
+            items=items,
             total=total,
             page=page,
             page_size=page_size,
             pages=pages,
         )
+
+    async def export_records(
+        self,
+        user_id: int,
+        publ_id: int,
+    ) -> bytes:
+        records = await repo.get_event_records_for_export(
+            self.session, user_id, publ_id, only_submitted=False
+        )
+        items = [_enrich_record(r) for r in records]
+        return records_to_excel(items)
+
+    async def export_all_records(
+        self,
+        user_id: int,
+    ) -> bytes:
+        event_records = await repo.get_event_records_for_export(
+            self.session, user_id, only_submitted=True
+        )
+        legacy_records = await repo.get_legacy_records_for_export(self.session, user_id)
+        items = [_enrich_record(r) for r in event_records]
+        return records_to_excel_all(items, legacy_records)
 
     async def _get_and_check_ownership(
         self,
@@ -217,26 +294,19 @@ class RecordService:
         user_id: int,
         ip: str | None,
         total_count: int,
+        publ_id: int,
     ) -> ImportResult:
         """Import records from parsed Excel/CSV rows."""
         user = await get_user_expect(self.session, user_id)
-        queue = await self.publication_service.get_current(user=user)
-        if len(queue) == 0:
-            raise NoPublicationsAssignedError(user_id)
-
-        publ = queue[0]
-
-        # Always ok now, but rules may change
-        await self.publication_service.validate_access(publ.publ_id, user=user)
+        publ = await self.publication_service.validate_access(publ_id, user=user)
 
         if total_count > settings.MAX_USER_RECORDS_PER_PUBLICATION:
             raise ImportLimitExceededError(
-                publ.publ_id, total_count, settings.MAX_USER_RECORDS_PER_PUBLICATION
+                publ_id, total_count, settings.MAX_USER_RECORDS_PER_PUBLICATION
             )
 
         event_records: list[EventRecord] = []
         all_errors: list[ImportError] = []
-        last_ok = None
 
         async for i, (record_data, error) in a.enumerate(records, 1):
             if error:
@@ -254,8 +324,8 @@ class RecordService:
             metadata, _ = _create_record_metadata(
                 record_data,
                 user_id,
-                publ.publ_id,
-                language=publ.language,
+                publ_id,
+                language=publ.language if publ else None,
                 submission_type="submit",
                 ip=ip,
                 import_errors=["Ошибка при импорте"] if error else None,
@@ -269,23 +339,10 @@ class RecordService:
 
             event_records.append(record)
 
-            if metadata.type == "rec_ok":
-                last_ok = record
-
         # Delete old records, then insert — all in one transaction
-        await repo.delete_records_by_user_and_publ(self.session, user_id, publ.publ_id)
+        await repo.delete_records_by_user_and_publ(self.session, user_id, publ_id)
 
         self.session.add_all(event_records)
-
-        if last_ok is not None:
-            await check_and_log_milestone(
-                self.session,
-                user_id,
-                # FIXME: This should be the exact record, that broke the record,
-                # but here we use the last one, which might not be expected
-                last_ok,
-                self.action_service,
-            )
 
         await self.session.commit()
 

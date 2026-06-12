@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+.git
+.gitignore
+.env
+.env*.local
+*.md
+.pytest_cache
+.vite
+coverage
+logs
+*.log
+.DS_Store
+.idea
+.vscode

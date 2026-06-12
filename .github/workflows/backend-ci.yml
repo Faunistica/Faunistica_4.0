@@ -4,6 +4,11 @@ on:
   pull_request:
     paths:
       - 'backend/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,6 +25,18 @@ env:
 
 jobs:
   lint:
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task: ruff check src/ alembic/ tests/
+            display: ruff-check
+          - task: ruff format --check src/ alembic/ tests/
+            display: ruff-format
+          - task: ty check src/ alembic/ tests/
+            display: typecheck
+    name: ${{ matrix.display }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -31,9 +48,7 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --frozen --group dev
-      - run: uv run ruff check src/ alembic/ tests/
-      - run: uv run ruff format --check src/ alembic/ tests/
-      - run: uv run ty check src/ alembic/ tests/
+      - run: uv run ${{ matrix.task }}
 
   test:
     runs-on: ubuntu-latest
@@ -55,6 +70,8 @@ jobs:
       DB_NAME: faunistica
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version-file: "backend/.python-version"

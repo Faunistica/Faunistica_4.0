@@ -72,7 +72,6 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
                 RecordData(
@@ -86,7 +85,7 @@ class TestImportRecords:
                     yield (record_data, None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1", total_count=2
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=2, publ_id=publ_id
             )
 
             assert isinstance(result, ImportResult)
@@ -120,7 +119,6 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             # Create a mock ValidationError
             mock_error = MagicMock(spec=ValidationError)
@@ -135,7 +133,7 @@ class TestImportRecords:
                 yield (RecordData(family="Formicidae", genus="Lasius"), None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1", total_count=3
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=3, publ_id=publ_id
             )
 
             assert result.imported == 3
@@ -172,7 +170,7 @@ class TestImportRecords:
                 yield (RecordData(family=None, genus=None, species=None), None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1", total_count=1
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=1, publ_id=publ_id
             )
 
             assert result.imported == 0
@@ -186,10 +184,15 @@ class TestImportRecords:
     ) -> None:
         """Test import when user has no publication assigned."""
         user_id = 12345
+        publ_id = 67890
 
         mock_user = MagicMock()
         mock_user.items = ""
         mock_user.user_id = user_id
+
+        mock_publication_service.validate_access.side_effect = (
+            NoPublicationsAssignedError(user_id)
+        )
 
         with patch(
             "service.records.get_user_expect", AsyncMock(return_value=mock_user)
@@ -200,7 +203,11 @@ class TestImportRecords:
 
             with pytest.raises(NoPublicationsAssignedError):
                 await record_service.import_records(
-                    gen(), user_id=user_id, ip="127.0.0.1", total_count=1
+                    gen(),
+                    user_id=user_id,
+                    ip="127.0.0.1",
+                    total_count=1,
+                    publ_id=publ_id,
                 )
 
     async def test_import_limit_exceeded(
@@ -234,6 +241,7 @@ class TestImportRecords:
                     user_id=user_id,
                     ip="127.0.0.1",
                     total_count=settings.MAX_USER_RECORDS_PER_PUBLICATION + 1,
+                    publ_id=publ_id,
                 )
 
     async def test_boolean_fields_parsing(
@@ -258,7 +266,6 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
                 RecordData(
@@ -273,7 +280,7 @@ class TestImportRecords:
                     yield (record_data, None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1", total_count=1
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=1, publ_id=publ_id
             )
 
             assert result.imported == 1
@@ -322,11 +329,14 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records, total = await read_excel(excel_content)
             result = await record_service.import_records(
-                records, user_id=user_id, ip="127.0.0.1", total_count=total
+                records,
+                user_id=user_id,
+                ip="127.0.0.1",
+                total_count=total,
+                publ_id=publ_id,
             )
 
             assert result.imported >= 1
@@ -353,7 +363,6 @@ class TestImportRecords:
             patch(
                 "service.records.count_records_by_user_publ", AsyncMock(return_value=0)
             ),
-            patch("service.records.check_and_log_milestone", AsyncMock()),
         ):
             records_data = [
                 RecordData(
@@ -369,6 +378,6 @@ class TestImportRecords:
                     yield (record_data, None)
 
             result = await record_service.import_records(
-                gen(), user_id=user_id, ip="127.0.0.1", total_count=1
+                gen(), user_id=user_id, ip="127.0.0.1", total_count=1, publ_id=publ_id
             )
             assert result.imported == 1

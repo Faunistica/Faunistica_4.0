@@ -14,15 +14,14 @@ dependencies = [
     "openpyxl>=3.1.5",
     "asyncstdlib>=3.14.0",
     "geopy>=2.4.1",
-    "pygbif>=0.6.6",
     "sqlalchemy>=2.0.48",
     "asyncpg>=0.31.0",
     "aiogram>=3.28.2",
     "cryptography>=46.0.5",
     "argon2-cffi>=25.1.0",
-    "pandas>=3.0.3",
     "aiohttp>=3.13.3",
     "fastapi[standard]>=0.136.1",
+    "cachetools>=7.1.4",
 ]
 
 [build-system]
@@ -64,8 +63,9 @@ select = [
     "PL",     # Pylint
 ]
 ignore = [
-    "PLR2004", # ignore magick variables for now
-    "PLR0913", # max 5 arguments
+    "PLR2004",  # ignore magick variables for now
+    "PLR0913",  # max 5 arguments
+    "PLR0911",  # many return statements in state machine
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -83,7 +83,6 @@ python = ".venv"
 
 [dependency-groups]
 dev = [
-    "pandas-stubs>=3.0.0.260204",
     "ruff>=0.15.7",
     "ty>=0.0.32",
     "types-openpyxl>=3.1.5.20260408",
@@ -111,4 +110,3 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 pythonpath = [".", "src"]
 addopts = "-W ignore::DeprecationWarning --cov src --cov scripts --cov-report=html --cov-report=term"
-

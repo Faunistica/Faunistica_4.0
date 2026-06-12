@@ -1,8 +1,9 @@
 import logging
-from enum import IntEnum
+from enum import IntEnum, StrEnum
+from typing import Literal
 
 from aiogram.fsm.state import State
-from sqlalchemy import Integer, TypeDecorator
+from sqlalchemy import Integer, String, TypeDecorator
 from sqlalchemy.engine import Dialect
 
 from bot.states import (
@@ -36,6 +37,54 @@ class UserStateType(TypeDecorator):
         if value is None:
             return UserState.DATA_CLEARED
         return UserState(value)
+
+
+class RecordTypeType(TypeDecorator):
+    """SQLAlchemy type decorator for RecordType enum."""
+
+    impl = String
+    cache_ok = True
+
+    def process_bind_param(
+        self,
+        value: "RecordType | str | None",
+        dialect: Dialect,
+    ) -> str | None:
+        if value is None:
+            return None
+        return str(value)
+
+    def process_result_value(
+        self,
+        value: str | None,
+        dialect: Dialect,
+    ) -> "RecordType | None":
+        if value is None:
+            return None
+        return RecordType(value)
+
+
+class RecordType(StrEnum):
+    REC_OK = "rec_ok"  # Record is valid and submitted
+    REC_FAIL = "rec_fail"  # Record submission failed validation
+    CHECK_OK = "check_ok"  # Draft/check valid
+    CHECK_FAIL = "check_fail"  # Draft/check failed validation
+    REC_DEL = "rec_del"  # Soft-deleted record
+
+    def is_submitted(self) -> bool:
+        return self == RecordType.REC_OK
+
+    def is_valid(self) -> bool:
+        return self in (RecordType.REC_OK, RecordType.CHECK_OK)
+
+    def is_draft(self) -> bool:
+        return self in (RecordType.CHECK_OK, RecordType.CHECK_FAIL)
+
+    def is_deleted(self) -> bool:
+        return self == RecordType.REC_DEL
+
+    def has_errors(self) -> bool:
+        return self in (RecordType.REC_FAIL, RecordType.CHECK_FAIL)
 
 
 class UserState(IntEnum):
@@ -101,3 +150,34 @@ class UserState(IntEnum):
         }
 
         return mapping.get(self)
+
+
+class PendingStatus(IntEnum):
+    AWAITING_CODE = 0
+    AWAITING_API_LOGIN = 1
+    AWAITING_API_REGISTRATION = 2
+    COMPLETED = 3
+
+
+class PendingStatusType(TypeDecorator):
+    impl = Integer
+    cache_ok = True
+
+    def process_bind_param(
+        self,
+        value: "PendingStatus | int | None",
+        dialect: Dialect,
+    ) -> int:
+        if value is None:
+            return PendingStatus.AWAITING_CODE
+        return int(value)
+
+    def process_result_value(
+        self,
+        value: int | None,
+        dialect: Dialect,
+    ) -> "PendingStatus | None":
+        return PendingStatus(value)
+
+
+type UserLanguage = Literal["eng", "rus", "all"]

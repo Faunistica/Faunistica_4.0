@@ -1,13 +1,16 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --script
 
 import asyncio
 import logging
 import os
-from datetime import datetime
+import sys
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from core.database import get_session, init_db
 from core.model import EventRecord, Publication, User
@@ -31,7 +34,45 @@ _SEED_UUIDS: list[UUID] = [
     UUID("77203fce-a3af-434b-a3dc-b78faf455159"),
     UUID("0cee6c03-eaff-4d81-bb61-7815c5b27023"),
     UUID("64c6ca7a-7d3f-468b-a857-17d29bf8f034"),
+    UUID("04c01ad6-8239-4e65-84b3-9fab334a845e"),
+    UUID("37e30d2f-4b5b-4de9-a6ff-1ab2fd94b02c"),
+    UUID("036f7a63-3fb3-4b59-8e58-9caf016c32e4"),
+    UUID("0320d654-f788-4419-9b20-5e7f918a81fe"),
+    UUID("c146e55f-62df-49ee-8b3f-5e6fe57e2c4e"),
+    UUID("cad599b0-2cd6-4847-b78b-aab46ffd1706"),
+    UUID("1aa72d13-1546-4375-bed8-b49a4ae1b366"),
+    UUID("c2717d20-4acb-4370-a93c-0aa7e0ace5dd"),
+    UUID("b3aeead7-c7e1-472d-b9e0-6c07ec601273"),
+    UUID("45a703c1-193c-41ff-8863-27bc647e9b6c"),
+    UUID("99fd10ff-04cd-4b0c-9299-575f3efe9ee2"),
+    UUID("b9190e68-7433-4891-b1eb-f9cbb0745c4a"),
+    UUID("0bdab6a0-7e54-4bd4-8f09-7f67b0d530ee"),
+    UUID("812452bb-092d-45a9-bd8f-05d8c4de439e"),
+    UUID("c9749c0f-b319-47df-bcbf-c6dc90533595"),
+    UUID("3ba32bdc-6a1e-4992-b7f6-848945bdc571"),
+    UUID("048b101e-3126-4261-a7bd-248ba28eaadb"),
+    UUID("c2491762-1e8d-4453-9543-65561f31aad3"),
+    UUID("1ecc4f28-93e7-4109-83a1-4ec133005469"),
+    UUID("7544d4cf-98b3-4057-9d69-c455d75904c0"),
 ]
+
+
+def build_record(i: int, data: dict) -> EventRecord:
+    record_data = RecordData.model_validate(data)
+    metadata, _ = _create_record_metadata(
+        record_data,
+        data["user_id"],
+        data["publ_id"],
+        language=data.get("language", "rus"),
+        submission_type="submit",
+    )
+    metadata.id = _SEED_UUIDS[i]
+    metadata.created_at = SEED_DT - timedelta(minutes=i)
+    metadata.updated_at = SEED_DT - timedelta(minutes=i)
+
+    flat = _flatten_for_db(record_data)
+    return EventRecord(**flat, **metadata.model_dump())
+
 
 PUBL_DATA: list[dict] = [
     {
@@ -81,12 +122,12 @@ PUBL_DATA: list[dict] = [
     },
 ]
 
-PASSWORDS = ["dev", "test"]
+PASSWORDS = ["password", "test"]
 
 USER_DATA: list[dict] = [
     {
-        "user_id": 0,  # placeholder, filled at runtime
-        "name": "DEV",
+        "user_id": 0,
+        "name": "DEV_USERNAME",
         "tlg_username": "dev_user",
         "tlg_name": "Dev User",
         "reg_stat": 1,
@@ -121,6 +162,16 @@ USER_DATA: list[dict] = [
 ]
 
 
+def build_user(data: dict, password: str, dev_tg_id: int = 1) -> dict:
+    user = {**data}
+    if user.get("user_id") is None or user["user_id"] == 0:
+        user["user_id"] = dev_tg_id
+    user["username"] = user["name"]
+    user["hash"] = get_password_hash(password)
+    user["hash_date"] = datetime.now(UTC).replace(tzinfo=None)
+    return user
+
+
 RECORDS_DATA: list[dict] = [
     # User DEV_TG, Publication 2 — Carabidae
     {
@@ -141,8 +192,6 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-05-15",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "Собран под корой сосны",
         "specimens": [Specimen(sex="male", life_stage="adult", count=3)],
@@ -166,8 +215,6 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-06-20",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На липе",
         "specimens": [Specimen(sex="male", life_stage="adult", count=5)],
@@ -191,14 +238,12 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-07-10",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На падали",
         "specimens": [
             Specimen(sex="male", life_stage="adult", count=1),
             Specimen(sex="female", life_stage="adult", count=1),
-            Specimen(sex="male", life_stage="juvenile", count=1),
+            Specimen(sex="male", life_stage="subadult", count=1),
         ],
     },
     # User DEV_TG, Publication 2 — Staphylinidae
@@ -220,8 +265,6 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-08-05",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "Под камнями у ручья",
         "specimens": [Specimen(sex="female", life_stage="adult", count=3)],
@@ -245,8 +288,6 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-09-12",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На свежеспиленных соснах",
         "specimens": [Specimen(sex="male", life_stage="adult", count=2)],
@@ -270,8 +311,6 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-06-18",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "В траве",
         "specimens": [Specimen(sex="female", life_stage="adult", count=1)],
@@ -295,13 +334,11 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-07-25",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На каменной кладке",
         "specimens": [Specimen(sex="male", life_stage="adult", count=4)],
     },
-    # User DEV_TG, Publication 2 — Scarabaeidae
+    # User DEV_TG, Publication 2 — Scarabaeidae (failed record)
     {
         "user_id": 0,
         "publ_id": 2,
@@ -320,8 +357,6 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-10-05",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На цветах бодяка",
         "specimens": [Specimen(sex="male", life_stage="adult", count=1)],
@@ -345,8 +380,6 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-08-30",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На кустах шиповника",
         "specimens": [Specimen(sex="male", life_stage="adult", count=2)],
@@ -370,39 +403,11 @@ RECORDS_DATA: list[dict] = [
         "verbatim_date": "2023-09-28",
         "date_precision": "day",
         "is_interval": False,
-        "georef_source": "vol",
-        "recorded_by": "Автор сбора",
         "quantity_type": "individuals",
         "occurrence_remarks": "На пастбище",
         "specimens": [Specimen(sex="male", life_stage="adult", count=6)],
     },
 ]
-
-
-def build_user(data: dict, password: str, dev_tg_id: int) -> dict:
-    data = {**data}
-    if data["user_id"] == 0:
-        data["user_id"] = dev_tg_id
-    data["hash"] = get_password_hash(password)
-    data["hash_date"] = datetime.now()
-    return data
-
-
-def build_record(i: int, data: dict) -> EventRecord:
-    record_data = RecordData.model_validate(data)
-    metadata, _ = _create_record_metadata(
-        record_data,
-        data["user_id"],
-        data["publ_id"],
-        language=data.get("language", "rus"),
-        submission_type="submit",
-    )
-    metadata.id = _SEED_UUIDS[i]
-    metadata.created_at = SEED_DT
-    metadata.updated_at = SEED_DT
-
-    flat = _flatten_for_db(record_data)
-    return EventRecord(**flat, **metadata.model_dump())
 
 
 async def seed() -> None:
@@ -431,7 +436,7 @@ async def seed() -> None:
 
         # Users
         for i, u in enumerate(USER_DATA):
-            user_dict = build_user(u, PASSWORDS[i], dev_tg_id)
+            user_dict = build_user(u, PASSWORDS[i], dev_tg_id=dev_tg_id)
             stmt = (
                 insert(User)
                 .values(**user_dict)
@@ -441,6 +446,7 @@ async def seed() -> None:
             logger.info(
                 "User inserted: name: %s; password: %s; publications: %s",
                 user_dict["name"],
+                # NOTE: THIS IS OK, THIS PASSWORD IS FOR DEVELOPMENT ONLY
                 PASSWORDS[i],
                 user_dict["items"],
             )
@@ -450,7 +456,10 @@ async def seed() -> None:
         if existing.scalar_one_or_none():
             logger.info("Records already exist, skipping")
         else:
-            records = [build_record(i, data) for i, data in enumerate(RECORDS_DATA)]
+            records = [
+                build_record(i, RECORDS_DATA[i % len(RECORDS_DATA)])
+                for i in range(len(_SEED_UUIDS))
+            ]
             session.add_all(records)
             logger.info(f"Inserted {len(records)} event records")
 

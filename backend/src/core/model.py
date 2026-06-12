@@ -4,19 +4,28 @@ from uuid import UUID
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    Column,
     Double,
+    Float,
     ForeignKey,
     Identity,
     Integer,
     Numeric,
     String,
+    Table,
     Text,
     func,
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from core.enums import UserState, UserStateType
+from core.enums import (
+    PendingStatus,
+    PendingStatusType,
+    RecordType,
+    UserState,
+    UserStateType,
+)
 
 
 class Base(DeclarativeBase):
@@ -29,6 +38,7 @@ class User(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     tlg_name: Mapped[str | None] = mapped_column(String(255))
     tlg_username: Mapped[str | None] = mapped_column(String(255))
+    username: Mapped[str | None] = mapped_column(String(255), unique=True)
     name: Mapped[str | None] = mapped_column(String(255))
     reg_stat: Mapped[UserState] = mapped_column(
         UserStateType,
@@ -50,6 +60,34 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(Text)
     region: Mapped[str | None] = mapped_column(Text)
     token_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
+class PendingRegistration(Base):
+    __tablename__ = "pending_registrations"
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        primary_key=True,
+        server_default=Identity(),
+    )
+    code: Mapped[str] = mapped_column(String(20), unique=True, index=True)
+    token: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    status: Mapped[PendingStatus] = mapped_column(
+        PendingStatusType,
+        default=PendingStatus.AWAITING_CODE,
+        server_default="0",
+    )
+    code_created_at: Mapped[datetime_type] = mapped_column(
+        TIMESTAMP, server_default=func.now()
+    )
+    token_created_at: Mapped[datetime_type] = mapped_column(
+        TIMESTAMP, server_default=func.now()
+    )
+    reg_run: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
+    confirmed_at: Mapped[datetime_type | None] = mapped_column(TIMESTAMP)
+    telegram_id: Mapped[int | None] = mapped_column(BigInteger)
+    telegram_username: Mapped[str | None] = mapped_column(String(255))
+    telegram_name: Mapped[str | None] = mapped_column(String(255))
 
 
 class Publication(Base):
@@ -113,7 +151,7 @@ class EventRecord(Base):
     )
     ip: Mapped[str | None] = mapped_column(Text)
     errors: Mapped[str | None] = mapped_column(Text)
-    type: Mapped[str | None] = mapped_column(Text)
+    type: Mapped[RecordType | None] = mapped_column(Text)
 
     country: Mapped[str | None] = mapped_column("countrycode", Text)
     region: Mapped[str | None] = mapped_column("stateprovince", Text)
@@ -163,3 +201,49 @@ class EventRecord(Base):
     identification_remarks: Mapped[str | None] = mapped_column(
         "identificationremarks", Text
     )
+
+
+records_table = Table(
+    "records",
+    Base.metadata,
+    Column("datetime", TIMESTAMP(precision=6)),
+    Column("ip", Text),
+    Column("publ_id", Integer),
+    Column("type", Text),
+    Column("errors", Text),
+    Column("adm_country", Text),
+    Column("adm_region", Text),
+    Column("adm_district", Text),
+    Column("adm_loc", Text),
+    Column("geo_nn", Float),
+    Column("geo_ee", Float),
+    Column("geo_nn_raw", Text),
+    Column("geo_ee_raw", Text),
+    Column("geo_origin", Text),
+    Column("geo_REM", Text),
+    Column("geo_uncert", Numeric),
+    Column("adm_verbatim", Integer),
+    Column("eve_YY", Numeric),
+    Column("eve_MM", Numeric),
+    Column("eve_DD", Numeric),
+    Column("eve_YY_end", Numeric),
+    Column("eve_MM_end", Numeric),
+    Column("eve_DD_end", Numeric),
+    Column("eve_day.def", Boolean),
+    Column("eve_habitat", Text),
+    Column("eve_effort", Text),
+    Column("eve_REM", Text),
+    Column("abu_coll", Text),
+    Column("abu", Float),
+    Column("abu_details", Text),
+    Column("abu_ind_rem", Text),
+    Column("tax_fam", Text),
+    Column("tax_gen", Text),
+    Column("tax_sp", Text),
+    Column("tax_sp.def", Boolean),
+    Column("tax_nsp", Boolean),
+    Column("type_status", Text),
+    Column("tax_REM", Text),
+    Column("user_id", BigInteger),
+    extend_existing=True,
+)

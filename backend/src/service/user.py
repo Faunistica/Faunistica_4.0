@@ -1,26 +1,61 @@
 import logging
+import re
+from datetime import datetime
+from typing import Annotated, Any
 
 from aiogram import Bot
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
 
 from bot.messages import Messages
+from core.dependencies import DBSession
 from core.enums import UserState
-from core.exceptions import MsgErr, Ok
+from core.exceptions import MsgErr, Ok, UsernameAlreadyExistsError
 from core.model import User
 from repository.user import (
+    count_users_with_username,
+    create_user_or_update,
+    find_user_by_name,
+    find_user_by_username,
     get_user,
+    get_user_expect,
+    increment_token_version,
+    update_user,
 )
+from schema.user import UserUpdate
 from service.actions import ActionService
+from service.user_validation import UserValidators
 
 logger = logging.getLogger(__name__)
+
+_USERNAME_REGEX = re.compile(r"^[a-zA-Z0-9_]+$")
+
+
+REGISTERED_STATES = (
+    UserState.REG_COMPLETED,
+    UserState.SUPPORT,
+    UserState.SURVEY_AGE,
+    UserState.SURVEY_PREFERENCES,
+    UserState.SURVEY_LANGUAGE,
+    UserState.SURVEY_RATING,
+    UserState.SURVEY_REGION,
+    UserState.SURVEY_EMAIL,
+    UserState.SURVEY_SEX,
+    UserState.RENAME,
+)
+
+
+def _no_action_service() -> None:
+    return None
 
 
 class UserService:
     def __init__(
         self,
-        session: AsyncSession,
-        bot: Bot,
-        action_service: ActionService,
+        session: DBSession,
+        bot: Annotated[Bot | None, Depends(_no_action_service)] = None,
+        action_service: Annotated[
+            ActionService | None, Depends(_no_action_service)
+        ] = None,
     ) -> None:
         self.session = session
         self.bot = bot
@@ -29,10 +64,6 @@ class UserService:
     async def check_commands_allowed(
         self, *, user_id: int | None = None, user: User | None = None
     ) -> Ok | MsgErr:
-        """
-        Check if user can use commands.
-        """
-
         if user is None:
             if user_id is None:
                 raise ValueError("both user and user_id are None")
@@ -43,20 +74,132 @@ class UserService:
 
         reg_stat = user.reg_stat
 
-        # Switch-case here?
         if reg_stat == UserState.DATA_CLEARED:
-            await self.actions.log_bot_other(user.user_id, "not_reg_end")
-            error = Messages.register_for_old()
-        elif reg_stat.is_in_registration():
-            error = Messages.registration_not_finished()
-            await self.actions.log_bot_other(user.user_id, "not_reg_end")
-        elif reg_stat.is_in_support():
-            error = Messages.support_flow_not_finished()
-        elif reg_stat.is_in_survey():
-            error = Messages.sociology_flow_not_finished()
-        elif reg_stat == UserState.RENAME:
-            error = Messages.rename_flow_not_finished()
-        else:
-            return Ok()
+            if self.actions:
+                await self.actions.log_bot_other(user.user_id, "not_reg_end")
+            return MsgErr(error=Messages.register_for_old())
+        if reg_stat.is_in_registration():
+            if self.actions:
+                await self.actions.log_bot_other(user.user_id, "not_reg_end")
+            return MsgErr(error=Messages.registration_not_finished())
+        if reg_stat.is_in_support():
+            return MsgErr(error=Messages.support_flow_not_finished())
+        if reg_stat.is_in_survey():
+            return MsgErr(error=Messages.sociology_flow_not_finished())
+        if reg_stat == UserState.RENAME:
+            return MsgErr(error=Messages.rename_flow_not_finished())
+        return Ok()
 
-        return MsgErr(error=error)
+    # ========== Queries ==========
+
+    async def get(self, user_id: int) -> User | None:
+        return await get_user(self.session, user_id)
+
+    async def get_expect(self, user_id: int) -> User:
+        return await get_user_expect(self.session, user_id)
+
+    async def find_by_username(self, username: str) -> User | None:
+        return await find_user_by_username(self.session, username)
+
+    async def find_by_name(self, name: str) -> User | None:
+        return await find_user_by_name(self.session, name)
+
+    # ========== Validation ==========
+
+    async def check_username_unique(
+        self, username: str, exclude_user_id: int | None = None
+    ) -> None:
+        other = await count_users_with_username(self.session, username)
+        if other > 0:
+            if exclude_user_id is not None:
+                user = await get_user(self.session, exclude_user_id)
+                if user and user.username == username:
+                    return
+            raise UsernameAlreadyExistsError(username)
+
+    async def validate_username(
+        self, username: str, *, exclude_user_id: int | None = None
+    ) -> Ok | MsgErr:
+        if len(username) < 3:
+            return MsgErr(error=Messages.message_too_short())
+        if len(username) > 40:
+            return MsgErr(error=Messages.message_too_long())
+        if not _USERNAME_REGEX.fullmatch(username):
+            return MsgErr(error=Messages.invalid_characters())
+
+        try:
+            await self.check_username_unique(username, exclude_user_id)
+            return Ok()
+        except UsernameAlreadyExistsError:
+            return MsgErr(error=Messages.username_already_exists())
+
+    # ========== Mutations ==========
+
+    async def _update(self, user_id: int, **kw: Any) -> User | None:  # noqa: ANN401
+        return await update_user(self.session, user_id, UserUpdate(**kw))
+
+    async def start_registration(self, user_id: int) -> None:
+        await create_user_or_update(self.session, user_id, UserState.REG_AGREEMENT)
+        await self.session.commit()
+
+    async def accept_agreement(self, user_id: int) -> None:
+        await self._update(user_id, reg_stat=UserState.REG_NAME)
+
+    async def set_name(self, user_id: int, name: str) -> Ok | MsgErr:
+        result = UserValidators.validate_name(name)
+        if isinstance(result, MsgErr):
+            return result
+        await self._update(user_id, name=name, reg_stat=UserState.REG_AGE)
+        return Ok()
+
+    async def set_age(self, user_id: int, age_str: str) -> Ok | MsgErr:
+        result = UserValidators.validate_age_str(age_str)
+        if isinstance(result, MsgErr):
+            return result
+        await self._update(
+            user_id, age=int(age_str), reg_stat=UserState.REG_PREFERENCES
+        )
+        return Ok()
+
+    async def set_preferences(self, user_id: int, comm: str) -> None:
+        await self._update(user_id, comm=comm, reg_stat=UserState.REG_LANGUAGE)
+
+    async def set_language_and_complete(self, user_id: int, lang: str) -> Ok | MsgErr:
+        parsed = UserValidators.parse_language(lang)
+        if isinstance(parsed, MsgErr):
+            return parsed
+        await self._update(
+            user_id,
+            lng=parsed,
+            reg_stat=UserState.REG_COMPLETED,
+            reg_end=datetime.now(),
+        )
+        return Ok()
+
+    async def cancel_action(self, user: User) -> Ok | MsgErr:
+        if user.reg_stat == UserState.DATA_CLEARED:
+            return MsgErr(error=Messages.register_for_old())
+        if user.reg_stat.is_in_registration():
+            return MsgErr(
+                error=Messages.unavailable_during_registration(),
+            )
+        await self._update(user.user_id, reg_stat=UserState.REG_COMPLETED)
+        return Ok()
+
+    async def update_user_data(self, user_id: int, **kw: object) -> User | None:
+        return await self._update(user_id, **kw)
+
+    async def set_state(self, user_id: int, state: UserState) -> None:
+        await self._update(user_id, reg_stat=state)
+
+    async def reset_to_completed(self, user_id: int) -> None:
+        await self._update(user_id, reg_stat=UserState.REG_COMPLETED)
+
+    async def increment_token_version(self, user_id: int) -> int:
+        return await increment_token_version(self.session, user_id)
+
+    async def complete_full_registration(
+        self, user_id: int, **kw: object
+    ) -> User | None:
+        await create_user_or_update(self.session, user_id, UserState(kw["reg_stat"]))
+        return await self._update(user_id, **kw)

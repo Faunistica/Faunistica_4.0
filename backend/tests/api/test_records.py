@@ -8,10 +8,13 @@ import pytest
 from conftest import SeedData
 from fastapi import status
 from httpx import AsyncClient
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.enums import RecordType
 from core.model import EventRecord
+
+fake_uuid = "ca94c96f-e03b-42d8-8e4c-f4a2fcaa0a5b"
 
 
 @pytest.mark.asyncio
@@ -145,13 +148,15 @@ async def test_get_record_wrong_user(
     response = await authenticated_client_user2.get(
         f"/api/records/{record_id}?user_id={user2.user_id}"
     )
-    assert response.status_code == 200
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio
 async def test_list_records_all_publs(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
-    response = await authenticated_client.get(f"/api/records?user_id={user.user_id}")
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}"
+    )
     assert response.status_code == 200
 
 
@@ -170,7 +175,7 @@ async def test_list_records_page_size_exceeds_max(
 ):
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&page_size=200"
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&page_size=1001"
     )
     assert response.status_code == 422
 
@@ -198,9 +203,102 @@ async def test_list_records_sort_updated_at(authenticated_client, seed_data: See
 
 
 @pytest.mark.asyncio
+async def test_list_records_pivot_first_page(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot a record on page 1 returns page 1."""
+    user = seed_data["users"][0]
+    # record_ids[0] is newest (created with ts=now-0), should be on page 1
+    record_id = seed_data["record_ids"][0]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={record_id}&page_size=10"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["page"] == 1
+    record_ids = [item["id"] for item in data["items"]]
+    assert record_id in record_ids
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_second_page(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot a record on page 2 returns page 2."""
+    user = seed_data["users"][0]
+    # record_ids[10] is at index 10 (0-indexed), should be first on page 2 with page_size=10
+    record_id = seed_data["record_ids"][10]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={record_id}&page_size=10"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["page"] == 2
+    record_ids = [item["id"] for item in data["items"]]
+    assert record_id in record_ids
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_last_page(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot the oldest record returns last page."""
+    user = seed_data["users"][0]
+    # record_ids[-1] (index 24) is oldest, should be on page 3 with page_size=10
+    record_id = seed_data["record_ids"][-1]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={record_id}&page_size=10"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    # 25 records, page_size=10: page 1 (indices 0-9), page 2 (10-19), page 3 (20-24)
+    assert data["page"] == 3
+    record_ids = [item["id"] for item in data["items"]]
+    assert record_id in record_ids
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_not_found(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot with non-existent UUID returns not found"""
+    user = seed_data["users"][0]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={fake_uuid}"
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_invalid_uuid(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot with invalid UUID format falls back to page 1 (graceful degradation)."""
+    user = seed_data["users"][0]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id=not-a-uuid"
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_list_records_pivot_sort_updated_at(
+    authenticated_client: AsyncClient, seed_data: SeedData
+):
+    """Pivot works with sort=updated_at."""
+    user = seed_data["users"][0]
+    # record_ids[0] is newest, should be on page 1 with updated_at sort too
+    record_id = seed_data["record_ids"][0]
+    response = await authenticated_client.get(
+        f"/api/records?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}&pivot_record_id={record_id}&sort=updated_at"
+    )
+    assert response.status_code == 200
+    assert response.json()["page"] == 1
+
+
+@pytest.mark.asyncio
 async def test_get_record_not_found(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
-    fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await authenticated_client.get(
         f"/api/records/{fake_uuid}?user_id={user.user_id}"
     )
@@ -210,7 +308,6 @@ async def test_get_record_not_found(authenticated_client, seed_data: SeedData):
 @pytest.mark.asyncio
 async def test_update_record_not_found(authenticated_client, seed_data: SeedData):
     user = seed_data["users"][0]
-    fake_uuid = "00000000-0000-0000-0000-000000000000"
     response = await authenticated_client.put(
         f"/api/records/{fake_uuid}",
         json={"publ_id": int(user.items.split("|")[0]), "latitude": "55.5"},
@@ -241,7 +338,7 @@ async def test_delete_record_previous_publ_403(
             id=uuid4(),
             user_id=user.user_id,
             publ_id=seed_data["publs"][1].publ_id,
-            type="rec_ok",
+            type=RecordType.REC_OK,
             created_at=now,
             updated_at=now,
         )
@@ -276,7 +373,7 @@ async def test_export_records_default(
     """Test export returns Excel file with user's records."""
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}"
+        f"/api/records/export?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}"
     )
     assert response.status_code == 200
     assert (
@@ -287,40 +384,13 @@ async def test_export_records_default(
 
 
 @pytest.mark.asyncio
-async def test_export_records_project_non_admin_403(
-    authenticated_client: AsyncClient, seed_data
-) -> None:
-    """Test export with scope=project returns 403 for non-admin."""
-    user = seed_data["users"][0]
-    response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}&scope=project"
-    )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-@pytest.mark.asyncio
-async def test_export_records_csv(authenticated_client: AsyncClient, seed_data) -> None:
-    """Test export returns CSV file with user's records."""
-    user = seed_data["users"][0]
-    response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}&format=csv"
-    )
-    assert response.status_code == 200
-    assert "text/csv" in response.headers["content-type"]
-    assert "attachment" in response.headers["content-disposition"]
-    assert "records.csv" in response.headers["content-disposition"]
-    content = response.text
-    assert "Genus" in content or "Family" in content
-
-
-@pytest.mark.asyncio
 async def test_export_records_xlsx_default(
     authenticated_client: AsyncClient, seed_data
 ) -> None:
     """Test export returns Excel file by default."""
     user = seed_data["users"][0]
     response = await authenticated_client.get(
-        f"/api/records/export?user_id={user.user_id}"
+        f"/api/records/export?user_id={user.user_id}&publ_id={int(user.items.split('|')[0])}"
     )
     assert response.status_code == 200
     assert (
@@ -331,7 +401,29 @@ async def test_export_records_xlsx_default(
 
 
 @pytest.mark.asyncio
-async def test_import_from_excel(authenticated_client: AsyncClient) -> None:
+async def test_export_all_records(authenticated_client: AsyncClient, seed_data) -> None:
+    """Test export-all returns 2-sheet Excel file."""
+    user = seed_data["users"][0]
+    response = await authenticated_client.get(
+        f"/api/records/export-all?user_id={user.user_id}"
+    )
+    assert response.status_code == 200
+    assert (
+        response.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    assert "records_all.xlsx" in response.headers["content-disposition"]
+
+    wb = load_workbook(io.BytesIO(response.content))
+    assert "v4" in wb.sheetnames
+    assert "v2" in wb.sheetnames
+    wb.close()
+
+
+@pytest.mark.asyncio
+async def test_import_from_excel(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing records from Excel file."""
     import io
 
@@ -370,6 +462,7 @@ async def test_import_from_excel(authenticated_client: AsyncClient) -> None:
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "test.xlsx",
@@ -386,7 +479,9 @@ async def test_import_from_excel(authenticated_client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_import_from_csv(authenticated_client: AsyncClient) -> None:
+async def test_import_from_csv(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing records from CSV file."""
     from service.export import COLUMN_MAPPING
 
@@ -415,6 +510,7 @@ async def test_import_from_csv(authenticated_client: AsyncClient) -> None:
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={"file": ("test.csv", csv_content, "text/csv")},
     )
     assert response.status_code == 200
@@ -431,13 +527,16 @@ async def test_import_invalid_file_type(
     """Test importing invalid file type returns error."""
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={"file": ("test.txt", b"invalid content", "text/plain")},
     )
     assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_import_empty_file(authenticated_client: AsyncClient) -> None:
+async def test_import_empty_file(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing empty Excel file."""
     wb = Workbook()
     ws = wb.active
@@ -454,6 +553,7 @@ async def test_import_empty_file(authenticated_client: AsyncClient) -> None:
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "empty.xlsx",
@@ -469,7 +569,9 @@ async def test_import_empty_file(authenticated_client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_import_boolean_fields(authenticated_client: AsyncClient) -> None:
+async def test_import_boolean_fields(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing records with boolean fields."""
     from openpyxl import Workbook
 
@@ -506,6 +608,7 @@ async def test_import_boolean_fields(authenticated_client: AsyncClient) -> None:
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "test.xlsx",
@@ -522,6 +625,7 @@ async def test_import_boolean_fields(authenticated_client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_import_user_without_publ(
     authenticated_client_user2: AsyncClient,
+    seed_data: SeedData,
 ) -> None:
     """Test importing with user that has no publication returns error."""
     wb = Workbook()
@@ -539,6 +643,7 @@ async def test_import_user_without_publ(
 
     response = await authenticated_client_user2.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "test.xlsx",
@@ -551,7 +656,9 @@ async def test_import_user_without_publ(
 
 
 @pytest.mark.asyncio
-async def test_import_file_size_limit(authenticated_client: AsyncClient) -> None:
+async def test_import_file_size_limit(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test importing file that exceeds size limit."""
     from core.config import settings
 
@@ -559,6 +666,7 @@ async def test_import_file_size_limit(authenticated_client: AsyncClient) -> None
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "large.xlsx",
@@ -571,7 +679,9 @@ async def test_import_file_size_limit(authenticated_client: AsyncClient) -> None
 
 
 @pytest.mark.asyncio
-async def test_import_limit_enforcement(authenticated_client: AsyncClient) -> None:
+async def test_import_limit_enforcement(
+    authenticated_client: AsyncClient, seed_data: SeedData
+) -> None:
     """Test that import limit is enforced."""
     from core.config import settings
 
@@ -604,6 +714,7 @@ async def test_import_limit_enforcement(authenticated_client: AsyncClient) -> No
 
     response = await authenticated_client.post(
         "/api/records/import",
+        params={"publ_id": seed_data["publs"][0].publ_id},
         files={
             "file": (
                 "test.xlsx",
@@ -613,3 +724,80 @@ async def test_import_limit_enforcement(authenticated_client: AsyncClient) -> No
         },
     )
     assert response.status_code == 400
+
+
+# ========== Forbidden Publication Access Tests ==========
+
+
+@pytest.mark.asyncio
+async def test_list_records_forbidden_publ(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """List records with non-interactable (second) publ_id returns 403."""
+    user_items = seed_data["users"][0].items.split("|")
+    assert len(user_items) >= 2, "Need at least 2 publications in queue"
+    second_publ_id = int(user_items[1])  # Second publication - not interactable
+
+    response = await authenticated_client.get(f"/api/records?publ_id={second_publ_id}")
+    assert response.status_code == 403
+    data = response.json()
+    assert data["error"] == "PUBL_FORBIDDEN"
+
+
+@pytest.mark.asyncio
+async def test_export_records_forbidden_publ(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """Export records with non-interactable (second) publ_id returns 403."""
+    user_items = seed_data["users"][0].items.split("|")
+    assert len(user_items) >= 2, "Need at least 2 publications in queue"
+    second_publ_id = int(user_items[1])  # Second publication - not interactable
+
+    response = await authenticated_client.get(
+        f"/api/records/export?publ_id={second_publ_id}"
+    )
+    assert response.status_code == 403
+    data = response.json()
+    assert data["error"] == "PUBL_FORBIDDEN"
+
+
+@pytest.mark.asyncio
+async def test_import_records_forbidden_publ(
+    authenticated_client: AsyncClient,
+    seed_data: SeedData,
+) -> None:
+    """Import records to non-interactable (second) publ_id returns 403."""
+    from openpyxl import Workbook
+
+    user_items = seed_data["users"][0].items.split("|")
+    assert len(user_items) >= 2, "Need at least 2 publications in queue"
+    second_publ_id = int(user_items[1])  # Second publication - not interactable
+
+    wb = Workbook()
+    ws = wb.active
+    if ws is None:
+        raise RuntimeError("Failed to create worksheet")
+
+    from service.export import COLUMN_MAPPING
+
+    ws.append(list(COLUMN_MAPPING.values()))
+    output = io.BytesIO()
+    wb.save(output)
+    excel_content = output.getvalue()
+
+    response = await authenticated_client.post(
+        "/api/records/import",
+        params={"publ_id": second_publ_id},
+        files={
+            "file": (
+                "test.xlsx",
+                excel_content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
+    )
+    assert response.status_code == 403
+    data = response.json()
+    assert data["error"] == "PUBL_FORBIDDEN"

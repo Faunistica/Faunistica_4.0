@@ -18,3 +18,12 @@ async def list_publications(
     ] = False,
 ) -> list[Publication]:
     return await pub_service.get_current(user_id=token.user_id, with_queue=list_all)
+
+
+@router.get("/{publ_id}")
+async def get(
+    publ_id: int,
+    token: TokenUser,
+    pub_service: Annotated[PublicationService, Depends()],
+) -> Publication:
+    return await pub_service.get(publ_id, user_id=token.user_id)

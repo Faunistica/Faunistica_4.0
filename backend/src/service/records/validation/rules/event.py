@@ -1,12 +1,12 @@
 from schema.records import RecordData
 
-from ..constants import DATE_PRECISIONS
 from ..helpers import (
     contains_forbidden_chars,
     has_cyrillic_in_foreign_text,
     has_range_separator,
+    nonblank,
 )
-from ..rules.base import RuleCategory, RuleContext, in_set, required, rule
+from ..rules.base import RuleCategory, RuleContext, required, rule
 
 rule(
     RuleCategory.EVENT,
@@ -14,24 +14,13 @@ rule(
     "required",
     required("verbatim_date", "Дата сбора не указана"),
 )
-rule(
-    RuleCategory.EVENT,
-    ["date_precision"],
-    "invalid",
-    in_set(
-        "date_precision",
-        DATE_PRECISIONS,
-        "Некорректная точность указания даты. Допустимые значения: "
-        + ", ".join(DATE_PRECISIONS),
-    ),
-)
 
 
 @rule(RuleCategory.EVENT, ["verbatim_date"], "conflict")
 def rule_interval_no_separator(data: RecordData, ctx: RuleContext) -> str | None:
     if (
         data.is_interval is True
-        and data.verbatim_date is not None
+        and nonblank(data.verbatim_date)
         and not has_range_separator(data.verbatim_date)
     ):
         return "Указан интервал дат, но значение не содержит разделителя интервала"

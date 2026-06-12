@@ -1,0 +1,42 @@
+import { type FC } from 'react';
+import { useFormContext } from 'react-hook-form';
+import type { RecordForm } from '@/types/forms';
+import { useRecordForm } from '@/hooks/useRecordForm';
+import ArticleSourceCard from '@/components/form/parts/ArticleSourceCard';
+import GeographyCard from '@/components/form/parts/GeographyCard';
+import CollectionEventCard from '@/components/form/parts/CollectionEventCard';
+import TaxonomyCard from '@/components/form/parts/TaxonomyCard';
+import QuantitiesCard from '@/components/form/parts/QuantitiesCard';
+import ServerErrorDisplay from '@/components/form/ServerErrorDisplay';
+import Footer from '@/components/form/parts/FormFooter';
+import LoadingScreen from '@/components/LoadingScreen';
+
+const RecordFormContent: FC = () => {
+    const {
+        state: { publ_id, activeRecordId },
+        actions,
+    } = useRecordForm();
+    const { handleSubmit } = useFormContext<RecordForm>();
+
+    if (!activeRecordId) {
+        return <LoadingScreen />;
+    }
+
+    return (
+        <div className="w-full flex-1 p-4 pb-20 md:p-8 md:pb-44">
+            <form onSubmit={handleSubmit(() => actions.submit())}>
+                <div className="mx-auto max-w-6xl space-y-6">
+                    <ArticleSourceCard publ_id={publ_id} />
+                    <GeographyCard publ_id={publ_id} activeRecordId={activeRecordId} />
+                    <CollectionEventCard publ_id={publ_id} activeRecordId={activeRecordId} />
+                    <TaxonomyCard />
+                    <QuantitiesCard />
+                    <ServerErrorDisplay />
+                </div>
+                <Footer />
+            </form>
+        </div>
+    );
+};
+
+export default RecordFormContent;

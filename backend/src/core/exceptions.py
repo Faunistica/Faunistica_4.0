@@ -59,9 +59,12 @@ class APIException(Exception):
 def api_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.info(exc)
     if isinstance(exc, APIException):
+        content: dict = {"error": exc.error_code, "message": exc.message}
+        if hasattr(exc, "draft_record_ids"):
+            content["draft_record_ids"] = exc.draft_record_ids
         return JSONResponse(
             status_code=exc.status_code,
-            content={"error": exc.error_code, "message": exc.message},
+            content=content,
         )
     raise exc
 
@@ -107,6 +110,15 @@ class ExpectationError(APIException):
         super().__init__("EXPECT_FAIL", message, 500)
 
 
+class PivotWithoutPublID(APIException):
+    def __init__(self, record_id: str | UUID) -> None:
+        super().__init__(
+            "BAD_PARAM",
+            f"Can't search for record {record_id} if publ id is not set",
+            400,
+        )
+
+
 class RecordNotFoundError(APIException):
     def __init__(self, record_id: str | UUID) -> None:
         super().__init__("RECORD_NOT_FOUND", f"Record {record_id} not found", 404)
@@ -127,6 +139,16 @@ class ActionLoggingError(APIException):
 class InternalError(APIException):
     def __init__(self, details: str) -> None:
         super().__init__("INTERNAL_ERROR", details, 500)
+
+
+class UnsubmittedRecordsError(APIException):
+    def __init__(self, draft_ids: list[str]) -> None:
+        self.draft_record_ids = draft_ids
+        super().__init__(
+            "UNSUBMITTED_RECORDS",
+            f"Publication has {len(draft_ids)} unsubmitted records",
+            409,
+        )
 
 
 class PublicationCompletedError(APIException):
@@ -174,3 +196,24 @@ class ImportLimitExceededError(APIException):
 class InvalidTokenError(APIException):
     def __init__(self, detail: str = "Invalid token") -> None:
         super().__init__("INVALID_TOKEN", detail, 401)
+
+
+class UsernameAlreadyExistsError(APIException):
+    def __init__(self, username: str) -> None:
+        super().__init__(
+            "USERNAME_ALREADY_EXISTS", f"Username '{username}' already exists", 409
+        )
+
+
+class RegistrationAlreadyStartedError(APIException):
+    def __init__(self, username: str) -> None:
+        super().__init__(
+            "REGISTRATION_ALREADY_STARTED",
+            f"Registration for username '{username}' already started",
+            409,
+        )
+
+
+class UserNotCreated(APIException):
+    def __init__(self, id: int) -> None:
+        super().__init__("USER_NOT_CREATED", f"User with id {id} can't be created", 409)

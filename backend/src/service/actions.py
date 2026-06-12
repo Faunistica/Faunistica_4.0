@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 from core.dependencies import DBSession
 from core.exceptions import DBException
 from core.model import Action
-from schema.common import MilestoneInfo, ProcessingLevel, WinnerInfo
+from schema.common import ProcessingLevel, WinnerInfo
 
 logger = logging.getLogger(__name__)
 
@@ -144,16 +144,6 @@ class ActionService:
         )
         await self.session.execute(stmt)
 
-    async def log_milestone(self, user_id: int, milestone: int, ip: str | None) -> None:
-        stmt = insert(Action).values(
-            user_id=user_id,
-            user_ip=ip,
-            action="fau_50",
-            object=str(milestone),
-            datetime=datetime.now(),
-        )
-        await self.session.execute(stmt)
-
     # Query methods - update to session.execute(select(...)) style
 
     async def get_winner_info(self, user_id: int) -> WinnerInfo | None:
@@ -193,33 +183,3 @@ class ActionService:
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none() is not None
-
-    async def get_last_milestone(self, user_id: int) -> MilestoneInfo | None:
-        stmt = (
-            select(Action)
-            .where(
-                Action.user_id == user_id,
-                Action.action == "fau_50",
-            )
-            .order_by(desc(Action.datetime))
-            .limit(1)
-        )
-        result = await self.session.execute(stmt)
-        action = result.scalar_one_or_none()
-
-        if action is None:
-            return None
-
-        if action.object is None:
-            logger.warning("Milestone action object is none")
-            raise DBException
-
-        try:
-            milestone = int(action.object)
-        except ValueError:
-            logger.warning("Invalid milestone action object format: %s", action.object)
-            raise
-
-        return MilestoneInfo(
-            user_id=user_id, milestone=milestone, datetime=action.datetime
-        )

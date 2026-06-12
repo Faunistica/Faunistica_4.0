@@ -10,8 +10,6 @@ from core.config import settings
 from core.dependencies import get_session
 from core.enums import UserState
 from core.exceptions import HandlerError, MsgErr
-from repository.user import update_user
-from schema.user import UserUpdate
 from service.actions import ActionService
 from service.user import UserService
 
@@ -38,8 +36,8 @@ async def support_command(message: Message, state: FSMContext, bot: Bot) -> None
             await message.answer(result.error)
             return
 
+        await user_service.set_state(user_id, UserState.SUPPORT)
         await state.set_state(UserState.SUPPORT.fsm_state())
-        await update_user(session, user_id, UserUpdate(reg_stat=UserState.SUPPORT))
 
         await message.answer(
             Messages.support_request(), reply_markup=keyboards.remove()
@@ -62,14 +60,11 @@ async def support_question_handler(
 
     if question.lower() in ["cancel", "отмена"]:
         async for session in get_session():
-            await update_user(
-                session,
-                user_id,
-                UserUpdate(reg_stat=UserState.REG_COMPLETED),
-            )
+            user_service = UserService(session, bot)
+            await user_service.reset_to_completed(user_id)
 
-            await message.answer(Messages.cancellation_support_request())
-            return
+        await message.answer(Messages.cancellation_support_request())
+        return
 
     if len(question) < 10:
         await message.answer(Messages.support_request_too_short())
@@ -79,11 +74,8 @@ async def support_question_handler(
         return
 
     async for session in get_session():
-        await update_user(
-            session,
-            user_id,
-            UserUpdate(reg_stat=UserState.REG_COMPLETED),
-        )
+        user_service = UserService(session, bot)
+        await user_service.reset_to_completed(user_id)
         await state.clear()
 
     await bot.send_message(

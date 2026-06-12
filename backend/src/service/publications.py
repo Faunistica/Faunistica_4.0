@@ -1,17 +1,21 @@
 import logging
+import random
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import update
+from sqlalchemy import or_, select, update
 
 from core import model
+from core.config import settings
 from core.dependencies import DBSession
+from core.enums import RecordType, UserLanguage
 from core.exceptions import (
     NoPublicationsAssignedError,
     PublicationForbiddenError,
     PublicationNotFoundError,
+    UnsubmittedRecordsError,
 )
-from core.model import User
+from core.model import EventRecord, User
 from repository.publication import (
     get_publication,
     get_publication_expect,
@@ -33,10 +37,12 @@ class PublicationService:
         self.session = session
         self.actions = action_service
 
-    def _get_current_publ_id(self, user: User) -> int | None:
-        """Return items[0] as current publ_id, or None if items is empty."""
-        queue = self._pipe_to_array(user.items) if user.items else []
-        return queue[0] if queue else None
+    @staticmethod
+    def _is_interactable(publ_id: int, queue: list[int]) -> bool:
+        count = settings.INTERACTABLE_QUEUE_COUNT
+        if count == 0:
+            return publ_id in queue
+        return publ_id in queue[:count]
 
     async def validate_access(
         self,
@@ -66,41 +72,31 @@ class PublicationService:
             user = await get_user_expect(self.session, user_id)
 
         user_id = user.user_id
-        current_publ_id = self._get_current_publ_id(user)
+        queue = self._pipe_to_array(user.items) if user.items else []
 
-        if current_publ_id is None:
+        if not queue:
             raise NoPublicationsAssignedError(user_id)
 
-        if current_publ_id != publ_id:
+        if not self._is_interactable(publ_id, queue):
             raise PublicationForbiddenError(user_id, publ_id)
 
         return Publication.model_validate(publ_db)
 
-    async def complete(
+    async def _advance_queue(
         self,
         user_id: int,
         publ_id: int,
         level: ProcessingLevel,
         ip: str | None,
-    ) -> Publication | None:
-        user = await get_user_expect(self.session, user_id)
-        await self.validate_access(publ_id, user=user)
-
+    ) -> tuple[Publication | None, int]:
         await self.actions.log_publ_complete(user_id, level, publ_id, ip)
 
-        # Advance queue: items includes current at position 0, pop it
+        user = await get_user_expect(self.session, user_id)
         queue = self._pipe_to_array(user.items) if user.items else []
-        if queue:
-            if queue[0] != publ_id:
-                logger.warning(
-                    "user %d completed publ %d but queue head is %d;"
-                    "validation passed, popping anyway",
-                    user_id,
-                    publ_id,
-                    queue[0],
-                )
-            queue.pop(0)
+        if publ_id in queue:
+            queue.remove(publ_id)
 
+        remaining = len(queue)
         new_items = self._array_to_pipe(queue)
         next_publ_id = queue[0] if queue else None
 
@@ -108,23 +104,76 @@ class PublicationService:
         await self.session.execute(stmt)
 
         if next_publ_id is None:
-            return None
+            return (None, remaining)
 
         next_publ = await get_publication_expect(self.session, next_publ_id)
-        await self.session.commit()
+        return (Publication.model_validate(next_publ), remaining)
 
-        return Publication.model_validate(next_publ)
+    async def get_draft_record_ids(self, user_id: int, publ_id: int) -> list[str]:
+        stmt = (
+            select(EventRecord.id)
+            .where(
+                EventRecord.user_id == user_id,
+                EventRecord.publ_id == publ_id,
+                or_(
+                    EventRecord.type.in_([RecordType.CHECK_OK, RecordType.CHECK_FAIL]),
+                    EventRecord.type.is_(None),
+                ),
+            )
+            .order_by(EventRecord.created_at.desc(), EventRecord.id)
+        )
+        result = await self.session.execute(stmt)
+        return [str(row[0]) for row in result.all()]
+
+    async def submit(
+        self,
+        user_id: int,
+        publ_id: int,
+        level: ProcessingLevel,
+        urals_scope: str | None,
+        material_status: str | None,
+        comment: str | None,
+        ip: str | None,
+    ) -> int:
+        await self.validate_access(publ_id, user_id=user_id)
+
+        draft_ids = await self.get_draft_record_ids(user_id, publ_id)
+        if draft_ids:
+            raise UnsubmittedRecordsError(draft_ids)
+
+        if level in (ProcessingLevel.FULL, ProcessingLevel.URAL):
+            stmt = (
+                update(model.Publication)
+                .where(model.Publication.publ_id == publ_id)
+                .values(cover=model.Publication.cover + 1)
+            )
+            await self.session.execute(stmt)
+
+        if urals_scope or material_status:
+            await self.actions.log_publ_metadata(
+                user_id, publ_id, urals_scope, material_status, ip
+            )
+
+        if comment:
+            await self.actions.log_publ_comment(user_id, publ_id, comment, ip)
+
+        _, remaining = await self._advance_queue(user_id, publ_id, level, ip)
+        await self.session.commit()
+        return remaining
 
     async def assign_current(self, user_id: int) -> Publication | None:
         """Return current publication from items[0], or None if queue empty."""
         user = await get_user_expect(self.session, user_id)
-        current_publ_id = self._get_current_publ_id(user)
+        queue = self._pipe_to_array(user.items) if user.items else []
 
-        if current_publ_id is None:
+        if not queue:
             return None
 
-        publ = await get_publication_expect(self.session, current_publ_id)
+        publ = await get_publication_expect(self.session, queue[0])
         return Publication.model_validate(publ)
+
+    async def get(self, publ_id: int, user_id: int) -> Publication:
+        return await self.validate_access(publ_id, user_id=user_id)
 
     async def get_current(
         self,
@@ -144,20 +193,75 @@ class PublicationService:
             if not publ_ids:
                 return []
             publ = await get_publication_expect(self.session, publ_ids[0])
-            return [Publication.model_validate(publ)]
+            pub = Publication.model_validate(publ)
+            pub.interactable = self._is_interactable(pub.publ_id, publ_ids)
+            return [pub]
 
         if not publ_ids:
             return []
 
         publications = await get_publications_by_ids(self.session, publ_ids)
-        return [Publication.model_validate(p) for p in publications]
+        publ_map = {p.publ_id: p for p in publications}
+        results: list[Publication] = []
+        for pid in publ_ids:
+            p = publ_map.get(pid)
+            if p is None:
+                continue
+            pub = Publication.model_validate(p)
+            pub.interactable = self._is_interactable(pub.publ_id, publ_ids)
+            results.append(pub)
+        return results
 
-    def _pipe_to_array(self, pipe_str: str) -> list[int]:
+    @staticmethod
+    def generate_started_publications(language: UserLanguage) -> str:
+        eng_publ = settings.STARTED_PUBLICATION_IDS_ENG
+        rus_publ = settings.STARTED_PUBLICATION_IDS_RUS
+        if language == "all":
+            return PublicationService._array_to_pipe(
+                random.sample(
+                    eng_publ,
+                    min(
+                        settings.STARTED_PUBLICATION_AMOUNT_ALL // 2,
+                        len(eng_publ),
+                    ),
+                )
+                + random.sample(
+                    rus_publ,
+                    min(
+                        settings.STARTED_PUBLICATION_AMOUNT_ALL // 2
+                        + settings.STARTED_PUBLICATION_AMOUNT_ALL % 2,
+                        len(rus_publ),
+                    ),
+                )
+            )
+        if language == "eng":
+            return PublicationService._array_to_pipe(
+                random.sample(
+                    eng_publ,
+                    min(
+                        settings.STARTED_PUBLICATION_AMOUNT_ENG,
+                        len(eng_publ),
+                    ),
+                )
+            )
+        return PublicationService._array_to_pipe(
+            random.sample(
+                rus_publ,
+                min(
+                    settings.STARTED_PUBLICATION_AMOUNT_RUS,
+                    len(rus_publ),
+                ),
+            )
+        )
+
+    @staticmethod
+    def _pipe_to_array(pipe_str: str) -> list[int]:
         """Convert '123|456|789' to [123, 456, 789]"""
         if not pipe_str:
             return []
         return [int(x) for x in pipe_str.split("|") if x.strip()]
 
-    def _array_to_pipe(self, arr: list[int]) -> str:
+    @staticmethod
+    def _array_to_pipe(arr: list[int]) -> str:
         """Convert [123, 456, 789] to '123|456|789'"""
         return "|".join(str(x) for x in arr)

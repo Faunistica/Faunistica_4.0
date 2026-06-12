@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, Request
 
-from schema.taxonomy import SuggestTaxonRequest, SuggestTaxonResponse
+from schema.taxonomy import SuggestTaxonRequest, SuggestTaxonResponse, TaxonomyFilters
 from service import taxon
 
 logger = logging.getLogger(__name__)
@@ -22,5 +22,7 @@ def suggest_taxon(
 
     Предлагает таксоны для автодополнения с фильтрацией по семейству и роду.
     """
-    suggestions = taxon.suggest(data.field, data.text, data.filters)
+    suggestions = taxon.suggest(
+        data.field, data.query, TaxonomyFilters(family=data.family, genus=data.genus)
+    )
     return SuggestTaxonResponse(suggestions=suggestions)

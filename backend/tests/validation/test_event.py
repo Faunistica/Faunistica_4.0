@@ -4,7 +4,6 @@ import pytest
 
 from schema.records import RecordData, Specimen
 from service.records.validation import validate_record
-from service.records.validation.constants import DATE_PRECISIONS
 from service.records.validation.rules import RuleCategory
 
 
@@ -48,25 +47,6 @@ class TestEventValidation:
         errors = validate_record(data, language="rus")
         assert any(
             e.code == "required" and "verbatim_date" in (e.fields or [])
-            for e in errors.errors
-        )
-
-    # ── date_precision invalid ─────────────────────────────────────────
-
-    def test_date_precision_invalid(self) -> None:
-        data = _valid_data(date_precision="bogus")
-        errors = validate_record(data, language="rus")
-        assert any(
-            e.code == "invalid" and "date_precision" in (e.fields or [])
-            for e in errors.errors
-        )
-
-    @pytest.mark.parametrize("dp", list(DATE_PRECISIONS))
-    def test_date_precision_valid_values(self, dp: str) -> None:
-        data = _valid_data(date_precision=dp)
-        errors = validate_record(data, language="rus")
-        assert not any(
-            e.code == "invalid" and "date_precision" in (e.fields or [])
             for e in errors.errors
         )
 
