@@ -1,46 +1,31 @@
 sequenceDiagram
     actor User
-    participant Frontend as Frontend (React)
-    participant API as API (FastAPI)
+    participant Frontend as Frontend
+    participant API as API
     participant Bot as Telegram Bot
     participant DB as PostgreSQL
 
     User->>Frontend: Click register
     Frontend->>API: POST /api/auth/code
-    API->>DB: INSERT pending_registration<br/>(code, token, AWAITING_CODE)
+    API->>DB: INSERT pending (code, AWAITING_CODE)
     API-->>Frontend: {code, token, bot_url}
-    Frontend->>User: Show code, QR,<br/>deep link ?start=CODE
+    Frontend->>User: Show code, QR, deep link
 
-    User->>Bot: Enter code via /confirm<br/>/register /start auto-detect
-
+    User->>Bot: Enter code in Telegram
     Bot->>DB: Lookup pending by code
-    alt User exists in DB
-        Bot->>DB: UPDATE status=AWAITING_API_LOGIN<br/>SET telegram_id
-        Bot-->>User: "Auth confirmed!"
-    else New user
-        Bot->>DB: UPDATE status=AWAITING_API_REGISTRATION<br/>SET telegram_id, reg_run
-        Bot-->>User: "Registration confirmed!"
+    Bot->>DB: UPDATE status = AWAITING_API_REGISTRATION
+    Bot-->>User: Registration confirmed!
+
+    loop Poll every 1s
+        Frontend->>API: GET /api/auth/code/status
+        API-->>Frontend: {status: AWAITING_API_REGISTRATION}
     end
 
-    loop Poll every 1s (up to 25s)
-        Frontend->>API: GET /api/auth/code/status?code=&token=
-        alt Status = AWAITING_API_LOGIN
-            API->>API: set_response_token_cookies(JWT)
-            API-->>Frontend: {status: 1, user_id, name, username}
-            Frontend->>User: Redirect to /dashboard
-        else Status = AWAITING_API_REGISTRATION
-            API-->>Frontend: {status: 2}
-            Frontend->>User: Show survey (Onboarding)
-            User->>Frontend: Fill: username, password, name,<br/>age, sex, lang, comm, rating, agreement
-            Frontend->>API: POST /api/auth/survey
-            API->>API: Hash password (Argon2)<br/>Generate publications
-            API->>DB: UPDATE reg_stat=REG_COMPLETED<br/>UPDATE pending=COMPLETED
-            API->>API: set_response_token_cookies(JWT)
-            API-->>Frontend: {status: COMPLETED}
-            Frontend->>User: Redirect to /dashboard
-        else Code expired
-            API->>API: refresh_code() → new code
-            API-->>Frontend: {code: new_code}
-            Frontend->>User: Update displayed code
-        end
-    end
+    Frontend->>User: Show onboarding form
+    User->>Frontend: Fill: username, password, name,<br/>age, sex, lang, comm, rating, agreement
+    Frontend->>API: POST /api/auth/survey
+    API->>API: Hash password, create user
+    API->>DB: reg_stat = REG_COMPLETED
+    API->>API: Set JWT cookies
+    API-->>Frontend: {status: COMPLETED}
+    Frontend->>User: Redirect to /dashboard

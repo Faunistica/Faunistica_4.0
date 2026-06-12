@@ -1,34 +1,18 @@
 flowchart TD
-    Start([User selects<br/>publication]) --> Pub[GET /api/publications/current<br/>list_publications]
-    Pub --> Form[Form blocks:]
+    Start([User selects<br/>publication]) --> Pub[GET /api/publications/current]
+    Pub --> Geo[GeographyCard<br/>location + coordinates]
+    Pub --> Coll[CollectionEventCard<br/>collection parameters]
+    Pub --> Tax[TaxonomyCard<br/>taxonomic classification]
+    Pub --> Quan[QuantitiesCard<br/>quantitative characteristics]
+    Pub --> Art[ArticleSourceCard<br/>publication info]
 
-    Form --> Geo[GeographyCard<br/>spatial + coordinates]
-    Form --> Coll[CollectionEventCard<br/>collection parameters]
-    Form --> Tax[TaxonomyCard<br/>taxonomic classification]
-    Form --> Quan[QuantitiesCard<br/>quantitative chars]
-    Form --> Art[ArticleSourceCard<br/>publication info]
-
-    Geo --> Auto{Autosave?}
-    Coll --> Auto
-    Tax --> Auto
-    Quan --> Auto
-    Art --> Auto
+    Geo & Coll & Tax & Quan & Art --> Auto{Autosave?}
 
     Auto -->|2s debounce| Save[PUT /api/records/id<br/>submission_type=autosave]
     Auto -->|Manual save| Save
 
-    Save --> Validate[validate_record<br/>5 rule modules]
-    Validate --> Type{Determine type:}
-
-    Type -->|No errors + autosave| CK[CHECK_OK]
-    Type -->|Has errors + autosave| CF[CHECK_FAIL]
-    Type -->|No errors + submit| OK[REC_OK]
-    Type -->|Has errors + submit| FL[REC_FAIL]
-
-    CK --> Sidebar[View in FormSidebar<br/>per-publication list]
-    CF --> Sidebar
-    OK --> Sidebar
-    FL --> Sidebar
-
-    OK --> Export[Export: XLSX via<br/>GET /api/records/export<br/>GET /api/records/export-all]
-    CK --> Export
+    Save --> Submit[PUT /api/records/id/submit]
+    Submit --> Valid[validate_record<br/>5 rule modules]
+    Valid --> Ok[REC_OK]
+    Ok --> Sidebar[View in FormSidebar]
+    Ok --> Export[Export XLSX<br/>/api/records/export]

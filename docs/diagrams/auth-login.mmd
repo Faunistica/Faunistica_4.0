@@ -1,0 +1,13 @@
+sequenceDiagram
+    actor User
+    participant Frontend as Frontend
+    participant API as API
+    participant DB as PostgreSQL
+
+    User->>Frontend: Enter username + password
+    Frontend->>API: POST /api/auth/login
+    API->>DB: Find user by username
+    API->>API: Verify password (Argon2)
+    API->>API: Set JWT cookies
+    API-->>Frontend: {user_id, name, username}
+    Frontend->>User: Redirect to /dashboard
