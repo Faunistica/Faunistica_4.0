@@ -1,21 +1,11 @@
 sequenceDiagram
     actor User
     actor Admin
-    participant Frontend as Frontend (React)
     participant Bot as Telegram Bot
-    participant API as API (FastAPI)
-    participant DB as PostgreSQL
 
-    User->>Frontend: Navigate to /support
-    Frontend->>Frontend: Show Telegram bot deep link<br/>?start=support + QR
-    User->>Bot: Open Telegram<br/>Send /support command
+    User->>Bot: /support
     Bot->>User: Ask for question text
-    User->>Bot: Send question (10-256 chars)
-    Bot->>Bot: Validate + format message
-    Bot->>Admin: Forward to ADMIN_CHAT_ID<br/>with user ID + username
-    Admin->>Bot: Reply to message<br/>or /reply command
+    User->>Bot: Send question
+    Bot->>Admin: Forward to admin chat
+    Admin->>Bot: /reply Answer text
     Bot->>User: Forward reply
-    Admin->>Bot: /logs command<br/>(view recent messages)
-    Bot->>Admin: Show recent support<br/>interactions
-
-    Note over API: POST /api/support exists but<br/>is unused by frontend
