@@ -26,4 +26,5 @@ diagrams:
 	mmdc -i docs/diagrams/record-filling.mmd -o docs/diagrams/record-filling.svg -b transparent -c docs/diagrams/mermaid-config.json
 	mmdc -i docs/diagrams/geocoding.mmd -o docs/diagrams/geocoding.svg -b transparent -c docs/diagrams/mermaid-config.json
 	mmdc -i docs/diagrams/taxonomy.mmd -o docs/diagrams/taxonomy.svg -b transparent -c docs/diagrams/mermaid-config.json
+	mmdc -i docs/diagrams/architecture.mmd -o docs/diagrams/architecture.svg -b transparent -c docs/diagrams/mermaid-config.json
 	mmdc -i docs/diagrams/support.mmd -o docs/diagrams/support.svg -b transparent -c docs/diagrams/mermaid-config.json
