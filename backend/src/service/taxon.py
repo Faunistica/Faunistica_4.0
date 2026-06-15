@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 # TODO: Replace local CSV with GBIF API integration for live taxonomy data
 csv_path: Path = settings.SPECIES_CSV_PATH
 if csv_path.exists():
-    with csv_path.open(newline="") as f:
+    with csv_path.open(newline="", encoding='utf-8') as f:
         _all_rows: list[dict[str, str]] = list(csv.DictReader(f))
 else:
     logger.warning("Species CSV not found at %s", csv_path)
