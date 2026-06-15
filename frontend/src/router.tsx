@@ -117,6 +117,11 @@ export const routes: RouteObject[] = [
                                     })),
                             },
                             {
+                                path: 'profile',
+                                lazy: () => import('./pages/Profile/Profile').then((m) => ({ Component: m.default })),
+                                handle: { isFullWidth: true },
+                            },
+                            {
                                 path: 'onboarding',
                                 lazy: () =>
                                     import('./pages/Onboarding').then((m) => ({

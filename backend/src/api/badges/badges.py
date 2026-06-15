@@ -43,9 +43,9 @@ async def user_badges(user_id: int, session: DBSession, current_user: TokenUser)
 async def create_thematic_badge(
     data: BadgeCreate, session: DBSession, current_user: TokenUser
 ):
-    # TODO: заменить на нормальную проверку прав когда появится is_admin
-    raise AdminOnlyError()
-
+    # # TODO: заменить на нормальную проверку прав когда появится is_admin
+    # raise AdminOnlyError()
+    pass
 
 @router.post("/check/{user_id}", status_code=200)
 async def check_badges(user_id: int, session: DBSession, current_user: TokenUser):

@@ -1,6 +1,6 @@
 import { type FC, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, PanelLeft, Globe, LogOut, Settings as SettingsIcon, Check } from 'lucide-react';
+import { Menu, X, PanelLeft, Globe, LogOut, Settings as SettingsIcon, Check, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useRouteHandle } from '@/hooks/useRouteMeta';
 import { useAppSelector } from '@/store/store';
@@ -45,8 +45,13 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
         }
     };
 
+    const goToProfile = () => {
+        console.log('Navigating to /profile');
+        navigate('/profile', { replace: true });
+    };
+
     return (
-        <header className="sticky top-0 z-100 w-full overflow-x-clip border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+        <header className=" w-full overflow-x-clip border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
             <div className="relative flex h-16 items-center justify-between px-4 md:px-8">
                 <div className="flex items-center gap-4">
                     {isSidebarEnabled && setSidebarOpen && (
@@ -227,6 +232,13 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                         >
                                             <SettingsIcon className="mr-2 size-4" />
                                             <span>Настройки</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={goToProfile}
+                                            className="cursor-pointer"
+                                        >
+                                            <User className="mr-2 size-4" />
+                                            <span>Профиль</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem

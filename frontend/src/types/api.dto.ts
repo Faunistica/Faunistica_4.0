@@ -126,3 +126,59 @@ export interface StatisticsResponse {
     most_common_genus: string | null;
     most_common_species: string | null;
 }
+
+export interface BadgeOut {
+    id: number;
+    badge_type: string;
+    name: string;
+    description: string | null;
+    awarded_at: string;
+}
+
+export interface LeaderboardEntry {
+    rank: number;
+    rank_delta: number | null;
+    user_id: number;
+    name: string | null;
+    record_count: number;
+}
+
+export interface LeaderboardResponse {
+    period: string;
+    entries: LeaderboardEntry[];
+}
+
+export interface MyRankResponse {
+    period: string;
+    rank: number;
+    rank_delta: number | null;
+    record_count: number;
+}
+
+export interface MarathonOut {
+    id: number;
+    name: string;
+    description: string | null;
+    starts_at: string;
+    ends_at: string;
+    rules: Record<string, unknown> | null;
+}
+
+export interface MapRecordOut {
+    id: string;
+    latitude: number | null;
+    longitude: number | null;
+    genus: string | null;
+    species: string | null;
+    created_at: string;
+}
+
+export interface UserStatisticsResponse {
+    user_id: number;
+    name: string | null;
+    records_entered: number;
+    publications_processed: number;
+    most_common_family: string | null;
+    most_common_genus: string | null;
+    most_common_species: string | null;
+}
