@@ -87,7 +87,7 @@ export const routes: RouteObject[] = [
                     {
                         path: 'instructions',
                         Component: Instructions,
-                        handle: { isFullWidth: true },
+                        handle: { isSidebarEnabled: true, isFullWidth: true },
                     },
 
                     {
