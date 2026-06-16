@@ -19,46 +19,28 @@ permissions:
   packages: write
 
 jobs:
-  build-backend:
+  build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: faunistica
+          POSTGRES_PASSWORD: faunistica
+          POSTGRES_DB: faunistica
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
-      - uses: actions/checkout@v6
-      - uses: docker/login-action@v3
+      - uses: ./.github/actions/docker-build
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: backend
-          push: true
-          load: true
-          tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:edge
-          build-args: |
-            GIT_COMMIT=${{ github.sha }}
-            GIT_TAG=edge
-            GIT_BRANCH=${{ github.ref_name }}
-
-  build-frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: frontend
-          push: true
-          load: true
-          tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:edge
-          build-args: |
-            VITE_API_URL=/api
-      - name: Smoke test
-        run: |
-          docker run -d --name test-frontend -p 8080:80 ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:edge
-          sleep 2
-          curl -f http://localhost:8080/ || (docker logs test-frontend && false)
-          docker rm -f test-frontend
+          backend-image: ${{ env.BACKEND_IMAGE }}
+          frontend-image: ${{ env.FRONTEND_IMAGE }}
+          backend-tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:edge
+          frontend-tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:edge
+          git-commit: ${{ github.sha }}
+          git-tag: edge
+          git-branch: ${{ github.ref_name }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
