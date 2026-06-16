@@ -16,9 +16,10 @@ postgres → backend:5001 → frontend:80 (статический SPA + /api/ �
 ```
 
 ```bash
-cd examples/all-docker
-cp ../.env.example .env
-cp ../config.yaml .       # копирует production-версию (examples/config.yaml), не путать с backend/config.yaml
+curl -o .env https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/.env.example
+curl -o config.yaml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/config.yaml
+curl -o compose.yml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/all-docker/compose.yml
+# curl можно заменить на wget -O <file> <url>
 # отредактировать .env
 docker compose up -d
 ```
@@ -27,12 +28,14 @@ docker compose up -d
 Бэкенд и фронтенд в Docker, PostgreSQL и nginx работают напрямую на хосте.
 
 ```bash
-cd examples/hybrid
-cp ../.env.example .env
-cp ../config.yaml .       # копирует production-версию (examples/config.yaml), не путать с backend/config.yaml
-# отредактировать .env, указать DB_HOST=/var/run/postgresql
+curl -o .env https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/.env.example
+curl -o config.yaml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/config.yaml
+curl -o compose.yml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/hybrid/compose.yml
+curl -o faunistica.conf https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/hybrid/nginx/faunistica.conf
+# curl можно заменить на wget -O <file> <url>
+# отредактировать .env (указать DB_HOST=/var/run/postgresql)
 docker compose up -d
-# скопировать nginx/faunistica.conf в /etc/nginx/sites-available/
+# sudo cp faunistica.conf /etc/nginx/sites-available/
 ```
 
 ---
@@ -120,11 +123,22 @@ volumes:
 ## Кастомные данные в `/data`
 
 Файлы в `backend/data/` (species_export.csv, locations.json и др.) вшиты в образ.
-Чтобы переопределить их, смонтируйте свой том поверх:
+По умолчанию постоянный том не используется — данные берутся из образа.
 
+Чтобы переопределить их, скачайте исходные файлы и смонтируйте свою папку:
+
+```bash
+mkdir data
+curl -O https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/backend/data/species_export.csv
+curl -O https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/backend/data/locations.json
+curl -O https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/backend/data/short_countries.txt
+curl -O https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/backend/data/ural_border.geojson
+```
+
+Добавьте в `compose.yml`:
 ```yaml
 volumes:
-  - ./my_data:/app/data:ro
+  - ./data:/app/data:ro
 ```
 
 Подробнее — в [backend/README.md](../backend/README.md).
