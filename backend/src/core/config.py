@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import ConfigDict, Field, SecretStr, computed_field
+from pydantic import ConfigDict, Field, SecretStr, computed_field, model_validator
 from pydantic_core import Url
 from pydantic_extra_types.dsn import PostgresDsn
 from pydantic_settings import (
@@ -120,6 +120,12 @@ class Settings(
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_jwt_secret_length(self) -> "Settings":
+        if not self.DEV_MODE and len(self.JWT_SECRET.get_secret_value()) < 32:
+            raise ValueError("JWT_SECRET must be at least 32 characters in production")
+        return self
 
     @classmethod
     def settings_customise_sources(

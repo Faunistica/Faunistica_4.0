@@ -24,6 +24,7 @@ services:
 
   # NOTE: remove if not needed
   pgadmin:
+    profiles: ["tools"]
     image: dpage/pgadmin4
     container_name: "fau_pgadmin"
     env_file:
