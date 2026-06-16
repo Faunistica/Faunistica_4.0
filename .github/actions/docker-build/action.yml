@@ -46,7 +46,7 @@ runs:
       uses: docker/build-push-action@v6
       with:
         context: backend
-        push: true
+        push: false
         load: true
         tags: ${{ inputs.backend-tags }}
         build-args: |
@@ -73,11 +73,18 @@ runs:
         docker exec test-backend /scripts/healthcheck.py
         docker rm -f test-backend
 
+    - name: Push backend
+      shell: bash
+      run: |
+        for tag in ${{ inputs.backend-tags }}; do
+          [ -n "$tag" ] && docker push "$tag"
+        done
+
     - name: Build & push frontend
       uses: docker/build-push-action@v6
       with:
         context: frontend
-        push: true
+        push: false
         load: true
         tags: ${{ inputs.frontend-tags }}
         build-args: |
@@ -89,10 +96,22 @@ runs:
       shell: bash
       run: |
         TAG="${{ inputs.registry }}/${{ inputs.frontend-image }}:edge"
-        docker run -d --name test-frontend -p 8080:80 "$TAG"
+        docker run -d --name test-frontend -p 8080:80 -p 8443:443 "$TAG"
+        for i in $(seq 1 6); do
+          curl -skf https://localhost:8443/ && break
+          sleep 2
+        done
+        curl -sk https://localhost:8443/ || (docker logs test-frontend && false)
         for i in $(seq 1 6); do
           curl -sf http://localhost:8080/ && break
           sleep 2
         done
         curl -f http://localhost:8080/ || (docker logs test-frontend && false)
         docker rm -f test-frontend
+
+    - name: Push frontend
+      shell: bash
+      run: |
+        for tag in ${{ inputs.frontend-tags }}; do
+          [ -n "$tag" ] && docker push "$tag"
+        done
