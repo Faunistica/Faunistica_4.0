@@ -1,9 +1,12 @@
+import i18next from 'i18next';
 import type { ApiErrorBody } from '@/types/api.dto';
 
-const DEFAULTS = {
-    api: 'Unknown error',
-    network: 'Network error. Please check your connection.',
-} as const;
+function getDefaults() {
+    return {
+        api: i18next.t('errors.unknownError'),
+        network: i18next.t('errors.networkError'),
+    };
+}
 
 interface ErrorFallbacks {
     api?: string;

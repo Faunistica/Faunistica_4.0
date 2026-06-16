@@ -54,23 +54,24 @@ export function recordFormSchema() {
         family: z.string().min(1, req),
         genus: z.string().min(1, req),
         species: z.string().min(1, req),
-    tax_verbatim: z.boolean().nullish(),
-    taxon_rank: z.enum(['genus', 'species', 'subspecies']).nullish(),
-    type_status: z.string().nullish(),
-    accepted_name: z.string().nullish(),
-    taxon_remarks: z.string().nullish(),
-    identification_remarks: z.string().nullish(),
+        tax_verbatim: z.boolean().nullish(),
+        taxon_rank: z.enum(['genus', 'species', 'subspecies']).nullish(),
+        type_status: z.string().nullish(),
+        accepted_name: z.string().nullish(),
+        taxon_remarks: z.string().nullish(),
+        identification_remarks: z.string().nullish(),
 
-    // ═══ QUANTITIES ═══
-    quantity_type: z.string().nullish(),
-    occurrence_remarks: z.string().nullish(),
-    males: z.coerce.number<number>().min(0).nullish(),
-    subadultMales: z.coerce.number<number>().min(0).nullish(),
-    females: z.coerce.number<number>().min(0).nullish(),
-    subadultFemales: z.coerce.number<number>().min(0).nullish(),
-    adults: z.coerce.number<number>().min(0).nullish(),
-    juveniles: z.coerce.number<number>().min(0).nullish(),
-});
+        // ═══ QUANTITIES ═══
+        quantity_type: z.string().nullish(),
+        occurrence_remarks: z.string().nullish(),
+        males: z.coerce.number<number>().min(0).nullish(),
+        subadultMales: z.coerce.number<number>().min(0).nullish(),
+        females: z.coerce.number<number>().min(0).nullish(),
+        subadultFemales: z.coerce.number<number>().min(0).nullish(),
+        adults: z.coerce.number<number>().min(0).nullish(),
+        juveniles: z.coerce.number<number>().min(0).nullish(),
+    });
+}
 
 export type RecordForm = z.infer<ReturnType<typeof recordFormSchema>>;
 
