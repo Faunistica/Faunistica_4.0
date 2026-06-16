@@ -6,6 +6,8 @@ from pydantic import UUID4
 
 from core.config import settings
 from core.dependencies import TokenUser
+from core.dependencies import DBSession
+from core.security import check_admin
 from core.exceptions import AdminOnlyError
 from schema.common import PaginatedResponse
 from schema.records import RecordFull
@@ -47,6 +49,7 @@ async def list_records(
 async def export_records(
     service: Annotated[RecordService, Depends()],
     token: TokenUser,
+    session: DBSession,
     publ_id: Annotated[
         int,
         Query(ge=1, description="Publication ID"),
@@ -60,7 +63,7 @@ async def export_records(
 ) -> Response | StreamingResponse:
     # TODO: remove or impl
     if scope == "project":
-        raise AdminOnlyError
+        await check_admin(session, token.user_id)
 
     result = await service.list_records(
         user_id=user_id or token.user_id,

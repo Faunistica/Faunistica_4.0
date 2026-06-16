@@ -51,6 +51,7 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(Text)
     region: Mapped[str | None] = mapped_column(Text)
     token_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
 
 class Publication(Base):

@@ -160,11 +160,14 @@ async def get_jwt_user(
     return UserMinimal(user_id=user_id, name=payload.username)
 
 
-def check_admin(
+async def check_admin(
     session: AsyncSession,
     user_id: int,
-) -> bool:
-    raise AdminOnlyError
+) -> None:
+    """Raises AdminOnlyError if the user is not an admin."""
+    user = await get_user(session, user_id)
+    if user is None or not user.is_admin:
+        raise AdminOnlyError()
 
 
 def validate_user_id(user_id: int, token_id: int) -> int:

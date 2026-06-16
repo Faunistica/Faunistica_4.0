@@ -1,6 +1,6 @@
 import hashlib
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import jwt as pyjwt
 import pytest
@@ -350,9 +350,30 @@ class TestGetJwtUser:
 
 
 class TestCheckAdmin:
-    def test_always_raises_admin_only_error(self):
-        with pytest.raises(AdminOnlyError):
-            check_admin(MagicMock(spec=AsyncSession), 1)
+    @pytest.mark.asyncio
+    async def test_non_admin_raises_admin_only_error(self):
+        mock_session = MagicMock(spec=AsyncSession)
+        mock_user = MagicMock(is_admin=False)
+
+        with patch("core.security.get_user", new_callable=AsyncMock, return_value=mock_user):
+            with pytest.raises(AdminOnlyError):
+                await check_admin(mock_session, 1)
+
+    @pytest.mark.asyncio
+    async def test_user_not_found_raises_admin_only_error(self):
+        mock_session = MagicMock(spec=AsyncSession)
+
+        with patch("core.security.get_user", new_callable=AsyncMock, return_value=None):
+            with pytest.raises(AdminOnlyError):
+                await check_admin(mock_session, 1)
+
+    @pytest.mark.asyncio
+    async def test_admin_user_does_not_raise(self):
+        mock_session = MagicMock(spec=AsyncSession)
+        mock_user = MagicMock(is_admin=True)
+
+        with patch("core.security.get_user", new_callable=AsyncMock, return_value=mock_user):
+            await check_admin(mock_session, 1)
 
 
 class TestValidateUserId:

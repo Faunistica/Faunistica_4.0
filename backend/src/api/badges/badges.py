@@ -2,7 +2,10 @@ from fastapi import APIRouter
 
 from core.dependencies import DBSession, TokenUser
 from core.exceptions import AdminOnlyError
-from repository.gamification import get_badges_for_user
+
+from core.security import check_admin
+from repository.gamification import get_badges_for_user, create_badge
+from repository.gamification import create_badge
 from schema.gamification import BadgeCreate, BadgeOut
 from service.gamification import check_and_award_badges
 
@@ -43,9 +46,17 @@ async def user_badges(user_id: int, session: DBSession, current_user: TokenUser)
 async def create_thematic_badge(
     data: BadgeCreate, session: DBSession, current_user: TokenUser
 ):
-    # # TODO: заменить на нормальную проверку прав когда появится is_admin
-    # raise AdminOnlyError()
-    pass
+    await check_admin(session, current_user.user_id)
+    badge = await create_badge(session, **data.model_dump())
+    await session.commit()
+    await session.refresh(badge)
+    return BadgeOut(
+        id=badge.id,
+        badge_type=badge.badge_type,
+        name=badge.name,
+        description=badge.description,
+        awarded_at=badge.created_at,
+    )
 
 @router.post("/check/{user_id}", status_code=200)
 async def check_badges(user_id: int, session: DBSession, current_user: TokenUser):

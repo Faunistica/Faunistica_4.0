@@ -23,10 +23,12 @@ def upgrade() -> None:
     bind = op.get_bind()
     inspector = inspect(bind)
 
-    if "user_id" not in inspector.get_pk_constraint("users")["constrained_columns"]:
+    existing_users_pk = inspector.get_pk_constraint("users")["constrained_columns"]
+    if "user_id" not in existing_users_pk:
         op.create_primary_key("users_pkey", "users", ["user_id"])
 
-    if "publs_pkey" not in inspector.get_pk_constraint("publs")["constrained_columns"]:
+    existing_publs_pk = inspector.get_pk_constraint("publs")["constrained_columns"]
+    if "publ_id" not in existing_publs_pk:
         op.create_primary_key("publs_pkey", "publs", ["publ_id"])
 
 

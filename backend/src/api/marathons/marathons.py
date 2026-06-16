@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from core.dependencies import DBSession, TokenUser
 from core.exceptions import AdminOnlyError
+from core.security import check_admin
 from repository.gamification import (
     award_badge,
     create_marathon,
@@ -42,15 +43,18 @@ async def marathon_detail(marathon_id: int, session: DBSession, current_user: To
 
 @router.post("/", response_model=MarathonOut, status_code=201)
 async def create(data: MarathonCreate, session: DBSession, current_user: TokenUser):
-    # TODO: admin check
-    raise AdminOnlyError()
+    await check_admin(session, current_user.user_id)
+    m = await create_marathon(session, data)
+    await session.commit()
+    await session.refresh(m)
+    return MarathonOut.model_validate(m)
 
 
 @router.post("/{marathon_id}/finish", status_code=200)
 async def finish_marathon(
     marathon_id: int, session: DBSession, current_user: TokenUser
 ):
-    # TODO: admin check
+    await check_admin(session, current_user.user_id)
     m = await get_marathon(session, marathon_id)
     if not m:
         raise HTTPException(404, "Marathon not found")
