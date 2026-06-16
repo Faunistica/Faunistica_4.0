@@ -49,6 +49,12 @@ async def reply_to_user(message: Message, bot: Bot) -> None:
     if message.reply_to_message is None or message.reply_to_message.text is None:
         return
 
+    if (
+        message.reply_to_message.from_user is None
+        or message.reply_to_message.from_user.id != bot.id
+    ):
+        return
+
     if message.text is None or not message.text.strip():
         return
 
