@@ -44,11 +44,11 @@ jobs:
           registry: ${{ env.REGISTRY }}
           backend-image: ${{ env.BACKEND_IMAGE }}
           frontend-image: ${{ env.FRONTEND_IMAGE }}
-          backend-tags: |
+          backend-tags: >-
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:edge
-          frontend-tags: |
+          frontend-tags: >-
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:edge
