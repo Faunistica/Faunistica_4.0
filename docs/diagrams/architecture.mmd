@@ -1,0 +1,35 @@
+flowchart TB
+    U[Пользователь-волонтёр]
+
+    subgraph R1[ ]
+        direction LR
+        FE[Frontend<br/>React / Vite]
+        BOT[Telegram Bot<br/>aiogram]
+    end
+
+    API[Backend API<br/>FastAPI]
+
+    subgraph R3[ ]
+        direction LR
+        DB[(PostgreSQL 15)]
+        GEO[Геокодер<br/>Nominatim geopy]
+        REF[Справочники<br/>CSV / JSON]
+        EXP[Экспорт<br/>XLSX / CSV]
+        SC[Support Chat]
+    end
+
+    A[Администратор]
+
+    U --> FE
+    U --> BOT
+    FE --> API
+    BOT --> API
+    API --> DB
+    API --> GEO
+    API --> REF
+    API --> EXP
+    API --> SC
+    SC --> A
+
+    style R1 fill:none,stroke:none
+    style R3 fill:none,stroke:none

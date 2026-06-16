@@ -26,7 +26,7 @@ from repository.registration import (
 )
 from schema.geo import RegionData
 
-_ALEMBIC_CFG_PATH = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
+_ALEMBIC_CFG_PATH = Path.cwd() / "alembic.ini"
 
 logger = logging.getLogger(__name__)
 

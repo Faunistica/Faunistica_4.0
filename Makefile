@@ -1,4 +1,4 @@
-.PHONY: lint format test
+.PHONY: lint format test diagrams
 
 lint:
 	@echo "Linting backend..."
@@ -17,3 +17,14 @@ test:
 	$(MAKE) -C backend test
 	@echo "Running frontend tests..."
 	$(MAKE) -C frontend test
+
+diagrams:
+	@echo "Generating mermaid diagrams..."
+	mmdc -i docs/diagrams/registration.mmd -o docs/diagrams/registration.svg -b transparent -c docs/diagrams/mermaid-config.json
+	mmdc -i docs/diagrams/auth-login.mmd -o docs/diagrams/auth-login.svg -b transparent -c docs/diagrams/mermaid-config.json
+	mmdc -i docs/diagrams/auth-telegram.mmd -o docs/diagrams/auth-telegram.svg -b transparent -c docs/diagrams/mermaid-config.json
+	mmdc -i docs/diagrams/record-filling.mmd -o docs/diagrams/record-filling.svg -b transparent -c docs/diagrams/mermaid-config.json
+	mmdc -i docs/diagrams/geocoding.mmd -o docs/diagrams/geocoding.svg -b transparent -c docs/diagrams/mermaid-config.json
+	mmdc -i docs/diagrams/taxonomy.mmd -o docs/diagrams/taxonomy.svg -b transparent -c docs/diagrams/mermaid-config.json
+	mmdc -i docs/diagrams/architecture.mmd -o docs/diagrams/architecture.svg -b transparent -c docs/diagrams/mermaid-config.json
+	mmdc -i docs/diagrams/support.mmd -o docs/diagrams/support.svg -b transparent -c docs/diagrams/mermaid-config.json

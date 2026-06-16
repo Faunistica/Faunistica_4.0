@@ -1,0 +1,11 @@
+flowchart LR
+    Start([Пользователь выбирает<br/>публикацию]) --> Pub[GET /api/publications/current]
+    Pub --> Form[Заполнение формы:<br/>география, таксоны,<br/>сбор, количественные хар-ки]
+    Form --> Auto{Автосохранение?}
+    Auto -->|2с задержка| Save[PUT /api/records/id<br/>submission_type=autosave]
+    Auto -->|Вручную| Save
+    Save --> Submit[PUT /api/records/id/submit]
+    Submit --> Valid[validate_record<br/>5 модулей проверки]
+    Valid --> Ok[REC_OK]
+    Ok --> Sidebar[Просмотр в FormSidebar]
+    Ok --> Export[Экспорт XLSX<br/>/api/records/export]

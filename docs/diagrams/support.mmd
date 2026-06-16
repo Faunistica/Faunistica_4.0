@@ -1,0 +1,11 @@
+sequenceDiagram
+    actor U as Пользователь
+    actor Adm as Администратор
+    participant B as Telegram Бот
+
+    U->>B: /support
+    B->>U: Запрашивает текст вопроса
+    U->>B: Отправляет вопрос
+    B->>Adm: Пересылает в чат администратора
+    Adm->>B: /reply Текст ответа
+    B->>U: Пересылает ответ

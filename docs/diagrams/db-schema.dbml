@@ -1,0 +1,120 @@
+// dbdiagram.io / DBML schema
+// Render at https://dbdiagram.io
+
+Table users {
+  user_id int [pk]
+  tlg_name varchar
+  tlg_username varchar
+  name varchar
+  reg_stat varchar
+  hash varchar
+  hash_date timestamp
+  age int
+  lng varchar
+  email varchar
+  region varchar
+  token_version int
+  reg_run timestamp
+  reg_end timestamp
+}
+
+Table publs {
+  publ_id int [pk]
+  type varchar
+  author varchar
+  year int
+  name varchar
+  external varchar
+  language varchar
+  ural boolean
+  pdf_file varchar
+  bib_file varchar
+  arj_file varchar
+  resume text
+  coords text
+  cover varchar
+  occs text
+  spec text
+  e_author varchar
+  e_name varchar
+}
+
+Table event_records {
+  id uuid [pk]
+  publ_id int [ref: > publs.publ_id]
+  user_id int [ref: > users.user_id]
+  type varchar
+  errors jsonb
+  ip inet
+  created_at timestamp
+  updated_at timestamp
+  country varchar
+  region varchar
+  district varchar
+  locality varchar
+  is_manual_location boolean
+  latitude float
+  longitude float
+  verbatimcoordinates varchar
+  coordinate_uncertainty float
+  georef_source varchar
+  location_remarks text
+  verbatim_date varchar
+  date_precision varchar
+  is_interval boolean
+  habitat text
+  sampling_protocol varchar
+  sampling_effort varchar
+  sample_size_value varchar
+  sample_size_unit varchar
+  event_remarks text
+  field_number varchar
+  catalog_number varchar
+  collection_code varchar
+  recorded_by varchar
+  family varchar
+  genus varchar
+  species varchar
+  tax_verbatim varchar
+  taxon_rank varchar
+  type_status varchar
+  accepted_name varchar
+  taxon_remarks text
+  quantity int
+  quantity_type varchar
+  sex varchar
+  life_stage varchar
+  occurrence_remarks text
+  identification_remarks text
+}
+
+Table actions {
+  id int [pk]
+  user_id int
+  action varchar
+  object varchar
+  datetime timestamp
+  user_ip inet
+}
+
+Table spiders {
+  publ_id int [pk]
+  shortlink varchar [pk]
+  scientificname varchar
+  family varchar
+  genus varchar
+  specificepithet varchar
+  eventdate varchar
+  locality varchar
+  decimallatitude float
+  decimallongitude float
+}
+
+// FK constraints
+Ref: event_records.publ_id > publs.publ_id
+Ref: event_records.user_id > users.user_id
+Ref: spiders.publ_id > publs.publ_id
+
+// Logical relationships (no FK constraint, enforced at app level)
+Ref: actions.user_id > users.user_id
+Ref: publs.publ_id - users.user_id

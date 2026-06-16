@@ -1,0 +1,24 @@
+sequenceDiagram
+    actor U as Пользователь
+    participant F as Фронтенд
+    participant A as API
+    participant B as Telegram Бот
+    participant D as БД
+
+    U->>F: Нажимает «Войти через Telegram»
+    F->>A: POST /api/auth/code
+    A-->>F: {code, token, bot_url}
+    F->>U: Показывает код, QR, ссылку
+
+    U->>B: Вводит код в Telegram
+    B->>D: Поиск пользователя по telegram_id
+    B->>D: UPDATE status = AWAITING_API_LOGIN
+    B-->>U: Авторизация подтверждена!
+
+    loop Опрос каждую 1с
+        F->>A: GET /api/auth/code/status
+        A-->>F: {status: AWAITING_API_LOGIN}
+    end
+
+    A->>A: Устанавливает JWT cookies
+    F->>U: Перенаправляет на /dashboard
