@@ -3,7 +3,7 @@ services:
     image: postgres:15-alpine
     container_name: fau_db
     env_file:
-      - ../.env.example
+      - .env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
     ports:
-      - "127.0.0.1:5432:5432"
+      - 127.0.0.1:5432:5432
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
@@ -25,12 +25,12 @@ services:
     image: ghcr.io/faunistica/backend:latest
     container_name: fau_backend
     env_file:
-      - ../.env.example
+      - .env
     volumes:
-      - ../config.yaml:/app/config.yaml:ro
-      - backend_data:/app/data
+      - ./config.yaml:/app/config.yaml:ro
+      # - backend_data:/app/data     # закомментировано — данные из образа, см. README
     ports:
-      - "127.0.0.1:5001:5001"
+      - 127.0.0.1:5001:5001
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,11 +50,11 @@ services:
     image: ghcr.io/faunistica/frontend:latest
     container_name: fau_frontend
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      # Для HTTPS раскомментировать:
-      # - /etc/letsencrypt:/etc/letsencrypt:ro
+      - 80:80
+      - 443:443
+    volumes: []
+    # Для замены self-signed сертификата на реальный:
+    # - /etc/letsencrypt:/etc/nginx/ssl:ro
     depends_on:
       - backend
     restart: always
@@ -62,4 +62,4 @@ services:
 
 volumes:
   postgres_data:
-  backend_data:
+# backend_data:
