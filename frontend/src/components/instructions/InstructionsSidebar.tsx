@@ -27,6 +27,7 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
     onSectionClick,
 }) => {
     const { t } = useTranslation();
+    const { t } = useTranslation();
     const { isMobile, setOpenMobile, openMobile } = useSidebar();
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -67,6 +68,7 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
                                 </div>
                                 <div className="text-[10px] leading-tight font-medium text-slate-500">
                                     {t('instructions.tableOfContents')}
+                                    {t('instructions.tableOfContents')}
                                 </div>
                             </div>
                         </div>
@@ -81,6 +83,7 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
                             className="size-8 text-slate-400 hover:text-slate-600 md:hidden"
                             onClick={() => setOpenMobile(false)}
                             aria-label={t('form.sidebarSection.closePanel')}
+                            aria-label={t('form.sidebarSection.closePanel')}
                         >
                             <X className="size-4" />
                         </Button>
@@ -91,6 +94,7 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
             <SidebarContent>
                 <SidebarGroup className="overflow-y-hidden p-0">
                     <SidebarGroupLabel className="rounded-none border-b border-slate-100 text-xs font-semibold tracking-wider text-slate-500 uppercase shadow-xs">
+                        <span className="py-1 pl-2">{t('instructions.tableOfContents')}</span>
                         <span className="py-1 pl-2">{t('instructions.tableOfContents')}</span>
                     </SidebarGroupLabel>
                     <SidebarGroupContent

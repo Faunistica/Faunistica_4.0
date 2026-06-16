@@ -8,6 +8,7 @@ import { useInstructions } from '@/hooks/useInstructions';
 import { InstructionsSidebar } from '@/components/instructions/InstructionsSidebar';
 import { MarkdownContent } from '@/components/instructions/MarkdownContent';
 import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 interface OutletContextType {
     isSidebarOpen: boolean;
@@ -15,6 +16,7 @@ interface OutletContextType {
 }
 
 const Instructions: FC = () => {
+    const { t } = useTranslation();
     const { t } = useTranslation();
     const context = useOutletContext<OutletContextType | null>();
     const isSidebarOpen = context?.isSidebarOpen ?? false;
