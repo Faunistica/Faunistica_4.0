@@ -8,31 +8,37 @@
 
 ### [all-docker](./all-docker/) — всё в Docker
 PostgreSQL, бэкенд и фронтенд — каждый в своём контейнере. \
-Отдельный [nginx](https://nginx.org)-контейнер **не нужен**: фронтенд-контейнер сам проксирует
-`/api/*` на бэкенд через смонтированный nginx-конфиг.
+Отдельный [nginx](https://nginx.org)-контейнер **не обязателен**: фронтенд-контейнер сам проксирует
+`/api/*` на бэкенд
 
 ```
 postgres → backend:5001 → frontend:80 (статический SPA + /api/ → backend)
 ```
 
 ```bash
-cd examples/all-docker
-cp ../.env.example .env
-cp ../config.yaml .       # копирует production-версию (examples/config.yaml), не путать с backend/config.yaml
+mkdir faunistica && cd faunistica
+curl -o .env https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/.env.example
+curl -o config.yaml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/config.yaml
+curl -o compose.yml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/all-docker/compose.yml
+# curl можно заменить на wget -O <file> <url>
 # отредактировать .env
 docker compose up -d
 ```
 
 ### [hybrid](./hybrid/) — Docker + хост
-Бэкенд и фронтенд в Docker, PostgreSQL и nginx работают напрямую на хосте.
+Бэкенд и фронтенд в Docker, PostgreSQL и nginx работают напрямую на хосте. \
+Хост-nginx **опционален** — фронтенд доступен на `http://localhost:8080`, бэкенд на `http://localhost:5001/docs`.
 
 ```bash
-cd examples/hybrid
-cp ../.env.example .env
-cp ../config.yaml .       # копирует production-версию (examples/config.yaml), не путать с backend/config.yaml
-# отредактировать .env, указать DB_HOST=/var/run/postgresql
+mkdir faunistica && cd faunistica
+curl -o .env https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/.env.example
+curl -o config.yaml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/config.yaml
+curl -o compose.yml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/hybrid/compose.yml
+curl -o faunistica.conf https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/hybrid/nginx/faunistica.conf
+# curl можно заменить на wget -O <file> <url>
+# отредактировать .env (указать DB_HOST=/var/run/postgresql)
 docker compose up -d
-# скопировать nginx/faunistica.conf в /etc/nginx/sites-available/
+# (опционально) хост nginx: sudo cp faunistica.conf /etc/nginx/sites-available/
 ```
 
 ---
@@ -41,38 +47,31 @@ docker compose up -d
 
 ### all-docker: фронтенд-контейнер как reverse proxy
 
-По умолчанию образ фронтенда (`ghcr.io/faunistica/frontend`) содержит минимальный
-nginx-конфиг, который только раздаёт статику (`frontend/nginx/default.conf`).
+Образ фронтенда (`ghcr.io/faunistica/frontend`) содержит полноценный nginx:
+- Раздача статики (`/assets/` с долгим кешем, SPA-роутинг для `/`)
+- Проксирование `/api/*`, `/docs`, `/openapi.json` на бэкенд
+- HTTPS с самоподписанным сертификатом (порт 443)
+- HTTP (порт 80) без редиректа, для совместимости
 
-Чтобы превратить его в полноценный reverse proxy, смонтируйте production-конфиг
-поверх дефолтного:
+Для замены самоподписанного сертификата на реальный смонтируйте свои сертификаты:
 
 ```yaml
 volumes:
-  - ./nginx/faunistica.conf:/etc/nginx/conf.d/default.conf:ro
+  - /etc/letsencrypt:/etc/nginx/ssl:ro
 ```
 
-Файл `nginx/faunistica.conf` в примере уже включает:
-- Раздачу статики (`/assets/` с долгим кешем, SPA-роутинг для `/`)
-- Проксирование `/api/*`, `/docs`, `/openapi.json` на бэкенд
-- Заголовки безопасности (CSP, X-Frame-Options и др.)
-- Закомментированный блок HTTPS
+### hybrid: nginx на хосте (опционально)
 
-Если вам нужен **кастомный nginx-конфиг** — просто замените файл в `./nginx/`
-или смонтируйте свой путь. Всё остальное остаётся без изменений.
+Фронтенд доступен напрямую на `http://localhost:8080`, бэкенд — на `http://localhost:5001/docs`.
+Хост-nginx нужен только для кастомного домена, HTTPS или единого порта.
 
-### hybrid: nginx на хосте
+Конфиг: [nginx/faunistica.conf](hybrid/nginx/faunistica.conf).
 
-В hybrid-схеме nginx работает на хосте, конфиг лежит в `nginx/faunistica.conf`.
-
-**Для включения HTTPS:**
+Для HTTPS:
 ```bash
-# [certbot](https://certbot.eff.org) (рекомендуется)
 certbot certonly --standalone -d faunistica.ru
-# или acme.sh
-acme.sh --issue --standalone -d faunistica.ru
 ```
-Раскомментируйте `server`-блок с `listen 443` в nginx-конфиге и перезагрузите nginx.
+Раскомментируйте `server`-блок с `listen 443` и перезагрузите nginx.
 
 ## Лимиты памяти (рекомендуемые)
 
@@ -120,11 +119,22 @@ volumes:
 ## Кастомные данные в `/data`
 
 Файлы в `backend/data/` (species_export.csv, locations.json и др.) вшиты в образ.
-Чтобы переопределить их, смонтируйте свой том поверх:
+По умолчанию постоянный том не используется — данные берутся из образа.
 
+Чтобы переопределить их, скачайте исходные файлы и смонтируйте свою папку:
+
+```bash
+mkdir data
+curl -O https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/backend/data/species_export.csv
+curl -O https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/backend/data/locations.json
+curl -O https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/backend/data/short_countries.txt
+curl -O https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/backend/data/ural_border.geojson
+```
+
+Добавьте в `compose.yml`:
 ```yaml
 volumes:
-  - ./my_data:/app/data:ro
+  - ./data:/app/data:ro
 ```
 
 Подробнее — в [backend/README.md](../backend/README.md).
