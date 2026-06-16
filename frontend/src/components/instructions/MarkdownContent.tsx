@@ -44,10 +44,13 @@ const markdownComponents: Components = {
     },
 };
 
+const stripHtmlComments = (text: string) =>
+    text.replace(/<!--[\s\S]*?-->/g, '');
+
 export const MarkdownContent: FC<{ content: string }> = ({ content }) => {
     return (
         <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-            {content}
+            {stripHtmlComments(content)}
         </Markdown>
     );
 };
