@@ -5,11 +5,13 @@ import { cn } from '@/lib/utils';
 
 type OverrideProps<TBase, TOverrides> = Omit<TBase, keyof TOverrides> & TOverrides;
 
+type SuggestionValue = string | { value: string; label: string };
+
 type AutocompleteProps = OverrideProps<
     ComponentProps<'input'>,
     {
         id: string;
-        suggestions: string[];
+        suggestions: SuggestionValue[];
         isLoading?: boolean;
         onSelect?: (value: string) => void;
         onSearch: (text: string) => void;
@@ -88,11 +90,21 @@ const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
             [minChars, onChange, onSearch],
         );
 
+        const getValue = useCallback((item: SuggestionValue): string => {
+            return typeof item === 'string' ? item : item.value;
+        }, []);
+
+        const getLabel = useCallback((item: SuggestionValue): string => {
+            return typeof item === 'string' ? item : item.label;
+        }, []);
+
         const handleSelect = useCallback(
-            (item: string) => {
-                onSelect?.(item);
+            (item: SuggestionValue) => {
+                const val = getValue(item);
+                const label = getLabel(item);
+                onSelect?.(val);
                 if (inputRef.current) {
-                    inputRef.current.value = item;
+                    inputRef.current.value = label;
                 }
                 if (blurOnSelect) {
                     inputRef.current?.blur();
@@ -118,7 +130,7 @@ const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
                     handleSelect(suggestions[clampedHighlightIndex]);
                 }
             },
-            [suggestions, open, handleSelect, clampedHighlightIndex, setHighlightIndex],
+            [suggestions, open, handleSelect, clampedHighlightIndex],
         );
 
         return (
@@ -164,7 +176,7 @@ const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
                     >
                         {suggestions.map((item, i) => (
                             <li
-                                key={item}
+                                key={getValue(item)}
                                 ref={(el) => {
                                     itemRefs.current[i] = el;
                                 }}
@@ -182,7 +194,7 @@ const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
                                         : 'text-slate-700 hover:bg-slate-50',
                                 )}
                             >
-                                {item}
+                                {getLabel(item)}
                             </li>
                         ))}
                     </ul>

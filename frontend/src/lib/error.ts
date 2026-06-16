@@ -1,8 +1,8 @@
 import type { ApiErrorBody } from '@/types/api.dto';
 
 const DEFAULTS = {
-    api: 'Неизвестная ошибка',
-    network: 'Ошибка сети. Пожалуйста, проверьте ваше подключение.',
+    api: 'Unknown error',
+    network: 'Network error. Please check your connection.',
 } as const;
 
 interface ErrorFallbacks {

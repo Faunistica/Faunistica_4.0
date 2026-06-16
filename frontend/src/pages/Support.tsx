@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { useGetBotUrlQuery } from '@/api/authAPI';
 import TelegramQRCode from '@/components/qr/TelegramQRCode';
+import { useTranslation } from 'react-i18next';
 
 export default function Support() {
+    const { t } = useTranslation();
     const { data: botData, isLoading } = useGetBotUrlQuery();
     const botUrl = botData?.bot_url;
     const supportUrl = botUrl ? `${botUrl}?start=support` : undefined;
@@ -24,22 +26,20 @@ export default function Support() {
                     <CardHeader className="space-y-4 pb-8 text-center">
                         <div className="space-y-2">
                             <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
-                                Служба поддержки
+                                {t('support.title')}
                             </CardTitle>
                             <CardDescription className="mx-auto max-w-lg text-base">
-                                Возникли вопросы, нужна помощь или вы нашли ошибку? Напишите нашему
-                                Telegram-боту, и мы оперативно вам поможем!
+                                {t('support.pageDescription')}
                             </CardDescription>
                         </div>
                     </CardHeader>
 
                     <CardContent className="px-6 pb-10 md:px-12">
                         <div className="flex flex-col items-center justify-center gap-10 md:flex-row md:items-stretch md:gap-12">
-                            {/* Левая колонка: Инструкция */}
                             <div className="flex flex-1 flex-col justify-center space-y-6">
                                 <div className="space-y-4">
                                     <h3 className="text-xl font-semibold text-slate-900">
-                                        Как связаться с поддержкой?
+                                        {t('support.howToContact')}
                                     </h3>
                                     <ul className="space-y-3 text-slate-600">
                                         <li className="flex items-start gap-3">
@@ -47,8 +47,7 @@ export default function Support() {
                                                 1
                                             </div>
                                             <span>
-                                                Перейдите в наш Telegram-бот по кнопке ниже,
-                                                отсканируйте QR-код или перейдите по прямой ссылке:{' '}
+                                                {t('support.step1')}{' '}
                                                 {botUrl ? (
                                                     <a
                                                         href={supportUrl}
@@ -60,7 +59,7 @@ export default function Support() {
                                                     </a>
                                                 ) : (
                                                     <span className="text-slate-400">
-                                                        загрузка...
+                                                        {t('support.loading')}
                                                     </span>
                                                 )}
                                                 .
@@ -71,8 +70,7 @@ export default function Support() {
                                                 2
                                             </div>
                                             <span>
-                                                Нажмите кнопку <strong>«Запустить»</strong> (Start),
-                                                если вы впервые открываете бота.
+                                                {t('support.step2')}
                                             </span>
                                         </li>
                                         <li className="flex items-start gap-3">
@@ -80,8 +78,7 @@ export default function Support() {
                                                 3
                                             </div>
                                             <span>
-                                                Если бот не перешел в режим поддержки автоматически,
-                                                отправьте команду <strong>/support</strong>.
+                                                {t('support.step3')}
                                             </span>
                                         </li>
                                         <li className="flex items-start gap-3">
@@ -89,8 +86,7 @@ export default function Support() {
                                                 4
                                             </div>
                                             <span>
-                                                Опишите вашу проблему, и наша команда поддержки
-                                                ответит вам в кратчайшие сроки.
+                                                {t('support.step4')}
                                             </span>
                                         </li>
                                     </ul>
@@ -108,12 +104,11 @@ export default function Support() {
                                         rel="noopener noreferrer"
                                     >
                                         <Send className="size-5" />
-                                        Написать в поддержку
+                                        {t('support.writeToSupport')}
                                     </a>
                                 </Button>
                             </div>
 
-                            {/* Правая колонка: QR-код */}
                             <div className="flex shrink-0 flex-col items-center justify-center space-y-4">
                                 <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-4">
                                     {supportUrl ? (
@@ -125,20 +120,19 @@ export default function Support() {
                                     )}
                                 </div>
                                 <p className="text-sm font-medium text-slate-500">
-                                    Отсканируйте QR-код
+                                    {t('support.scanQR')}
                                 </p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Дополнительный блок (опционально) */}
                 <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 text-center text-sm text-blue-800">
                     <MessageCircle className="mx-auto mb-2 size-6 text-blue-500" />
                     <p>
-                        Мы стараемся отвечать на все запросы в течение 24 часов.
+                        {t('support.responseTime')}
                         <br />
-                        Спасибо, что помогаете делать проект лучше!
+                        {t('support.thanks')}
                     </p>
                 </div>
             </div>

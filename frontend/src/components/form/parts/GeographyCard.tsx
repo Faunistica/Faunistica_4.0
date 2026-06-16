@@ -12,6 +12,7 @@ import {
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 import 'leaflet/dist/leaflet.css';
 import { type FC, useState, useEffect } from 'react';
@@ -32,6 +33,7 @@ interface Props {
 }
 
 const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
+    const { t } = useTranslation();
     const { control, setValue, getValues } = useFormContext<RecordForm>();
 
     const georefSource = useWatch({ name: 'georef_source', control }) || 'none';
@@ -88,7 +90,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                             <MapPin className="size-4" />
                         </span>
                         <CardTitle className="text-lg font-semibold">
-                            Пространственная локализация
+                            {t('form.spatialLocalization')}
                         </CardTitle>
                     </div>
                     <SavedPresetSelect
@@ -108,7 +110,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { invalid, error } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel>Происхождение координат</FieldLabel>
+                                <FieldLabel>{t('form.spatial.coordinateOrigin')}</FieldLabel>
                                 <RadioGroup
                                     value={field.value ?? 'none'}
                                     onValueChange={field.onChange}
@@ -128,7 +130,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                                 htmlFor={`geo_${opt.value}`}
                                                 className="cursor-pointer font-normal text-slate-700"
                                             >
-                                                {opt.label}
+                                                {t(opt.label)}
                                             </FieldLabel>
                                         </div>
                                     ))}
@@ -143,12 +145,12 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
                                 <FieldLabel htmlFor="location_remarks">
-                                    Географические примечания
+                                    {t('form.spatial.geoNotes')}
                                 </FieldLabel>
                                 <Textarea
                                     id="location_remarks"
                                     className="max-h-fit min-h-28"
-                                    placeholder="Примечания к местоположению…"
+                                    placeholder={t('form.spatial.geoNotesPlaceholder')}
                                     {...field}
                                     value={field.value ?? ''}
                                 />
@@ -161,23 +163,23 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <FormAutocomplete
                         name="country"
-                        label="Страна"
-                        options={[...COUNTRY_OPTIONS]}
-                        placeholder="Выберите страну"
+                        label={t('form.spatial.country')}
+                        options={[...COUNTRY_OPTIONS].map((c) => ({ value: c, label: t(`countries.${c}`) }))}
+                        placeholder={t('form.spatial.countryPlaceholder')}
                     />
                     <FormAutocomplete
                         name="region"
-                        label="Регион (субъект)"
+                        label={t('form.spatial.region')}
                         options={regionSearchFn}
-                        placeholder="Начните вводить…"
+                        placeholder={t('form.spatial.regionPlaceholder')}
                         onSelectSuggestion={handleLocationSuggestionSelect}
                         onCommitTyped={handleLocationTypedCommit}
                     />
                     <FormAutocomplete
                         name="district"
-                        label="Район"
+                        label={t('form.spatial.district')}
                         options={districtSearchFn}
-                        placeholder="Начните вводить…"
+                        placeholder={t('form.spatial.districtPlaceholder')}
                         onSelectSuggestion={handleLocationSuggestionSelect}
                         onCommitTyped={handleLocationTypedCommit}
                     />
@@ -186,10 +188,10 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="locality">Локалитет (топоним)</FieldLabel>
+                                <FieldLabel htmlFor="locality">{t('form.spatial.locality')}</FieldLabel>
                                 <Input
                                     id="locality"
-                                    placeholder="Исходное название места из статьи"
+                                    placeholder={t('form.spatial.localityPlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                 />
@@ -205,7 +207,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <Field>
-                                        <FieldLabel>Формат ввода координат</FieldLabel>
+                                        <FieldLabel>{t('form.spatial.coordinateFormat')}</FieldLabel>
                                         <Select
                                             value={coordFormat || undefined}
                                             onValueChange={(val: 'DD' | 'DM' | 'DMS') =>
@@ -213,17 +215,17 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                             }
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Выберите формат" />
+                                                <SelectValue placeholder={t('form.spatial.formatPlaceholder')} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="DD">
-                                                    Десятичные градусы (DD)
+                                                    {t('form.spatial.coordinateFormatDD')}
                                                 </SelectItem>
                                                 <SelectItem value="DM">
-                                                    Градусы и минуты (DM)
+                                                    {t('form.spatial.coordinateFormatDM')}
                                                 </SelectItem>
                                                 <SelectItem value="DMS">
-                                                    Градусы, минуты, секунды (DMS)
+                                                    {t('form.spatial.coordinateFormatDMS')}
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>
@@ -244,7 +246,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     onClick={() => setShowMap(!showMap)}
                                 >
                                     <MapIcon className="size-4" />
-                                    {showMap ? 'Скрыть карту' : 'Выбрать на карте'}
+                                    {showMap ? t('form.spatial.hideMap') : t('form.spatial.selectOnMap')}
                                 </Button>
 
                                 {showMap && (
@@ -266,7 +268,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                         render={({ field, fieldState: { invalid, error } }) => (
                                             <Field data-invalid={invalid}>
                                                 <FieldLabel htmlFor="latitude">
-                                                    Широта (DD)
+                                                    {t('form.spatial.latitudeDD')}
                                                 </FieldLabel>
                                                 <Input
                                                     id="latitude"
@@ -285,7 +287,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                         render={({ field, fieldState: { invalid, error } }) => (
                                             <Field data-invalid={invalid}>
                                                 <FieldLabel htmlFor="longitude">
-                                                    Долгота (DD)
+                                                    {t('form.spatial.longitudeDD')}
                                                 </FieldLabel>
                                                 <Input
                                                     id="longitude"
@@ -306,7 +308,7 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                 render={({ field, fieldState: { invalid, error } }) => (
                                     <Field data-invalid={invalid}>
                                         <FieldLabel htmlFor="coordinate_uncertainty">
-                                            Неопределённость, м
+                                            {t('form.spatial.uncertainty')}
                                         </FieldLabel>
                                         <Input
                                             id="coordinate_uncertainty"

@@ -3,6 +3,7 @@ import { BookOpen, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router';
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 import { PublicationPreview } from '@/components/shared/PublicationPreview';
 import PublicationSourceFiles from '@/components/shared/PublicationSourceFiles';
 import type { Publication } from '@/types/domain';
@@ -13,6 +14,7 @@ interface PublicationRowProps {
 }
 
 export const PublicationRow: FC<PublicationRowProps> = ({ publication, mode }) => {
+    const { t } = useTranslation();
     const border = mode === 'progress' ? 'border-blue-400' : 'border-emerald-400';
 
     return (
@@ -28,7 +30,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ publication, mode }) =
                     >
                         <Link to={`/publication/${publication.publ_id}`}>
                             <BookOpen className="size-4" />
-                            <span>Продолжить</span>
+                            <span>{t('dashboard.continue')}</span>
                         </Link>
                     </Button>
                     <Button
@@ -39,7 +41,7 @@ export const PublicationRow: FC<PublicationRowProps> = ({ publication, mode }) =
                     >
                         <Link to={`/publication/${publication.publ_id}/submit`}>
                             <CheckCircle2 className="size-4" />
-                            <span>Завершить обработку</span>
+                            <span>{t('dashboard.finish')}</span>
                         </Link>
                     </Button>
                 </div>

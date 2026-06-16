@@ -1,16 +1,18 @@
 import { Microscope } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 
 export default function Science() {
+    const { t } = useTranslation();
     return (
         <section id="science" className="w-full bg-white py-16 md:py-24">
             <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
                 <div className="mb-12 text-center">
                     <Badge className="mb-4 bg-emerald-100 text-emerald-800 hover:bg-emerald-200">
-                        Для специалистов
+                        {t('landing.forSpecialists')}
                     </Badge>
                     <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                        Научная основа проекта
+                        {t('landing.scienceTitle')}
                     </h2>
                 </div>
 
@@ -23,33 +25,23 @@ export default function Science() {
                         </div>
                         <div className="space-y-6 leading-relaxed text-slate-600">
                             <p>
-                                Проект «Паутина данных» — это первое применение подходов{' '}
-                                <strong>Data Science</strong> и гражданской науки для оцифровки
-                                академических публикаций в нашей области. Мы прокладываем мост между
-                                литературным наследием прошлого и порталами данных о биоразнообразии
-                                будущего.
+                                {t('landing.scienceDesc1')}
                             </p>
                             <p>
-                                К настоящему времени создана платформа для перевода данных в
-                                стандарт <strong>DarwinCore</strong>. В сотрудничестве с К.Г.
-                                Михайловым разработано веб-приложение{' '}
-                                <a href="https://faunistics.international/arachnolibrary/">
-                                    <strong>Arachnolibrary</strong>
-                                </a>
-                                , база которого уже содержит 5200 источников.
+                                {t('landing.scienceDesc2')}
                             </p>
 
                             <div className="flex flex-wrap gap-4 pt-4">
                                 <div className="flex w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 sm:w-auto">
                                     <span className="size-2 rounded-full bg-emerald-500"></span>
                                     <span className="text-sm font-medium text-slate-900">
-                                        При поддержке РНФ (№ 24-24-00460)
+                                        {t('landing.rnfSupport')}
                                     </span>
                                 </div>
                                 <div className="flex w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 sm:w-auto">
                                     <span className="size-2 rounded-full bg-blue-500"></span>
                                     <span className="text-sm font-medium text-slate-900">
-                                        Интеграция с GBIF
+                                        {t('landing.gbifIntegration')}
                                     </span>
                                 </div>
                             </div>

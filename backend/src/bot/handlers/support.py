@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from bot import keyboards
-from bot.messages import Messages
+from bot.i18n import BotLanguage, Messages
 from bot.states import SupportStates
 from core.config import settings
 from core.dependencies import get_session
@@ -17,21 +17,20 @@ router = Router()
 
 
 @router.message(Command("support"))
-async def support_command(message: Message, state: FSMContext, bot: Bot) -> None:
+async def support_command(message: Message, state: FSMContext, bot: Bot, lang: BotLanguage) -> None:
     if message.from_user is None:
         raise HandlerError
 
     if message.chat.id == settings.ADMIN_CHAT_ID:
-        await message.answer(Messages.support_for_admins())
+        await message.answer(Messages.support_for_admins(lang))
         return
-
     user_id = message.from_user.id
 
     async for session in get_session():
         action_service = ActionService(session)
         user_service = UserService(session, bot, action_service)
 
-        result = await user_service.check_commands_allowed(user_id=user_id)
+        result = await user_service.check_commands_allowed(user_id=user_id, lang=lang)
         if isinstance(result, MsgErr):
             await message.answer(result.error)
             return
@@ -40,13 +39,13 @@ async def support_command(message: Message, state: FSMContext, bot: Bot) -> None
         await state.set_state(UserState.SUPPORT.fsm_state())
 
         await message.answer(
-            Messages.support_request(), reply_markup=keyboards.remove()
+            Messages.support_request(lang), reply_markup=keyboards.remove()
         )
 
 
 @router.message(SupportStates.waiting_for_question)
 async def support_question_handler(
-    message: Message, state: FSMContext, bot: Bot
+    message: Message, state: FSMContext, bot: Bot, lang: BotLanguage
 ) -> None:
     if (
         message.from_user is None
@@ -54,7 +53,6 @@ async def support_question_handler(
         or message.text is None
     ):
         raise HandlerError
-
     question = message.text.strip()
     user_id = message.from_user.id
 
@@ -63,14 +61,14 @@ async def support_question_handler(
             user_service = UserService(session, bot)
             await user_service.reset_to_completed(user_id)
 
-        await message.answer(Messages.cancellation_support_request())
+        await message.answer(Messages.cancellation_support_request(lang))
         return
 
     if len(question) < 10:
-        await message.answer(Messages.support_request_too_short())
+        await message.answer(Messages.support_request_too_short(lang))
         return
     if len(message.text) > 256:
-        await message.answer(Messages.message_too_long())
+        await message.answer(Messages.message_too_long(lang))
         return
 
     async for session in get_session():
@@ -86,7 +84,7 @@ async def support_question_handler(
     )
 
     await message.answer(
-        Messages.support_request_received(),
+        Messages.support_request_received(lang),
         reply_markup=keyboards.remove(),
         parse_mode="HTML",
     )

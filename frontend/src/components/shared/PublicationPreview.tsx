@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { CardHeader, CardTitle } from '@/components/ui/card';
 import type { Publication } from '@/types/domain';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface PublicationPreviewProps {
     publication: Publication;
@@ -11,6 +12,7 @@ interface PublicationPreviewProps {
 }
 
 export const PublicationPreview: FC<PublicationPreviewProps> = ({ publication, border }) => {
+    const { t } = useTranslation();
     return (
         <>
             <div
@@ -20,7 +22,7 @@ export const PublicationPreview: FC<PublicationPreviewProps> = ({ publication, b
                 <div className="flex flex-wrap items-center gap-2">
                     {!!publication.ural && (
                         <Badge className="h-5 rounded-full border border-blue-200 bg-blue-50 px-2.5 text-[10px] font-medium text-blue-700">
-                            Урал
+                            {t('publication.uralBadge')}
                         </Badge>
                     )}
                     {publication.language && (
@@ -32,9 +34,9 @@ export const PublicationPreview: FC<PublicationPreviewProps> = ({ publication, b
 
                 <CardTitle
                     className="line-clamp-2 text-lg font-semibold text-slate-800 transition-colors group-hover:text-slate-900 md:text-base"
-                    title={publication.name || 'Название публикации отсутствует'}
+                    title={publication.name || t('publication.titleMissing')}
                 >
-                    {publication.name || 'Название публикации отсутствует'}
+                    {publication.name || t('publication.titleMissing')}
                 </CardTitle>
 
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
@@ -45,7 +47,7 @@ export const PublicationPreview: FC<PublicationPreviewProps> = ({ publication, b
                         </span>
                         <span className="inline-flex items-center gap-1">
                             <User className="size-3.5 text-slate-400" />
-                            {publication.author || 'Автор неизвестен'}
+                            {publication.author || t('publication.authorUnknown')}
                         </span>
                         {publication.year && (
                             <span className="inline-flex items-center gap-1">

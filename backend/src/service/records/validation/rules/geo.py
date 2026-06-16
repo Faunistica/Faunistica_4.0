@@ -20,7 +20,7 @@ def rule_latitude_required(data: RecordData, ctx: RuleContext) -> str | None:
         return None
     v = data.latitude
     if not nonblank(v):
-        return "Широта не задана"
+        return ctx.t("Широта не задана", "Latitude is not specified")
     return None
 
 
@@ -30,7 +30,7 @@ def rule_longitude_required(data: RecordData, ctx: RuleContext) -> str | None:
         return None
     v = data.longitude
     if not nonblank(v):
-        return "Долгота не задана"
+        return ctx.t("Долгота не задана", "Longitude is not specified")
     return None
 
 
@@ -38,7 +38,7 @@ rule(
     RuleCategory.GEO,
     ["georef_source"],
     "required",
-    required("georef_source", "Происхождение координат не указано"),
+    required("georef_source", {"ru": "Происхождение координат не указано", "en": "Coordinate origin is not specified"}),
 )
 
 
@@ -51,7 +51,7 @@ def rule_latitude_precision(data: RecordData, ctx: RuleContext) -> str | None:
         return None
     dp = axis_finest_dp(lat_part)
     if dp is not None and dp < 1 and "." in lat_part:
-        return "Недостаточна точность широты"
+        return ctx.t("Недостаточна точность широты", "Insufficient latitude precision")
     return None
 
 
@@ -64,7 +64,7 @@ def rule_latitude_excess_precision(data: RecordData, ctx: RuleContext) -> str | 
         return None
     dp = axis_finest_dp(lat_part)
     if dp is not None and dp > 4:
-        return "Невозможно большая точность широты"
+        return ctx.t("Невозможно большая точность широты", "Impossibly high latitude precision")
     return None
 
 
@@ -77,7 +77,7 @@ def rule_longitude_precision(data: RecordData, ctx: RuleContext) -> str | None:
         return None
     dp = axis_finest_dp(lon_part)
     if dp is not None and dp < 1 and "." in lon_part:
-        return "Недостаточна точность долготы"
+        return ctx.t("Недостаточна точность долготы", "Insufficient longitude precision")
     return None
 
 
@@ -90,7 +90,7 @@ def rule_longitude_excess_precision(data: RecordData, ctx: RuleContext) -> str |
         return None
     dp = axis_finest_dp(lon_part)
     if dp is not None and dp > 4:
-        return "Невозможно большая точность долготы"
+        return ctx.t("Невозможно большая точность долготы", "Impossibly high longitude precision")
     return None
 
 
@@ -100,7 +100,7 @@ def rule_coord_uncertainty_min(data: RecordData, ctx: RuleContext) -> str | None
         return None
     v = data.coordinate_uncertainty
     if v is not None and v < COORD_UNCERTAINTY_MIN:
-        return "Радиус неточности координат недопустимо мал (менее 30 м)"
+        return ctx.t("Радиус неточности координат недопустимо мал (менее 30 м)", "Coordinate uncertainty radius is too small (less than 30 m)")
     return None
 
 
@@ -110,7 +110,7 @@ def rule_coord_uncertainty_max(data: RecordData, ctx: RuleContext) -> str | None
         return None
     v = data.coordinate_uncertainty
     if v is not None and v > COORD_UNCERTAINTY_MAX:
-        return "Радиус неточности координат недопустимо большой (более 15 км)"
+        return ctx.t("Радиус неточности координат недопустимо большой (более 15 км)", "Coordinate uncertainty radius is too large (more than 15 km)")
     return None
 
 
@@ -120,8 +120,9 @@ def rule_georef_source_invalid(data: RecordData, ctx: RuleContext) -> str | None
     if not nonblank(v):
         return None
     if v not in GEOREF_SOURCES:
-        return "Некорректный источник координат. Допустимые значения: " + ", ".join(
-            GEOREF_SOURCES
+        return ctx.t(
+            "Некорректный источник координат. Допустимые значения: " + ", ".join(GEOREF_SOURCES),
+            "Invalid coordinate source. Allowed values: " + ", ".join(GEOREF_SOURCES),
         )
     return None
 
@@ -136,9 +137,9 @@ def rule_latitude_region(data: RecordData, ctx: RuleContext) -> str | None:
     try:
         lat = float(v)
     except ValueError:
-        return "Точка выходит за границы исследуемого региона по широте"
+        return ctx.t("Точка выходит за границы исследуемого региона по широте", "Point is outside the study region by latitude")
     if lat < REGION_LAT_MIN or lat > REGION_LAT_MAX:
-        return "Точка выходит за границы исследуемого региона по широте"
+        return ctx.t("Точка выходит за границы исследуемого региона по широте", "Point is outside the study region by latitude")
     return None
 
 
@@ -152,9 +153,9 @@ def rule_longitude_region(data: RecordData, ctx: RuleContext) -> str | None:
     try:
         lon = float(v)
     except ValueError:
-        return "Точка выходит за границы исследуемого региона по долготе"
+        return ctx.t("Точка выходит за границы исследуемого региона по долготе", "Point is outside the study region by longitude")
     if lon < REGION_LON_MIN or lon > REGION_LON_MAX:
-        return "Точка выходит за границы исследуемого региона по долготе"
+        return ctx.t("Точка выходит за границы исследуемого региона по долготе", "Point is outside the study region by longitude")
     return None
 
 
@@ -172,7 +173,7 @@ def rule_ural_polygon_containment(data: RecordData, ctx: RuleContext) -> str | N
     except ValueError:
         return None
     if not UralBorder.contains(lon, lat):
-        return "Указанные координаты выходят за пределы Урала"
+        return ctx.t("Указанные координаты выходят за пределы Урала", "The specified coordinates are outside the Urals")
     return None
 
 
@@ -189,5 +190,5 @@ def rule_geo_coords_conflict(data: RecordData, ctx: RuleContext) -> str | None:
         and lon is not None
         and lon != "0"
     ):
-        return "Источник координат указан как 'none', но координаты присутствуют"
+        return ctx.t("Источник координат указан как 'none', но координаты присутствуют", "Coordinate source is 'none' but coordinates are present")
     return None

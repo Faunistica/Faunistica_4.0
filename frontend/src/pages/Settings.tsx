@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useTranslation } from 'react-i18next';
 import {
     Loader2,
     User,
@@ -38,55 +39,58 @@ import { Textarea } from '@/components/ui/textarea';
 import { useGetMeQuery, useUpdateMeMutation } from '@/api/userAPI';
 import { toast } from 'sonner';
 
-const formSchema = z
-    .object({
-        username: z
-            .string()
-            .min(3, 'Минимум 3 символа')
-            .max(40, 'Максимум 40 символов')
-            .regex(/^[a-zA-Z0-9_]+$/, 'Только латинские буквы, цифры и _')
-            .optional()
-            .or(z.literal('')),
-        password: z
-            .string()
-            .min(8, 'Минимум 8 символов')
-            .max(128, 'Максимум 128 символов')
-            .optional()
-            .or(z.literal('')),
-        name: z
-            .string()
-            .min(3, 'Минимум 3 символа')
-            .max(40, 'Максимум 40 символов')
-            .regex(/^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$/, 'Недопустимые символы в имени'),
-        age: z.coerce
-            .number()
-            .min(14, 'Возраст должен быть не менее 14 лет')
-            .max(99, 'Возраст должен быть не более 99 лет')
-            .nullable()
-            .optional(),
-        sex: z.enum(['M', 'F', 'N']).nullable().optional(),
-        langRu: z.boolean().default(false),
-        langEn: z.boolean().default(false),
-        rating: z.enum(['yes', 'no']),
-        email: z
-            .string()
-            .min(5, 'Минимум 5 символов')
-            .max(100, 'Максимум 100 символов')
-            .email('Некорректный email')
-            .or(z.literal(''))
-            .nullable()
-            .optional(),
-        region: z.string().nullable().optional(),
-        comm: z.string().nullable().optional(),
-    })
-    .refine((data) => data.langRu || data.langEn, {
-        message: 'Выберите хотя бы один язык',
-        path: ['languages_error'],
-    });
+const getFormSchema = (t: (key: string) => string) =>
+    z
+        .object({
+            username: z
+                .string()
+                .min(3, t('settings.validation.usernameMin'))
+                .max(40, t('settings.validation.usernameMax'))
+                .regex(/^[a-zA-Z0-9_]+$/, t('settings.validation.usernamePattern'))
+                .optional()
+                .or(z.literal('')),
+            password: z
+                .string()
+                .min(8, t('settings.validation.passwordMin'))
+                .max(128, t('settings.validation.passwordMax'))
+                .optional()
+                .or(z.literal('')),
+            name: z
+                .string()
+                .min(3, t('settings.validation.nameMin'))
+                .max(40, t('settings.validation.nameMax'))
+                .regex(/^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$/, t('settings.validation.namePattern')),
+            age: z.coerce
+                .number()
+                .min(14, t('settings.validation.ageMin'))
+                .max(99, t('settings.validation.ageMax'))
+                .nullable()
+                .optional(),
+            sex: z.enum(['M', 'F', 'N']).nullable().optional(),
+            langRu: z.boolean().default(false),
+            langEn: z.boolean().default(false),
+            rating: z.enum(['yes', 'no']),
+            email: z
+                .string()
+                .min(5, t('settings.validation.emailMin'))
+                .max(100, t('settings.validation.emailMax'))
+                .email(t('settings.validation.emailInvalid'))
+                .or(z.literal(''))
+                .nullable()
+                .optional(),
+            region: z.string().nullable().optional(),
+            comm: z.string().nullable().optional(),
+        })
+        .refine((data) => data.langRu || data.langEn, {
+            message: t('settings.languages.atLeastOne'),
+            path: ['languages_error'],
+        });
 
-type FormValues = z.infer<typeof formSchema>;
+const _defaultSchema = getFormSchema((k: string) => k);
+type FormValues = z.infer<typeof _defaultSchema>;
 
 export default function Settings() {
+    const { t } = useTranslation();
     const { data: user, isLoading: isUserLoading } = useGetMeQuery();
     const [updateMe, { isLoading: isUpdating, isSuccess }] = useUpdateMeMutation();
 
@@ -98,7 +102,7 @@ export default function Settings() {
         formState: { errors, isDirty },
     } = useForm<FormValues>({
         resolver: zodResolver(
-            formSchema,
+            getFormSchema(t),
         ) as unknown as import('react-hook-form').Resolver<FormValues>,
         defaultValues: {
             username: '',
@@ -172,7 +176,7 @@ export default function Settings() {
                 comm: data.comm,
             });
         } catch (err) {
-            toast.error('Сбой обновления');
+            toast.error(t('settings.error'));
             console.error('Update failed:', err);
         }
     };
@@ -192,11 +196,10 @@ export default function Settings() {
                     <Card className="overflow-hidden border-slate-200 shadow-sm">
                         <CardHeader className="space-y-4">
                             <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
-                                Настройки профиля
+                                {t('settings.title')}
                             </CardTitle>
                             <CardDescription>
-                                Здесь вы можете изменить свои личные данные, языковые компетенции и
-                                предпочтения публичности.
+                                {t('settings.description')}
                             </CardDescription>
                         </CardHeader>
 
@@ -208,11 +211,11 @@ export default function Settings() {
                                     <div className="space-y-5">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <KeyRound className="size-5" />
-                                            <h3>Учетная запись</h3>
+                                            <h3>{t('settings.account.title')}</h3>
                                         </div>
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="username">Логин</Label>
+                                                <Label htmlFor="username">{t('settings.account.username')}</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -221,14 +224,14 @@ export default function Settings() {
                                                         id="username"
                                                         disabled={!!user?.username}
                                                         className={`pl-9 ${user?.username ? 'bg-slate-50 text-slate-500' : ''}`}
-                                                        placeholder="Уникальный логин"
+                                                        placeholder={t('settings.account.username')}
                                                         {...register('username')}
                                                     />
                                                 </div>
                                                 <p className="text-xs text-slate-500">
                                                     {user?.username
-                                                        ? 'Уникальный логин не может быть изменен.'
-                                                        : 'Внимание: уникальный логин можно установить только один раз!'}
+                                                        ? t('settings.account.usernameHint')
+                                                        : t('settings.account.usernameHintNew')}
                                                 </p>
                                                 {errors.username && (
                                                     <span className="text-xs text-red-500">
@@ -237,7 +240,7 @@ export default function Settings() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="name">Имя (для отображения)</Label>
+                                                <Label htmlFor="name">{t('settings.account.name')}</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -245,7 +248,7 @@ export default function Settings() {
                                                     <Input
                                                         id="name"
                                                         className="pl-9"
-                                                        placeholder="Ваше имя"
+                                                        placeholder={t('settings.account.name')}
                                                         {...register('name')}
                                                     />
                                                 </div>
@@ -256,7 +259,7 @@ export default function Settings() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="password">Пароль</Label>
+                                                <Label htmlFor="password">{t('settings.account.password')}</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <KeyRound className="size-4 text-slate-400" />
@@ -265,7 +268,7 @@ export default function Settings() {
                                                         id="password"
                                                         type="password"
                                                         className="pl-9"
-                                                        placeholder="Оставьте пустым, если не хотите менять"
+                                                        placeholder={t('settings.account.passwordHint')}
                                                         {...register('password')}
                                                     />
                                                 </div>
@@ -282,15 +285,15 @@ export default function Settings() {
                                     <div className="space-y-5">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <UserCheck className="size-5" />
-                                            <h3>Личные данные</h3>
+                                            <h3>{t('settings.personal.title')}</h3>
                                         </div>
                                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label htmlFor="age">Ваш возраст</Label>
+                                                <Label htmlFor="age">{t('settings.personal.age')}</Label>
                                                 <Input
                                                     id="age"
                                                     type="number"
-                                                    placeholder="Например, 25"
+                                                    placeholder={t('settings.personal.age')}
                                                     min="14"
                                                     {...register('age')}
                                                 />
@@ -301,7 +304,7 @@ export default function Settings() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="sex">Пол</Label>
+                                                <Label htmlFor="sex">{t('settings.personal.sex')}</Label>
                                                 <Controller
                                                     control={control}
                                                     name="sex"
@@ -312,17 +315,17 @@ export default function Settings() {
                                                             value={field.value || undefined}
                                                         >
                                                             <SelectTrigger id="sex">
-                                                                <SelectValue placeholder="Не выбрано" />
+                                                                <SelectValue placeholder={t('settings.personal.sex')} />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 <SelectItem value="M">
-                                                                    Мужской
+                                                                    {t('settings.personal.male')}
                                                                 </SelectItem>
                                                                 <SelectItem value="F">
-                                                                    Женский
+                                                                    {t('settings.personal.female')}
                                                                 </SelectItem>
                                                                 <SelectItem value="N">
-                                                                    Предпочитаю не указывать
+                                                                    {t('settings.personal.preferNotToSay')}
                                                                 </SelectItem>
                                                             </SelectContent>
                                                         </Select>
@@ -341,15 +344,12 @@ export default function Settings() {
                                     <div className="space-y-5">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <Mail className="size-5" />
-                                            <h3>Контакты и регион</h3>
+                                            <h3>{t('settings.contacts.title')}</h3>
                                         </div>
                                         <div className="grid grid-cols-1 gap-5">
                                             <div className="space-y-2">
                                                 <Label htmlFor="email">
-                                                    Электронная почта{' '}
-                                                    <span className="font-normal text-slate-400">
-                                                        (по желанию)
-                                                    </span>
+                                                    {t('settings.contacts.email')}
                                                 </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -371,10 +371,7 @@ export default function Settings() {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="region">
-                                                    Регион проживания{' '}
-                                                    <span className="font-normal text-slate-400">
-                                                        (по желанию)
-                                                    </span>
+                                                    {t('settings.contacts.region')}
                                                 </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -383,7 +380,7 @@ export default function Settings() {
                                                     <Input
                                                         id="region"
                                                         className="pl-9"
-                                                        placeholder="Например, Москва"
+                                                        placeholder={t('settings.contacts.region')}
                                                         {...register('region')}
                                                     />
                                                 </div>
@@ -403,11 +400,10 @@ export default function Settings() {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <Languages className="size-5" />
-                                            <h3>Языковые компетенции</h3>
+                                            <h3>{t('settings.languages.title')}</h3>
                                         </div>
                                         <p className="text-sm text-slate-600">
-                                            На каких языках вы готовы обрабатывать научные
-                                            публикации? (можно выбрать несколько)
+                                            {t('settings.languages.description')}
                                         </p>
                                         <div className="flex flex-wrap gap-6 pt-2">
                                             <div className="flex items-center space-x-2">
@@ -426,7 +422,7 @@ export default function Settings() {
                                                     htmlFor="lang-ru"
                                                     className="cursor-pointer font-medium"
                                                 >
-                                                    Русский
+                                                    {t('settings.languages.russian')}
                                                 </Label>
                                             </div>
                                             <div className="flex items-center space-x-2">
@@ -445,7 +441,7 @@ export default function Settings() {
                                                     htmlFor="lang-en"
                                                     className="cursor-pointer font-medium"
                                                 >
-                                                    Английский
+                                                    {t('settings.languages.english')}
                                                 </Label>
                                             </div>
                                         </div>
@@ -464,26 +460,21 @@ export default function Settings() {
                                     <div className="flex flex-col space-y-4">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <Settings2 className="size-5" />
-                                            <h3>Профессиональные предпочтения</h3>
+                                            <h3>{t('settings.preferences.title')}</h3>
                                         </div>
                                         <p className="text-sm text-slate-600">
-                                            Укажите пожелания по сложности материала,
-                                            географическому региону, автору или конкретному
-                                            семейству.
+                                            {t('settings.preferences.description')}
                                         </p>
                                         <div className="flex grow flex-col pt-2">
                                             <Label
                                                 htmlFor="preferences"
                                                 className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
                                             >
-                                                Дополнительная информация{' '}
-                                                <span className="font-normal text-slate-400">
-                                                    (по желанию)
-                                                </span>
+                                                {t('settings.preferences.title')}
                                             </Label>
                                             <Textarea
                                                 id="preferences"
-                                                placeholder="Например: предпочтительно семейство Lycosidae..."
+                                                placeholder={t('settings.preferences.placeholder')}
                                                 className="min-h-[160px] grow resize-y"
                                                 {...register('comm')}
                                             />
@@ -494,12 +485,11 @@ export default function Settings() {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <FileText className="size-5" />
-                                            <h3>Публичность данных</h3>
+                                            <h3>{t('settings.rating.title')}</h3>
                                         </div>
                                         <div className="space-y-3">
                                             <Label className="text-sm text-slate-600">
-                                                Согласны ли вы на отображение вашего имени в
-                                                публичной таблице рейтинга?
+                                                {t('settings.rating.description')}
                                             </Label>
                                             <Controller
                                                 control={control}
@@ -519,8 +509,7 @@ export default function Settings() {
                                                                 htmlFor="rating-yes"
                                                                 className="cursor-pointer font-normal"
                                                             >
-                                                                Да, я согласен на публичное
-                                                                отображение
+                                                                {t('settings.rating.yes')}
                                                             </Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
@@ -532,8 +521,7 @@ export default function Settings() {
                                                                 htmlFor="rating-no"
                                                                 className="cursor-pointer font-normal"
                                                             >
-                                                                Нет, использовать анонимный
-                                                                идентификатор
+                                                                {t('settings.rating.no')}
                                                             </Label>
                                                         </div>
                                                     </RadioGroup>
@@ -553,7 +541,7 @@ export default function Settings() {
                         <CardFooter className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50 p-6 sm:flex-row sm:items-center sm:justify-between">
                             {isSuccess && !isDirty ? (
                                 <span className="text-sm font-medium text-green-600">
-                                    Настройки успешно сохранены!
+                                    {t('settings.success')}
                                 </span>
                             ) : (
                                 <span />
@@ -566,10 +554,10 @@ export default function Settings() {
                                 {isUpdating ? (
                                     <>
                                         <Loader2 className="mr-2 size-4 animate-spin" />
-                                        Сохранение...
+                                        {t('common.saving')}
                                     </>
                                 ) : (
-                                    'Сохранить изменения'
+                                    t('common.save')
                                 )}
                             </Button>
                         </CardFooter>

@@ -8,6 +8,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.handlers import main_router
 from bot.keyboards import setup_bot_commands
+from bot.middlewares.language import LanguageMiddleware
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,8 @@ async def start() -> None:
     dp_instance = Dispatcher(storage=MemoryStorage())
 
     dp_instance.include_router(main_router)
+
+    dp_instance.message.outer_middleware.register(LanguageMiddleware())
 
     try:
         await bot_instance.delete_webhook(drop_pending_updates=True)

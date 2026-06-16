@@ -10,7 +10,9 @@ def validate_record(
 ) -> ErrorCollection:
     errors = ErrorCollection()
     if data is None:
-        errors.add([""], "EMPTY", "Пустая запись")
+        msg = {"ru": "Пустая запись", "en": "Empty record"}
+        m = msg.get("en") if language == "en" else msg["ru"]
+        errors.add([""], "EMPTY", m)
         return errors
 
     ctx = RuleContext(language=language)

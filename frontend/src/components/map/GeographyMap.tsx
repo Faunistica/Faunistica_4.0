@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { useTranslation } from 'react-i18next';
 import Autocomplete from '@/components/ui/autocomplete';
 import useGeocodingSearch from '@/hooks/useGeocodingSearch';
 
@@ -39,6 +40,7 @@ const MapClickHandler = ({
 };
 
 export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps) => {
+    const { t } = useTranslation();
     const [map, setMap] = useState<L.Map | null>(null);
     const { suggestions, resultMap, isSearching, onSearch } = useGeocodingSearch();
 
@@ -84,7 +86,7 @@ export const GeographyMap = ({ latitude, longitude, onLocationSelect }: MapProps
                 <Autocomplete
                     className="border border-input bg-background text-secondary-foreground shadow-sm"
                     id="geo-search"
-                    placeholder="Введите адрес или место..."
+                    placeholder={t('form.map.searchPlaceholder')}
                     suggestions={suggestions}
                     isLoading={isSearching}
                     onSearch={onSearch}

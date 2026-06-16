@@ -6,7 +6,7 @@ from aiogram.filters import Command
 from aiogram.types import BufferedInputFile, Message
 from openpyxl import Workbook
 
-from bot.messages import Messages
+from bot.i18n import BotLanguage, Messages
 from core.config import settings
 from core.dependencies import get_session
 from repository.stats import get_volunteers_achievements
@@ -16,9 +16,9 @@ router = Router()
 
 
 @router.message(Command("achievements"))
-async def achievements_command(message: Message) -> None:
+async def achievements_command(message: Message, lang: BotLanguage) -> None:
     if message.chat.id != settings.ADMIN_CHAT_ID:
-        await message.answer(Messages.no_access_to_command())
+        await message.answer(Messages.no_access_to_command(lang))
         return
 
     async for session in get_session():
@@ -52,5 +52,5 @@ async def achievements_command(message: Message) -> None:
         document=BufferedInputFile(
             file=output.read(), filename="volunteer_achievements.xlsx"
         ),
-        caption="Волонтерские достижения на данный момент",
+        caption="Volunteer achievements (as of now)",
     )

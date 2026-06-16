@@ -19,41 +19,57 @@ import {
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useRegisterMutation } from '@/api/authAPI';
+import { useTranslation } from 'react-i18next';
 
-const formSchema = z
-    .object({
-        name: z
-            .string()
-            .min(3, 'Минимум 3 символа')
-            .max(40, 'Максимум 40 символов')
-            .regex(/^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$/, 'Недопустимые символы в имени'),
-        username: z
-            .string()
-            .min(3, 'Минимум 3 символа')
-            .max(40, 'Максимум 40 символов')
-            .regex(/^[a-zA-Z0-9_]+$/, 'Только латинские буквы, цифры и _'),
-        password: z.string().min(8, 'Минимум 8 символов').max(128, 'Максимум 128 символов'),
-        age: z.coerce
-            .number()
-            .min(14, 'Возраст должен быть не менее 14 лет')
-            .max(99, 'Возраст должен быть не более 99 лет'),
-        sex: z.enum(['M', 'F', 'N'], { message: 'Выберите пол' }),
-        langRu: z.boolean().default(false),
-        langEn: z.boolean().default(false),
-        rating: z.enum(['yes', 'no']),
-        comm: z.string().optional(),
-        agreement: z.boolean().refine((val) => val, {
-            message: 'Необходимо подтвердить согласие',
-        }),
-    })
-    .refine((data) => data.langRu || data.langEn, {
-        message: 'Выберите хотя бы один язык',
-        path: ['languages_error'],
-    });
+function useOnboardingSchema(t: (key: string) => string) {
+    return z
+        .object({
+            name: z
+                .string()
+                .min(3, t('onboarding.validation.nameMin'))
+                .max(40, t('onboarding.validation.nameMax'))
+                .regex(/^[а-яА-ЯёЁa-zA-Z0-9\s\-'.]+$/, t('onboarding.validation.namePattern')),
+            username: z
+                .string()
+                .min(3, t('onboarding.validation.usernameMin'))
+                .max(40, t('onboarding.validation.usernameMax'))
+                .regex(/^[a-zA-Z0-9_]+$/, t('onboarding.validation.usernamePattern')),
+            password: z.string().min(8, t('onboarding.validation.passwordMin')).max(128, t('onboarding.validation.passwordMax')),
+            age: z.coerce
+                .number()
+                .min(14, t('onboarding.validation.ageMin'))
+                .max(99, t('onboarding.validation.ageMax')),
+            sex: z.enum(['M', 'F', 'N'], { message: t('onboarding.validation.sexRequired') }),
+            langRu: z.boolean().default(false),
+            langEn: z.boolean().default(false),
+            rating: z.enum(['yes', 'no']),
+            comm: z.string().optional(),
+            agreement: z.boolean().refine((val) => val, {
+                message: t('onboarding.validation.agreementRequired'),
+            }),
+        })
+        .refine((data) => data.langRu || data.langEn, {
+            message: t('onboarding.validation.languagesRequired'),
+            path: ['languages_error'],
+        });
+}
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = {
+    name: string;
+    username: string;
+    password: string;
+    age: number;
+    sex: 'M' | 'F' | 'N';
+    langRu: boolean;
+    langEn: boolean;
+    rating: 'yes' | 'no';
+    comm?: string;
+    agreement: boolean;
+};
 
 export default function Onboarding() {
+    const { t } = useTranslation();
+    const formSchema = useOnboardingSchema(t);
     const location = useLocation();
     const navigate = useNavigate();
     const state = location.state as { token?: string; code?: string } | null;
@@ -125,21 +141,14 @@ export default function Onboarding() {
                     <Card className="overflow-hidden border-slate-200 shadow-sm">
                         <CardHeader className="space-y-4">
                             <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
-                                Анкета участника
+                                {t('onboarding.profileTitle')}
                             </CardTitle>
                             <div className="space-y-4 leading-relaxed text-slate-900">
                                 <p>
-                                    Благодарим вас за регистрацию в системе. Перед началом работы
-                                    нам необходимо уточнить несколько организационных вопросов для
-                                    оптимизации вашего взаимодействия с проектом.
+                                    {t('onboarding.profileThanks')}
                                 </p>
                                 <div className="rounded-lg border-l-4 border-slate-400 bg-slate-100 p-4 text-sm">
-                                    Напоминаем, что регистрироваться и участвовать в нашем проекте
-                                    могут <strong>совершеннолетние лица</strong>. Несовершеннолетние
-                                    в возрасте от 14 до 18 лет также могут принимать участие, однако
-                                    регистрация должна осуществляться
-                                    <strong> с согласия и в присутствии родителей</strong> или
-                                    законных представителей.
+                                    {t('onboarding.ageNotice')}
                                 </div>
                             </div>
                         </CardHeader>
@@ -151,7 +160,7 @@ export default function Onboarding() {
                                     {error.data?.message ||
                                         // @ts-ignore
                                         error.data?.detail ||
-                                        'Ошибка регистрации. Пожалуйста, попробуйте еще раз.'}
+                                        t('onboarding.registrationError')}
                                 </div>
                             )}
 
@@ -162,11 +171,11 @@ export default function Onboarding() {
                                     <div className="space-y-5">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <KeyRound className="size-5" />
-                                            <h3>Учетная запись</h3>
+                                            <h3>{t('onboarding.accountTitle')}</h3>
                                         </div>
                                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label htmlFor="name">Имя (для отображения)</Label>
+                                                <Label htmlFor="name">{t('settings.account.name')}</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -174,7 +183,7 @@ export default function Onboarding() {
                                                     <Input
                                                         id="name"
                                                         className="pl-9"
-                                                        placeholder="Ваше имя"
+                                                        placeholder={t('onboarding.namePlaceholder')}
                                                         {...register('name')}
                                                     />
                                                 </div>
@@ -185,7 +194,7 @@ export default function Onboarding() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="username">Логин</Label>
+                                                <Label htmlFor="username">{t('settings.account.username')}</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -193,7 +202,7 @@ export default function Onboarding() {
                                                     <Input
                                                         id="username"
                                                         className="pl-9"
-                                                        placeholder="Уникальный логин"
+                                                        placeholder={t('onboarding.usernamePlaceholder')}
                                                         {...register('username')}
                                                     />
                                                 </div>
@@ -204,7 +213,7 @@ export default function Onboarding() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="password">Пароль</Label>
+                                                <Label htmlFor="password">{t('settings.account.password')}</Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <KeyRound className="size-4 text-slate-400" />
@@ -213,7 +222,7 @@ export default function Onboarding() {
                                                         id="password"
                                                         type="password"
                                                         className="pl-9"
-                                                        placeholder="Надежный пароль"
+                                                        placeholder={t('onboarding.passwordPlaceholder')}
                                                         {...register('password')}
                                                     />
                                                 </div>
@@ -230,15 +239,15 @@ export default function Onboarding() {
                                     <div className="space-y-5">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <UserCheck className="size-5" />
-                                            <h3>Личные данные</h3>
+                                            <h3>{t('onboarding.personalDataTitle')}</h3>
                                         </div>
                                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label htmlFor="age">Ваш возраст</Label>
+                                                <Label htmlFor="age">{t('onboarding.yourAge')}</Label>
                                                 <Input
                                                     id="age"
                                                     type="number"
-                                                    placeholder="Например, 25"
+                                                    placeholder={t('onboarding.agePlaceholder')}
                                                     min="14"
                                                     {...register('age')}
                                                 />
@@ -249,7 +258,7 @@ export default function Onboarding() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="gender">Пол</Label>
+                                                <Label htmlFor="gender">{t('onboarding.gender')}</Label>
                                                 <Controller
                                                     control={control}
                                                     name="sex"
@@ -259,17 +268,17 @@ export default function Onboarding() {
                                                             value={field.value}
                                                         >
                                                             <SelectTrigger id="gender">
-                                                                <SelectValue placeholder="Не выбрано" />
+                                                                <SelectValue placeholder={t('onboarding.notSelected')} />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 <SelectItem value="M">
-                                                                    Мужской
+                                                                    {t('onboarding.male')}
                                                                 </SelectItem>
                                                                 <SelectItem value="F">
-                                                                    Женский
+                                                                    {t('onboarding.female')}
                                                                 </SelectItem>
                                                                 <SelectItem value="N">
-                                                                    Предпочитаю не указывать
+                                                                    {t('settings.personal.preferNotToSay')}
                                                                 </SelectItem>
                                                             </SelectContent>
                                                         </Select>
@@ -288,11 +297,10 @@ export default function Onboarding() {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <Languages className="size-5" />
-                                            <h3>Языковые компетенции</h3>
+                                            <h3>{t('onboarding.languageCompetencies')}</h3>
                                         </div>
                                         <p className="text-sm text-slate-600">
-                                            На каких языках вы готовы обрабатывать научные
-                                            публикации? (можно выбрать несколько)
+                                            {t('onboarding.languageDesc')}
                                         </p>
                                         <div className="flex flex-wrap gap-6 pt-2">
                                             <div className="flex items-center space-x-2">
@@ -311,7 +319,7 @@ export default function Onboarding() {
                                                     htmlFor="lang-ru"
                                                     className="cursor-pointer font-medium"
                                                 >
-                                                    Русский
+                                                    {t('onboarding.russian')}
                                                 </Label>
                                             </div>
                                             <div className="flex items-center space-x-2">
@@ -330,7 +338,7 @@ export default function Onboarding() {
                                                     htmlFor="lang-en"
                                                     className="cursor-pointer font-medium"
                                                 >
-                                                    Английский
+                                                    {t('onboarding.english')}
                                                 </Label>
                                             </div>
                                         </div>
@@ -352,24 +360,21 @@ export default function Onboarding() {
                                     <div className="flex flex-col space-y-4">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <Settings2 className="size-5" />
-                                            <h3>Профессиональные предпочтения</h3>
+                                            <h3>{t('onboarding.professionalPreferences')}</h3>
                                         </div>
                                         <p className="text-sm text-slate-600">
-                                            Укажите пожелания по сложности материала,
-                                            географическому региону, автору или конкретному
-                                            семейству. Мы постараемся учесть это при распределении
-                                            задач.
+                                            {t('onboarding.preferencesDesc')}
                                         </p>
                                         <div className="flex grow flex-col pt-2">
                                             <Label
                                                 htmlFor="preferences"
                                                 className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase"
                                             >
-                                                Дополнительная информация (по желанию)
+                                                {t('onboarding.additionalInfo')}
                                             </Label>
                                             <Textarea
                                                 id="preferences"
-                                                placeholder="Например: предпочтительно семейство Lycosidae, публикации на английском языке, Южный Урал..."
+                                                placeholder={t('onboarding.preferencesPlaceholder')}
                                                 className="min-h-[160px] grow resize-y"
                                                 {...register('comm')}
                                             />
@@ -380,12 +385,11 @@ export default function Onboarding() {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 border-b border-slate-100 pb-2 font-bold text-slate-900">
                                             <FileText className="size-5" />
-                                            <h3>Публичность данных</h3>
+                                            <h3>{t('onboarding.dataPublicity')}</h3>
                                         </div>
                                         <div className="space-y-3">
                                             <Label className="text-sm text-slate-600">
-                                                Согласны ли вы на отображение вашего имени в
-                                                публичной таблице рейтинга?
+                                                {t('onboarding.publicityQuestion')}
                                             </Label>
                                             <Controller
                                                 control={control}
@@ -405,8 +409,7 @@ export default function Onboarding() {
                                                                 htmlFor="rating-yes"
                                                                 className="cursor-pointer font-normal"
                                                             >
-                                                                Да, я согласен на публичное
-                                                                отображение
+                                                                {t('onboarding.publicityYes')}
                                                             </Label>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
@@ -418,8 +421,7 @@ export default function Onboarding() {
                                                                 htmlFor="rating-no"
                                                                 className="cursor-pointer font-normal"
                                                             >
-                                                                Нет, использовать анонимный
-                                                                идентификатор
+                                                                {t('onboarding.publicityNo')}
                                                             </Label>
                                                         </div>
                                                     </RadioGroup>
@@ -455,8 +457,7 @@ export default function Onboarding() {
                                             htmlFor="agreement"
                                             className="cursor-pointer text-sm/snug font-semibold"
                                         >
-                                            Я подтверждаю, что соблюдаю условия пользовательского
-                                            соглашения и соответствую возрастным критериям проекта
+                                            {t('onboarding.agreement')}
                                         </Label>
                                         {errors.agreement && (
                                             <span className="text-xs text-red-500">
@@ -477,10 +478,10 @@ export default function Onboarding() {
                                 {isLoading ? (
                                     <>
                                         <Loader2 className="mr-2 size-4 animate-spin" />
-                                        Отправка...
+                                        {t('onboarding.sending')}
                                     </>
                                 ) : (
-                                    'Завершить регистрацию'
+                                    t('onboarding.completeRegistration')
                                 )}
                             </Button>
                         </CardFooter>

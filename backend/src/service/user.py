@@ -6,7 +6,7 @@ from typing import Annotated, Any
 from aiogram import Bot
 from fastapi import Depends
 
-from bot.messages import Messages
+from bot.i18n import BotLanguage, Messages
 from core.dependencies import DBSession
 from core.enums import UserState
 from core.exceptions import MsgErr, Ok, UsernameAlreadyExistsError
@@ -62,7 +62,7 @@ class UserService:
         self.actions = action_service
 
     async def check_commands_allowed(
-        self, *, user_id: int | None = None, user: User | None = None
+        self, *, user_id: int | None = None, user: User | None = None, lang: BotLanguage = "en"
     ) -> Ok | MsgErr:
         if user is None:
             if user_id is None:
@@ -70,24 +70,24 @@ class UserService:
 
             user = await get_user(self.session, user_id)
             if user is None:
-                return MsgErr(error=Messages.not_registered())
+                return MsgErr(error=Messages.not_registered(lang))
 
         reg_stat = user.reg_stat
 
         if reg_stat == UserState.DATA_CLEARED:
             if self.actions:
                 await self.actions.log_bot_other(user.user_id, "not_reg_end")
-            return MsgErr(error=Messages.register_for_old())
+            return MsgErr(error=Messages.register_for_old(lang))
         if reg_stat.is_in_registration():
             if self.actions:
                 await self.actions.log_bot_other(user.user_id, "not_reg_end")
-            return MsgErr(error=Messages.registration_not_finished())
+            return MsgErr(error=Messages.registration_not_finished(lang))
         if reg_stat.is_in_support():
-            return MsgErr(error=Messages.support_flow_not_finished())
+            return MsgErr(error=Messages.support_flow_not_finished(lang))
         if reg_stat.is_in_survey():
-            return MsgErr(error=Messages.sociology_flow_not_finished())
+            return MsgErr(error=Messages.sociology_flow_not_finished(lang))
         if reg_stat == UserState.RENAME:
-            return MsgErr(error=Messages.rename_flow_not_finished())
+            return MsgErr(error=Messages.rename_flow_not_finished(lang))
         return Ok()
 
     # ========== Queries ==========
@@ -118,20 +118,20 @@ class UserService:
             raise UsernameAlreadyExistsError(username)
 
     async def validate_username(
-        self, username: str, *, exclude_user_id: int | None = None
+        self, username: str, *, exclude_user_id: int | None = None, lang: BotLanguage = "en"
     ) -> Ok | MsgErr:
         if len(username) < 3:
-            return MsgErr(error=Messages.message_too_short())
+            return MsgErr(error=Messages.message_too_short(lang))
         if len(username) > 40:
-            return MsgErr(error=Messages.message_too_long())
+            return MsgErr(error=Messages.message_too_long(lang))
         if not _USERNAME_REGEX.fullmatch(username):
-            return MsgErr(error=Messages.invalid_characters())
+            return MsgErr(error=Messages.invalid_characters(lang))
 
         try:
             await self.check_username_unique(username, exclude_user_id)
             return Ok()
         except UsernameAlreadyExistsError:
-            return MsgErr(error=Messages.username_already_exists())
+            return MsgErr(error=Messages.username_already_exists(lang))
 
     # ========== Mutations ==========
 
@@ -176,12 +176,12 @@ class UserService:
         )
         return Ok()
 
-    async def cancel_action(self, user: User) -> Ok | MsgErr:
+    async def cancel_action(self, user: User, lang: BotLanguage = "en") -> Ok | MsgErr:
         if user.reg_stat == UserState.DATA_CLEARED:
-            return MsgErr(error=Messages.register_for_old())
+            return MsgErr(error=Messages.register_for_old(lang))
         if user.reg_stat.is_in_registration():
             return MsgErr(
-                error=Messages.unavailable_during_registration(),
+                error=Messages.unavailable_during_registration(lang),
             )
         await self._update(user.user_id, reg_stat=UserState.REG_COMPLETED)
         return Ok()

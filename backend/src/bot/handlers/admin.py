@@ -5,7 +5,7 @@ from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.types import FSInputFile, Message
 
-from bot.messages import Messages
+from bot.i18n import BotLanguage, Messages
 from core.config import settings
 from core.exceptions import HandlerError
 
@@ -13,16 +13,16 @@ router = Router()
 
 
 @router.message(Command("reply"))
-async def reply(message: Message, bot: Bot) -> None:
+async def reply(message: Message, bot: Bot, lang: BotLanguage) -> None:
     if message.text is None:
         raise HandlerError
 
     if message.chat.id != settings.ADMIN_CHAT_ID:
-        await message.answer(Messages.no_access_to_command())
+        await message.answer(Messages.no_access_to_command(lang))
         return
 
     if message.reply_to_message is None or message.reply_to_message.text is None:
-        await message.answer(Messages.using_command_reply())
+        await message.answer(Messages.using_command_reply(lang))
         return
 
     reply_text = (
@@ -31,20 +31,20 @@ async def reply(message: Message, bot: Bot) -> None:
         .strip()
     )
     if not reply_text:
-        await message.answer(Messages.empty_response_to_user())
+        await message.answer(Messages.empty_response_to_user(lang))
         return
 
     user_id = _extract_user_id(message.reply_to_message.text)
     if user_id is None:
-        await message.answer(Messages.could_not_extract_id())
+        await message.answer(Messages.could_not_extract_id(lang))
         return
 
     await bot.send_message(user_id, Messages.response_from_support(reply_text))
-    await message.answer(Messages.response_sent())
+    await message.answer(Messages.response_sent(lang))
 
 
 @router.message(lambda msg: msg.chat.id == settings.ADMIN_CHAT_ID)
-async def reply_to_user(message: Message, bot: Bot) -> None:
+async def reply_to_user(message: Message, bot: Bot, lang: BotLanguage) -> None:
 
     if message.reply_to_message is None or message.reply_to_message.text is None:
         return
@@ -57,11 +57,11 @@ async def reply_to_user(message: Message, bot: Bot) -> None:
 
     user_id = _extract_user_id(message.reply_to_message.text)
     if user_id is None:
-        await message.answer(Messages.could_not_extract_id())
+        await message.answer(Messages.could_not_extract_id(lang))
         return
 
     await bot.send_message(user_id, Messages.response_from_support(message.text))
-    await message.answer(Messages.response_sent())
+    await message.answer(Messages.response_sent(lang))
 
 
 def _extract_user_id(text: str) -> int | None:
@@ -74,17 +74,17 @@ def _extract_user_id(text: str) -> int | None:
 
 
 @router.message(Command("logs"))
-async def logs(message: Message) -> None:
+async def logs(message: Message, lang: BotLanguage) -> None:
     if message.text is None:
         raise HandlerError
 
     if message.chat.id != settings.ADMIN_CHAT_ID:
-        await message.answer(Messages.no_access_to_command())
+        await message.answer(Messages.no_access_to_command(lang))
         return
 
     args = message.text.split(maxsplit=1)
     if len(args) < 2:
-        await message.answer(Messages.incorrect_date())
+        await message.answer(Messages.incorrect_date(lang))
         return
 
     date_str = args[1]
@@ -114,9 +114,9 @@ async def logs(message: Message) -> None:
             )
 
     except ValueError:
-        await message.answer(Messages.incorrect_date())
+        await message.answer(Messages.incorrect_date(lang))
     except (FileNotFoundError, PermissionError, OSError):
-        await message.answer(Messages.unexpected_error())
+        await message.answer(Messages.unexpected_error(lang))
 
 
 async def _get_log_files(date_str: str) -> list[tuple[str, Path]]:

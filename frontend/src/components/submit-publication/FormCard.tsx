@@ -29,32 +29,33 @@ import {
 import { toast } from 'sonner';
 import { Loader2, CheckCircle2, FileText, MapPin, Hash, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 /* ─── Schema ─── */
 
 const submitFormSchema = z.object({
     processingLevel: z.enum(['full', 'ural', 'part', 'skip'], {
-        message: 'Выберите уровень обработки',
+        message: 'Select processing level',
     }),
     uralsScope: z.enum(['yes', 'no']).nullable(),
     materialStatus: z.enum(['yes', 'no']).nullable(),
-    comment: z.string().max(1000, 'Комментарий не длиннее 1000 символов').optional(),
+    comment: z.string().max(1000, 'Comment no longer than 1000 characters').optional(),
 });
 
 type SubmitForm = z.infer<typeof submitFormSchema>;
 
 const LEVEL_LABELS: Record<string, string> = {
-    full: 'Полная',
-    ural: 'Урал',
-    part: 'Частичная',
-    skip: 'Пропуск',
+    full: 'Full',
+    ural: 'Urals',
+    part: 'Partial',
+    skip: 'Skip',
 };
 
 const LEVEL_DESC: Record<string, string> = {
-    full: 'Все виды определены до вида',
-    ural: 'Обработка ограничена Уралом',
-    part: 'Часть видов не определена',
-    skip: 'Публикация пропущена',
+    full: 'All species identified to species level',
+    ural: 'Processing limited to Urals',
+    part: 'Some species not identified',
+    skip: 'Publication skipped',
 };
 
 /* ─── Animations ─── */
@@ -74,6 +75,7 @@ interface Props {
 }
 
 const FormCard: FC<Props> = ({ publ_id, meta }) => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [submit, { isLoading: submitting }] = useSubmitPublicationMutation();
     const { data: recordsData } = useRecordsListQuery({ publ_id });
@@ -105,11 +107,11 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                 },
             });
             if (!result.error) {
-                toast.success('Публикация обработана');
+                toast.success(t('submitPublication.successToast'));
                 void navigate('/dashboard', { replace: true });
             }
         },
-        [publ_id, submit, navigate],
+        [publ_id, submit, navigate, t],
     );
 
     const onSubmit = useCallback(
@@ -146,10 +148,10 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                     className="mb-8 text-center"
                 >
                     <h1 className="text-2xl font-light tracking-wide sm:text-3xl">
-                        Завершение обработки
+                        {t('submitPublication.finishProcessing')}
                     </h1>
                     <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
-                        Публикация #{publ_id}
+                        {t('submitPublication.publicationNumber', { id: publ_id })}
                     </p>
                     {meta && <p className="mt-1 text-sm text-muted-foreground italic">{meta}</p>}
                 </motion.div>
@@ -164,7 +166,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                 <Field data-invalid={invalid}>
                                     <FieldLabel>
                                         <FileText className="size-3.5 text-emerald-600" />
-                                        Уровень обработки
+                                        {t('submitPublication.processingLevel')}
                                     </FieldLabel>
                                     <Select value={field.value} onValueChange={field.onChange}>
                                         <SelectTrigger
@@ -175,7 +177,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                             )}
                                             aria-invalid={invalid}
                                         >
-                                            <SelectValue placeholder="— выберите уровень —" />
+                                            <SelectValue placeholder={t('submitPublication.selectLevel')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {Object.entries(LEVEL_LABELS).map(([val, label]) => (
@@ -203,7 +205,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                 <Field data-invalid={invalid}>
                                     <FieldLabel>
                                         <MapPin className="size-3.5 text-emerald-600" />
-                                        Находки за пределами Урала?
+                                        {t('submitPublication.uralsScope')}
                                     </FieldLabel>
                                     <RadioGroup
                                         value={field.value ?? ''}
@@ -212,8 +214,8 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                         aria-invalid={invalid}
                                     >
                                         {[
-                                            { val: 'yes', label: 'Да' },
-                                            { val: 'no', label: 'Нет' },
+                                            { val: 'yes', label: t('common.yes') },
+                                            { val: 'no', label: t('common.no') },
                                         ].map((opt) => (
                                             <div key={opt.val} className="flex items-center gap-2">
                                                 <RadioGroupItem
@@ -244,7 +246,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                 <Field data-invalid={invalid}>
                                     <FieldLabel>
                                         <Hash className="size-3.5 text-emerald-600" />
-                                        Указания видов без материала?
+                                        {t('submitPublication.materialStatus')}
                                     </FieldLabel>
                                     <RadioGroup
                                         value={field.value ?? ''}
@@ -253,8 +255,8 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                         aria-invalid={invalid}
                                     >
                                         {[
-                                            { val: 'yes', label: 'Да' },
-                                            { val: 'no', label: 'Нет' },
+                                            { val: 'yes', label: t('common.yes') },
+                                            { val: 'no', label: t('common.no') },
                                         ].map((opt) => (
                                             <div key={opt.val} className="flex items-center gap-2">
                                                 <RadioGroupItem
@@ -285,12 +287,12 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                 <Field data-invalid={invalid}>
                                     <FieldLabel>
                                         <MessageSquare className="size-3.5 text-emerald-600" />
-                                        Комментарий
+                                        {t('submitPublication.comment')}
                                     </FieldLabel>
                                     <Textarea
                                         id="comment"
                                         {...field}
-                                        placeholder="Любые замечания по публикации..."
+                                        placeholder={t('submitPublication.commentPlaceholder')}
                                         className="min-h-24 text-sm placeholder:text-sm placeholder:text-muted-foreground/40"
                                         aria-invalid={invalid}
                                     />
@@ -308,7 +310,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                     className="mt-8 flex items-center justify-between border-t border-border pt-6"
                 >
                     <Button variant="outline" asChild>
-                        <Link to="/dashboard">Отмена</Link>
+                        <Link to="/dashboard">{t('submitPublication.cancel')}</Link>
                     </Button>
                     <Button
                         type="submit"
@@ -320,7 +322,7 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                         ) : (
                             <CheckCircle2 className="mr-2 size-4" />
                         )}
-                        {submitting ? 'Отправка...' : 'Завершить'}
+                        {submitting ? t('submitPublication.sending') : t('submitPublication.finish')}
                     </Button>
                 </motion.div>
             </form>
@@ -328,21 +330,20 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
             <AlertDialog open={showZeroDialog} onOpenChange={setShowZeroDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+                        <AlertDialogTitle>{t('submitPublication.confirmTitle')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Вы не оставили ни одной записи о находках в этой публикации. <br />
-                            Всё равно завершить обработку?
+                            {t('submitPublication.confirmDescription')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <Button variant="outline" onClick={handleCancelZero}>
-                            Отмена
+                            {t('submitPublication.cancel')}
                         </Button>
                         <Button
                             onClick={handleConfirmZero}
                             className="bg-emerald-700 text-white hover:bg-emerald-800"
                         >
-                            Да, завершить
+                            {t('submitPublication.confirmYes')}
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>

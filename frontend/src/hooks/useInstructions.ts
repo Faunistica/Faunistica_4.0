@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface Section {
     id: string;
@@ -49,6 +50,7 @@ function parseSections(markdown: string): Section[] {
 }
 
 export const useInstructions = () => {
+    const { i18n } = useTranslation();
     const [markdown, setMarkdown] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -60,7 +62,13 @@ export const useInstructions = () => {
     const sections = useMemo(() => parseSections(markdown), [markdown]);
 
     useEffect(() => {
-        fetch('/instruction.md')
+        const lang = i18n.language?.split('-')[0] || 'en';
+        const instructionFile = lang === 'ru' ? '/instruction.md' : '/instruction.en.md';
+
+        setLoading(true);
+        setError(false);
+
+        fetch(instructionFile)
             .then((r) => {
                 if (!r.ok) throw new Error('Failed to load');
                 return r.text();
@@ -74,7 +82,7 @@ export const useInstructions = () => {
             })
             .catch(() => setError(true))
             .finally(() => setLoading(false));
-    }, []);
+    }, [i18n.language]);
 
     useEffect(() => {
         const handleScroll = () => {

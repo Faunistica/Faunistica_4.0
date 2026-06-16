@@ -12,7 +12,7 @@ rule(
     RuleCategory.EVENT,
     ["verbatim_date"],
     "required",
-    required("verbatim_date", "Дата сбора не указана"),
+    required("verbatim_date", {"ru": "Дата сбора не указана", "en": "Collection date is not specified"}),
 )
 
 
@@ -23,7 +23,7 @@ def rule_interval_no_separator(data: RecordData, ctx: RuleContext) -> str | None
         and nonblank(data.verbatim_date)
         and not has_range_separator(data.verbatim_date)
     ):
-        return "Указан интервал дат, но значение не содержит разделителя интервала"
+        return ctx.t("Указан интервал дат, но значение не содержит разделителя интервала", "Date interval is specified but value does not contain a range separator")
     return None
 
 
@@ -32,7 +32,7 @@ def rule_date_precision_no_date(data: RecordData, ctx: RuleContext) -> str | Non
     if data.date_precision is not None and (
         data.verbatim_date is None or data.verbatim_date.strip() == ""
     ):
-        return "Указана точность даты, но дата не заполнена"
+        return ctx.t("Указана точность даты, но дата не заполнена", "Date precision is specified but date is not filled")
     return None
 
 
@@ -40,9 +40,11 @@ def rule_date_precision_no_date(data: RecordData, ctx: RuleContext) -> str | Non
 def rule_recorded_by_required(data: RecordData, ctx: RuleContext) -> str | None:
     rb = data.recorded_by
     if rb is None or rb.strip() == "" or len(rb.strip()) < 4:
-        return (
+        return ctx.t(
             "Коллектор не распознан. Обратите внимание на аббревиатуры. "
-            "Если не указано, поставьте автора публикации."
+            "Если не указано, поставьте автора публикации.",
+            "Collector not recognized. Pay attention to abbreviations. "
+            "If not specified, use the publication author.",
         )
     return None
 
@@ -70,7 +72,7 @@ def rule_forbidden_chars_event(data: RecordData, ctx: RuleContext) -> str | None
         data.event_remarks,
         data.recorded_by,
     ):
-        return "Табуляция и/или переносы строки в разделе Сбор материала"
+        return ctx.t("Табуляция и/или переносы строки в разделе Сбор материала", "Tabs and/or line breaks in the Collection section")
     return None
 
 
@@ -94,7 +96,10 @@ def rule_cyrillic_event(data: RecordData, ctx: RuleContext) -> str | None:
         data.sample_size_unit,
         data.recorded_by,
     ):
-        return "Кириллица в блоке Сбор материала для публикации не на русском языке"
+        return ctx.t(
+            "Кириллица в блоке Сбор материала для публикации не на русском языке",
+            "Cyrillic in Collection block for non-Russian publication",
+        )
     return None
 
 
@@ -102,5 +107,5 @@ def rule_cyrillic_event(data: RecordData, ctx: RuleContext) -> str | None:
 def rule_sample_size_positive(data: RecordData, ctx: RuleContext) -> str | None:
     v = data.sample_size_value
     if v is not None and v <= 0:
-        return "Объём выборки должен быть положительным числом"
+        return ctx.t("Объём выборки должен быть положительным числом", "Sample size must be a positive number")
     return None

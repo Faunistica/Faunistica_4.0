@@ -1,6 +1,7 @@
 import { type FC, type ReactNode, forwardRef } from 'react';
 import { FileDown, FileText, FileArchive, ExternalLink, ChevronDown, X } from 'lucide-react';
 import { toast } from 'sonner';
+import i18next from 'i18next';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -33,7 +34,7 @@ const SourceButton = forwardRef<
         ) : (
             <>
                 <FileDown className="size-4" />
-                <span>Источник</span>
+                <span>{i18next.t('common.source')}</span>
                 {rightIcon}
             </>
         )}
@@ -46,7 +47,7 @@ function SourceButtonContent({ rightIcon }: { rightIcon: ReactNode }) {
     return (
         <>
             <FileDown className="size-4" />
-            <span>Источник</span>
+            <span>{i18next.t('common.source')}</span>
             {rightIcon}
         </>
     );
@@ -79,7 +80,7 @@ const PublicationSourceFiles: FC<PublicationSourceFilesProps> = ({ publication }
         return (
             <SourceButton
                 rightIcon={<X className="size-3.5 text-red-500" />}
-                onClick={() => toast.error('Нет доступных источников')}
+                onClick={() => toast.error(i18next.t('common.noSources'))}
             />
         );
     }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import i18next from 'i18next';
 import { useInitTelegramAuthMutation, useLazyCheckTelegramAuthStatusQuery } from '@/api/authAPI';
 
 export function useTelegramAuth() {
@@ -7,7 +8,7 @@ export function useTelegramAuth() {
     const [initAuth, { data: initData, isLoading: isInitLoading, error: initError }] =
         useInitTelegramAuthMutation();
     const [checkStatus] = useLazyCheckTelegramAuthStatusQuery();
-    const [statusMessage, setStatusMessage] = useState('Генерация кода...');
+    const [statusMessage, setStatusMessage] = useState(i18next.t('telegramAuth.generating'));
     const [isPollingError, setIsPollingError] = useState(false);
     const [displayCode, setDisplayCode] = useState<string | undefined>(undefined);
 
@@ -43,12 +44,12 @@ export function useTelegramAuth() {
                         break;
                     } else if (result.status === 'pending' || result.status === 0) {
                         setIsPollingError(false);
-                        setStatusMessage('Ожидание ввода кода в Telegram...');
+                        setStatusMessage(i18next.t('telegramAuth.waitingForCode'));
                     }
                 } catch {
                     if (isMounted) {
                         setIsPollingError(true);
-                        setStatusMessage('Проблема с подключением, пытаемся восстановить...');
+                        setStatusMessage(i18next.t('telegramAuth.reconnecting'));
                         await new Promise((resolve) => setTimeout(resolve, 3000));
                     }
                 }
@@ -60,14 +61,14 @@ export function useTelegramAuth() {
                 const res = await initAuth().unwrap();
                 if (isMounted) {
                     setIsPollingError(false);
-                    setStatusMessage('Ожидание ввода кода в Telegram...');
+                    setStatusMessage(i18next.t('telegramAuth.waitingForCode'));
                     setDisplayCode(res.code);
                     void startPolling(res.code, res.token);
                 }
             } catch {
                 if (isMounted) {
                     setIsPollingError(true);
-                    setStatusMessage('Ошибка соединения. Пожалуйста, попробуйте еще раз.');
+                    setStatusMessage(i18next.t('telegramAuth.connectionError'));
                 }
             }
         };
