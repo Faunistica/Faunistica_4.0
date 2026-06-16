@@ -24,6 +24,7 @@ const SourceButton = forwardRef<
         variant="outline"
         size="sm"
         className="h-9 w-full justify-center gap-2 rounded-lg border-slate-300 sm:w-auto"
+        type="button"
         asChild={asChild}
         {...rest}
     >

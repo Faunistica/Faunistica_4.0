@@ -447,18 +447,18 @@ async def test_submit_unsubmitted_records_check_fail(
     assert draft_id in data["draft_record_ids"]
 
 
-# ========== Submit-Status Tests ==========
+# ========== Drafts Tests ==========
 
 
 @pytest.mark.asyncio
-async def test_submit_status_ok(
+async def test_get_drafts_ok(
     authenticated_client: AsyncClient,
     seed_data: SeedData,
 ) -> None:
-    """GET /submit-status returns empty list when no drafts."""
+    """GET /drafts returns empty list when no drafts."""
     publ_id = seed_data["publs"][0].publ_id
     response = await authenticated_client.get(
-        f"/api/publications/{publ_id}/submit-status",
+        f"/api/publications/{publ_id}/drafts",
     )
     assert response.status_code == 200
     data = response.json()
@@ -466,12 +466,12 @@ async def test_submit_status_ok(
 
 
 @pytest.mark.asyncio
-async def test_submit_status_drafts(
+async def test_get_drafts_drafts(
     authenticated_client: AsyncClient,
     session_maker,
     seed_data: SeedData,
 ) -> None:
-    """GET /submit-status returns draft IDs when drafts exist."""
+    """GET /drafts returns draft IDs when drafts exist."""
     publ_id = seed_data["publs"][0].publ_id
     user = seed_data["users"][0]
 
@@ -487,7 +487,7 @@ async def test_submit_status_drafts(
         draft_id = str(draft.id)
 
     response = await authenticated_client.get(
-        f"/api/publications/{publ_id}/submit-status",
+        f"/api/publications/{publ_id}/drafts",
     )
     assert response.status_code == 200
     data = response.json()
@@ -495,13 +495,13 @@ async def test_submit_status_drafts(
 
 
 @pytest.mark.asyncio
-async def test_submit_status_no_access(
+async def test_get_drafts_no_access(
     authenticated_client_user2: AsyncClient,
     seed_data: SeedData,
 ) -> None:
-    """GET /submit-status returns 403 for user without access."""
+    """GET /drafts returns 403 for user without access."""
     publ_id = seed_data["publs"][0].publ_id
     response = await authenticated_client_user2.get(
-        f"/api/publications/{publ_id}/submit-status",
+        f"/api/publications/{publ_id}/drafts",
     )
     assert response.status_code == 403

@@ -15,8 +15,11 @@ export const publAPI = createApi({
             query: (id) => `/publications/${id}`,
             providesTags: (_result, _error, id) => [{ type: 'publications', id }],
         }),
-        getSubmitStatus: build.query<Types.SubmitStatusResponse, number>({
-            query: (publ_id) => `/publications/${publ_id}/submit-status`,
+        getDraftRecordIds: build.query<Types.DraftsResponse, number>({
+            query: (publ_id) => `/publications/${publ_id}/drafts`,
+            providesTags: (_result, _error, publ_id) => [
+                { type: 'publications', id: `draft-${publ_id}` },
+            ],
         }),
         submitPublication: build.mutation<
             void,
@@ -27,7 +30,10 @@ export const publAPI = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: ['publications'],
+            invalidatesTags: (_result, _error, { publ_id }) => [
+                'publications',
+                { type: 'publications', id: `draft-${publ_id}` },
+            ],
         }),
     }),
 });
@@ -35,6 +41,6 @@ export const publAPI = createApi({
 export const {
     useGetCurrentPublicationQuery,
     useGetPublicationByIdQuery,
-    useGetSubmitStatusQuery,
+    useGetDraftRecordIdsQuery,
     useSubmitPublicationMutation,
 } = publAPI;
