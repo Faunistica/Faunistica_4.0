@@ -1,49 +1,59 @@
 import { z } from 'zod';
+import i18next from 'i18next';
 import { LAT_MIN, LAT_MAX, LNG_MIN, LNG_MAX, UNCERTAINTY_MAX } from '@/lib/constants';
 import type { QuantityField } from '@/lib/constants';
 
-export const recordFormSchema = z.object({
-    // ═══ LOCATION ═══
-    georef_source: z.enum(['lit', 'vol', 'none']).nullish(),
-    country: z.string().min(1, 'Обязательное поле'),
-    region: z.string().min(1, 'Обязательное поле'),
-    district: z.string().min(1, 'Обязательное поле'),
-    locality: z.string().min(1, 'Обязательное поле'),
-    is_manual_location: z.boolean().nullish(),
-    verbatimcoordinates: z.string().nullish(),
-    latitude: z.coerce
-        .number<number>('Число')
-        .min(LAT_MIN, `Мин. ${LAT_MIN}`)
-        .max(LAT_MAX, `Макс. ${LAT_MAX}`),
-    longitude: z.coerce
-        .number<number>('Число')
-        .min(LNG_MIN, `Мин. ${LNG_MIN}`)
-        .max(LNG_MAX, `Макс. ${LNG_MAX}`),
-    coordinate_uncertainty: z.coerce
-        .number<number>()
-        .max(UNCERTAINTY_MAX, `Макс. ${UNCERTAINTY_MAX}`)
-        .nullish(),
-    location_remarks: z.string().nullish(),
+export function recordFormSchema() {
+    const req = i18next.t('formValidation.required');
+    const num = i18next.t('formValidation.number');
+    const minLat = i18next.t('formValidation.min', { value: LAT_MIN });
+    const maxLat = i18next.t('formValidation.max', { value: LAT_MAX });
+    const minLng = i18next.t('formValidation.min', { value: LNG_MIN });
+    const maxLng = i18next.t('formValidation.max', { value: LNG_MAX });
+    const maxUnc = i18next.t('formValidation.max', { value: UNCERTAINTY_MAX });
 
-    // ═══ EVENT + OCCURRENCE ═══
-    verbatim_date: z.string().min(1, 'Обязательное поле'),
-    date_precision: z.string().nullish(),
-    is_interval: z.boolean().nullish(),
-    habitat: z.string().nullish(),
-    sampling_protocol: z.string().min(1, 'Обязательное поле'),
-    sampling_effort: z.string().nullish(),
-    sample_size_value: z.coerce.number<number>().nullish(),
-    sample_size_unit: z.string().nullish(),
-    event_remarks: z.string().nullish(),
-    field_number: z.string().nullish(),
-    catalog_number: z.string().nullish(),
-    collection_code: z.string().nullish(),
-    recorded_by: z.string().min(1, 'Обязательное поле'),
+    return z.object({
+        // ═══ LOCATION ═══
+        georef_source: z.enum(['lit', 'vol', 'none']).nullish(),
+        country: z.string().min(1, req),
+        region: z.string().min(1, req),
+        district: z.string().min(1, req),
+        locality: z.string().min(1, req),
+        is_manual_location: z.boolean().nullish(),
+        verbatimcoordinates: z.string().nullish(),
+        latitude: z.coerce
+            .number<number>(num)
+            .min(LAT_MIN, minLat)
+            .max(LAT_MAX, maxLat),
+        longitude: z.coerce
+            .number<number>(num)
+            .min(LNG_MIN, minLng)
+            .max(LNG_MAX, maxLng),
+        coordinate_uncertainty: z.coerce
+            .number<number>()
+            .max(UNCERTAINTY_MAX, maxUnc)
+            .nullish(),
+        location_remarks: z.string().nullish(),
 
-    // ═══ TAXONOMY ═══
-    family: z.string().min(1, 'Обязательное поле'),
-    genus: z.string().min(1, 'Обязательное поле'),
-    species: z.string().min(1, 'Обязательное поле'),
+        // ═══ EVENT + OCCURRENCE ═══
+        verbatim_date: z.string().min(1, req),
+        date_precision: z.string().nullish(),
+        is_interval: z.boolean().nullish(),
+        habitat: z.string().nullish(),
+        sampling_protocol: z.string().min(1, req),
+        sampling_effort: z.string().nullish(),
+        sample_size_value: z.coerce.number<number>().nullish(),
+        sample_size_unit: z.string().nullish(),
+        event_remarks: z.string().nullish(),
+        field_number: z.string().nullish(),
+        catalog_number: z.string().nullish(),
+        collection_code: z.string().nullish(),
+        recorded_by: z.string().min(1, req),
+
+        // ═══ TAXONOMY ═══
+        family: z.string().min(1, req),
+        genus: z.string().min(1, req),
+        species: z.string().min(1, req),
     tax_verbatim: z.boolean().nullish(),
     taxon_rank: z.enum(['genus', 'species', 'subspecies']).nullish(),
     type_status: z.string().nullish(),
@@ -62,7 +72,7 @@ export const recordFormSchema = z.object({
     juveniles: z.coerce.number<number>().min(0).nullish(),
 });
 
-export type RecordForm = z.infer<typeof recordFormSchema>;
+export type RecordForm = z.infer<ReturnType<typeof recordFormSchema>>;
 
 export type RecordFormKey<V> = {
     [K in keyof RecordForm]-?: RecordForm[K] extends V ? K : never;

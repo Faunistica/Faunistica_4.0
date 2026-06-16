@@ -1,5 +1,6 @@
 import { type FC, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import type { Section } from '@/hooks/useInstructions';
 import {
     Sidebar,
@@ -25,6 +26,7 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
     activeSection,
     onSectionClick,
 }) => {
+    const { t } = useTranslation();
     const { isMobile, setOpenMobile, openMobile } = useSidebar();
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -61,10 +63,10 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
                         <div className="flex items-center gap-2">
                             <div>
                                 <div className="text-sm/tight font-bold text-slate-900">
-                                    Инструкция
+                                    {t('instructions.title')}
                                 </div>
                                 <div className="text-[10px] leading-tight font-medium text-slate-500">
-                                    Справочное руководство
+                                    {t('instructions.tableOfContents')}
                                 </div>
                             </div>
                         </div>
@@ -78,7 +80,7 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
                             size="icon"
                             className="size-8 text-slate-400 hover:text-slate-600 md:hidden"
                             onClick={() => setOpenMobile(false)}
-                            aria-label="Закрыть панель"
+                            aria-label={t('form.sidebarSection.closePanel')}
                         >
                             <X className="size-4" />
                         </Button>
@@ -89,7 +91,7 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
             <SidebarContent>
                 <SidebarGroup className="overflow-y-hidden p-0">
                     <SidebarGroupLabel className="rounded-none border-b border-slate-100 text-xs font-semibold tracking-wider text-slate-500 uppercase shadow-xs">
-                        <span className="py-1 pl-2">Содержание</span>
+                        <span className="py-1 pl-2">{t('instructions.tableOfContents')}</span>
                     </SidebarGroupLabel>
                     <SidebarGroupContent
                         ref={scrollRef}

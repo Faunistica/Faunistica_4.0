@@ -11,10 +11,13 @@ def rule_total_quantity_max(data: RecordData, ctx: RuleContext) -> str | None:
         return None
     total = sum(s.count for s in data.specimens)
     if total > QUANTITY_MAX:
-        return (
+        return ctx.t(
             "Недопустимо большое число особей. "
             "Если их действительно 300 и более, то укажите 299, "
-            "а реальное количество — в поле 'Примечания к экземпляру'."
+            "а реальное количество — в поле 'Примечания к экземпляру'.",
+            "Unacceptably large number of specimens. "
+            "If there are really 300 or more, specify 299 "
+            "and put the real count in the 'Specimen Notes' field.",
         )
     return None
 
@@ -25,7 +28,7 @@ def rule_each_count_min(data: RecordData, ctx: RuleContext) -> str | None:
         return None
     for s in data.specimens:
         if s.count is not None and 0 < s.count < 0.001:
-            return "Слишком мало особей"
+            return ctx.t("Слишком мало особей", "Too few specimens")
     return None
 
 
@@ -35,7 +38,7 @@ def rule_each_count_positive(data: RecordData, ctx: RuleContext) -> str | None:
         return None
     for s in data.specimens:
         if s.count < 0:
-            return "Количество не может быть отрицательным"
+            return ctx.t("Количество не может быть отрицательным", "Count cannot be negative")
     return None
 
 
@@ -49,5 +52,5 @@ def rule_forbidden_chars_occurrence(data: RecordData, ctx: RuleContext) -> str |
         data.occurrence_remarks,
         data.identification_remarks,
     ):
-        return "Табуляция и/или переносы строки в комментариях к экземпляру"
+        return ctx.t("Табуляция и/или переносы строки в комментариях к экземпляру", "Tabs and/or line breaks in specimen comments")
     return None

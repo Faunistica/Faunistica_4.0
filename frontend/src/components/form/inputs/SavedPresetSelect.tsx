@@ -8,6 +8,7 @@ import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 import { LOCATION_FIELDS, EVENT_FIELDS, locationSummary, eventSummary } from '@/lib/recordLabels';
 import { recordAPI } from '@/api/recordAPI';
 import { useAppSelector } from '@/store/store';
+import { useTranslation } from 'react-i18next';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -42,6 +43,7 @@ const LABEL_BUILDERS: Record<PresetType, (d: RecordFull) => string> = {
 };
 
 const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className }) => {
+    const { t } = useTranslation();
     const { setValue, clearErrors } = useFormContext<RecordForm>();
 
     const presets = useAppSelector(
@@ -146,7 +148,7 @@ const SavedPresetSelect: FC<Props> = ({ type, publ_id, activeRecordId, className
                     )}
                 >
                     <History className="size-4" />
-                    Заполнить как у другой записи
+                    {t('form.presets.fillFromAnother')}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-fit max-w-screen" align="end">

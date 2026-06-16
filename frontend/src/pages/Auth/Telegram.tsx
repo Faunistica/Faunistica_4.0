@@ -13,10 +13,20 @@ import { Link } from 'react-router';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 import TermsConsent from './TermsConsent';
 import TelegramQRCode from '@/components/qr/TelegramQRCode';
+import { useTranslation } from 'react-i18next';
 
 const TelegramAuth: FC = () => {
-    const { displayCode, botUrl, statusMessage, isPollingError, isInitLoading, initError } =
+    const { t } = useTranslation();
+    const { displayCode, botUrl, statusMessage: _, isPollingError, isInitLoading, initError } =
         useTelegramAuth();
+
+    const statusMessage = isInitLoading
+        ? t('telegramAuth.generating')
+        : initError
+            ? t('telegramAuth.connectionError')
+            : isPollingError
+                ? t('telegramAuth.reconnecting')
+                : t('telegramAuth.waitingForCode');
 
     return (
         <div className="mx-auto w-full max-w-[700px] space-y-6">
@@ -24,10 +34,11 @@ const TelegramAuth: FC = () => {
                 <div className="absolute inset-y-0 left-0 w-1.5 bg-telegram"></div>
                 <CardHeader className="space-y-1 pl-6 text-center">
                     <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
-                        Вход через Telegram
+                        {t('auth.loginWithTelegram')}
                     </CardTitle>
                     <CardDescription className="mx-auto mt-2 max-w-md text-slate-500">
-                        {'Отправьте этот код сообщением нашему Telegram боту '}
+                        {t('auth.telegramDescription', { botName: '' })}
+                        {' '}
                         <a
                             href={botUrl ? `${botUrl}?start=${displayCode}` : ''}
                             target="_blank"
@@ -36,12 +47,10 @@ const TelegramAuth: FC = () => {
                         >
                             @{botUrl?.replace(/^https?:\/\/t\.me\//, '')}
                         </a>
-                        {', не закрывая данную страницу'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 pt-2">
                     <div className="flex flex-col items-center justify-center gap-6 md:flex-row md:items-stretch">
-                        {/* Left Column: Code Block */}
                         <div className="flex w-full max-w-[240px] flex-col justify-center">
                             {isInitLoading ? (
                                 <div className="flex h-[240px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
@@ -50,7 +59,7 @@ const TelegramAuth: FC = () => {
                             ) : initError ? (
                                 <div className="flex h-[240px] flex-col items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 text-center text-red-500">
                                     <span className="text-sm font-medium">
-                                        Не удалось сгенерировать код
+                                        {t('auth.failedGenerateCode')}
                                     </span>
                                 </div>
                             ) : (
@@ -62,7 +71,6 @@ const TelegramAuth: FC = () => {
                             )}
                         </div>
 
-                        {/* Right Column: QR and Button */}
                         <div className="flex h-[240px] w-full max-w-[240px] flex-col justify-between">
                             <div className="flex w-full grow items-center justify-center rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
                                 <TelegramQRCode code={displayCode} botUrl={botUrl} />
@@ -83,7 +91,7 @@ const TelegramAuth: FC = () => {
                                     rel="noopener noreferrer"
                                 >
                                     <Send className="size-4" />
-                                    Открыть бота
+                                    {t('auth.openBot')}
                                 </a>
                             </Button>
                         </div>
@@ -97,7 +105,7 @@ const TelegramAuth: FC = () => {
                         >
                             <Link to="/auth/login">
                                 <Key className="size-4 text-slate-500" />
-                                Войти по логину
+                                {t('auth.loginWithPassword')}
                             </Link>
                         </Button>
                     </div>

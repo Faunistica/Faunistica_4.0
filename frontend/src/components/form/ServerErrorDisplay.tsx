@@ -2,8 +2,10 @@ import { type FC } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRecordForm } from '@/hooks/useRecordForm';
+import { useTranslation } from 'react-i18next';
 
 const ServerErrorDisplay: FC = () => {
+    const { t } = useTranslation();
     const { state: globalErrors } = useRecordForm((ctx) => ctx.state.globalErrors);
     if (globalErrors.length === 0) return null;
 
@@ -13,7 +15,7 @@ const ServerErrorDisplay: FC = () => {
                 <div className="flex items-start gap-3">
                     <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-500" />
                     <div className="space-y-1.5">
-                        <p className="text-sm font-semibold text-red-700">Ошибки при сохранении</p>
+                        <p className="text-sm font-semibold text-red-700">{t('form.saveErrors.title')}</p>
                         {globalErrors.map((msg, i) => (
                             <p key={i} className="text-sm text-red-600">
                                 {msg}

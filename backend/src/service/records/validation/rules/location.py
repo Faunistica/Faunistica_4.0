@@ -18,7 +18,7 @@ def rule_forbidden_chars_location(data: RecordData, ctx: RuleContext) -> str | N
         data.locality,
         data.location_remarks,
     ):
-        return "Табуляция и/или переносы строки в разделе Административное расположение"
+        return ctx.t("Табуляция и/или переносы строки в разделе Административное расположение", "Tabs and/or line breaks in the Administrative location section")
     return None
 
 
@@ -35,9 +35,10 @@ def rule_cyrillic_location(data: RecordData, ctx: RuleContext) -> str | None:
         data.district,
         data.locality,
     ):
-        return (
+        return ctx.t(
             "Кириллица в блоке Административное расположение "
-            "для публикации не на русском языке"
+            "для публикации не на русском языке",
+            "Cyrillic in Administrative location block for non-Russian publication",
         )
     return None
 
@@ -50,7 +51,7 @@ def rule_country_min_length(data: RecordData, ctx: RuleContext) -> str | None:
     if v.strip() in SHORT_COUNTRY_ALLOWLIST:
         return None
     if len(v.strip()) < 4:
-        return "Страна указана некорректно"
+        return ctx.t("Страна указана некорректно", "Country is specified incorrectly")
     return None
 
 
@@ -58,11 +59,11 @@ rule(
     RuleCategory.LOCATION,
     ["region"],
     "too_short",
-    min_length("region", 5, "Регион указан некорректно"),
+    min_length("region", 5, {"ru": "Регион указан некорректно", "en": "Region is specified incorrectly"}),
 )
 rule(
     RuleCategory.LOCATION,
     ["district"],
     "too_short",
-    min_length("district", 5, "Район указан некорректно"),
+    min_length("district", 5, {"ru": "Район указан некорректно", "en": "District is specified incorrectly"}),
 )

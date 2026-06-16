@@ -18,6 +18,7 @@ import { useRecordByIdQuery } from '@/api/recordAPI';
 import { RecordStatusIndicator } from '@/components/form/sidebar/RecordStatusIndicator';
 import { selectRecordSummary } from '@/lib/recordSelectors';
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const SidebarRecordItem = ({
     publ_id,
@@ -32,6 +33,7 @@ export const SidebarRecordItem = ({
     onNavigate: (targetID: string) => void;
     deleteRecord: (id: string) => Promise<void>;
 }) => {
+    const { t } = useTranslation();
     const { isMobile, setOpenMobile } = useSidebar();
 
     const { status, recordName, recordLocation } = useRecordByIdQuery(
@@ -73,7 +75,7 @@ export const SidebarRecordItem = ({
                                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-400 opacity-75" />
                                 <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
                             </span>
-                            <span className="pl-1 font-semibold text-blue-600">Редактируется</span>
+                            <span className="pl-1 font-semibold text-blue-600">{t('form.sidebarSection.editing')}</span>
                         </>
                     ) : (
                         <>
@@ -91,27 +93,27 @@ export const SidebarRecordItem = ({
                         variant="ghost"
                         size="icon"
                         className="absolute top-2.5 right-1.5 z-10 size-6 shrink-0 rounded-md text-slate-400 opacity-100 transition-opacity group-hover/menu-item:opacity-100 hover:bg-red-100 hover:text-red-600 aria-expanded:opacity-100 md:opacity-0"
-                        aria-label="Удалить запись"
+                        aria-label={t('form.sidebarSection.deleteRecordAria')}
                     >
                         <Trash2 className="size-3.5" />
                     </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Вы абсолютно уверены?</AlertDialogTitle>
+                        <AlertDialogTitle>{t('form.sidebarSection.deleteConfirmTitle')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Это действие нельзя отменить. Запись будет безвозвратно удалена.
+                            {t('form.sidebarSection.deleteConfirmDescription')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Отмена</AlertDialogCancel>
+                        <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                         <AlertDialogAction
                             variant="destructive"
                             onClick={async () => {
                                 await handleDelete();
                             }}
                         >
-                            Удалить
+                            {t('common.delete')}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

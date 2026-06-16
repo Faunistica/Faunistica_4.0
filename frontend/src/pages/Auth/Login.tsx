@@ -20,8 +20,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { authAPI } from '@/api/authAPI';
 import TermsConsent from './TermsConsent';
 import type { LoginRequest } from '@/types/api.dto';
+import { useTranslation } from 'react-i18next';
 
 const Login: FC = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [login, { isLoading, error }] = authAPI.useLoginMutation();
@@ -41,7 +43,7 @@ const Login: FC = () => {
     };
 
     const apiErrorMessage = getErrorMessage(error, {
-        api: 'Ошибка входа. Пожалуйста, попробуйте снова.',
+        api: t('auth.loginApiError'),
     });
 
     return (
@@ -49,10 +51,10 @@ const Login: FC = () => {
             <Card className="border-slate-200 shadow-sm">
                 <CardHeader className="space-y-1 text-center">
                     <CardTitle className="text-2xl font-semibold tracking-tight text-slate-900">
-                        Добро пожаловать
+                        {t('auth.welcome')}
                     </CardTitle>
                     <CardDescription className="text-slate-500">
-                        Войдите с помощью вашей учётной записи
+                        {t('auth.welcomeDescription')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -75,14 +77,14 @@ const Login: FC = () => {
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
                             <span className="bg-white px-2 font-medium text-slate-500">
-                                Или войдите с помощью
+                                {t('auth.orLoginWith')}
                             </span>
                         </div>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="username">Email или логин</Label>
+                            <Label htmlFor="username">{t('auth.emailOrUsername')}</Label>
                             <Input
                                 id="username"
                                 type="text"
@@ -97,7 +99,7 @@ const Login: FC = () => {
                         </div>
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="password">Пароль</Label>
+                                <Label htmlFor="password">{t('auth.password')}</Label>
                             </div>
                             <Input
                                 id="password"
@@ -120,18 +122,18 @@ const Login: FC = () => {
                             disabled={isLoading}
                             className="w-full bg-slate-900 font-semibold text-white shadow-sm hover:bg-slate-800"
                         >
-                            {isLoading ? 'Вход...' : 'Войти'}
+                            {isLoading ? t('auth.loginLoading') : t('auth.loginButton')}
                         </Button>
                     </form>
                 </CardContent>
                 <CardFooter className="flex flex-col justify-center border-t border-slate-100 bg-white p-4">
                     <div className="text-sm text-slate-600">
-                        Нет аккаунта?{' '}
+                        {t('auth.noAccount')}{' '}
                         <Link
                             to="/auth/register"
                             className="font-semibold text-slate-900 hover:underline"
                         >
-                            Зарегистрироваться
+                            {t('auth.registerButton')}
                         </Link>
                     </div>
                 </CardFooter>

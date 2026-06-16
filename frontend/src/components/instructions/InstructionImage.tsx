@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Image } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const InstructionImage = ({
     src,
@@ -11,6 +12,7 @@ export const InstructionImage = ({
     alt: string;
     className?: string;
 }) => {
+    const { t } = useTranslation();
     const [hasError, setHasError] = useState(false);
 
     return (
@@ -23,7 +25,7 @@ export const InstructionImage = ({
             {hasError ? (
                 <div className="flex flex-col items-center justify-center gap-2 p-8 text-center text-sm text-muted-foreground">
                     <Image />
-                    <span>Не удалось загрузить изображение: {src}</span>
+                    <span>{t('instructionImage.error', { src })}</span>
                 </div>
             ) : (
                 <img

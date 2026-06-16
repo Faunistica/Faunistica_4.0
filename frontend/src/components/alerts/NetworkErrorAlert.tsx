@@ -1,6 +1,7 @@
 import { AlertCircle, X } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 import type { FC } from 'react';
 
 interface NetworkErrorAlertProps {
@@ -8,16 +9,16 @@ interface NetworkErrorAlertProps {
 }
 
 const NetworkErrorAlert: FC<NetworkErrorAlertProps> = ({ onClose }) => {
+    const { t } = useTranslation();
     return (
         <div className="fixed right-4 bottom-4 z-100 max-w-md animate-in fade-in slide-in-from-bottom-4">
             <Alert variant="destructive" className="border-destructive bg-white shadow-lg">
                 <AlertCircle className="size-4" />
                 <AlertTitle className="font-bold text-destructive">
-                    Нет доступа к серверу
+                    {t('alerts.networkError.title')}
                 </AlertTitle>
                 <AlertDescription className="pr-8 text-slate-600">
-                    Не удалось проверить статус авторизации. Часть функций (сохранение данных,
-                    работа с анкетой) может быть временно недоступна.
+                    {t('alerts.networkError.description')}
                 </AlertDescription>
                 <Button
                     variant="ghost"

@@ -7,12 +7,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import { Hash } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { QUANTITY_FIELD_LABELS, QUANTITY_TYPE_OPTIONS } from '@/lib/constants';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { RecordForm } from '@/types/forms';
 
 const QuantitiesCard: FC = () => {
+    const { t } = useTranslation();
     const { control } = useFormContext<RecordForm>();
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     const total = useWatch<RecordForm>({
@@ -30,22 +32,22 @@ const QuantitiesCard: FC = () => {
     }) as number;
 
     const quantityFields = [
-        { key: 'males' as const, label: QUANTITY_FIELD_LABELS.males, color: 'text-blue-600' },
+        { key: 'males' as const, label: t(QUANTITY_FIELD_LABELS.males), color: 'text-blue-600' },
         {
             key: 'subadultMales' as const,
-            label: QUANTITY_FIELD_LABELS.subadultMales,
+            label: t(QUANTITY_FIELD_LABELS.subadultMales),
             color: 'text-blue-400',
         },
-        { key: 'females' as const, label: QUANTITY_FIELD_LABELS.females, color: 'text-pink-600' },
+        { key: 'females' as const, label: t(QUANTITY_FIELD_LABELS.females), color: 'text-pink-600' },
         {
             key: 'subadultFemales' as const,
-            label: QUANTITY_FIELD_LABELS.subadultFemales,
+            label: t(QUANTITY_FIELD_LABELS.subadultFemales),
             color: 'text-pink-400',
         },
-        { key: 'adults' as const, label: QUANTITY_FIELD_LABELS.adults, color: 'text-slate-600' },
+        { key: 'adults' as const, label: t(QUANTITY_FIELD_LABELS.adults), color: 'text-slate-600' },
         {
             key: 'juveniles' as const,
-            label: QUANTITY_FIELD_LABELS.juveniles,
+            label: t(QUANTITY_FIELD_LABELS.juveniles),
             color: 'text-amber-600',
         },
     ];
@@ -58,7 +60,7 @@ const QuantitiesCard: FC = () => {
                         <Hash className="size-4" />
                     </div>
                     <CardTitle className="text-lg font-semibold">
-                        Количественные характеристики
+                        {t('form.quantitativeCharacteristics')}
                     </CardTitle>
                 </div>
             </CardHeader>
@@ -108,12 +110,12 @@ const QuantitiesCard: FC = () => {
                 <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 md:grid-cols-2">
                     <FormAutocomplete
                         name="quantity_type"
-                        label="Единицы измерения"
-                        placeholder="Выберите единицы"
-                        options={QUANTITY_TYPE_OPTIONS.map((o) => o.label)}
+                        label={t('form.quantitative.units')}
+                        placeholder={t('form.quantitative.unitsPlaceholder')}
+                        options={QUANTITY_TYPE_OPTIONS.map((o) => t(o.label))}
                     />
                     <Field>
-                        <FieldLabel>Общее количество (вычислено)</FieldLabel>
+                        <FieldLabel>{t('form.quantitative.computedTotal')}</FieldLabel>
                         <div className="flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700">
                             {total > 0 ? total : '—'}
                         </div>
@@ -126,12 +128,12 @@ const QuantitiesCard: FC = () => {
                     render={({ field, fieldState: { error, invalid } }) => (
                         <Field data-invalid={invalid}>
                             <FieldLabel htmlFor="occurrence_remarks">
-                                Примечания к образцам
+                                {t('form.quantitative.specimenNotes')}
                             </FieldLabel>
                             <Textarea
                                 id="occurrence_remarks"
                                 className="max-h-fit min-h-18"
-                                placeholder="Укажите специфические детали экземпляра…"
+                                placeholder={t('form.quantitative.specimenNotesPlaceholder')}
                                 aria-invalid={invalid}
                                 {...field}
                                 value={field.value?.toString() ?? ''}

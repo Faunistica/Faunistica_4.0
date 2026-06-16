@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarDays, Info } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import SavedPresetSelect from '@/components/form/inputs/SavedPresetSelect';
 import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import type { RecordForm } from '@/types/forms';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
+    const { t } = useTranslation();
     const { control } = useFormContext<RecordForm>();
 
     return (
@@ -28,7 +30,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                             <CalendarDays className="size-4" />
                         </span>
                         <CardTitle className="min-w-0 text-lg font-semibold">
-                            Параметры сбора материала
+                            {t('form.collectionParameters')}
                         </CardTitle>
                     </div>
                     <SavedPresetSelect
@@ -48,22 +50,20 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                             <Field data-invalid={invalid}>
                                 <div className="flex items-center gap-1">
                                     <FieldLabel htmlFor="verbatim_date">
-                                        Дата сбора (как в статье)
+                                        {t('form.collection.collectionDate')}
                                     </FieldLabel>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Info className="size-3.5 cursor-help text-slate-400" />
                                         </TooltipTrigger>
                                         <TooltipContent side="top" className="max-w-xs text-xs">
-                                            Укажите дату точно так, как она приведена в статье.
-                                            Примеры: «19.08.2018», «19.08–02.09.2018», «лето 2017»,
-                                            «VIII.2019».
+                                            {t('form.collection.collectionDateTooltip')}
                                         </TooltipContent>
                                     </Tooltip>
                                 </div>
                                 <Input
                                     id="verbatim_date"
-                                    placeholder="19.08-02.09.2018"
+                                    placeholder={t('form.collection.collectionDatePlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                 />
@@ -74,9 +74,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
 
                     <FormAutocomplete
                         name="date_precision"
-                        label="Точность даты"
-                        placeholder="день, неделя, месяц, год…"
-                        options={['день', 'неделя', 'месяц', 'год']}
+                        label={t('form.collection.datePrecision')}
+                        placeholder={t('form.collection.datePrecisionPlaceholder')}
+                        options={['день', 'неделя', 'месяц', 'год'].map((d) => ({ value: d, label: t(`form.collection.datePrecisionOptions.${d}`) }))}
                     />
 
                     <Controller
@@ -84,10 +84,10 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="recorded_by">Коллектор</FieldLabel>
+                                <FieldLabel htmlFor="recorded_by">{t('form.collection.collector')}</FieldLabel>
                                 <Input
                                     id="recorded_by"
-                                    placeholder="Фамилия И.О."
+                                    placeholder={t('form.collection.collectorPlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                 />
@@ -112,7 +112,7 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     htmlFor="is_interval"
                                     className="cursor-pointer font-normal"
                                 >
-                                    Дата является интервалом
+                                    {t('form.collection.dateIsInterval')}
                                 </FieldLabel>
                                 <FieldError errors={[error]} />
                             </Field>
@@ -126,10 +126,10 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="sampling_protocol">Метод сбора</FieldLabel>
+                                <FieldLabel htmlFor="sampling_protocol">{t('form.collection.collectionMethod')}</FieldLabel>
                                 <Input
                                     id="sampling_protocol"
-                                    placeholder="ловушки Барбера, кошение сачком…"
+                                    placeholder={t('form.collection.collectionMethodPlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                 />
@@ -143,12 +143,12 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="sample_size_value">Объём выборки</FieldLabel>
+                                <FieldLabel htmlFor="sample_size_value">{t('form.collection.sampleSize')}</FieldLabel>
                                 <Input
                                     id="sample_size_value"
                                     type="number"
                                     min={0}
-                                    placeholder="Число"
+                                    placeholder={t('form.collection.sampleSizePlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString() ?? ''}
@@ -163,10 +163,10 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="sample_size_unit">Единица выборки</FieldLabel>
+                                <FieldLabel htmlFor="sample_size_unit">{t('form.collection.sampleUnit')}</FieldLabel>
                                 <Input
                                     id="sample_size_unit"
-                                    placeholder="ловушки, взмахи сачком…"
+                                    placeholder={t('form.collection.sampleUnitPlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString() ?? ''}
@@ -184,21 +184,20 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
                                 <div className="flex items-center gap-1">
-                                    <FieldLabel htmlFor="habitat">Биотоп</FieldLabel>
+                                    <FieldLabel htmlFor="habitat">{t('form.collection.habitat')}</FieldLabel>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Info className="size-3.5 cursor-help text-slate-400" />
                                         </TooltipTrigger>
                                         <TooltipContent side="top" className="max-w-xs text-xs">
-                                            Если биотопов несколько, разделяйте их точкой с запятой
-                                            «;».
+                                            {t('form.collection.habitatTooltip')}
                                         </TooltipContent>
                                     </Tooltip>
                                 </div>
                                 <Input
                                     id="habitat"
                                     className="min-h-8 resize-none"
-                                    placeholder="Описание местообитания; второе местообитание"
+                                    placeholder={t('form.collection.habitatPlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString() ?? ''}
@@ -213,10 +212,10 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="sampling_effort">Выборочное усилие</FieldLabel>
+                                <FieldLabel htmlFor="sampling_effort">{t('form.collection.samplingEffort')}</FieldLabel>
                                 <Input
                                     id="sampling_effort"
-                                    placeholder="Например: 20 ловушко-суток"
+                                    placeholder={t('form.collection.samplingEffortPlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value ?? ''}
@@ -234,12 +233,12 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
                                 <FieldLabel htmlFor="event_remarks">
-                                    Примечания к событию
+                                    {t('form.collection.eventNotes')}
                                 </FieldLabel>
                                 <Textarea
                                     id="event_remarks"
                                     className="max-h-fit min-h-20"
-                                    placeholder="Погодные условия, методика и т.п."
+                                    placeholder={t('form.collection.eventNotesPlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString() ?? ''}
@@ -256,10 +255,10 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="field_number">Полевой номер</FieldLabel>
+                                <FieldLabel htmlFor="field_number">{t('form.collection.fieldNumber')}</FieldLabel>
                                 <Input
                                     id="field_number"
-                                    placeholder="Полевой №"
+                                    placeholder={t('form.collection.fieldNumberPlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString() ?? ''}
@@ -273,10 +272,10 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="catalog_number">Каталожный номер</FieldLabel>
+                                <FieldLabel htmlFor="catalog_number">{t('form.collection.catalogNumber')}</FieldLabel>
                                 <Input
                                     id="catalog_number"
-                                    placeholder="Каталожный №"
+                                    placeholder={t('form.collection.catalogNumberPlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString() ?? ''}
@@ -290,10 +289,10 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="collection_code">Коллекционный код</FieldLabel>
+                                <FieldLabel htmlFor="collection_code">{t('form.collection.collectionCode')}</FieldLabel>
                                 <Input
                                     id="collection_code"
-                                    placeholder="Код коллекции"
+                                    placeholder={t('form.collection.collectionCodePlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString() ?? ''}

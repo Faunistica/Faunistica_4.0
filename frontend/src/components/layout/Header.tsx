@@ -1,7 +1,8 @@
 import { type FC, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, PanelLeft, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { Menu, X, PanelLeft, LogOut, Settings as SettingsIcon, Globe } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { useRouteHandle } from '@/hooks/useRouteMeta';
 import { useAppSelector } from '@/store/store';
 import { useLogoutMutation } from '@/api/authAPI';
@@ -24,11 +25,17 @@ interface HeaderProps {
 const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isLanding, isNavigateEnabled = true } = useRouteHandle();
+    const { t, i18n } = useTranslation();
 
     const { name, auth, user_id } = useAppSelector((state) => state.user);
     const photoUrl = useUserPhoto(auth ? user_id : null);
     const [logout] = useLogoutMutation();
     const navigate = useNavigate();
+
+    const toggleLanguage = () => {
+        const newLang = i18n.language === 'ru' ? 'en' : 'ru';
+        void i18n.changeLanguage(newLang);
+    };
 
     const handleLogout = async () => {
         try {
@@ -50,7 +57,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             size="icon"
                             className="size-9 rounded-md text-slate-600 lg:hidden"
                             onClick={() => setSidebarOpen(true)}
-                            aria-label="Открыть боковую панель"
+                            aria-label={t('header.openSidebar')}
                         >
                             <PanelLeft className="size-5" />
                         </Button>
@@ -62,7 +69,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             size="icon"
                             className="size-9 rounded-md text-slate-600 md:hidden"
                             onClick={() => setIsMobileMenuOpen((v) => !v)}
-                            aria-label="Открыть меню"
+                            aria-label={t('header.openMenu')}
                             aria-expanded={isMobileMenuOpen}
                         >
                             {isMobileMenuOpen ? (
@@ -88,25 +95,25 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                         href="#about"
                                         className="transition-colors hover:text-slate-900"
                                     >
-                                        О проекте
+                                        {t('navigation.about')}
                                     </a>
                                     <a
                                         href="#volunteers"
                                         className="transition-colors hover:text-slate-900"
                                     >
-                                        Волонтерам
+                                        {t('navigation.volunteers')}
                                     </a>
                                     <a
                                         href="#science"
                                         className="transition-colors hover:text-slate-900"
                                     >
-                                        Научная база
+                                        {t('navigation.science')}
                                     </a>
                                     <Link
                                         to="/instructions"
                                         className="transition-colors hover:text-slate-900"
                                     >
-                                        Инструкция
+                                        {t('navigation.instructions')}
                                     </Link>
                                 </>
                             ) : auth ? (
@@ -115,48 +122,57 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                         to="/dashboard"
                                         className="transition-colors hover:text-slate-900"
                                     >
-                                        Публикации
+                                        {t('navigation.dashboard')}
                                     </Link>
                                     <Link
                                         to="/instructions"
                                         className="transition-colors hover:text-slate-900"
                                     >
-                                        Инструкция
+                                        {t('navigation.instructions')}
                                     </Link>
                                     <Link
                                         to="/statistics"
                                         className="transition-colors hover:text-slate-900"
                                     >
-                                        Статистика
+                                        {t('navigation.statistics')}
                                     </Link>
                                     <Link
                                         to="/support"
                                         className="transition-colors hover:text-slate-900"
                                     >
-                                        Поддержка
+                                        {t('navigation.support')}
                                     </Link>
                                 </>
                             ) : (
                                 <>
                                     <Link to="/" className="transition-colors hover:text-slate-900">
-                                        На главную
+                                        {t('header.backToHome')}
                                     </Link>
                                     <Link
                                         to="/instructions"
                                         className="transition-colors hover:text-slate-900"
                                     >
-                                        Инструкция
+                                        {t('navigation.instructions')}
                                     </Link>
                                 </>
                             )}
                         </nav>
                         <div className="flex items-center gap-3">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 rounded-md text-slate-600"
+                                onClick={toggleLanguage}
+                                aria-label={t('common.language')}
+                            >
+                                <Globe className="size-5" />
+                            </Button>
                             {!auth ? (
                                 <Button
                                     asChild
                                     className="bg-slate-900 text-xs font-semibold text-white shadow-sm hover:bg-slate-800"
                                 >
-                                    <Link to="/auth/login">Войти</Link>
+                                    <Link to="/auth/login">{t('header.loginButton')}</Link>
                                 </Button>
                             ) : (
                                 <DropdownMenu>
@@ -169,7 +185,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                                 {photoUrl && (
                                                     <AvatarImage
                                                         src={photoUrl}
-                                                        alt={name || 'Фото профиля'}
+                                                        alt={name || t('header.profilePhoto')}
                                                     />
                                                 )}
                                                 <AvatarFallback className="bg-slate-900 text-xs font-bold text-white">
@@ -184,10 +200,10 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                         <DropdownMenuLabel className="font-normal">
                                             <div className="flex flex-col space-y-1">
                                                 <p className="text-sm leading-none font-medium text-slate-900">
-                                                    {name || 'Пользователь'}
+                                                    {name || t('header.user')}
                                                 </p>
                                                 <p className="text-xs leading-none text-slate-500">
-                                                    Волонтёр
+                                                    {t('header.volunteer')}
                                                 </p>
                                             </div>
                                         </DropdownMenuLabel>
@@ -197,7 +213,7 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                             className="cursor-pointer"
                                         >
                                             <SettingsIcon className="mr-2 size-4" />
-                                            <span>Настройки</span>
+                                            <span>{t('common.settings')}</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
@@ -205,14 +221,14 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                             className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
                                         >
                                             <LogOut className="mr-2 size-4" />
-                                            <span>Выйти</span>
+                                            <span>{t('common.logout')}</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={handleLogout}
                                             className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
                                         >
                                             <LogOut className="mr-2 size-4" />
-                                            <span>Выйти везде</span>
+                                            <span>{t('header.logoutEverywhere')}</span>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -225,6 +241,14 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
             {isMobileMenuOpen && isNavigateEnabled && (
                 <div className="absolute inset-x-0 top-full z-50 animate-in overflow-x-clip border-b border-slate-200 bg-white p-4 shadow-xl slide-in-from-top-2 md:hidden">
                     <nav className="flex flex-col gap-2 text-base font-medium text-slate-700">
+                        <Button
+                            variant="ghost"
+                            className="flex items-center justify-start gap-2 rounded-md p-3 transition-colors hover:bg-slate-50"
+                            onClick={toggleLanguage}
+                        >
+                            <Globe className="size-5" />
+                            {t('common.language')}: {i18n.language === 'ru' ? t('common.russian') : t('common.english')}
+                        </Button>
                         {isLanding ? (
                             <>
                                 <a
@@ -232,28 +256,28 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    О проекте
+                                    {t('navigation.about')}
                                 </a>
                                 <a
                                     href="#volunteers"
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    Волонтерам
+                                    {t('navigation.volunteers')}
                                 </a>
                                 <a
                                     href="#science"
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    Научная база
+                                    {t('navigation.science')}
                                 </a>
                                 <Link
                                     to="/instructions"
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    Инструкция
+                                    {t('navigation.instructions')}
                                 </Link>
                             </>
                         ) : auth ? (
@@ -263,28 +287,28 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    Публикации
+                                    {t('navigation.dashboard')}
                                 </Link>
                                 <Link
                                     to="/instructions"
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    Инструкция
+                                    {t('navigation.instructions')}
                                 </Link>
                                 <Link
                                     to="/statistics"
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    Статистика
+                                    {t('navigation.statistics')}
                                 </Link>
                                 <Link
                                     to="/support"
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    Поддержка
+                                    {t('navigation.support')}
                                 </Link>
                             </>
                         ) : (
@@ -294,14 +318,14 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    На главную
+                                    {t('header.backToHome')}
                                 </Link>
                                 <Link
                                     to="/instructions"
                                     className="rounded-md p-3 transition-colors hover:bg-slate-50"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                    Инструкция
+                                    {t('navigation.instructions')}
                                 </Link>
                             </>
                         )}

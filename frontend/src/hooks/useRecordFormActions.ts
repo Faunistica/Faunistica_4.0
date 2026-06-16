@@ -2,6 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useFormContext } from 'react-hook-form';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { RecordFull } from '@/types/api.dto';
 import { FORM_DEFAULT_VALUES, type RecordForm } from '@/types/forms';
 import { draftToRecordData } from '@/lib/recordUtils';
@@ -23,6 +24,7 @@ export interface RecordFormActions {
 }
 
 export function useRecordFormActions(store: FormStore): RecordFormActions {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const methods = useFormContext<RecordForm>();
     const [updateRecord] = useUpdateRecordMutation();
@@ -50,9 +52,7 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
                 return response;
             } catch {
                 toast.error(
-                    source === 'submit'
-                        ? 'Ошибка при отправке данных'
-                        : 'Ошибка при сохранении данных',
+                    source === 'submit' ? t('recordForm.submitError') : t('recordForm.saveError'),
                 );
                 return undefined;
             }
@@ -136,7 +136,7 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
             void navigate(`/publication/${publ_id}/${created.id}`, { replace: true });
             store.setState({ lastSavedTime: null, globalErrors: [] });
         } catch {
-            toast.error('Ошибка при создании записи');
+            toast.error(t('recordForm.createError'));
         }
     }, [publ_id, createRecord, cancelAutoSave, methods, performSave, navigate, store]);
 
@@ -160,7 +160,7 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
                     // Note: if nextId is null, the provider will handle this via recordIds sync
                 }
             } catch {
-                toast.error('Ошибка при удалении записи');
+                toast.error(t('recordForm.deleteError'));
             }
         },
         [publ_id, deleteRecord, navigate, store, recordIds],

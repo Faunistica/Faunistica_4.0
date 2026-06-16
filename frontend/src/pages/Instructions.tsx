@@ -7,6 +7,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { useInstructions } from '@/hooks/useInstructions';
 import { InstructionsSidebar } from '@/components/instructions/InstructionsSidebar';
 import { MarkdownContent } from '@/components/instructions/MarkdownContent';
+import { useTranslation } from 'react-i18next';
 
 interface OutletContextType {
     isSidebarOpen: boolean;
@@ -14,9 +15,10 @@ interface OutletContextType {
 }
 
 const Instructions: FC = () => {
+    const { t } = useTranslation();
     const context = useOutletContext<OutletContextType | null>();
     const isSidebarOpen = context?.isSidebarOpen ?? false;
-    const setIsSidebarOpen = context?.setIsSidebarOpen ?? (() => {});
+    const setIsSidebarOpen = context?.setIsSidebarOpen ?? (() => { });
 
     const { loading, error, activeSection, sections, scrollToSection } = useInstructions();
 
@@ -29,7 +31,7 @@ const Instructions: FC = () => {
     if (error) {
         return (
             <div className="flex min-h-[60vh] w-full flex-1 items-center justify-center">
-                <p className="text-muted-foreground">Не удалось загрузить инструкцию.</p>
+                <p className="text-muted-foreground">{t('instructions.error')}</p>
             </div>
         );
     }

@@ -10,10 +10,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useTranslation } from 'react-i18next';
 import { useUploadExcelMutation, useDownloadRecordsMutation } from '@/api/recordAPI';
 import { getErrorMessage } from '@/lib/error';
 import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
     open: boolean;
@@ -28,7 +28,7 @@ const ACCEPTED_TYPES = [
 const ACCEPTED_EXTENSIONS = ['.xlsx', '.csv'];
 
 const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
-    const isMobile = useIsMobile();
+    const { t } = useTranslation();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -44,7 +44,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
 
     const handleFileSelect = (file: File) => {
         if (!isValidFile(file)) {
-            toast.error('Неверный формат файла. Поддерживаются .xlsx и .csv');
+            toast.error(t('excel.invalidFormat'));
             return;
         }
         setSelectedFile(file);
@@ -93,13 +93,13 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
 
         if (error) {
             const message = getErrorMessage(error);
-            toast.error('Ошибка при загрузке файла', { description: message });
+            toast.error(t('excel.importError'), { description: message });
         } else if (result) {
-            toast.success(`Загружено ${result.imported} записей`, { duration: 5000 });
+            toast.success(t('excel.importedRecords', { count: result.imported }), { duration: 5000 });
 
             if (result.errors && result.errors.length > 0) {
-                toast.warning('Обнаружены ошибки при импорте', {
-                    description: `В строке ${result.errors[0].row}: ${JSON.stringify(result.errors[0].error)}`,
+                toast.warning(t('excel.importErrors'), {
+                    description: t('excel.rowError', { row: result.errors[0].row, error: JSON.stringify(result.errors[0].error) }),
                     duration: 10000,
                 });
             }
@@ -126,7 +126,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
         });
 
         if (error) {
-            toast.error('Ошибка при скачивании файла');
+            toast.error(t('excel.downloadError'));
         }
     };
 
@@ -138,7 +138,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                         <div className="flex h-fit w-full items-center justify-between gap-4 pb-1">
                             <AlertDialogTitle className="flex items-center gap-2 text-xl">
                                 <FileSpreadsheet className="size-5 text-emerald-600" />
-                                Работа с Excel
+                                {t('excel.title')}
                             </AlertDialogTitle>
                             <Button
                                 type="button"
@@ -153,12 +153,11 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                 ) : (
                                     <Download className="mr-2 size-4" />
                                 )}
-                                Скачать {isMobile || ' XLSX'}
+                                {t('excel.download')}
                             </Button>
                         </div>
                         <AlertDialogDescription>
-                            Загрузите файл Excel (.xlsx) или CSV (.csv) с данными записей или
-                            скачайте текущие.
+                            {t('excel.description')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
@@ -194,7 +193,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                         {selectedFile.name}
                                     </p>
                                     <p className="mt-1 text-xs text-slate-500">
-                                        {(selectedFile.size / 1024).toFixed(1)} КБ
+                                        {(selectedFile.size / 1024).toFixed(1)} {t('common.kilobytes')}
                                     </p>
                                 </div>
                                 <Button
@@ -208,7 +207,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                     }}
                                 >
                                     <X className="mr-1 size-4" />
-                                    Убрать файл
+                                    {t('excel.removeFile')}
                                 </Button>
                             </>
                         ) : (
@@ -217,12 +216,12 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                     <Upload className="size-6 text-slate-500" />
                                 </div>
                                 <div className="text-center">
-                                    <p className="font-medium text-slate-700">
-                                        Перетащите файл сюда
-                                    </p>
-                                    <p className="mt-1 text-xs text-slate-500">
-                                        или нажмите для выбора • .xlsx, .csv
-                                    </p>
+                                <p className="font-medium text-slate-700">
+                                    {t('excel.dragDrop')}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    {t('excel.clickToSelect')}
+                                </p>
                                 </div>
                             </>
                         )}
@@ -235,7 +234,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                             onClick={handleClose}
                             disabled={isUploading}
                         >
-                            Отмена
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             type="button"
@@ -246,12 +245,12 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                             {isUploading ? (
                                 <>
                                     <Loader2 className="size-4 animate-spin" />
-                                    Загрузка...
+                                    {t('excel.uploading')}
                                 </>
                             ) : (
                                 <>
                                     <Upload className="size-4" />
-                                    Загрузить
+                                    {t('excel.upload')}
                                 </>
                             )}
                         </Button>
@@ -264,11 +263,10 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
                             <AlertTriangle className="size-5 text-amber-500" />
-                            Подтверждение импорта
+                            {t('excel.confirmTitle')}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            Все текущие записи будут удалены и заменены данными из Excel.
-                            Продолжить?
+                            {t('excel.confirmDescription')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -277,14 +275,14 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                             variant="outline"
                             onClick={() => setShowConfirm(false)}
                         >
-                            Отмена
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             type="button"
                             onClick={handleConfirmUpload}
                             className="bg-red-600 text-white hover:bg-red-700"
                         >
-                            Да, заменить все данные
+                            {t('excel.confirmReplace')}
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>

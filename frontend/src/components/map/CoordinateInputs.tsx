@@ -9,6 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useTranslation } from 'react-i18next';
 import { useCoordinateInputs } from '@/hooks/useCoordinateInputs';
 
 interface Props {
@@ -90,12 +91,13 @@ const DirectionSelect = ({
 };
 
 export const DMInputGroup: FC<Props> = ({ disabled }) => {
+    const { t } = useTranslation();
     const { latitude, longitude } = useCoordinateInputs('dm');
 
     return (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="space-y-2">
-                <Label htmlFor="latitude-deg">Широта (градусы° минуты')</Label>
+                <Label htmlFor="latitude-deg">{t('form.coordinates.latitudeDM')}</Label>
                 <div className="flex items-start gap-2">
                     <CoordinateInput
                         id="latitude-deg"
@@ -119,15 +121,15 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
                         id="latitude-dir"
                         {...latitude.direction}
                         options={[
-                            { value: 'N', label: 'N (С.Ш.)' },
-                            { value: 'S', label: 'S (Ю.Ш.)' },
+                            { value: 'N', label: t('form.coordinates.northFull') },
+                            { value: 'S', label: t('form.coordinates.southFull') },
                         ]}
                         disabled={disabled}
                     />
                 </div>
             </div>
             <div className="space-y-2">
-                <Label htmlFor="longtitude-deg">Долгота (градусы° минуты')</Label>
+                <Label htmlFor="longtitude-deg">{t('form.coordinates.longitudeDM')}</Label>
                 <div className="flex items-start gap-2">
                     <CoordinateInput
                         id="longtitude-deg"
@@ -151,8 +153,8 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
                         id="longtitude-dir"
                         {...longitude.direction}
                         options={[
-                            { value: 'E', label: 'E (В.Д.)' },
-                            { value: 'W', label: 'W (З.Д.)' },
+                            { value: 'E', label: t('form.coordinates.eastFull') },
+                            { value: 'W', label: t('form.coordinates.westFull') },
                         ]}
                         disabled={disabled}
                     />
@@ -163,12 +165,13 @@ export const DMInputGroup: FC<Props> = ({ disabled }) => {
 };
 
 export const DMSInputGroup: FC<Props> = ({ disabled }) => {
+    const { t } = useTranslation();
     const { latitude, longitude } = useCoordinateInputs('dms');
 
     return (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="space-y-2">
-                <Label htmlFor="latitude-deg-dms">Широта (градусы° минуты' секунды'')</Label>
+                <Label htmlFor="latitude-deg-dms">{t('form.coordinates.latitudeDMS')}</Label>
                 <div className="flex flex-wrap items-start gap-2">
                     <CoordinateInput
                         id="latitude-deg-dms"
@@ -200,15 +203,15 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                         id="latitude-dir-dms"
                         {...latitude.direction}
                         options={[
-                            { value: 'N', label: 'N (С.Ш.)' },
-                            { value: 'S', label: 'S (Ю.Ш.)' },
+                            { value: 'N', label: t('form.coordinates.northFull') },
+                            { value: 'S', label: t('form.coordinates.southFull') },
                         ]}
                         disabled={disabled}
                     />
                 </div>
             </div>
             <div className="space-y-2">
-                <Label htmlFor="longtitude-deg-dms">Долгота (градусы° минуты' секунды'')</Label>
+                <Label htmlFor="longtitude-deg-dms">{t('form.coordinates.longitudeDMS')}</Label>
                 <div className="flex flex-wrap items-start gap-2">
                     <CoordinateInput
                         id="longtitude-deg-dms"
@@ -240,8 +243,8 @@ export const DMSInputGroup: FC<Props> = ({ disabled }) => {
                         id="longtitude-dir-dms"
                         {...longitude.direction}
                         options={[
-                            { value: 'E', label: 'E (В.Д.)' },
-                            { value: 'W', label: 'W (З.Д.)' },
+                            { value: 'E', label: t('form.coordinates.eastFull') },
+                            { value: 'W', label: t('form.coordinates.westFull') },
                         ]}
                         disabled={disabled}
                     />

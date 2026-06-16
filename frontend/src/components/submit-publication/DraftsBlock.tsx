@@ -5,6 +5,7 @@ import { useRecordByIdQuery } from '@/api/recordAPI';
 import { RecordStatusIndicator } from '@/components/form/sidebar/RecordStatusIndicator';
 import { selectRecordSummary } from '@/lib/recordSelectors';
 import { MapPin, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 /* ─── Animations ─── */
 
@@ -47,12 +48,14 @@ interface Props {
     draftIds: string[];
 }
 
-const DraftsBlock: FC<Props> = ({ publ_id, draftIds }) => (
+const DraftsBlock: FC<Props> = ({ publ_id, draftIds }) => {
+    const { t } = useTranslation();
+    return (
     <>
         <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
-            <h1 className="text-2xl font-light tracking-wide sm:text-3xl">Завершение недоступно</h1>
+            <h1 className="text-2xl font-light tracking-wide sm:text-3xl">{t('submitPublication.completionUnavailable')}</h1>
             <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
-                Публикация #{publ_id}
+                {t('submitPublication.publicationNumber', { id: publ_id })}
             </p>
         </motion.div>
 
@@ -61,11 +64,12 @@ const DraftsBlock: FC<Props> = ({ publ_id, draftIds }) => (
                 <AlertCircle className="size-5 shrink-0 pb-0.75 text-red-500" />
                 <div className="flex flex-col">
                     <span className="font-semibold">
-                        Есть {draftIds.length}{' '}
-                        {draftIds.length === 1 ? 'черновая запись' : 'черновых записей'}
+                        {draftIds.length === 1
+                            ? t('submitPublication.draftCount', { count: draftIds.length })
+                            : t('submitPublication.draftCount_plural', { count: draftIds.length })}
                     </span>
                     <span className="mb-4 text-sm text-muted-foreground">
-                        которые нужно отправить или удалить.
+                        {t('submitPublication.draftAction')}
                     </span>
                 </div>
             </div>
@@ -77,6 +81,7 @@ const DraftsBlock: FC<Props> = ({ publ_id, draftIds }) => (
             </div>
         </motion.div>
     </>
-);
+    );
+};
 
 export default DraftsBlock;

@@ -9,9 +9,9 @@ rule(
     RuleCategory.TAXONOMY,
     ["family"],
     "required",
-    required("family", "Семейство обязательно"),
+    required("family", {"ru": "Семейство обязательно", "en": "Family is required"}),
 )
-rule(RuleCategory.TAXONOMY, ["genus"], "required", required("genus", "Род обязателен"))
+rule(RuleCategory.TAXONOMY, ["genus"], "required", required("genus", {"ru": "Род обязателен", "en": "Genus is required"}))
 
 
 @rule(RuleCategory.TAXONOMY, ["species"], "required")
@@ -20,7 +20,7 @@ def rule_species_required(data: RecordData, ctx: RuleContext) -> str | None:
         return None
     v = data.species
     if not nonblank(v):
-        return "Вид обязателен"
+        return ctx.t("Вид обязателен", "Species is required")
     return None
 
 
@@ -32,7 +32,7 @@ def rule_family_genus_known(data: RecordData, ctx: RuleContext) -> str | None:
         and nonblank(data.genus)
         and not family_genus_known(data.family, data.genus)
     ):
-        return "Неизвестная комбинация семейства и рода"
+        return ctx.t("Неизвестная комбинация семейства и рода", "Unknown family-genus combination")
     return None
 
 
@@ -44,7 +44,7 @@ def rule_genus_species_known(data: RecordData, ctx: RuleContext) -> str | None:
         and nonblank(data.species)
         and not genus_species_known(data.genus, data.species)
     ):
-        return "Неизвестная комбинация рода и вида"
+        return ctx.t("Неизвестная комбинация рода и вида", "Unknown genus-species combination")
     return None
 
 
@@ -55,15 +55,19 @@ rule(
     in_set(
         "taxon_rank",
         TAXON_RANKS,
-        "Некорректная точность названия таксона. "
-        "Допустимые значения: " + ", ".join(TAXON_RANKS),
+        {
+            "ru": "Некорректная точность названия таксона. "
+            "Допустимые значения: " + ", ".join(TAXON_RANKS),
+            "en": "Invalid taxon rank. "
+            "Allowed values: " + ", ".join(TAXON_RANKS),
+        },
     ),
 )
 rule(
     RuleCategory.TAXONOMY,
     ["type_status"],
     "invalid",
-    in_set("type_status", TYPE_STATUSES, "Некорректный тип статуса"),
+    in_set("type_status", TYPE_STATUSES, {"ru": "Некорректный тип статуса", "en": "Invalid type status"}),
 )
 
 
@@ -74,7 +78,7 @@ def rule_type_status_on_genus(data: RecordData, ctx: RuleContext) -> str | None:
         and data.type_status != "none"
         and data.taxon_rank == "genus"
     ):
-        return "Типовой статус не указывается для рода"
+        return ctx.t("Типовой статус не указывается для рода", "Type status is not specified for genus")
     return None
 
 
@@ -99,7 +103,7 @@ def rule_forbidden_chars_taxon(data: RecordData, ctx: RuleContext) -> str | None
         data.taxon_remarks,
         data.identification_remarks,
     ):
-        return "Табуляция и/или переносы строки в разделе Таксономия"
+        return ctx.t("Табуляция и/или переносы строки в разделе Таксономия", "Tabs and/or line breaks in the Taxonomy section")
     return None
 
 
@@ -117,5 +121,8 @@ def rule_cyrillic_taxon(data: RecordData, ctx: RuleContext) -> str | None:
         data.accepted_name,
         data.identification_remarks,
     ):
-        return "Кириллица в блоке Таксономия для публикации не на русском языке"
+        return ctx.t(
+            "Кириллица в блоке Таксономия для публикации не на русском языке",
+            "Cyrillic in Taxonomy block for non-Russian publication",
+        )
     return None

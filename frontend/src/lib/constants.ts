@@ -27,62 +27,62 @@ export const COUNTRY_OPTIONS = [
 ] as const;
 
 export const GEOREF_OPTIONS = [
-    { value: 'lit', label: 'Из источника (оригинальные)' },
-    { value: 'vol', label: 'Собственная геопривязка (волонтёр)' },
-    { value: 'none', label: 'Данные отсутствуют' },
+    { value: 'lit', label: 'form.spatial.sourceCoordinates' },
+    { value: 'vol', label: 'form.spatial.ownGeoreference' },
+    { value: 'none', label: 'form.spatial.noCoordinates' },
 ] as const;
 
 export const TYPE_STATUS_OPTIONS = [
-    { value: 'none', label: 'Нет' },
-    { value: 'голотип', label: 'Голотип' },
-    { value: 'паратип', label: 'Паратип' },
-    { value: 'неотип', label: 'Неотип' },
-    { value: 'топотип', label: 'Топотип' },
-    { value: 'синтип', label: 'Синтип' },
-    { value: 'лектотип', label: 'Лектотип' },
-    { value: 'тип', label: 'Тип' },
+    { value: 'none', label: 'form.typeStatus.none' },
+    { value: 'голотип', label: 'form.typeStatus.holotype' },
+    { value: 'паратип', label: 'form.typeStatus.paratype' },
+    { value: 'неотип', label: 'form.typeStatus.neotype' },
+    { value: 'топотип', label: 'form.typeStatus.topotype' },
+    { value: 'синтип', label: 'form.typeStatus.syntype' },
+    { value: 'лектотип', label: 'form.typeStatus.lectotype' },
+    { value: 'тип', label: 'form.typeStatus.type' },
 ] as const;
 
 export const TAXON_RANK_OPTIONS = [
-    { value: 'genus', label: 'Род (genus)' },
-    { value: 'species', label: 'Вид (species)' },
-    { value: 'subspecies', label: 'Подвид (subspecies)' },
+    { value: 'genus', label: 'form.taxonRank.genus' },
+    { value: 'species', label: 'form.taxonRank.species' },
+    { value: 'subspecies', label: 'form.taxonRank.subspecies' },
 ] as const;
 
 export const QUANTITY_TYPE_OPTIONS = [
-    { value: 'individuals', label: 'особей' },
+    { value: 'individuals', label: 'form.quantityType.individuals' },
     {
         value: 'individuals per 10 trap-days',
-        label: 'особей на 10 ловушко-суток',
+        label: 'form.quantityType.individualsPer10TrapDays',
     },
     {
         value: 'individuals per 100 trap-days',
-        label: 'особей на 100 ловушко-суток',
+        label: 'form.quantityType.individualsPer100TrapDays',
     },
-    { value: 'individuals per m2', label: 'особей на м²' },
+    { value: 'individuals per m2', label: 'form.quantityType.individualsPerM2' },
     {
         value: 'Abundance class (Pesenko, 1982)',
-        label: 'балл обилия (по Песенко)',
+        label: 'form.quantityType.abundanceClassPesenko',
     },
     {
         value: 'individuals per 10 net sweps',
-        label: 'особей на 10 взмахов сачком',
+        label: 'form.quantityType.individualsPer10NetSweeps',
     },
     {
         value: 'individuals per 20 net sweppings',
-        label: 'особей на 20 взмахов сачком',
+        label: 'form.quantityType.individualsPer20NetSweepings',
     },
     {
         value: 'individuals per 100 net sweps',
-        label: 'особей на 100 взмахов сачком',
+        label: 'form.quantityType.individualsPer100NetSweeps',
     },
     {
         value: 'individuals per 10 ditch-days',
-        label: 'особей на 10 канаво-суток',
+        label: 'form.quantityType.individualsPer10DitchDays',
     },
     {
         value: 'individuals per 100 pitfall-traps',
-        label: 'особей на 100 ловушек',
+        label: 'form.quantityType.individualsPer100PitfallTraps',
     },
 ] as const;
 
@@ -104,12 +104,12 @@ export const QUANTITY_FIELDS: QuantityField[] = [
 ] as const;
 
 export const QUANTITY_FIELD_LABELS: Record<QuantityField, string> = {
-    males: 'Самцов',
-    subadultMales: 'Субвзрослых самцов',
-    females: 'Самок',
-    subadultFemales: 'Субвзрослых самок',
-    adults: 'Взрослых (пол не определён)',
-    juveniles: 'Ювенильных',
+    males: 'form.quantitative.males',
+    subadultMales: 'form.quantitative.subadultMales',
+    females: 'form.quantitative.females',
+    subadultFemales: 'form.quantitative.subadultFemales',
+    adults: 'form.quantitative.adultsUnknownSex',
+    juveniles: 'form.quantitative.juveniles',
 };
 
 export const LAT_MIN = -90;

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useRecordForm } from '@/hooks/useRecordForm';
 import { useRecordPublGuard } from '@/hooks/useRecordPublGuard';
+import { useTranslation } from 'react-i18next';
 
 interface OutletContextType {
     isSidebarOpen: boolean;
@@ -19,6 +20,7 @@ interface OutletContextType {
 }
 
 const FormFillingInner: FC<OutletContextType> = ({ isSidebarOpen, setIsSidebarOpen }) => {
+    const { t } = useTranslation();
     const {
         state: { activeRecordId, isInitialLoading },
         actions: { create },
@@ -38,10 +40,10 @@ const FormFillingInner: FC<OutletContextType> = ({ isSidebarOpen, setIsSidebarOp
                     <RecordFormContent />
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-6 py-24">
-                        <p className="text-lg text-slate-500">Нет записей</p>
+                        <p className="text-lg text-slate-500">{t('record.noRecords')}</p>
                         <Button onClick={create} className="gap-2">
                             <Plus className="size-4" />
-                            Создать запись
+                            {t('record.createRecord')}
                         </Button>
                     </div>
                 )}
@@ -58,7 +60,7 @@ const FormFilling: FC = () => {
     const { isValidating } = useRecordPublGuard(publ_id);
 
     const methods = useForm<RecordForm>({
-        resolver: zodResolver(recordFormSchema),
+        resolver: zodResolver(recordFormSchema()),
         defaultValues: FORM_DEFAULT_VALUES,
         mode: 'onBlur',
         reValidateMode: 'onChange',

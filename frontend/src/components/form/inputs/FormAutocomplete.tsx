@@ -10,7 +10,7 @@ interface FormAutocompleteProps {
     isLoading?: boolean;
     label: string;
     placeholder?: string;
-    options: string[] | ((text: string, signal?: AbortSignal) => Promise<string[]>);
+    options: Array<string | { value: string; label: string }> | ((text: string, signal?: AbortSignal) => Promise<string[]>);
     debounceMs?: number;
     onSelectSuggestion?: (value: string) => void;
     onCommitTyped?: (value: string) => void;
@@ -27,7 +27,7 @@ export function FormAutocomplete({
     onCommitTyped,
 }: FormAutocompleteProps) {
     const { control, setValue } = useFormContext<RecordForm>();
-    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [suggestions, setSuggestions] = useState<Array<string | { value: string; label: string }>>([]);
     const lastCommittedRef = useRef('');
     const {
         field,
@@ -65,7 +65,11 @@ export function FormAutocomplete({
     const handleSearch = useCallback(
         (text: string) => {
             if (Array.isArray(options)) {
-                setSuggestions(options.filter((o) => o.toLowerCase().includes(text.toLowerCase())));
+                const lower = text.toLowerCase();
+                setSuggestions(options.filter((o) => {
+                    if (typeof o === 'string') return o.toLowerCase().includes(lower);
+                    return o.label.toLowerCase().includes(lower);
+                }));
             } else {
                 debouncedSearch(text);
             }

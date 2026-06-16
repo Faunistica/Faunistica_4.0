@@ -12,6 +12,7 @@ import {
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { FormAutocomplete } from '@/components/form/inputs/FormAutocomplete';
 import { Bug } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useLazySuggestTaxonQuery } from '@/api/utilAPI';
 import { TYPE_STATUS_OPTIONS, TAXON_RANK_OPTIONS } from '@/lib/constants';
 import { Input } from '../../ui/input';
@@ -19,6 +20,7 @@ import { Textarea } from '../../ui/textarea';
 import type { RecordForm } from '@/types/forms';
 
 const TaxonomyCard: FC = () => {
+    const { t } = useTranslation();
     const { control, setValue, getValues, getFieldState } = useFormContext<RecordForm>();
 
     const [suggestTaxon] = useLazySuggestTaxonQuery();
@@ -86,7 +88,7 @@ const TaxonomyCard: FC = () => {
                         <Bug className="size-4" />
                     </span>
                     <CardTitle className="pt-0.5 text-lg font-semibold md:pt-0">
-                        Таксономическая принадлежность
+                        {t('form.taxonomy.title')}
                     </CardTitle>
                 </div>
             </CardHeader>
@@ -94,25 +96,25 @@ const TaxonomyCard: FC = () => {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <FormAutocomplete
                         name="family"
-                        label="Семейство (Familia)"
+                        label={t('form.taxonomy.family')}
                         options={familySearchFn}
-                        placeholder="Начните вводить…"
+                        placeholder={t('form.taxonomy.familyPlaceholder')}
                         onSelectSuggestion={handleTaxonSuggestionSelect}
                         onCommitTyped={handleTaxonTypedCommit}
                     />
                     <FormAutocomplete
                         name="genus"
-                        label="Род (Genus)"
+                        label={t('form.taxonomy.genus')}
                         options={genusSearchFn}
-                        placeholder="Название рода"
+                        placeholder={t('form.taxonomy.genusPlaceholder')}
                         onSelectSuggestion={handleTaxonSuggestionSelect}
                         onCommitTyped={handleTaxonTypedCommit}
                     />
                     <FormAutocomplete
                         name="species"
-                        label="Видовое название (эпитет)"
+                        label={t('form.taxonomy.speciesEpithet')}
                         options={speciesSearchFn}
-                        placeholder="Только эпитет, без рода"
+                        placeholder={t('form.taxonomy.speciesPlaceholder')}
                         onSelectSuggestion={handleTaxonSuggestionSelect}
                         onCommitTyped={handleTaxonTypedCommit}
                     />
@@ -124,18 +126,18 @@ const TaxonomyCard: FC = () => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel>Ранг таксона</FieldLabel>
+                                <FieldLabel>{t('form.taxonomy.taxonRank')}</FieldLabel>
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
                                     <SelectTrigger aria-invalid={invalid}>
-                                        <SelectValue placeholder="Выберите ранг" />
+                                        <SelectValue placeholder={t('form.taxonomy.rankPlaceholder')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {TAXON_RANK_OPTIONS.map((opt) => (
                                             <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
+                                                {t(opt.label)}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -149,18 +151,18 @@ const TaxonomyCard: FC = () => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel>Типовой статус</FieldLabel>
+                                <FieldLabel>{t('form.taxonomy.typeStatus')}</FieldLabel>
                                 <Select
                                     value={field.value || undefined}
                                     onValueChange={field.onChange}
                                 >
                                     <SelectTrigger aria-invalid={invalid}>
-                                        <SelectValue placeholder="Выберите статус" />
+                                        <SelectValue placeholder={t('form.taxonomy.typeStatusPlaceholder')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {TYPE_STATUS_OPTIONS.map((opt) => (
                                             <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
+                                                {t(opt.label)}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -174,10 +176,10 @@ const TaxonomyCard: FC = () => {
                         control={control}
                         render={({ field, fieldState: { invalid, error } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="accepted_name">Валидное название</FieldLabel>
+                                <FieldLabel htmlFor="accepted_name">{t('form.taxonomy.validName')}</FieldLabel>
                                 <Input
                                     id="accepted_name"
-                                    placeholder="Если приведённое в статье устарело"
+                                    placeholder={t('form.taxonomy.validNamePlaceholder')}
                                     aria-invalid={invalid}
                                     {...field}
                                     value={field.value?.toString()}
@@ -203,7 +205,7 @@ const TaxonomyCard: FC = () => {
                                     htmlFor="tax_verbatim"
                                     className="cursor-pointer font-normal"
                                 >
-                                    Латинское название введено вручную
+                                    {t('form.taxonomy.manualEntry')}
                                 </FieldLabel>
                                 <FieldError errors={[error]} />
                             </Field>
@@ -218,11 +220,11 @@ const TaxonomyCard: FC = () => {
                         render={({ field, fieldState: { invalid, error } }) => (
                             <Field data-invalid={invalid}>
                                 <FieldLabel htmlFor="taxon_remarks">
-                                    Таксономические примечания
+                                    {t('form.taxonomy.taxonomicNotes')}
                                 </FieldLabel>
                                 <Textarea
                                     id="taxon_remarks"
-                                    placeholder="Примечания ко всему таксону…"
+                                    placeholder={t('form.taxonomy.taxonomicNotesPlaceholder')}
                                     className="max-h-fit"
                                     aria-invalid={invalid}
                                     {...field}
@@ -238,11 +240,11 @@ const TaxonomyCard: FC = () => {
                         render={({ field, fieldState: { invalid, error } }) => (
                             <Field data-invalid={invalid}>
                                 <FieldLabel htmlFor="identification_remarks">
-                                    Примечания к идентификации
+                                    {t('form.taxonomy.identificationNotes')}
                                 </FieldLabel>
                                 <Textarea
                                     id="identification_remarks"
-                                    placeholder="Примечания к определению…"
+                                    placeholder={t('form.taxonomy.identificationNotesPlaceholder')}
                                     className="max-h-fit"
                                     aria-invalid={invalid}
                                     {...field}

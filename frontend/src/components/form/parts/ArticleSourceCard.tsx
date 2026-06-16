@@ -2,6 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useGetPublicationByIdQuery } from '@/api/publAPI';
 import { type FC } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PublicationPreview } from '@/components/shared/PublicationPreview';
 import PublicationSourceFiles from '@/components/shared/PublicationSourceFiles';
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
+    const { t } = useTranslation();
     const { data: publication, isLoading, error } = useGetPublicationByIdQuery(publ_id);
 
     if (isLoading) {
@@ -23,7 +25,7 @@ const ArticleSourceCard: FC<Props> = ({ publ_id }) => {
     if (error || !publication) {
         return (
             <Card className="relative overflow-hidden border-red-200 bg-red-50 p-6 shadow-sm">
-                <p className="text-sm font-medium text-red-600">Ошибка загрузки данных источника</p>
+                <p className="text-sm font-medium text-red-600">{t('form.sourceError')}</p>
             </Card>
         );
     }

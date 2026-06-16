@@ -154,7 +154,7 @@ function TestHarness({
     autoSaveDelay?: number;
 }) {
     const methods = useForm<RecordForm>({
-        resolver: zodResolver(recordFormSchema),
+        resolver: zodResolver(recordFormSchema()),
         defaultValues: FORM_DEFAULT_VALUES,
     });
     testMethodsRef.current = methods;

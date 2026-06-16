@@ -7,6 +7,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { Card } from '@/components/ui/card';
 import FormCard from '@/components/submit-publication/FormCard';
 import DraftsBlock from '@/components/submit-publication/DraftsBlock';
+import { useTranslation } from 'react-i18next';
 
 const containerAnim = {
     initial: { opacity: 0 },
@@ -14,6 +15,7 @@ const containerAnim = {
 };
 
 const SubmitPublication: FC = () => {
+    const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const publ_id = Number(id);
 
@@ -33,10 +35,9 @@ const SubmitPublication: FC = () => {
                     <Card className="p-6 sm:p-8">
                         <div className="flex flex-col items-center gap-3 text-center">
                             <AlertTriangle className="size-8 text-red-500" />
-                            <h2 className="text-lg font-semibold">Ошибка загрузки черновиков</h2>
+                            <h2 className="text-lg font-semibold">{t('submitPublication.errorLoadingDrafts')}</h2>
                             <p className="text-sm text-muted-foreground">
-                                Не удалось проверить наличие неотправленных записей. Попробуйте
-                                обновить страницу.
+                                {t('submitPublication.errorLoadingDraftsDesc')}
                             </p>
                         </div>
                     </Card>
@@ -65,7 +66,7 @@ const SubmitPublication: FC = () => {
                         className="mb-5 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                         <ArrowLeft className="size-4" />
-                        На дашборд
+                        {t('submitPublication.toDashboard')}
                     </Link>
 
                     <motion.div variants={containerAnim} initial="initial" animate="animate">

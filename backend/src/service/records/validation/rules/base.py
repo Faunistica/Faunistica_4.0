@@ -28,6 +28,11 @@ class RuleCategory(StrEnum):
 class RuleContext:
     language: str | None = None
 
+    def t(self, ru: str, en: str | None = None) -> str:
+        if self.language == "en" and en is not None:
+            return en
+        return ru
+
 
 RuleFunc = Callable[[RecordData, RuleContext], str | None]
 
@@ -90,22 +95,33 @@ def all_rules() -> list[Rule]:
     return list(_RULES)
 
 
-def required(field: str, msg: str) -> RuleFunc:
+_Msg = str | dict[str, str]
+
+
+def _resolve(msg: _Msg, ctx: RuleContext) -> str:
+    if isinstance(msg, dict):
+        return msg.get("en", msg["ru"]) if ctx.language == "en" else msg["ru"]
+    return msg
+
+
+def required(field: str, msg: _Msg) -> RuleFunc:
     """Check field is non-None and non-blank-string."""
 
-    def rule(data: RecordData, _: RuleContext) -> str | None:
+    def rule(data: RecordData, ctx: RuleContext) -> str | None:
         v = getattr(data, field, None)
-        return msg if not v or (isinstance(v, str) and not v.strip()) else None
+        m = _resolve(msg, ctx)
+        return m if not v or (isinstance(v, str) and not v.strip()) else None
 
     return rule
 
 
-def in_set(field: str, allowed: frozenset[str], msg: str) -> RuleFunc:
+def in_set(field: str, allowed: frozenset[str], msg: _Msg) -> RuleFunc:
     """Membership check; returns None if field is None (skips check)."""
 
-    def rule(data: RecordData, _: RuleContext) -> str | None:
+    def rule(data: RecordData, ctx: RuleContext) -> str | None:
         v = getattr(data, field, None)
-        return msg if v is not None and v not in allowed else None
+        m = _resolve(msg, ctx)
+        return m if v is not None and v not in allowed else None
 
     return rule
 
@@ -114,7 +130,7 @@ def in_range(
     field: str,
     min_val: float | None,
     max_val: float | None,
-    msg: str,
+    msg: _Msg,
     *,
     convert_to_float: bool = False,
 ) -> RuleFunc:
@@ -122,31 +138,33 @@ def in_range(
     Min/max bounds check; if convert_to_float, tries string-to-float conversion first.
     """
 
-    def rule(data: RecordData, _: RuleContext) -> str | None:
+    def rule(data: RecordData, ctx: RuleContext) -> str | None:
         v = getattr(data, field, None)
+        m = _resolve(msg, ctx)
         if v is None:
             return None
         if convert_to_float and isinstance(v, str):
             try:
                 v = float(v)
             except ValueError:
-                return msg
+                return m
         if min_val is not None and v < min_val:
-            return msg
+            return m
         if max_val is not None and v > max_val:
-            return msg
+            return m
         return None
 
     return rule
 
 
-def min_length(field: str, min_len: int, msg: str) -> RuleFunc:
+def min_length(field: str, min_len: int, msg: _Msg) -> RuleFunc:
     """Strip string then check length >= min_len."""
 
-    def rule(data: RecordData, _: RuleContext) -> str | None:
+    def rule(data: RecordData, ctx: RuleContext) -> str | None:
         v = getattr(data, field, None)
+        m = _resolve(msg, ctx)
         if v is not None and len(v.strip()) < min_len:
-            return msg
+            return m
         return None
 
     return rule

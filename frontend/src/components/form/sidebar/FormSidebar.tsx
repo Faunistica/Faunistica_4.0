@@ -12,6 +12,7 @@ import {
     SidebarGroupContent,
     useSidebar,
 } from '@/components/ui/sidebar';
+import { useTranslation } from 'react-i18next';
 import ExcelUploadModal from '@/components/form/inputs/ExcelUploadModal';
 import { useRecordForm } from '@/hooks/useRecordForm';
 import { useRecordIDs } from '@/hooks/useRecordIDs';
@@ -19,6 +20,7 @@ import { SidebarRecordItem } from './FormSidebarItem';
 import { Link } from 'react-router';
 
 const FormSidebar: FC = () => {
+    const { t } = useTranslation();
     const {
         state: { publ_id, activeRecordId },
         actions: { create, onNavigate, deleteRecord },
@@ -62,10 +64,10 @@ const FormSidebar: FC = () => {
                                 </div>
                                 <div>
                                     <div className="text-sm/tight font-bold text-slate-900">
-                                        Менеджер
+                                        {t('form.sidebarSection.manager')}
                                     </div>
                                     <div className="text-[10px] leading-tight font-medium text-slate-500">
-                                        Записи данных
+                                        {t('form.sidebarSection.dataRecords')}
                                     </div>
                                 </div>
                             </div>
@@ -78,7 +80,7 @@ const FormSidebar: FC = () => {
                             size="icon"
                             className="size-8 text-slate-400 hover:text-slate-600 md:hidden"
                             onClick={() => setOpenMobile(false)}
-                            aria-label="Закрыть панель"
+                                                            aria-label={t('form.sidebarSection.closePanel')}
                         >
                             <X className="size-4" />
                         </Button>
@@ -91,7 +93,7 @@ const FormSidebar: FC = () => {
                             size="sm"
                         >
                             <Plus className="size-4" />
-                            <span>Добавить запись</span>
+                            <span>{t('form.sidebarSection.addRecord')}</span>
                         </Button>
                         <Button
                             type="button"
@@ -101,7 +103,7 @@ const FormSidebar: FC = () => {
                             size="sm"
                         >
                             <FileSpreadsheet className="size-4" />
-                            Работа с Excel
+                            {t('form.sidebarSection.excelWork')}
                         </Button>
                     </div>
                 </SidebarHeader>
@@ -109,7 +111,7 @@ const FormSidebar: FC = () => {
                 <SidebarContent>
                     <SidebarGroup className="overflow-y-hidden p-0">
                         <SidebarGroupLabel className="rounded-none border-b border-slate-100 text-xs font-semibold tracking-wider text-slate-500 uppercase shadow-xs">
-                            <span className="py-1 pl-2">Список записей</span>
+                            <span className="py-1 pl-2">{t('form.sidebarSection.recordList')}</span>
                         </SidebarGroupLabel>
                         <SidebarGroupContent
                             ref={scrollRef}
@@ -139,7 +141,7 @@ const FormSidebar: FC = () => {
                     >
                         <Link to={`/publication/${publ_id}/submit`}>
                             <CheckCircle2 className="size-4 text-emerald-600" />
-                            Завершить обработку
+                            {t('form.sidebarSection.finishProcessing')}
                         </Link>
                     </Button>
                 </SidebarFooter>

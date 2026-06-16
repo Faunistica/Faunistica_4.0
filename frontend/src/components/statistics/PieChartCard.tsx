@@ -3,6 +3,7 @@ import type { UserStatisticsResponse } from '@/types/api.dto';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Bug } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const PIE_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
 
@@ -17,11 +18,13 @@ export function PieChartCard({
     data: UserStatisticsResponse | undefined;
     error: boolean;
 }) {
+    const { t } = useTranslation();
+
     if (error) {
         return (
             <Card>
                 <CardContent className="py-6 text-center text-sm text-red-500">
-                    Не удалось загрузить статистику
+                    {t('statistics.loadError')}
                 </CardContent>
             </Card>
         );
@@ -30,7 +33,7 @@ export function PieChartCard({
         return (
             <Card>
                 <CardContent className="py-12 text-center text-sm text-muted-foreground">
-                    У вас пока нет записей
+                    {t('statistics.noRecords')}
                 </CardContent>
             </Card>
         );
@@ -40,7 +43,7 @@ export function PieChartCard({
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                     <Bug className="size-4" />
-                    Ваши топ-виды
+                    {t('statistics.topSpecies')}
                 </CardTitle>
             </CardHeader>
             <CardContent>

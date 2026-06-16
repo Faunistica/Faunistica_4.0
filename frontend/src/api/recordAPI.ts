@@ -175,7 +175,7 @@ export const recordAPI = createApi({
                 const url = window.URL.createObjectURL(blob);
                 Object.assign(document.createElement('a'), {
                     href: url,
-                    download: 'данные_faunistica.xlsx',
+                    download: 'faunistica_data.xlsx',
                 }).click();
                 window.URL.revokeObjectURL(url);
 

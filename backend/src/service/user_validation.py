@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import get_args
 
-from bot.messages import Messages
+from bot.i18n import BotLanguage, Messages
 from core.config import settings
 from core.enums import UserLanguage
 from core.exceptions import MsgErr, Ok
@@ -16,32 +16,32 @@ _LANG_MAP: dict[str, UserLanguage] = {"1": "all", "2": "eng", "3": "rus"}
 
 class UserValidators:
     @staticmethod
-    def validate_name(name: str) -> Ok | MsgErr:
+    def validate_name(name: str, lang: BotLanguage = "en") -> Ok | MsgErr:
         if len(name) < 3:
-            return MsgErr(error=Messages.message_too_short())
+            return MsgErr(error=Messages.message_too_short(lang))
         if len(name) > 40:
-            return MsgErr(error=Messages.message_too_long())
+            return MsgErr(error=Messages.message_too_long(lang))
         if not _NAME_REGEX.fullmatch(name):
-            return MsgErr(error=Messages.invalid_characters())
+            return MsgErr(error=Messages.invalid_characters(lang))
         return Ok()
 
     @staticmethod
-    def validate_sex(sex: str) -> Ok | MsgErr:
+    def validate_sex(sex: str, lang: BotLanguage = "en") -> Ok | MsgErr:
         if sex not in ["F", "M", "N"]:
-            return MsgErr(error=Messages.invalid_sex())
+            return MsgErr(error=Messages.invalid_sex(lang))
         return Ok()
 
     @staticmethod
-    def validate_age_str(age_str: str) -> Ok | MsgErr:
+    def validate_age_str(age_str: str, lang: BotLanguage = "en") -> Ok | MsgErr:
         if len(age_str) > 5:
-            return MsgErr(error=Messages.message_too_long())
+            return MsgErr(error=Messages.message_too_long(lang))
         if not age_str.isdigit():
-            return MsgErr(error=Messages.message_no_digits())
+            return MsgErr(error=Messages.message_no_digits(lang))
         age = int(age_str)
         if age > 99:
-            return MsgErr(error=Messages.age_too_high())
+            return MsgErr(error=Messages.age_too_high(lang))
         if age < 14:
-            return MsgErr(error=Messages.age_too_low())
+            return MsgErr(error=Messages.age_too_low(lang))
         return Ok()
 
     @staticmethod
@@ -52,19 +52,19 @@ class UserValidators:
         return _LANG_MAP[cleaned]
 
     @staticmethod
-    def validate_language(lang: UserLanguage) -> Ok | MsgErr:
+    def validate_language(lang: UserLanguage, lang_code: BotLanguage = "en") -> Ok | MsgErr:
         if lang not in get_args(UserLanguage):
-            return MsgErr(error=Messages.invalid_lang())
+            return MsgErr(error=Messages.invalid_lang(lang_code))
         return Ok()
 
     @staticmethod
-    def validate_email(email: str) -> Ok | MsgErr:
+    def validate_email(email: str, lang: BotLanguage = "en") -> Ok | MsgErr:
         if len(email) < 5:
-            return MsgErr(error=Messages.message_too_short())
+            return MsgErr(error=Messages.message_too_short(lang))
         if len(email) > 100:
-            return MsgErr(error=Messages.message_too_long())
+            return MsgErr(error=Messages.message_too_long(lang))
         if not _EMAIL_REGEX.fullmatch(email):
-            return MsgErr(error=Messages.not_email())
+            return MsgErr(error=Messages.not_email(lang))
         return Ok()
 
     @staticmethod

@@ -3,16 +3,18 @@ import { Badge } from '@/components/ui/badge';
 import { PublicationRow } from '@/components/articles/PublicationRow';
 import { publAPI } from '@/api/publAPI';
 import type { Publication } from '@/types/domain';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard: FC = () => {
+    const { t } = useTranslation();
     const {
         data: currentPublications = [],
         isLoading,
         isError,
     } = publAPI.useGetCurrentPublicationQuery({ list: true });
 
-    if (isLoading) return <div className="p-4 text-slate-500">Загрузка публикаций...</div>;
-    if (isError) return <div className="p-4 text-red-500">Ошибка при загрузке публикаций.</div>;
+    if (isLoading) return <div className="p-4 text-slate-500">{t('common.loading')}</div>;
+    if (isError) return <div className="p-4 text-red-500">{t('common.error')}</div>;
 
     const [available, queue] = useMemo(() => {
         const splitIndex = currentPublications.findIndex((item) => !item.interactable);
@@ -30,7 +32,7 @@ const Dashboard: FC = () => {
                         <div className="mb-2 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase md:text-base">
-                                    Доступно к обработке
+                                    {t('dashboard.available')}
                                 </h2>
                                 <Badge className="rounded-md border-none bg-amber-100 px-2 font-bold text-amber-800 hover:bg-amber-100">
                                     {available.length}
@@ -47,7 +49,7 @@ const Dashboard: FC = () => {
                         <div className="mb-2 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <h2 className="text-sm font-bold tracking-wide text-slate-900 uppercase md:text-base">
-                                    В очереди
+                                    {t('dashboard.inQueue')}
                                 </h2>
                                 <Badge className="rounded-md border-none bg-amber-100 px-2 font-bold text-amber-800 hover:bg-amber-100">
                                     {queue.length}

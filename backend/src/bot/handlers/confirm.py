@@ -6,7 +6,7 @@ from aiogram.filters import Command, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from bot.messages import Messages
+from bot.i18n import BotLanguage, Messages
 from bot.states import ConfirmStates
 from core.config import settings
 from core.dependencies import get_session
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.message(Command("confirm"))
-async def confirm_registration(message: Message, state: FSMContext) -> None:
+async def confirm_registration(message: Message, state: FSMContext, lang: BotLanguage) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
 
@@ -30,10 +30,10 @@ async def confirm_registration(message: Message, state: FSMContext) -> None:
 
     args = message.text.split()
     if len(args) > 1:
-        await handle_code_input(message, args[1])
+        await handle_code_input(message, state, lang)
         return
 
-    await message.answer(Messages.request_confirmation_code())
+    await message.answer(Messages.request_confirmation_code(lang))
     await state.set_state(ConfirmStates.waiting_for_code)
 
 
@@ -46,9 +46,10 @@ async def confirm_registration(message: Message, state: FSMContext) -> None:
     ),
     ~Command("start", "menu", "register", "confirm", "support", "cancel"),
 )
-async def handle_code_input(message: Message, state: FSMContext) -> None:
+async def handle_code_input(message: Message, state: FSMContext, lang: BotLanguage) -> None:
     if message.from_user is None or message.text is None:
         raise HandlerError
+
     args = message.text.split()
     code = message.text.strip()
     if len(args) > 1:
@@ -62,19 +63,19 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
             pending = None
         if pending is None:
             await state.clear()
-            await message.answer(Messages.confirmation_code_invalid())
+            await message.answer(Messages.confirmation_code_invalid(lang))
             return
 
         if pending.status == PendingStatus.AWAITING_CODE and is_enter_expired(
             pending.code_created_at, settings.TG_CODE_EXPIRE_SECONDS
         ):
             await state.clear()
-            await message.answer(Messages.confirmation_code_expired())
+            await message.answer(Messages.confirmation_code_expired(lang))
             return
 
         if pending.status != PendingStatus.AWAITING_CODE:
             await state.clear()
-            await message.answer(Messages.confirmation_code_used())
+            await message.answer(Messages.confirmation_code_used(lang))
             return
 
         existing_user = await get_user(session, message.from_user.id)
@@ -86,13 +87,12 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
                 telegram_id=message.from_user.id,
             )
             await session.commit()
-            await message.answer(Messages.auth_confirmed())
+            await message.answer(Messages.auth_confirmed(lang))
             await state.clear()
             return
 
         tlg_name = message.from_user.full_name
         tlg_username = message.from_user.username
-        # try except поймать ошибку, если что-то сломается в upd
         try:
             await update_pending_by_code(
                 session,
@@ -106,10 +106,10 @@ async def handle_code_input(message: Message, state: FSMContext) -> None:
             await session.commit()
         except Exception as e:
             await session.rollback()
-            await message.answer(Messages.registration_failed())
+            await message.answer(Messages.registration_failed(lang))
             logger.error(
                 "Update pending by code for new user failed: %s", str(e), exc_info=True
             )
 
-    await message.answer(Messages.registration_confirmed(), parse_mode="HTML")
+    await message.answer(Messages.registration_confirmed(lang), parse_mode="HTML")
     await state.clear()

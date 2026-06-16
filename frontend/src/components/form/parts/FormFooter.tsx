@@ -12,9 +12,10 @@ import { motion, useScroll, useMotionValueEvent } from 'motion/react';
 import { Send, Trash2, Cloud, CloudOff, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRecordForm } from '@/hooks/useRecordForm';
+import { useTranslation } from 'react-i18next';
 
-function formatTime(date: Date): string {
-    return date.toLocaleTimeString('ru-RU', {
+function formatTime(date: Date, locale: string): string {
+    return date.toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
@@ -24,6 +25,7 @@ function formatTime(date: Date): string {
 const ENABLE_MOTION_ON_DESKTOP = false;
 
 const Footer: FC = () => {
+    const { t, i18n } = useTranslation();
     const {
         state: { lastSavedTime, activeRecordId, isAutoSaving, isBusy },
         actions,
@@ -89,24 +91,24 @@ const Footer: FC = () => {
                         className="hidden gap-2 text-xs md:inline-flex"
                     >
                         <Trash2 className="size-4" />
-                        Удалить
+                        {t('common.delete')}
                     </Button>
 
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                         {isAutoSaving ? (
                             <>
                                 <Cloud className="size-4 animate-pulse text-blue-500" />
-                                <span>Автосохранение...</span>
+                                <span>{t('form.saving')}</span>
                             </>
                         ) : lastSavedTime ? (
                             <>
                                 <Check className="size-4 text-emerald-500" />
-                                <span>Сохранено в {formatTime(lastSavedTime)}</span>
+                                <span>{t('form.saved', { time: formatTime(lastSavedTime, i18n.language) })}</span>
                             </>
                         ) : (
                             <>
                                 <CloudOff className="size-4 text-slate-400" />
-                                <span>Не сохранено</span>
+                                <span>{t('form.notSaved')}</span>
                             </>
                         )}
                     </div>
@@ -119,7 +121,7 @@ const Footer: FC = () => {
                         className="gap-2 bg-slate-900 text-xs font-semibold text-white hover:bg-slate-800"
                     >
                         <Send className="size-4" />
-                        Отправить
+                        {t('common.submit')}
                     </Button>
                 </div>
             </motion.footer>
@@ -127,10 +129,9 @@ const Footer: FC = () => {
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Подтвердить удаление?</AlertDialogTitle>
+                        <AlertDialogTitle>{t('record.deleteConfirmTitle')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Вы уверены, что хотите удалить эту запись? Это действие нельзя будет
-                            отменить.
+                            {t('record.deleteConfirmDescription')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -140,7 +141,7 @@ const Footer: FC = () => {
                             onClick={() => setIsDeleteDialogOpen(false)}
                             disabled={isBusy}
                         >
-                            Отмена
+                            {t('record.cancel')}
                         </Button>
                         <Button
                             type="button"
@@ -151,7 +152,7 @@ const Footer: FC = () => {
                             disabled={isBusy || activeRecordId === null}
                             variant="destructive"
                         >
-                            Удалить
+                            {t('record.delete')}
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
