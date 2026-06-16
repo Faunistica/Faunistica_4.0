@@ -33,7 +33,7 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
             if (!scrollRef.current) return;
             if (activeSection) {
                 const el = scrollRef.current.querySelector(
-                    `button[data-section="${activeSection}"]`
+                    `button[data-section="${activeSection}"]`,
                 );
                 if (el) {
                     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -60,7 +60,9 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
                     {isMobile ? (
                         <div className="flex items-center gap-2">
                             <div>
-                                <div className="text-sm/tight font-bold text-slate-900">Инструкция</div>
+                                <div className="text-sm/tight font-bold text-slate-900">
+                                    Инструкция
+                                </div>
                                 <div className="text-[10px] leading-tight font-medium text-slate-500">
                                     Справочное руководство
                                 </div>
@@ -91,7 +93,7 @@ export const InstructionsSidebar: FC<InstructionsSidebarProps> = ({
                     </SidebarGroupLabel>
                     <SidebarGroupContent
                         ref={scrollRef}
-                        className="no-scrollbar overscroll-contain overflow-y-scroll p-2 pb-8"
+                        className="no-scrollbar overflow-y-scroll overscroll-contain p-2 pb-8"
                     >
                         <SidebarMenu className="gap-1.5 px-2 pt-1">
                             {sections.map((section) => {

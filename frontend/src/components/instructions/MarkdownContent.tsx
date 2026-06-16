@@ -32,9 +32,7 @@ const markdownComponents: Components = {
     table({ children }) {
         return (
             <div className="my-4 w-full overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                    {children}
-                </table>
+                <table className="w-full border-collapse text-sm">{children}</table>
             </div>
         );
     },
@@ -44,8 +42,7 @@ const markdownComponents: Components = {
     },
 };
 
-const stripHtmlComments = (text: string) =>
-    text.replace(/<!--[\s\S]*?-->/g, '');
+const stripHtmlComments = (text: string) => text.replace(/<!--[\s\S]*?-->/g, '');
 
 export const MarkdownContent: FC<{ content: string }> = ({ content }) => {
     return (

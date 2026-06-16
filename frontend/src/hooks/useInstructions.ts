@@ -53,7 +53,7 @@ export const useInstructions = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [activeSection, setActiveSection] = useState('');
-    
+
     const isClickScrolling = useRef(false);
     const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -112,7 +112,7 @@ export const useInstructions = () => {
     const scrollToSection = useCallback((id: string, onScrollStart?: () => void) => {
         isClickScrolling.current = true;
         setActiveSection(id);
-        
+
         if (onScrollStart) {
             onScrollStart();
         }
@@ -120,11 +120,11 @@ export const useInstructions = () => {
         const el = document.getElementById(id);
         if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            
+
             if (scrollTimeoutRef.current) {
                 clearTimeout(scrollTimeoutRef.current);
             }
-            
+
             scrollTimeoutRef.current = setTimeout(() => {
                 isClickScrolling.current = false;
             }, 1000);

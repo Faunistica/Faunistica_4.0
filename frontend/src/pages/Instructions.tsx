@@ -28,7 +28,7 @@ const Instructions: FC = () => {
 
     if (error) {
         return (
-            <div className="flex w-full flex-1 items-center justify-center min-h-[60vh]">
+            <div className="flex min-h-[60vh] w-full flex-1 items-center justify-center">
                 <p className="text-muted-foreground">Не удалось загрузить инструкцию.</p>
             </div>
         );
@@ -54,7 +54,7 @@ const Instructions: FC = () => {
                                 <CardHeader>
                                     <CardTitle className="text-2xl">{section.title}</CardTitle>
                                 </CardHeader>
-                                <CardContent className="prose prose-sm max-w-none dark:prose-invert md:prose-base prose-headings:font-semibold prose-img:m-0">
+                                <CardContent className="prose prose-sm max-w-none md:prose-base dark:prose-invert prose-headings:font-semibold prose-img:m-0">
                                     <MarkdownContent content={section.content} />
                                 </CardContent>
                             </Card>
