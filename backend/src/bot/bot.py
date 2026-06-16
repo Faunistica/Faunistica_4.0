@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 async def start() -> None:
+    if not settings.BOT_ENABLED:
+        logger.info("Bot is disabled via BOT_ENABLED=false, skipping start")
+        return
+
     session = None
     if settings.BOT_PROXY is not None:
         session = AiohttpSession(proxy=settings.BOT_PROXY.unicode_string())

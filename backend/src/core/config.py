@@ -55,6 +55,7 @@ class BotSettings(CamelCaseSettings):
     ADMIN_CHAT_ID: int = Field(init=False)
     ADMIN_USER_IDS: list[int] = [911269241, 412819044, 950994899]
     BOT_USERNAME: str | None = None
+    BOT_ENABLED: bool = True
 
 
 class LoggingSettings(CamelCaseSettings):

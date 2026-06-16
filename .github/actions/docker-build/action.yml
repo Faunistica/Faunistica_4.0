@@ -77,6 +77,7 @@ runs:
         docker run -d --name test-backend --network host \
           -e JWT_SECRET=test \
           -e BOT_TOKEN=dummy \
+          -e BOT_ENABLED=false \
           -e ADMIN_CHAT_ID=-1 \
           -e DB_PASSWORD=faunistica \
           "$BACKEND_TAG"
