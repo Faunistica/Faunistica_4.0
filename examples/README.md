@@ -21,7 +21,11 @@ curl -o .env https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/ex
 curl -o config.yaml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/config.yaml
 curl -o compose.yml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/all-docker/compose.yml
 # curl можно заменить на wget -O <file> <url>
-# отредактировать .env
+```
+
+Отредактируйте `.env`: укажите `BOT_TOKEN`, `ADMIN_CHAT_ID`, `JWT_SECRET`.
+
+```bash
 docker compose up -d
 ```
 
@@ -36,10 +40,15 @@ curl -o config.yaml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/
 curl -o compose.yml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/hybrid/compose.yml
 curl -o faunistica.conf https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/hybrid/nginx/faunistica.conf
 # curl можно заменить на wget -O <file> <url>
-# отредактировать .env (указать DB_HOST=/var/run/postgresql)
-docker compose up -d
-# (опционально) хост nginx: sudo cp faunistica.conf /etc/nginx/sites-available/
 ```
+
+Отредактируйте `.env`: укажите `BOT_TOKEN`, `ADMIN_CHAT_ID`, `JWT_SECRET`, `DB_HOST=/var/run/postgresql`.
+
+```bash
+docker compose up -d
+```
+
+(опционально) хост nginx: `sudo cp faunistica.conf /etc/nginx/sites-available/`
 
 ---
 
