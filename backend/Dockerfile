@@ -16,6 +16,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY --from=builder /app/.venv /app/.venv
 COPY alembic/ alembic/
 COPY alembic.ini config.yaml ./
+COPY src/app.py src/
 COPY data/ data/
 ARG GIT_COMMIT=unknown
 ARG GIT_TAG=unknown
@@ -26,4 +27,4 @@ RUN chmod +x /scripts/entrypoint.sh /scripts/healthcheck.py
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD ["/scripts/healthcheck.py"]
 ENTRYPOINT ["/scripts/entrypoint.sh"]
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5001"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5001", "--app-dir", "/app/src"]
