@@ -44,10 +44,8 @@ services:
     mem_limit: 1g
 
   # Фронтенд-контейнер сам выступает в роли reverse proxy.
-  # По умолчанию он просто раздаёт статику, но если смонтировать
-  # ./nginx/faunistica.conf поверх /etc/nginx/conf.d/default.conf,
-  # nginx внутри контейнера начнёт проксировать /api/ → backend.
-  # Так мы избавляемся от отдельного nginx-контейнера.
+  # nginx внутри контейнера проксирует /api/ → backend (конфиг вшит в образ).
+  # Отдельный nginx-контейнер не нужен.
   frontend:
     image: ghcr.io/faunistica/frontend:latest
     container_name: fau_frontend
@@ -55,7 +53,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/faunistica.conf:/etc/nginx/conf.d/default.conf:ro
       # Для HTTPS раскомментировать:
       # - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
