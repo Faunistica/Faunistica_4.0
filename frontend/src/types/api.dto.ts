@@ -117,7 +117,7 @@ export interface SubmitPublicationRequest {
     comment?: string | null;
 }
 
-export interface SubmitStatusResponse {
+export interface DraftsResponse {
     draft_record_ids: string[];
 }
 

@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import * as Types from '../types/api.dto';
 import { baseQueryWithReauth } from './baseQuery';
+import { publAPI } from './publAPI';
 
 export const recordAPI = createApi({
     reducerPath: 'recordAPI',
@@ -47,11 +48,16 @@ export const recordAPI = createApi({
                 body: record,
             }),
             invalidatesTags: ['records-list'],
-            onQueryStarted: async (_args, { dispatch, queryFulfilled }) => {
+            onQueryStarted: async ({ publ_id }, { dispatch, queryFulfilled }) => {
                 try {
                     const { data } = await queryFulfilled;
                     void dispatch(
                         recordAPI.util.upsertQueryData('recordById', { record_id: data.id }, data),
+                    );
+                    dispatch(
+                        publAPI.util.invalidateTags([
+                            { type: 'publications', id: `draft-${publ_id}` },
+                        ]),
                     );
                 } catch {
                     // best-effort
@@ -64,7 +70,7 @@ export const recordAPI = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            onQueryStarted: async ({ record_id }, { dispatch, queryFulfilled }) => {
+            onQueryStarted: async ({ record_id, publ_id }, { dispatch, queryFulfilled }) => {
                 try {
                     const { data } = await queryFulfilled;
                     if (!data) return;
@@ -81,6 +87,13 @@ export const recordAPI = createApi({
                     void dispatch(
                         recordAPI.util.upsertQueryData('recordById', { record_id }, data),
                     );
+                    if (publ_id) {
+                        dispatch(
+                            publAPI.util.invalidateTags([
+                                { type: 'publications', id: `draft-${publ_id}` },
+                            ]),
+                        );
+                    }
                 } catch {
                     // mutation failed — RTK handles rollback automatically
                 }
@@ -105,6 +118,11 @@ export const recordAPI = createApi({
                 );
                 try {
                     await queryFulfilled;
+                    dispatch(
+                        publAPI.util.invalidateTags([
+                            { type: 'publications', id: `draft-${publ_id}` },
+                        ]),
+                    );
                 } catch {
                     patch.undo();
                 }
