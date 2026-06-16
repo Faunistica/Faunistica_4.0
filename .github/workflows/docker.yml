@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -41,8 +44,8 @@ jobs:
           registry: ${{ env.REGISTRY }}
           backend-image: ${{ env.BACKEND_IMAGE }}
           frontend-image: ${{ env.FRONTEND_IMAGE }}
-          backend-tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:edge
-          frontend-tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:edge
+          backend-tags: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'edge' }}
+          frontend-tags: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'edge' }}
           git-commit: ${{ github.sha }}
           git-tag: edge
           git-branch: ${{ github.ref_name }}

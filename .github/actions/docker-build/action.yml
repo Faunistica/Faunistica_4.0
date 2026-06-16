@@ -34,7 +34,9 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+      with:
+        persist-credentials: false
 
     - uses: docker/login-action@v3
       with:
@@ -42,7 +44,7 @@ runs:
         username: ${{ github.actor }}
         password: ${{ inputs.github-token }}
 
-    - name: Build & push backend
+    - name: Build backend
       uses: docker/build-push-action@v6
       with:
         context: backend
@@ -54,33 +56,8 @@ runs:
           GIT_TAG=${{ inputs.git-tag }}
           GIT_BRANCH=${{ inputs.git-branch }}
         cache-from: type=gha
-        cache-to: type=gha,mode=max
 
-    - name: Smoke test backend
-      shell: bash
-      run: |
-        TAG=$(printf '%s\n' ${{ inputs.backend-tags }} | tr ',' '\n' | head -1)
-        docker run -d --name test-backend --network host \
-          -e JWT_SECRET=test \
-          -e BOT_TOKEN=dummy \
-          -e ADMIN_CHAT_ID=-1 \
-          -e DB_PASSWORD=faunistica \
-          "$TAG"
-        for i in $(seq 1 12); do
-          docker exec test-backend /scripts/healthcheck.py && break
-          sleep 5
-        done
-        docker exec test-backend /scripts/healthcheck.py
-        docker rm -f test-backend
-
-    - name: Push backend
-      shell: bash
-      run: |
-        printf '%s\n' ${{ inputs.backend-tags }} | tr ',' '\n' | while read tag; do
-          [ -n "$tag" ] && docker push "$tag"
-        done
-
-    - name: Build & push frontend
+    - name: Build frontend
       uses: docker/build-push-action@v6
       with:
         context: frontend
@@ -90,28 +67,55 @@ runs:
         build-args: |
           VITE_API_URL=/api
         cache-from: type=gha
-        cache-to: type=gha,mode=max
 
-    - name: Smoke test frontend
+    - name: Smoke test both
       shell: bash
       run: |
-        TAG=$(printf '%s\n' ${{ inputs.frontend-tags }} | tr ',' '\n' | head -1)
-        docker run -d --name test-frontend -p 8080:80 -p 8443:443 "$TAG"
+        BACKEND_TAG=$(printf '%s\n' "${{ inputs.backend-tags }}" | tr ',' '\n' | head -1)
+        FRONTEND_TAG=$(printf '%s\n' "${{ inputs.frontend-tags }}" | tr ',' '\n' | head -1)
+
+        docker run -d --name test-backend --network host \
+          -e JWT_SECRET=test \
+          -e BOT_TOKEN=dummy \
+          -e BOT_ENABLED=false \
+          -e ADMIN_CHAT_ID=-1 \
+          -e DB_PASSWORD=faunistica \
+          "$BACKEND_TAG"
+
+        for i in $(seq 1 12); do
+          docker exec test-backend /scripts/healthcheck.py && break
+          sleep 5
+        done
+        docker exec test-backend /scripts/healthcheck.py
+
+        docker run -d --name test-frontend --network host \
+          --add-host backend:127.0.0.1 \
+          "$FRONTEND_TAG"
+
         for i in $(seq 1 6); do
-          curl -skf https://localhost:8443/ && break
+          curl -sf http://localhost/ && break
           sleep 2
         done
-        curl -sk https://localhost:8443/ || (docker logs test-frontend && false)
+        curl -f http://localhost/ || (docker logs test-frontend && false)
+
         for i in $(seq 1 6); do
-          curl -sf http://localhost:8080/ && break
+          curl -skf https://localhost/ && break
           sleep 2
         done
-        curl -f http://localhost:8080/ || (docker logs test-frontend && false)
-        docker rm -f test-frontend
+        curl -skf https://localhost/ || (docker logs test-frontend && false)
+
+        docker rm -f test-frontend test-backend
+
+    - name: Push backend
+      shell: bash
+      run: |
+        printf '%s\n' "${{ inputs.backend-tags }}" | tr ',' '\n' | while read tag; do
+          [ -n "$tag" ] && docker push "$tag"
+        done
 
     - name: Push frontend
       shell: bash
       run: |
-        printf '%s\n' ${{ inputs.frontend-tags }} | tr ',' '\n' | while read tag; do
+        printf '%s\n' "${{ inputs.frontend-tags }}" | tr ',' '\n' | while read tag; do
           [ -n "$tag" ] && docker push "$tag"
         done
