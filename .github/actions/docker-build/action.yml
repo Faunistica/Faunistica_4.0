@@ -59,7 +59,7 @@ runs:
     - name: Smoke test backend
       shell: bash
       run: |
-        TAG="${{ inputs.registry }}/${{ inputs.backend-image }}:edge"
+        TAG=$(printf '%s\n' ${{ inputs.backend-tags }} | tr ',' '\n' | head -1)
         docker run -d --name test-backend --network host \
           -e JWT_SECRET=test \
           -e BOT_TOKEN=dummy \
@@ -76,7 +76,7 @@ runs:
     - name: Push backend
       shell: bash
       run: |
-        for tag in ${{ inputs.backend-tags }}; do
+        printf '%s\n' ${{ inputs.backend-tags }} | tr ',' '\n' | while read tag; do
           [ -n "$tag" ] && docker push "$tag"
         done
 
@@ -95,7 +95,7 @@ runs:
     - name: Smoke test frontend
       shell: bash
       run: |
-        TAG="${{ inputs.registry }}/${{ inputs.frontend-image }}:edge"
+        TAG=$(printf '%s\n' ${{ inputs.frontend-tags }} | tr ',' '\n' | head -1)
         docker run -d --name test-frontend -p 8080:80 -p 8443:443 "$TAG"
         for i in $(seq 1 6); do
           curl -skf https://localhost:8443/ && break
@@ -112,6 +112,6 @@ runs:
     - name: Push frontend
       shell: bash
       run: |
-        for tag in ${{ inputs.frontend-tags }}; do
+        printf '%s\n' ${{ inputs.frontend-tags }} | tr ',' '\n' | while read tag; do
           [ -n "$tag" ] && docker push "$tag"
         done
