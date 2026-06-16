@@ -6,6 +6,7 @@
 **Минусы:** PostgreSQL в Docker — дополнительная нагрузка на I/O, требует настройки бекапов отдельно.
 
 ```bash
+mkdir faunistica && cd faunistica
 curl -o .env https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/.env.example
 curl -o config.yaml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/config.yaml
 curl -o compose.yml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/all-docker/compose.yml

@@ -2,9 +2,10 @@
 
 **Плюсы:** PostgreSQL с нативной производительностью, привычные инструменты бекапа, nginx легко обслуживать.
 
-**Минусы:** требуется настроенный PostgreSQL и nginx на хосте (см. nginx/faunistica.conf).
+**Минусы:** требуется настроенный PostgreSQL на хосте.
 
 ```bash
+mkdir faunistica && cd faunistica
 curl -o .env https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/.env.example
 curl -o config.yaml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/config.yaml
 curl -o compose.yml https://raw.githubusercontent.com/Faunistica/Faunistica_4.0/main/examples/hybrid/compose.yml
@@ -12,5 +13,5 @@ curl -o faunistica.conf https://raw.githubusercontent.com/Faunistica/Faunistica_
 # curl можно заменить на wget -O <file> <url>
 # Отредактируйте .env: укажите BOT_TOKEN, ADMIN_CHAT_ID, JWT_SECRET, DB_HOST=/var/run/postgresql
 docker compose up -d
-# sudo cp faunistica.conf /etc/nginx/sites-available/
+# (опционально) хост nginx: sudo cp faunistica.conf /etc/nginx/sites-available/
 ```
