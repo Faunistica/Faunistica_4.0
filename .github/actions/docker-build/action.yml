@@ -71,8 +71,8 @@ runs:
     - name: Smoke test both
       shell: bash
       run: |
-        BACKEND_TAG=$(printf '%s\n' ${{ inputs.backend-tags }} | tr ',' '\n' | head -1)
-        FRONTEND_TAG=$(printf '%s\n' ${{ inputs.frontend-tags }} | tr ',' '\n' | head -1)
+        BACKEND_TAG=$(printf '%s\n' "${{ inputs.backend-tags }}" | tr ',' '\n' | head -1)
+        FRONTEND_TAG=$(printf '%s\n' "${{ inputs.frontend-tags }}" | tr ',' '\n' | head -1)
 
         docker run -d --name test-backend --network host \
           -e JWT_SECRET=test \
@@ -101,20 +101,20 @@ runs:
           curl -skf https://localhost/ && break
           sleep 2
         done
-        curl -sk https://localhost/ || (docker logs test-frontend && false)
+        curl -skf https://localhost/ || (docker logs test-frontend && false)
 
         docker rm -f test-frontend test-backend
 
     - name: Push backend
       shell: bash
       run: |
-        printf '%s\n' ${{ inputs.backend-tags }} | tr ',' '\n' | while read tag; do
+        printf '%s\n' "${{ inputs.backend-tags }}" | tr ',' '\n' | while read tag; do
           [ -n "$tag" ] && docker push "$tag"
         done
 
     - name: Push frontend
       shell: bash
       run: |
-        printf '%s\n' ${{ inputs.frontend-tags }} | tr ',' '\n' | while read tag; do
+        printf '%s\n' "${{ inputs.frontend-tags }}" | tr ',' '\n' | while read tag; do
           [ -n "$tag" ] && docker push "$tag"
         done
