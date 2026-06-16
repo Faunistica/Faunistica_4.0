@@ -1,4 +1,4 @@
-.PHONY: lint lint-fix format
+.PHONY: lint lint-fix format test
 
 lint:
 	pnpm lint
