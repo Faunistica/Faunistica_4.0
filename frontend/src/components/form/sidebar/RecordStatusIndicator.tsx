@@ -4,10 +4,7 @@ import { CheckCircle2, AlertCircle, CircleDashed, Circle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { RecordStatus } from '@/lib/recordStatus';
 
-const STATUS_CONFIG: Record<
-    RecordStatus,
-    { Icon: FC<{ className?: string }>; color: string }
-> = {
+const STATUS_CONFIG: Record<RecordStatus, { Icon: FC<{ className?: string }>; color: string }> = {
     empty: {
         Icon: Circle,
         color: 'text-slate-300',
@@ -35,7 +32,10 @@ export const RecordStatusIndicator: FC<Props> = ({ status }) => {
     const { Icon, color } = STATUS_CONFIG[status];
 
     return (
-        <span className={cn('inline-flex items-center gap-1', color)} title={t(`form.recordStatus.${status}`)}>
+        <span
+            className={cn('inline-flex items-center gap-1', color)}
+            title={t(`form.recordStatus.${status}`)}
+        >
             <Icon className="size-3.5" />
         </span>
     );

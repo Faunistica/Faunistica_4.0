@@ -24,12 +24,8 @@ export default function Science() {
                             </div>
                         </div>
                         <div className="space-y-6 leading-relaxed text-slate-600">
-                            <p>
-                                {t('landing.scienceDesc1')}
-                            </p>
-                            <p>
-                                {t('landing.scienceDesc2')}
-                            </p>
+                            <p>{t('landing.scienceDesc1')}</p>
+                            <p>{t('landing.scienceDesc2')}</p>
 
                             <div className="flex flex-wrap gap-4 pt-4">
                                 <div className="flex w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 sm:w-auto">

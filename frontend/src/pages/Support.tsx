@@ -69,25 +69,19 @@ export default function Support() {
                                             <div className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-medium text-slate-900">
                                                 2
                                             </div>
-                                            <span>
-                                                {t('support.step2')}
-                                            </span>
+                                            <span>{t('support.step2')}</span>
                                         </li>
                                         <li className="flex items-start gap-3">
                                             <div className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-medium text-slate-900">
                                                 3
                                             </div>
-                                            <span>
-                                                {t('support.step3')}
-                                            </span>
+                                            <span>{t('support.step3')}</span>
                                         </li>
                                         <li className="flex items-start gap-3">
                                             <div className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-medium text-slate-900">
                                                 4
                                             </div>
-                                            <span>
-                                                {t('support.step4')}
-                                            </span>
+                                            <span>{t('support.step4')}</span>
                                         </li>
                                     </ul>
                                 </div>

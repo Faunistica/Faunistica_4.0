@@ -177,7 +177,9 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                                             )}
                                             aria-invalid={invalid}
                                         >
-                                            <SelectValue placeholder={t('submitPublication.selectLevel')} />
+                                            <SelectValue
+                                                placeholder={t('submitPublication.selectLevel')}
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {Object.entries(LEVEL_LABELS).map(([val, label]) => (
@@ -322,7 +324,9 @@ const FormCard: FC<Props> = ({ publ_id, meta }) => {
                         ) : (
                             <CheckCircle2 className="mr-2 size-4" />
                         )}
-                        {submitting ? t('submitPublication.sending') : t('submitPublication.finish')}
+                        {submitting
+                            ? t('submitPublication.sending')
+                            : t('submitPublication.finish')}
                     </Button>
                 </motion.div>
             </form>

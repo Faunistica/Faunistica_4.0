@@ -15,7 +15,9 @@ const ServerErrorDisplay: FC = () => {
                 <div className="flex items-start gap-3">
                     <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-500" />
                     <div className="space-y-1.5">
-                        <p className="text-sm font-semibold text-red-700">{t('form.saveErrors.title')}</p>
+                        <p className="text-sm font-semibold text-red-700">
+                            {t('form.saveErrors.title')}
+                        </p>
                         {globalErrors.map((msg, i) => (
                             <p key={i} className="text-sm text-red-600">
                                 {msg}

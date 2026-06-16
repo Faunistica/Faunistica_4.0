@@ -51,36 +51,40 @@ interface Props {
 const DraftsBlock: FC<Props> = ({ publ_id, draftIds }) => {
     const { t } = useTranslation();
     return (
-    <>
-        <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
-            <h1 className="text-2xl font-light tracking-wide sm:text-3xl">{t('submitPublication.completionUnavailable')}</h1>
-            <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
-                {t('submitPublication.publicationNumber', { id: publ_id })}
-            </p>
-        </motion.div>
+        <>
+            <motion.div variants={itemAnim} transition={stagger(0)} className="mb-8 text-center">
+                <h1 className="text-2xl font-light tracking-wide sm:text-3xl">
+                    {t('submitPublication.completionUnavailable')}
+                </h1>
+                <p className="mt-1 text-xs font-medium tracking-[0.15em] text-muted-foreground uppercase">
+                    {t('submitPublication.publicationNumber', { id: publ_id })}
+                </p>
+            </motion.div>
 
-        <motion.div variants={itemAnim} transition={stagger(1)}>
-            <div className="mb-3 flex items-start gap-2 text-slate-600">
-                <AlertCircle className="size-5 shrink-0 pb-0.75 text-red-500" />
-                <div className="flex flex-col">
-                    <span className="font-semibold">
-                        {draftIds.length === 1
-                            ? t('submitPublication.draftCount', { count: draftIds.length })
-                            : t('submitPublication.draftCount_plural', { count: draftIds.length })}
-                    </span>
-                    <span className="mb-4 text-sm text-muted-foreground">
-                        {t('submitPublication.draftAction')}
-                    </span>
+            <motion.div variants={itemAnim} transition={stagger(1)}>
+                <div className="mb-3 flex items-start gap-2 text-slate-600">
+                    <AlertCircle className="size-5 shrink-0 pb-0.75 text-red-500" />
+                    <div className="flex flex-col">
+                        <span className="font-semibold">
+                            {draftIds.length === 1
+                                ? t('submitPublication.draftCount', { count: draftIds.length })
+                                : t('submitPublication.draftCount_plural', {
+                                      count: draftIds.length,
+                                  })}
+                        </span>
+                        <span className="mb-4 text-sm text-muted-foreground">
+                            {t('submitPublication.draftAction')}
+                        </span>
+                    </div>
                 </div>
-            </div>
 
-            <div className="space-y-2">
-                {draftIds.map((recordId) => (
-                    <DraftRecordItem key={recordId} publ_id={publ_id} recordId={recordId} />
-                ))}
-            </div>
-        </motion.div>
-    </>
+                <div className="space-y-2">
+                    {draftIds.map((recordId) => (
+                        <DraftRecordItem key={recordId} publ_id={publ_id} recordId={recordId} />
+                    ))}
+                </div>
+            </motion.div>
+        </>
     );
 };
 

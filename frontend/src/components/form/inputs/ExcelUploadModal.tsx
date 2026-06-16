@@ -95,11 +95,16 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
             const message = getErrorMessage(error);
             toast.error(t('excel.importError'), { description: message });
         } else if (result) {
-            toast.success(t('excel.importedRecords', { count: result.imported }), { duration: 5000 });
+            toast.success(t('excel.importedRecords', { count: result.imported }), {
+                duration: 5000,
+            });
 
             if (result.errors && result.errors.length > 0) {
                 toast.warning(t('excel.importErrors'), {
-                    description: t('excel.rowError', { row: result.errors[0].row, error: JSON.stringify(result.errors[0].error) }),
+                    description: t('excel.rowError', {
+                        row: result.errors[0].row,
+                        error: JSON.stringify(result.errors[0].error),
+                    }),
                     duration: 10000,
                 });
             }
@@ -156,9 +161,7 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                 {t('excel.download')}
                             </Button>
                         </div>
-                        <AlertDialogDescription>
-                            {t('excel.description')}
-                        </AlertDialogDescription>
+                        <AlertDialogDescription>{t('excel.description')}</AlertDialogDescription>
                     </AlertDialogHeader>
 
                     <div
@@ -193,7 +196,8 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                         {selectedFile.name}
                                     </p>
                                     <p className="mt-1 text-xs text-slate-500">
-                                        {(selectedFile.size / 1024).toFixed(1)} {t('common.kilobytes')}
+                                        {(selectedFile.size / 1024).toFixed(1)}{' '}
+                                        {t('common.kilobytes')}
                                     </p>
                                 </div>
                                 <Button
@@ -216,12 +220,12 @@ const ExcelUploadModal: FC<Props> = ({ open, onOpenChange, publ_id }) => {
                                     <Upload className="size-6 text-slate-500" />
                                 </div>
                                 <div className="text-center">
-                                <p className="font-medium text-slate-700">
-                                    {t('excel.dragDrop')}
-                                </p>
-                                <p className="mt-1 text-xs text-slate-500">
-                                    {t('excel.clickToSelect')}
-                                </p>
+                                    <p className="font-medium text-slate-700">
+                                        {t('excel.dragDrop')}
+                                    </p>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                        {t('excel.clickToSelect')}
+                                    </p>
                                 </div>
                             </>
                         )}

@@ -76,7 +76,10 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         name="date_precision"
                         label={t('form.collection.datePrecision')}
                         placeholder={t('form.collection.datePrecisionPlaceholder')}
-                        options={['день', 'неделя', 'месяц', 'год'].map((d) => ({ value: d, label: t(`form.collection.datePrecisionOptions.${d}`) }))}
+                        options={['день', 'неделя', 'месяц', 'год'].map((d) => ({
+                            value: d,
+                            label: t(`form.collection.datePrecisionOptions.${d}`),
+                        }))}
                     />
 
                     <Controller
@@ -84,7 +87,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="recorded_by">{t('form.collection.collector')}</FieldLabel>
+                                <FieldLabel htmlFor="recorded_by">
+                                    {t('form.collection.collector')}
+                                </FieldLabel>
                                 <Input
                                     id="recorded_by"
                                     placeholder={t('form.collection.collectorPlaceholder')}
@@ -126,7 +131,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="sampling_protocol">{t('form.collection.collectionMethod')}</FieldLabel>
+                                <FieldLabel htmlFor="sampling_protocol">
+                                    {t('form.collection.collectionMethod')}
+                                </FieldLabel>
                                 <Input
                                     id="sampling_protocol"
                                     placeholder={t('form.collection.collectionMethodPlaceholder')}
@@ -143,7 +150,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="sample_size_value">{t('form.collection.sampleSize')}</FieldLabel>
+                                <FieldLabel htmlFor="sample_size_value">
+                                    {t('form.collection.sampleSize')}
+                                </FieldLabel>
                                 <Input
                                     id="sample_size_value"
                                     type="number"
@@ -163,7 +172,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="sample_size_unit">{t('form.collection.sampleUnit')}</FieldLabel>
+                                <FieldLabel htmlFor="sample_size_unit">
+                                    {t('form.collection.sampleUnit')}
+                                </FieldLabel>
                                 <Input
                                     id="sample_size_unit"
                                     placeholder={t('form.collection.sampleUnitPlaceholder')}
@@ -184,7 +195,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
                                 <div className="flex items-center gap-1">
-                                    <FieldLabel htmlFor="habitat">{t('form.collection.habitat')}</FieldLabel>
+                                    <FieldLabel htmlFor="habitat">
+                                        {t('form.collection.habitat')}
+                                    </FieldLabel>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Info className="size-3.5 cursor-help text-slate-400" />
@@ -212,7 +225,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="sampling_effort">{t('form.collection.samplingEffort')}</FieldLabel>
+                                <FieldLabel htmlFor="sampling_effort">
+                                    {t('form.collection.samplingEffort')}
+                                </FieldLabel>
                                 <Input
                                     id="sampling_effort"
                                     placeholder={t('form.collection.samplingEffortPlaceholder')}
@@ -255,7 +270,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="field_number">{t('form.collection.fieldNumber')}</FieldLabel>
+                                <FieldLabel htmlFor="field_number">
+                                    {t('form.collection.fieldNumber')}
+                                </FieldLabel>
                                 <Input
                                     id="field_number"
                                     placeholder={t('form.collection.fieldNumberPlaceholder')}
@@ -272,7 +289,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="catalog_number">{t('form.collection.catalogNumber')}</FieldLabel>
+                                <FieldLabel htmlFor="catalog_number">
+                                    {t('form.collection.catalogNumber')}
+                                </FieldLabel>
                                 <Input
                                     id="catalog_number"
                                     placeholder={t('form.collection.catalogNumberPlaceholder')}
@@ -289,7 +308,9 @@ const CollectionEventCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="collection_code">{t('form.collection.collectionCode')}</FieldLabel>
+                                <FieldLabel htmlFor="collection_code">
+                                    {t('form.collection.collectionCode')}
+                                </FieldLabel>
                                 <Input
                                     id="collection_code"
                                     placeholder={t('form.collection.collectionCodePlaceholder')}

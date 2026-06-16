@@ -103,7 +103,11 @@ const Footer: FC = () => {
                         ) : lastSavedTime ? (
                             <>
                                 <Check className="size-4 text-emerald-500" />
-                                <span>{t('form.saved', { time: formatTime(lastSavedTime, i18n.language) })}</span>
+                                <span>
+                                    {t('form.saved', {
+                                        time: formatTime(lastSavedTime, i18n.language),
+                                    })}
+                                </span>
                             </>
                         ) : (
                             <>

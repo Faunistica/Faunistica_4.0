@@ -9,7 +9,10 @@ export const selectRecordSummary = createSelector(
     (record) => ({
         status: record ? computeRecordStatus(record) : 'empty',
         recordName: capitalizeFirstLetter(
-            record?.species || record?.genus || record?.family || i18n.t('recordSelectors.newRecord'),
+            record?.species ||
+                record?.genus ||
+                record?.family ||
+                i18n.t('recordSelectors.newRecord'),
         ),
         recordLocation: record?.locality || record?.region || i18n.t('recordSelectors.noLocation'),
     }),

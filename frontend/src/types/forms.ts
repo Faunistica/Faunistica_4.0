@@ -21,18 +21,9 @@ export function recordFormSchema() {
         locality: z.string().min(1, req),
         is_manual_location: z.boolean().nullish(),
         verbatimcoordinates: z.string().nullish(),
-        latitude: z.coerce
-            .number<number>(num)
-            .min(LAT_MIN, minLat)
-            .max(LAT_MAX, maxLat),
-        longitude: z.coerce
-            .number<number>(num)
-            .min(LNG_MIN, minLng)
-            .max(LNG_MAX, maxLng),
-        coordinate_uncertainty: z.coerce
-            .number<number>()
-            .max(UNCERTAINTY_MAX, maxUnc)
-            .nullish(),
+        latitude: z.coerce.number<number>(num).min(LAT_MIN, minLat).max(LAT_MAX, maxLat),
+        longitude: z.coerce.number<number>(num).min(LNG_MIN, minLng).max(LNG_MAX, maxLng),
+        coordinate_uncertainty: z.coerce.number<number>().max(UNCERTAINTY_MAX, maxUnc).nullish(),
         location_remarks: z.string().nullish(),
 
         // ═══ EVENT + OCCURRENCE ═══

@@ -57,9 +57,7 @@ export default function Hero() {
                                     <Bug className="size-5" />
                                     {t('landing.modelGroup')}
                                 </div>
-                                <p className="text-sm text-slate-200">
-                                    {t('landing.modelDesc')}
-                                </p>
+                                <p className="text-sm text-slate-200">{t('landing.modelDesc')}</p>
                             </div>
                         </div>
                     </div>

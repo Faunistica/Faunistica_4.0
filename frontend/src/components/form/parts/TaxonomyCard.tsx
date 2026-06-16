@@ -132,7 +132,9 @@ const TaxonomyCard: FC = () => {
                                     onValueChange={field.onChange}
                                 >
                                     <SelectTrigger aria-invalid={invalid}>
-                                        <SelectValue placeholder={t('form.taxonomy.rankPlaceholder')} />
+                                        <SelectValue
+                                            placeholder={t('form.taxonomy.rankPlaceholder')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {TAXON_RANK_OPTIONS.map((opt) => (
@@ -157,7 +159,9 @@ const TaxonomyCard: FC = () => {
                                     onValueChange={field.onChange}
                                 >
                                     <SelectTrigger aria-invalid={invalid}>
-                                        <SelectValue placeholder={t('form.taxonomy.typeStatusPlaceholder')} />
+                                        <SelectValue
+                                            placeholder={t('form.taxonomy.typeStatusPlaceholder')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {TYPE_STATUS_OPTIONS.map((opt) => (
@@ -176,7 +180,9 @@ const TaxonomyCard: FC = () => {
                         control={control}
                         render={({ field, fieldState: { invalid, error } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="accepted_name">{t('form.taxonomy.validName')}</FieldLabel>
+                                <FieldLabel htmlFor="accepted_name">
+                                    {t('form.taxonomy.validName')}
+                                </FieldLabel>
                                 <Input
                                     id="accepted_name"
                                     placeholder={t('form.taxonomy.validNamePlaceholder')}

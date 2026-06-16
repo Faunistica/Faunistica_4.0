@@ -17,16 +17,22 @@ import { useTranslation } from 'react-i18next';
 
 const TelegramAuth: FC = () => {
     const { t } = useTranslation();
-    const { displayCode, botUrl, statusMessage: _, isPollingError, isInitLoading, initError } =
-        useTelegramAuth();
+    const {
+        displayCode,
+        botUrl,
+        statusMessage: _,
+        isPollingError,
+        isInitLoading,
+        initError,
+    } = useTelegramAuth();
 
     const statusMessage = isInitLoading
         ? t('telegramAuth.generating')
         : initError
-            ? t('telegramAuth.connectionError')
-            : isPollingError
-                ? t('telegramAuth.reconnecting')
-                : t('telegramAuth.waitingForCode');
+          ? t('telegramAuth.connectionError')
+          : isPollingError
+            ? t('telegramAuth.reconnecting')
+            : t('telegramAuth.waitingForCode');
 
     return (
         <div className="mx-auto w-full max-w-[700px] space-y-6">
@@ -37,8 +43,7 @@ const TelegramAuth: FC = () => {
                         {t('auth.loginWithTelegram')}
                     </CardTitle>
                     <CardDescription className="mx-auto mt-2 max-w-md text-slate-500">
-                        {t('auth.telegramDescription', { botName: '' })}
-                        {' '}
+                        {t('auth.telegramDescription', { botName: '' })}{' '}
                         <a
                             href={botUrl ? `${botUrl}?start=${displayCode}` : ''}
                             target="_blank"

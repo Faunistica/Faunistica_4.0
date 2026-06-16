@@ -83,12 +83,12 @@ The sidebar is a list of all records (finds) in the current publication. It is l
 
 Each record has a status displayed with a colored indicator:
 
-| Status | Color | Meaning |
-|--------|------|---------|
-| Empty | Gray | Record is not filled |
-| Draft | Blue | Record is filled but not submitted |
-| Error | Red | Validation errors present |
-| Ready | Green | Record successfully submitted |
+| Status | Color | Meaning                            |
+| ------ | ----- | ---------------------------------- |
+| Empty  | Gray  | Record is not filled               |
+| Draft  | Blue  | Record is filled but not submitted |
+| Error  | Red   | Validation errors present          |
+| Ready  | Green | Record successfully submitted      |
 
 The currently edited record is highlighted with a blue dot and "Editing" label.
 
@@ -141,7 +141,7 @@ First, select the coordinate source:
 
 **District** — smaller administrative units. If you select a district first, the region will be set automatically.
 
-> If you cannot find the required option in the list, or want to enter all finds from this publication, not just those related to the Urals, uncheck *Location relates to Urals* and then enter any other administrative names.
+> If you cannot find the required option in the list, or want to enter all finds from this publication, not just those related to the Urals, uncheck _Location relates to Urals_ and then enter any other administrative names.
 
 **Locality (toponym)** — enter manually exactly as it is specified in the work. Most often this is the nearest settlement to where the find was made, but it could be nature reserve names, direction indications (4 km south of village Makarovo), and other variants.
 
@@ -181,7 +181,7 @@ In the upper right corner of the card there is a dropdown list **Fill from Anoth
 
 ## Example Entry
 
-Since the publication is in English, uncheck *Enter administrative names in Russian*. The location is always specified in the "Materials and Methods" section of the publication. In this article, information about the Region is also reflected in the publication title. Therefore, select Orenburg Oblast as the region, after changing the country to its English name (Russia).
+Since the publication is in English, uncheck _Enter administrative names in Russian_. The location is always specified in the "Materials and Methods" section of the publication. In this article, information about the Region is also reflected in the publication title. Therefore, select Orenburg Oblast as the region, after changing the country to its English name (Russia).
 
 ![Region input](/assets/instruction/adm2.webp)
 
@@ -246,7 +246,7 @@ Similar to the localization block, the upper right corner of the card has a drop
 
 In the **Taxonomy** card, we enter the Latin names of the spider family, genus, and species.
 
-We are dealing with the order Araneae (or Aranei). Orders are divided into families, which end in *-idae* (e.g., Araneidae, Lycosidae). Families are divided into genera, and genera into species. A full species name looks, for example, like this: *Araneus diadematus Clerck, 1757*. The author's surname and year of description should not be entered anywhere.
+We are dealing with the order Araneae (or Aranei). Orders are divided into families, which end in _-idae_ (e.g., Araneidae, Lycosidae). Families are divided into genera, and genera into species. A full species name looks, for example, like this: _Araneus diadematus Clerck, 1757_. The author's surname and year of description should not be entered anywhere.
 
 ![Taxonomy in article](/assets/instruction/tax1.webp)
 
@@ -276,7 +276,7 @@ If the desired species is not found in the dropdown list, check the **Latin Name
 
 In some works, the genus may be abbreviated to a single letter. Enter the full genus and species in the form, without abbreviations.
 
-If only the genus could be determined (indicated as *sp.*), leave the species epithet field empty and uncheck **Species Identified**.
+If only the genus could be determined (indicated as _sp._), leave the species epithet field empty and uncheck **Species Identified**.
 
 # Quantitative Characteristics
 
@@ -286,14 +286,14 @@ In the **Quantitative Characteristics** card, data on the number of spiders is e
 
 ## Input Fields
 
-| Field | Description |
-|-------|-------------|
-| **Males** | Sexually mature males (♂, m) |
-| **Subadult Males** | Young males, will become adults after the next molt (sub.♂, sub. m) |
-| **Females** | Sexually mature females (♀, f) |
-| **Subadult Females** | Young females (sub.♀, sub. f) |
-| **Adults (Sex Unknown)** | Sexually mature individuals, sex not specified |
-| **Juveniles** | Immature individuals (juv.) |
+| Field                    | Description                                                         |
+| ------------------------ | ------------------------------------------------------------------- |
+| **Males**                | Sexually mature males (♂, m)                                        |
+| **Subadult Males**       | Young males, will become adults after the next molt (sub.♂, sub. m) |
+| **Females**              | Sexually mature females (♀, f)                                      |
+| **Subadult Females**     | Young females (sub.♀, sub. f)                                       |
+| **Adults (Sex Unknown)** | Sexually mature individuals, sex not specified                      |
+| **Juveniles**            | Immature individuals (juv.)                                         |
 
 The **automatic total count** of individuals in the record is displayed to the right of the fields.
 

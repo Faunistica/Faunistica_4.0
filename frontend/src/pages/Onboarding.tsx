@@ -34,7 +34,10 @@ function useOnboardingSchema(t: (key: string) => string) {
                 .min(3, t('onboarding.validation.usernameMin'))
                 .max(40, t('onboarding.validation.usernameMax'))
                 .regex(/^[a-zA-Z0-9_]+$/, t('onboarding.validation.usernamePattern')),
-            password: z.string().min(8, t('onboarding.validation.passwordMin')).max(128, t('onboarding.validation.passwordMax')),
+            password: z
+                .string()
+                .min(8, t('onboarding.validation.passwordMin'))
+                .max(128, t('onboarding.validation.passwordMax')),
             age: z.coerce
                 .number()
                 .min(14, t('onboarding.validation.ageMin'))
@@ -144,9 +147,7 @@ export default function Onboarding() {
                                 {t('onboarding.profileTitle')}
                             </CardTitle>
                             <div className="space-y-4 leading-relaxed text-slate-900">
-                                <p>
-                                    {t('onboarding.profileThanks')}
-                                </p>
+                                <p>{t('onboarding.profileThanks')}</p>
                                 <div className="rounded-lg border-l-4 border-slate-400 bg-slate-100 p-4 text-sm">
                                     {t('onboarding.ageNotice')}
                                 </div>
@@ -175,7 +176,9 @@ export default function Onboarding() {
                                         </div>
                                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label htmlFor="name">{t('settings.account.name')}</Label>
+                                                <Label htmlFor="name">
+                                                    {t('settings.account.name')}
+                                                </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -183,7 +186,9 @@ export default function Onboarding() {
                                                     <Input
                                                         id="name"
                                                         className="pl-9"
-                                                        placeholder={t('onboarding.namePlaceholder')}
+                                                        placeholder={t(
+                                                            'onboarding.namePlaceholder',
+                                                        )}
                                                         {...register('name')}
                                                     />
                                                 </div>
@@ -194,7 +199,9 @@ export default function Onboarding() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="username">{t('settings.account.username')}</Label>
+                                                <Label htmlFor="username">
+                                                    {t('settings.account.username')}
+                                                </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -202,7 +209,9 @@ export default function Onboarding() {
                                                     <Input
                                                         id="username"
                                                         className="pl-9"
-                                                        placeholder={t('onboarding.usernamePlaceholder')}
+                                                        placeholder={t(
+                                                            'onboarding.usernamePlaceholder',
+                                                        )}
                                                         {...register('username')}
                                                     />
                                                 </div>
@@ -213,7 +222,9 @@ export default function Onboarding() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="password">{t('settings.account.password')}</Label>
+                                                <Label htmlFor="password">
+                                                    {t('settings.account.password')}
+                                                </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <KeyRound className="size-4 text-slate-400" />
@@ -222,7 +233,9 @@ export default function Onboarding() {
                                                         id="password"
                                                         type="password"
                                                         className="pl-9"
-                                                        placeholder={t('onboarding.passwordPlaceholder')}
+                                                        placeholder={t(
+                                                            'onboarding.passwordPlaceholder',
+                                                        )}
                                                         {...register('password')}
                                                     />
                                                 </div>
@@ -243,7 +256,9 @@ export default function Onboarding() {
                                         </div>
                                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label htmlFor="age">{t('onboarding.yourAge')}</Label>
+                                                <Label htmlFor="age">
+                                                    {t('onboarding.yourAge')}
+                                                </Label>
                                                 <Input
                                                     id="age"
                                                     type="number"
@@ -258,7 +273,9 @@ export default function Onboarding() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="gender">{t('onboarding.gender')}</Label>
+                                                <Label htmlFor="gender">
+                                                    {t('onboarding.gender')}
+                                                </Label>
                                                 <Controller
                                                     control={control}
                                                     name="sex"
@@ -268,7 +285,11 @@ export default function Onboarding() {
                                                             value={field.value}
                                                         >
                                                             <SelectTrigger id="gender">
-                                                                <SelectValue placeholder={t('onboarding.notSelected')} />
+                                                                <SelectValue
+                                                                    placeholder={t(
+                                                                        'onboarding.notSelected',
+                                                                    )}
+                                                                />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 <SelectItem value="M">
@@ -278,7 +299,9 @@ export default function Onboarding() {
                                                                     {t('onboarding.female')}
                                                                 </SelectItem>
                                                                 <SelectItem value="N">
-                                                                    {t('settings.personal.preferNotToSay')}
+                                                                    {t(
+                                                                        'settings.personal.preferNotToSay',
+                                                                    )}
                                                                 </SelectItem>
                                                             </SelectContent>
                                                         </Select>

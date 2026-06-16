@@ -35,7 +35,9 @@ const SubmitPublication: FC = () => {
                     <Card className="p-6 sm:p-8">
                         <div className="flex flex-col items-center gap-3 text-center">
                             <AlertTriangle className="size-8 text-red-500" />
-                            <h2 className="text-lg font-semibold">{t('submitPublication.errorLoadingDrafts')}</h2>
+                            <h2 className="text-lg font-semibold">
+                                {t('submitPublication.errorLoadingDrafts')}
+                            </h2>
                             <p className="text-sm text-muted-foreground">
                                 {t('submitPublication.errorLoadingDraftsDesc')}
                             </p>

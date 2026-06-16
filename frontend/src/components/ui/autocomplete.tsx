@@ -112,7 +112,7 @@ const Autocomplete = forwardRef<HTMLInputElement, AutocompleteProps>(
                     inputRef.current?.focus();
                 }
             },
-            [onSelect, blurOnSelect],
+            [onSelect, blurOnSelect, getValue, getLabel],
         );
 
         const handleKeyDown = useCallback(

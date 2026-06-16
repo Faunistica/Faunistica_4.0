@@ -247,7 +247,8 @@ const Header: FC<HeaderProps> = ({ isSidebarEnabled, setSidebarOpen }) => {
                             onClick={toggleLanguage}
                         >
                             <Globe className="size-5" />
-                            {t('common.language')}: {i18n.language === 'ru' ? t('common.russian') : t('common.english')}
+                            {t('common.language')}:{' '}
+                            {i18n.language === 'ru' ? t('common.russian') : t('common.english')}
                         </Button>
                         {isLanding ? (
                             <>

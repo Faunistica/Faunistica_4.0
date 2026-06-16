@@ -164,7 +164,10 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                     <FormAutocomplete
                         name="country"
                         label={t('form.spatial.country')}
-                        options={[...COUNTRY_OPTIONS].map((c) => ({ value: c, label: t(`countries.${c}`) }))}
+                        options={[...COUNTRY_OPTIONS].map((c) => ({
+                            value: c,
+                            label: t(`countries.${c}`),
+                        }))}
                         placeholder={t('form.spatial.countryPlaceholder')}
                     />
                     <FormAutocomplete
@@ -188,7 +191,9 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                         control={control}
                         render={({ field, fieldState: { error, invalid } }) => (
                             <Field data-invalid={invalid}>
-                                <FieldLabel htmlFor="locality">{t('form.spatial.locality')}</FieldLabel>
+                                <FieldLabel htmlFor="locality">
+                                    {t('form.spatial.locality')}
+                                </FieldLabel>
                                 <Input
                                     id="locality"
                                     placeholder={t('form.spatial.localityPlaceholder')}
@@ -207,7 +212,9 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <Field>
-                                        <FieldLabel>{t('form.spatial.coordinateFormat')}</FieldLabel>
+                                        <FieldLabel>
+                                            {t('form.spatial.coordinateFormat')}
+                                        </FieldLabel>
                                         <Select
                                             value={coordFormat || undefined}
                                             onValueChange={(val: 'DD' | 'DM' | 'DMS') =>
@@ -215,7 +222,11 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                             }
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder={t('form.spatial.formatPlaceholder')} />
+                                                <SelectValue
+                                                    placeholder={t(
+                                                        'form.spatial.formatPlaceholder',
+                                                    )}
+                                                />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="DD">
@@ -246,7 +257,9 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
                                     onClick={() => setShowMap(!showMap)}
                                 >
                                     <MapIcon className="size-4" />
-                                    {showMap ? t('form.spatial.hideMap') : t('form.spatial.selectOnMap')}
+                                    {showMap
+                                        ? t('form.spatial.hideMap')
+                                        : t('form.spatial.selectOnMap')}
                                 </Button>
 
                                 {showMap && (

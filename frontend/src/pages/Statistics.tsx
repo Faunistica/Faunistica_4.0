@@ -125,7 +125,15 @@ function getStatLabel(key: string, t: (s: string) => string): string {
     return translationKey ? t(translationKey) : key;
 }
 
-function ProgressCard({ progress, t, locale }: { progress: ProgressInfo; t: (s: string, opts?: Record<string, unknown>) => string; locale: string }) {
+function ProgressCard({
+    progress,
+    t,
+    locale,
+}: {
+    progress: ProgressInfo;
+    t: (s: string, opts?: Record<string, unknown>) => string;
+    locale: string;
+}) {
     const [animate, setAnimate] = useState(false);
     useEffect(() => {
         const timer = setTimeout(() => setAnimate(true), 100);
@@ -180,15 +188,23 @@ function ProgressCard({ progress, t, locale }: { progress: ProgressInfo; t: (s: 
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
                     <span>
-                        {t('statistics.processed')}: {formatNumber(progress.processed_publications, locale)}
+                        {t('statistics.processed')}:{' '}
+                        {formatNumber(progress.processed_publications, locale)}
                         {progress.fully_processed_publications > 0 && (
                             <>
                                 {' '}
-                                {t('statistics.ofWhichFully', { count: formatNumber(progress.fully_processed_publications, locale) })}
+                                {t('statistics.ofWhichFully', {
+                                    count: formatNumber(
+                                        progress.fully_processed_publications,
+                                        locale,
+                                    ),
+                                })}
                             </>
                         )}
                     </span>
-                    <span>{t('statistics.total')}: {formatNumber(total, locale)}</span>
+                    <span>
+                        {t('statistics.total')}: {formatNumber(total, locale)}
+                    </span>
                 </div>
             </CardContent>
         </Card>
@@ -260,7 +276,7 @@ const Statistics: FC = () => {
 
     if (projectError) {
         return (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
                 {t('statistics.pageError')}
             </div>
         );
@@ -286,16 +302,28 @@ const Statistics: FC = () => {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {projectCards.slice(0, 4).map(({ key, icon, field }) => (
-                    <StatCard key={key} icon={icon} label={getStatLabel(key, t)} value={projectStats?.[field]} />
+                    <StatCard
+                        key={key}
+                        icon={icon}
+                        label={getStatLabel(key, t)}
+                        value={projectStats?.[field]}
+                    />
                 ))}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {projectCards.slice(4).map(({ key, icon, field }) => (
-                    <StatCard key={key} icon={icon} label={getStatLabel(key, t)} value={projectStats?.[field]} />
+                    <StatCard
+                        key={key}
+                        icon={icon}
+                        label={getStatLabel(key, t)}
+                        value={projectStats?.[field]}
+                    />
                 ))}
             </div>
 
-            {projectStats?.progress && <ProgressCard progress={projectStats.progress} t={t} locale={i18n.language} />}
+            {projectStats?.progress && (
+                <ProgressCard progress={projectStats.progress} t={t} locale={i18n.language} />
+            )}
 
             {projectStats &&
                 (projectStats.cumulative_records.length > 0 ||
@@ -334,7 +362,9 @@ const Statistics: FC = () => {
                 <div className="flex items-end justify-between">
                     <h2 className="mb-3 font-bold tracking-wide text-slate-900 uppercase dark:text-slate-100">
                         {fiendName
-                            ? t('statistics.userStatsTitle', { name: fiendStats?.name ?? fiendName })
+                            ? t('statistics.userStatsTitle', {
+                                  name: fiendStats?.name ?? fiendName,
+                              })
                             : t('statistics.personalStatsTitle')}
                     </h2>
                     <div className="flex h-16 flex-col-reverse items-end justify-baseline">
@@ -380,7 +410,9 @@ const Statistics: FC = () => {
 
                 {fiendName && fiendLoading && <StatisticsSkeleton />}
                 {fiendName && fiendError && (
-                    <p className="text-sm text-red-500">{t('statistics.userNotFound', { name: fiendName })}</p>
+                    <p className="text-sm text-red-500">
+                        {t('statistics.userNotFound', { name: fiendName })}
+                    </p>
                 )}
                 {(!fiendName || (fiendStats && !fiendLoading)) && (
                     <>
@@ -393,16 +425,17 @@ const Statistics: FC = () => {
                                     value={displayStats?.[field]}
                                 />
                             ))}
-                            {personalDetailedCards
-                                .slice(0, 4)
-                                .map(({ key, icon, field }) => (
-                                    <StatCard
-                                        key={key}
-                                        icon={icon}
-                                        label={getStatLabel(key === 'species' ? 'species_identified' : key, t)}
-                                        value={displayStats?.[field]}
-                                    />
-                                ))}
+                            {personalDetailedCards.slice(0, 4).map(({ key, icon, field }) => (
+                                <StatCard
+                                    key={key}
+                                    icon={icon}
+                                    label={getStatLabel(
+                                        key === 'species' ? 'species_identified' : key,
+                                        t,
+                                    )}
+                                    value={displayStats?.[field]}
+                                />
+                            ))}
                         </div>
                         <div
                             className={cn(
@@ -433,7 +466,11 @@ const Statistics: FC = () => {
                         </h2>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             {commonLabels.map(({ key, field }) => (
-                                <LabelCard key={key} label={getStatLabel(key, t)} value={displayStats?.[field]} />
+                                <LabelCard
+                                    key={key}
+                                    label={getStatLabel(key, t)}
+                                    value={displayStats?.[field]}
+                                />
                             ))}
                         </div>
                         <PieChartCard

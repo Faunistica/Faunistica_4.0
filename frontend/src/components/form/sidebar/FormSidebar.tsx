@@ -80,7 +80,7 @@ const FormSidebar: FC = () => {
                             size="icon"
                             className="size-8 text-slate-400 hover:text-slate-600 md:hidden"
                             onClick={() => setOpenMobile(false)}
-                                                            aria-label={t('form.sidebarSection.closePanel')}
+                            aria-label={t('form.sidebarSection.closePanel')}
                         >
                             <X className="size-4" />
                         </Button>

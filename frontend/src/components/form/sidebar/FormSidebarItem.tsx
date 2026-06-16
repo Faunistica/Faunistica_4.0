@@ -75,7 +75,9 @@ export const SidebarRecordItem = ({
                                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-400 opacity-75" />
                                 <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
                             </span>
-                            <span className="pl-1 font-semibold text-blue-600">{t('form.sidebarSection.editing')}</span>
+                            <span className="pl-1 font-semibold text-blue-600">
+                                {t('form.sidebarSection.editing')}
+                            </span>
                         </>
                     ) : (
                         <>
@@ -100,7 +102,9 @@ export const SidebarRecordItem = ({
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>{t('form.sidebarSection.deleteConfirmTitle')}</AlertDialogTitle>
+                        <AlertDialogTitle>
+                            {t('form.sidebarSection.deleteConfirmTitle')}
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
                             {t('form.sidebarSection.deleteConfirmDescription')}
                         </AlertDialogDescription>

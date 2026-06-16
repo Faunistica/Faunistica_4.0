@@ -14,9 +14,7 @@ export default function Footer() {
                             Faunistics
                         </span>
                     </div>
-                    <p className="max-w-sm text-sm">
-                        {t('landing.description')}
-                    </p>
+                    <p className="max-w-sm text-sm">{t('landing.description')}</p>
                 </div>
                 <div className="space-y-4">
                     <h4 className="font-semibold text-white">{t('landing.navigation')}</h4>

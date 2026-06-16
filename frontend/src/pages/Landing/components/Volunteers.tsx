@@ -26,7 +26,9 @@ export default function Volunteers() {
                             <div className="flex items-start gap-3">
                                 <Trophy className="size-6 shrink-0 text-amber-400" />
                                 <div>
-                                    <h4 className="font-semibold text-white">{t('landing.rating')}</h4>
+                                    <h4 className="font-semibold text-white">
+                                        {t('landing.rating')}
+                                    </h4>
                                     <p className="text-sm text-slate-400">
                                         {t('landing.ratingDesc')}
                                     </p>
@@ -35,7 +37,9 @@ export default function Volunteers() {
                             <div className="flex items-start gap-3">
                                 <BookOpen className="size-6 shrink-0 text-blue-400" />
                                 <div>
-                                    <h4 className="font-semibold text-white">{t('landing.exclusive')}</h4>
+                                    <h4 className="font-semibold text-white">
+                                        {t('landing.exclusive')}
+                                    </h4>
                                     <p className="text-sm text-slate-400">
                                         {t('landing.exclusiveDesc')}
                                     </p>
@@ -44,7 +48,9 @@ export default function Volunteers() {
                             <div className="flex items-start gap-3">
                                 <Users className="size-6 shrink-0 text-emerald-400" />
                                 <div>
-                                    <h4 className="font-semibold text-white">{t('landing.community')}</h4>
+                                    <h4 className="font-semibold text-white">
+                                        {t('landing.community')}
+                                    </h4>
                                     <p className="text-sm text-slate-400">
                                         {t('landing.communityDesc')}
                                     </p>
@@ -53,7 +59,9 @@ export default function Volunteers() {
                             <div className="flex items-start gap-3">
                                 <ShieldCheck className="size-6 shrink-0 text-purple-400" />
                                 <div>
-                                    <h4 className="font-semibold text-white">{t('landing.phobia')}</h4>
+                                    <h4 className="font-semibold text-white">
+                                        {t('landing.phobia')}
+                                    </h4>
                                     <p className="text-sm text-slate-400">
                                         {t('landing.phobiaDesc')}
                                     </p>
@@ -81,14 +89,10 @@ export default function Volunteers() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4 text-slate-300">
-                                <p>
-                                    {t('landing.studentDesc')}
-                                </p>
+                                <p>{t('landing.studentDesc')}</p>
                                 <div className="flex items-center gap-4 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
                                     <FileText className="size-8 text-[#229ED9]" />
-                                    <p className="text-sm">
-                                        {t('landing.coauthorship')}
-                                    </p>
+                                    <p className="text-sm">{t('landing.coauthorship')}</p>
                                 </div>
                             </CardContent>
                         </Card>

@@ -57,7 +57,7 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
                 return undefined;
             }
         },
-        [updateRecord, publ_id],
+        [updateRecord, publ_id, t],
     );
 
     const save = useCallback(
@@ -138,7 +138,7 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
         } catch {
             toast.error(t('recordForm.createError'));
         }
-    }, [publ_id, createRecord, cancelAutoSave, methods, performSave, navigate, store]);
+    }, [publ_id, createRecord, cancelAutoSave, methods, performSave, navigate, store, t]);
 
     const deleteRecordAction = useCallback(
         async (id: string) => {
@@ -163,7 +163,7 @@ export function useRecordFormActions(store: FormStore): RecordFormActions {
                 toast.error(t('recordForm.deleteError'));
             }
         },
-        [publ_id, deleteRecord, navigate, store, recordIds],
+        [publ_id, deleteRecord, navigate, store, recordIds, t],
     );
 
     return useMemo(

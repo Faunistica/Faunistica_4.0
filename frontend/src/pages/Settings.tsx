@@ -198,9 +198,7 @@ export default function Settings() {
                             <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
                                 {t('settings.title')}
                             </CardTitle>
-                            <CardDescription>
-                                {t('settings.description')}
-                            </CardDescription>
+                            <CardDescription>{t('settings.description')}</CardDescription>
                         </CardHeader>
 
                         <CardContent className="p-6 md:p-8">
@@ -215,7 +213,9 @@ export default function Settings() {
                                         </div>
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="username">{t('settings.account.username')}</Label>
+                                                <Label htmlFor="username">
+                                                    {t('settings.account.username')}
+                                                </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -240,7 +240,9 @@ export default function Settings() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="name">{t('settings.account.name')}</Label>
+                                                <Label htmlFor="name">
+                                                    {t('settings.account.name')}
+                                                </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <User className="size-4 text-slate-400" />
@@ -259,7 +261,9 @@ export default function Settings() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="password">{t('settings.account.password')}</Label>
+                                                <Label htmlFor="password">
+                                                    {t('settings.account.password')}
+                                                </Label>
                                                 <div className="relative">
                                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                                         <KeyRound className="size-4 text-slate-400" />
@@ -268,7 +272,9 @@ export default function Settings() {
                                                         id="password"
                                                         type="password"
                                                         className="pl-9"
-                                                        placeholder={t('settings.account.passwordHint')}
+                                                        placeholder={t(
+                                                            'settings.account.passwordHint',
+                                                        )}
                                                         {...register('password')}
                                                     />
                                                 </div>
@@ -289,7 +295,9 @@ export default function Settings() {
                                         </div>
                                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label htmlFor="age">{t('settings.personal.age')}</Label>
+                                                <Label htmlFor="age">
+                                                    {t('settings.personal.age')}
+                                                </Label>
                                                 <Input
                                                     id="age"
                                                     type="number"
@@ -304,7 +312,9 @@ export default function Settings() {
                                                 )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="sex">{t('settings.personal.sex')}</Label>
+                                                <Label htmlFor="sex">
+                                                    {t('settings.personal.sex')}
+                                                </Label>
                                                 <Controller
                                                     control={control}
                                                     name="sex"
@@ -315,7 +325,11 @@ export default function Settings() {
                                                             value={field.value || undefined}
                                                         >
                                                             <SelectTrigger id="sex">
-                                                                <SelectValue placeholder={t('settings.personal.sex')} />
+                                                                <SelectValue
+                                                                    placeholder={t(
+                                                                        'settings.personal.sex',
+                                                                    )}
+                                                                />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 <SelectItem value="M">
@@ -325,7 +339,9 @@ export default function Settings() {
                                                                     {t('settings.personal.female')}
                                                                 </SelectItem>
                                                                 <SelectItem value="N">
-                                                                    {t('settings.personal.preferNotToSay')}
+                                                                    {t(
+                                                                        'settings.personal.preferNotToSay',
+                                                                    )}
                                                                 </SelectItem>
                                                             </SelectContent>
                                                         </Select>

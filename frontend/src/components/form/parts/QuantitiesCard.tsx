@@ -38,7 +38,11 @@ const QuantitiesCard: FC = () => {
             label: t(QUANTITY_FIELD_LABELS.subadultMales),
             color: 'text-blue-400',
         },
-        { key: 'females' as const, label: t(QUANTITY_FIELD_LABELS.females), color: 'text-pink-600' },
+        {
+            key: 'females' as const,
+            label: t(QUANTITY_FIELD_LABELS.females),
+            color: 'text-pink-600',
+        },
         {
             key: 'subadultFemales' as const,
             label: t(QUANTITY_FIELD_LABELS.subadultFemales),
