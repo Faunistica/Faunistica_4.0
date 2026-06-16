@@ -179,19 +179,31 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         app.state.http_session = aiohttp.ClientSession()
         logger.info("HTTP session created without proxy")
 
+    app.state.location_data = {"ru": [], "en": []}
+    
     json_path = settings.LOCATIONS_JSON_PATH
     if json_path.exists():
         try:
             with open(json_path, encoding="utf-8") as f:  # noqa: ASYNC230
                 raw_data = json.load(f)
-                app.state.location_data = [RegionData(**item) for item in raw_data]
-            logger.info("Location data loaded")
+                app.state.location_data["ru"] = [RegionData(**item) for item in raw_data]
+            logger.info("Location data loaded (RU)")
         except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
-            logger.error("Failed to load location data: %s", e, exc_info=True)
-            app.state.location_data = []
+            logger.error("Failed to load location data (RU): %s", e, exc_info=True)
     else:
         logger.warning("Location data file not found at %s", json_path)
-        app.state.location_data = []
+
+    json_en_path = settings.LOCATIONS_EN_JSON_PATH
+    if json_en_path.exists():
+        try:
+            with open(json_en_path, encoding="utf-8") as f:  # noqa: ASYNC230
+                raw_data = json.load(f)
+                app.state.location_data["en"] = [RegionData(**item) for item in raw_data]
+            logger.info("Location data loaded (EN)")
+        except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
+            logger.error("Failed to load location data (EN): %s", e, exc_info=True)
+    else:
+        logger.warning("Location data file not found at %s", json_en_path)
 
     bot_task = asyncio.create_task(bot.start())
     cleanup_task = asyncio.create_task(_cleanup_pending_registrations())

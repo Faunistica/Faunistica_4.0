@@ -82,6 +82,7 @@ class AppSettings(CamelCaseSettings):
 class DataSettings(CamelCaseSettings):
     SPECIES_CSV_PATH: Path = Path("data/species_export.csv")
     LOCATIONS_JSON_PATH: Path = Path("data/locations.json")
+    LOCATIONS_EN_JSON_PATH: Path = Path("data/locations_en.json")
     SHORT_COUNTRIES_PATH: Path = Path("data/short_countries.txt")
     URAL_BORDER_PATH: Path = Path("data/ural_border.geojson")
 

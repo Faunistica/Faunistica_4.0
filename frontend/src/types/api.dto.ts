@@ -98,6 +98,7 @@ export interface GeoSearchRequest {
     field: string;
     query: string;
     region?: string | null;
+    lng?: 'en' | 'ru';
 }
 
 export interface GeoSearchResponse {

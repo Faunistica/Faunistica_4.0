@@ -22,13 +22,14 @@ export const utilAPI = createApi({
             }),
         }),
         geoSearch: build.query<Types.GeoSearchResponse, Types.GeoSearchRequest>({
-            query: ({ field, query, region }) => ({
+            query: ({ field, query, region, lng }) => ({
                 url: '/geo/search',
                 method: 'GET',
                 params: {
                     field,
                     query,
                     region,
+                    lng,
                 },
             }),
         }),

@@ -11,6 +11,7 @@ class GeoSearchRequest(BaseModel):
     field: str
     query: str
     region: str | None = None
+    lng: Literal["en", "ru"] = "ru"
 
 
 class GeoSearchResponse(BaseModel):

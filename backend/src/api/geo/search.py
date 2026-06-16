@@ -25,6 +25,6 @@ async def search_geo(
     Ищет подсказки локаций по полю и тексту с фильтрацией по региону.
     """
     suggestions = await geo.get_location_suggestions(
-        location_data, data.field, data.query, GeoFilters(region=data.region)
+        location_data.get(data.lng, location_data.get("ru", [])), data.field, data.query, GeoFilters(region=data.region)
     )
     return GeoSearchResponse(suggestions=suggestions)

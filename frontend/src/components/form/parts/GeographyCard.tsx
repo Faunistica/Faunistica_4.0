@@ -33,7 +33,7 @@ interface Props {
 }
 
 const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { control, setValue, getValues } = useFormContext<RecordForm>();
 
     const georefSource = useWatch({ name: 'georef_source', control }) || 'none';
@@ -72,12 +72,12 @@ const GeographyCard: FC<Props> = ({ publ_id, activeRecordId }) => {
     const [searchDistrict] = useLazyGeoSearchQuery();
 
     const regionSearchFn = (query: string) =>
-        searchRegion({ field: 'region', query })
+        searchRegion({ field: 'region', query, lng: i18n.language as 'en' | 'ru' })
             .unwrap()
             .then((r) => r.suggestions ?? []);
 
     const districtSearchFn = (query: string) =>
-        searchDistrict({ field: 'district', query })
+        searchDistrict({ field: 'district', query, lng: i18n.language as 'en' | 'ru' })
             .unwrap()
             .then((r) => r.suggestions ?? []);
 
